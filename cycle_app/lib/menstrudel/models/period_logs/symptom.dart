@@ -20,6 +20,8 @@ class Symptom {
       'tender breasts' => SymptomType.tenderBreasts,
       'insomnia' => SymptomType.insomnia,
       'depressed' => SymptomType.depressed,
+      'sleep' => SymptomType.sleep,
+      'water' => SymptomType.water,
       _ => SymptomType.custom,
     };
 
@@ -91,6 +93,10 @@ extension SymptomExtension on Symptom {
         return 'insomnia';
       case SymptomType.depressed:
         return 'depressed';
+      case SymptomType.sleep:
+        return 'sleep';
+      case SymptomType.water:
+        return 'water';
       case SymptomType.custom:
         return customName.toLowerCase();
     }
@@ -120,6 +126,10 @@ extension SymptomExtension on Symptom {
         return l10n.builtInSymptom_insomnia;
       case SymptomType.depressed:
         return l10n.builtInSymptom_depressed;
+      case SymptomType.sleep:
+        return l10n.builtInSymptom_sleep;
+      case SymptomType.water:
+        return l10n.builtInSymptom_water;
       case SymptomType.custom:
         return customName.toCapitalized();
     }

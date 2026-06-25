@@ -253,6 +253,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get builtInSymptom_depressed => 'Depressed';
 
   @override
+  String get builtInSymptom_sleep => 'การนอนหลับ (ชั่วโมง)';
+
+  @override
+  String get builtInSymptom_water => 'น้ำ (แก้ว)';
+
+  @override
   String get painLevel_title => 'ระดับความปวด';
 
   @override

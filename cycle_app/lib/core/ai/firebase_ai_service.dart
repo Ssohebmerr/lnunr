@@ -83,6 +83,9 @@ class FirebaseAiService {
         'nutrition' => 500,
         'partner' => 300,
         'mood' => 400,
+        'fertility' => 500,
+        'weight' => 500,
+        'intimacy' => 400,
         _ => 2000,
       };
 

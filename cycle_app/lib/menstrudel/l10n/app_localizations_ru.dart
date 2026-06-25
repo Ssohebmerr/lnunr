@@ -253,6 +253,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get builtInSymptom_depressed => 'Depressed';
 
   @override
+  String get builtInSymptom_sleep => 'Сон (часы)';
+
+  @override
+  String get builtInSymptom_water => 'Вода (стаканы)';
+
+  @override
   String get painLevel_title => 'Pain Level';
 
   @override

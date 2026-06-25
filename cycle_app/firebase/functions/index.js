@@ -199,6 +199,46 @@ Rules:
 - If the user doesn't specify what to say, write a general "here's how I'm feeling today" message based on their cycle phase.
 - Same language as the user.`;
 
+const FERTILITY_INSIGHT_PROMPT = `
+You are Lune 🌸, a fertility-aware wellness companion.
+
+The user wants to understand their fertility window and conception-related questions.
+
+Rules:
+- Explain the fertile window based on their cycle data (ovulation date, cycle length).
+- Give 2-3 practical, evidence-based tips for conception or fertility awareness.
+- Be warm, supportive, and educational. Never pressure.
+- If cycle data is limited, explain how tracking more helps improve predictions.
+- Write 80-130 words. Warm, clear, non-clinical tone.
+${medicalSafety}
+Same language as the user.`;
+
+const WEIGHT_INSIGHT_PROMPT = `
+You are Lune 🌸, a weight-aware wellness companion.
+
+The user wants insights about their weight in relation to their cycle.
+
+Rules:
+- Explain how cycle phases affect water retention, appetite, and metabolism.
+- Offer 1-2 practical, body-positive tips for each phase.
+- Never promote restrictive diets - focus on intuitive eating and phase support.
+- If weight data is provided, note gentle trends without diagnosing.
+- Write 80-120 words. Warm, body-positive, educational tone.
+${medicalSafety}
+Same language as the user.`;
+
+const INTIMACY_GUIDANCE_PROMPT = `
+You are Lune 🌸, helping the user understand intimacy and libido in relation to their cycle.
+
+Rules:
+- Explain how cycle phases can affect libido, energy, and intimacy naturally.
+- Offer 1-2 gentle, practical suggestions to connect with their partner based on the phase.
+- Keep sex-positive, inclusive, and respectful of all relationship types.
+- Never give medical or sexual health prescriptions.
+- Write 60-100 words. Warm, respectful, body-positive tone.
+${medicalSafety}
+Same language as the user.`;
+
 const MOOD_ANALYSIS_PROMPT = `
 You are Lune 🌸, an empathetic emotional wellness companion.
 
@@ -222,6 +262,9 @@ function getSystemPromptForMode(mode, ctx) {
     case 'nutrition': return PHASE_NUTRITION_PROMPT;
     case 'partner': return PARTNER_MESSAGE_PROMPT;
     case 'mood': return MOOD_ANALYSIS_PROMPT;
+    case 'fertility': return FERTILITY_INSIGHT_PROMPT;
+    case 'weight': return WEIGHT_INSIGHT_PROMPT;
+    case 'intimacy': return INTIMACY_GUIDANCE_PROMPT;
     case 'analyze': return isPregnant ? PREGNANT_ANALYZE_PROMPT : ANALYZE_SYSTEM_PROMPT;
     case 'doctor': return DOCTOR_REPORT_SYSTEM_PROMPT;
     default: return isPregnant ? PREGNANT_CHAT_PROMPT : HEALTH_SYSTEM_PROMPT;
@@ -236,6 +279,9 @@ function getMaxTokensForMode(mode) {
     case 'nutrition': return 500;
     case 'partner': return 300;
     case 'mood': return 400;
+    case 'fertility': return 500;
+    case 'weight': return 500;
+    case 'intimacy': return 400;
     case 'analyze': return 900;
     case 'doctor': return 1200;
     default: return 4000;
@@ -565,8 +611,6 @@ async function moderateFirestoreDoc(collection, docId, text) {
 // ---------------------------------------------------------------------------
 // Auto-delete expired stories (scheduled — runs every hour)
 // ---------------------------------------------------------------------------
-const { onSchedule } = require('firebase-functions/v2/scheduler');
-
 exports.cleanupExpiredStories = onSchedule(
   { schedule: 'every 1 hours', timeoutSeconds: 120, memory: '256MiB' },
   async (event) => {

@@ -4898,6 +4898,42 @@ abstract class AppLocalizations {
   /// **'Quick pain relief guidance'**
   String get aiEmergencyTooltip;
 
+  /// No description provided for @aiFeatureFertility.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility Insights'**
+  String get aiFeatureFertility;
+
+  /// No description provided for @aiFeatureFertilityPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me understand my fertility window'**
+  String get aiFeatureFertilityPrompt;
+
+  /// No description provided for @aiFeatureWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight & Nutrition'**
+  String get aiFeatureWeight;
+
+  /// No description provided for @aiFeatureWeightPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What should I eat for my phase?'**
+  String get aiFeatureWeightPrompt;
+
+  /// No description provided for @aiFeatureIntimacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy Guidance'**
+  String get aiFeatureIntimacy;
+
+  /// No description provided for @aiFeatureIntimacyPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for intimacy during my cycle'**
+  String get aiFeatureIntimacyPrompt;
+
   /// No description provided for @dailyBriefingTitle.
   ///
   /// In en, this message translates to:

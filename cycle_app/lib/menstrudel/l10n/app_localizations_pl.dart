@@ -253,6 +253,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get builtInSymptom_depressed => 'Depressed';
 
   @override
+  String get builtInSymptom_sleep => 'Sen (godziny)';
+
+  @override
+  String get builtInSymptom_water => 'Woda (szklanki)';
+
+  @override
   String get painLevel_title => 'Pain Level';
 
   @override

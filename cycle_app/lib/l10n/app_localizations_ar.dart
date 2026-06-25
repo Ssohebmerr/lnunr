@@ -2586,6 +2586,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiEmergencyTooltip => 'إرشادات سريعة لتخفيف الألم';
 
   @override
+  String get aiFeatureFertility => 'رؤى الخصوبة';
+
+  @override
+  String get aiFeatureFertilityPrompt => 'ساعديني أفهم أيام الخصوبة';
+
+  @override
+  String get aiFeatureWeight => 'الوزن والتغذية';
+
+  @override
+  String get aiFeatureWeightPrompt => 'شو أكل حسب مرحلتي؟';
+
+  @override
+  String get aiFeatureIntimacy => 'إرشادات العلاقة';
+
+  @override
+  String get aiFeatureIntimacyPrompt => 'نصائح للعلاقة أثناء دورتي';
+
+  @override
   String get dailyBriefingTitle => 'ملخص اليوم';
 
   @override

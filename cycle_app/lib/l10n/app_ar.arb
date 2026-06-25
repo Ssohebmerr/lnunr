@@ -950,6 +950,12 @@
   "aiFeatureEmergency": "مساعدة عاجلة",
   "aiEmergencyPrompt": "أنا بألم وبدني مساعدة حالاً",
   "aiEmergencyTooltip": "إرشادات سريعة لتخفيف الألم",
+  "aiFeatureFertility": "رؤى الخصوبة",
+  "aiFeatureFertilityPrompt": "ساعديني أفهم أيام الخصوبة",
+  "aiFeatureWeight": "الوزن والتغذية",
+  "aiFeatureWeightPrompt": "شو أكل حسب مرحلتي؟",
+  "aiFeatureIntimacy": "إرشادات العلاقة",
+  "aiFeatureIntimacyPrompt": "نصائح للعلاقة أثناء دورتي",
   "dailyBriefingTitle": "ملخص اليوم",
   "dailyBriefingLoading": "جاري تحضير ملخص يومكِ...",
 

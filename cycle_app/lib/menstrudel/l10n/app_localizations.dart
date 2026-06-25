@@ -535,6 +535,18 @@ abstract class AppLocalizations {
   /// **'Depressed'**
   String get builtInSymptom_depressed;
 
+  /// No description provided for @builtInSymptom_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep (hours)'**
+  String get builtInSymptom_sleep;
+
+  /// No description provided for @builtInSymptom_water.
+  ///
+  /// In en, this message translates to:
+  /// **'Water (glasses)'**
+  String get builtInSymptom_water;
+
   /// No description provided for @painLevel_title.
   ///
   /// In en, this message translates to:

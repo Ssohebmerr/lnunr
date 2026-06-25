@@ -2,6 +2,7 @@ import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart'
     as menstrudel_l10n;
 import 'package:cycle_aura/menstrudel_integration/menstrudel_init.dart';
 import 'package:cycle_aura/menstrudel_integration/menstrudel_providers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -85,6 +86,22 @@ void main() async {
   }
 
   await NotificationService.initialize();
+
+  // Register FCM token on every app start (not just login)
+  // Handles existing users who logged in before token registration was added.
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser != null) {
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .set({'fcmToken': fcmToken, 'fcmTokenUpdatedAt': FieldValue.serverTimestamp()},
+                SetOptions(merge: true));
+      }
+    } catch (_) {}
+  }
 
   // FCM foreground listener — show local notification when app is open
   FirebaseMessaging.onMessage.listen((message) {

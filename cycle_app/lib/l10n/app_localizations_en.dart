@@ -2610,6 +2610,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiEmergencyTooltip => 'Quick pain relief guidance';
 
   @override
+  String get aiFeatureFertility => 'Fertility Insights';
+
+  @override
+  String get aiFeatureFertilityPrompt =>
+      'Help me understand my fertility window';
+
+  @override
+  String get aiFeatureWeight => 'Weight & Nutrition';
+
+  @override
+  String get aiFeatureWeightPrompt => 'What should I eat for my phase?';
+
+  @override
+  String get aiFeatureIntimacy => 'Intimacy Guidance';
+
+  @override
+  String get aiFeatureIntimacyPrompt => 'Tips for intimacy during my cycle';
+
+  @override
   String get dailyBriefingTitle => 'Daily Briefing';
 
   @override

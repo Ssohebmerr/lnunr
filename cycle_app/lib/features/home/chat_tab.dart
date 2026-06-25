@@ -547,6 +547,27 @@ class _FeatureCardsGrid extends StatelessWidget {
         prompt: l10n.aiEmergencyPrompt,
         mode: 'emergency',
       ),
+      _FeatureCardData(
+        icon: Icons.egg_rounded,
+        gradient: const [Color(0xFFE85D75), Color(0xFFF4A0B0)],
+        label: l10n.aiFeatureFertility,
+        prompt: l10n.aiFeatureFertilityPrompt,
+        mode: 'fertility',
+      ),
+      _FeatureCardData(
+        icon: Icons.monitor_weight_outlined,
+        gradient: const [Color(0xFF3D9A78), Color(0xFF6BC4A0)],
+        label: l10n.aiFeatureWeight,
+        prompt: l10n.aiFeatureWeightPrompt,
+        mode: 'weight',
+      ),
+      _FeatureCardData(
+        icon: Icons.favorite_outline,
+        gradient: const [Color(0xFF9B59B6), Color(0xFFC084E0)],
+        label: l10n.aiFeatureIntimacy,
+        prompt: l10n.aiFeatureIntimacyPrompt,
+        mode: 'intimacy',
+      ),
     ];
 
     return GridView.builder(

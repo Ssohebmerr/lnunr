@@ -10,5 +10,7 @@ enum SymptomType {
   tenderBreasts,
   insomnia,
   depressed,
+  sleep,
+  water,
   custom
 }

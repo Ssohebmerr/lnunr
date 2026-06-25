@@ -978,6 +978,12 @@
   "aiFeatureEmergency": "Emergency Help",
   "aiEmergencyPrompt": "I'm in pain and need help right now",
   "aiEmergencyTooltip": "Quick pain relief guidance",
+  "aiFeatureFertility": "Fertility Insights",
+  "aiFeatureFertilityPrompt": "Help me understand my fertility window",
+  "aiFeatureWeight": "Weight & Nutrition",
+  "aiFeatureWeightPrompt": "What should I eat for my phase?",
+  "aiFeatureIntimacy": "Intimacy Guidance",
+  "aiFeatureIntimacyPrompt": "Tips for intimacy during my cycle",
   "dailyBriefingTitle": "Daily Briefing",
   "dailyBriefingLoading": "Preparing your daily briefing...",
 

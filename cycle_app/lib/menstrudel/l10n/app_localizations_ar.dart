@@ -265,6 +265,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get builtInSymptom_depressed => 'اكتئاب';
 
   @override
+  String get builtInSymptom_sleep => 'النوم (ساعات)';
+
+  @override
+  String get builtInSymptom_water => 'الماء (أكواب)';
+
+  @override
   String get painLevel_title => 'مستوى الألم';
 
   @override
