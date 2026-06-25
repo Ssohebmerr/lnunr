@@ -24,9 +24,11 @@ Future<void> showStoryComposer({
     context: context,
     showDragHandle: true,
     builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: Semantics(
+        label: l10n.storyCreate,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
@@ -93,7 +95,8 @@ Future<void> showStoryComposer({
             },
           ),
           const SizedBox(height: 8),
-        ],
+          ],
+        ),
       ),
     ),
   );

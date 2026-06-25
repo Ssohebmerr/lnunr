@@ -5,6 +5,7 @@ import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -257,6 +258,40 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
     );
   }
 
+  void _showWatchInfo(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.watch_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 16),
+            const Text('Smart Watch Sync', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 12),
+            const Text(
+              'Your cycle data is automatically synced to your paired smart watch. '
+              'You can view your cycle progress and log your period directly from your watch.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            _WatchFeature(icon: Icons.sync, text: 'Auto-syncs cycle data to watch'),
+            _WatchFeature(icon: Icons.circle_outlined, text: 'Cycle ring on watch face'),
+            _WatchFeature(icon: Icons.water_drop, text: 'Log period from watch'),
+            _WatchFeature(icon: Icons.calendar_today, text: 'Current phase display'),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Got it'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showPremiumSheet() {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -371,10 +406,16 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
               icon: Icons.favorite_outline,
               title: l10n.partnerTitle,
               subtitle: l10n.partnerSubtitle,
-              showDivider: false,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const PartnerPage()),
               ),
+            ),
+            AccountMenuTile(
+              icon: Icons.watch_outlined,
+              title: 'Smart Watch',
+              subtitle: Platform.isIOS ? 'Apple Watch support' : 'Wear OS support',
+              showDivider: false,
+              onTap: () => _showWatchInfo(context),
             ),
             if (_isAdmin)
               AccountMenuTile(
@@ -394,6 +435,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             AccountMenuTile(
               icon: Icons.notifications_outlined,
               title: l10n.accountMenuReminders,
+              showDivider: false,
               trailing: Switch(
                 value: _notifications,
                 onChanged: (v) async {
@@ -403,22 +445,6 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
                 },
               ),
               onTap: _showRemindersSheet,
-            ),
-            AccountMenuTile(
-              icon: Icons.flag_outlined,
-              title: l10n.accountChangeGoal,
-              subtitle: GoalChangeFlow.labelFor(context, _goal),
-              showDivider: false,
-              onTap: () async {
-                final picked = await GoalChangeFlow.run(
-                  context,
-                  current: _goal,
-                  sync: _cycleSync,
-                );
-                if (picked != null && mounted) {
-                  setState(() => _goal = picked);
-                }
-              },
             ),
           ],
         ),
@@ -437,10 +463,9 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             ),
             AccountMenuTile(
               icon: Icons.help_outline_rounded,
-              title: l10n.accountMenuHelp,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const EducationHubPage()),
-              ),
+              title: 'Anonymous Q&A',
+              subtitle: 'Ask health questions privately',
+              onTap: () => context.push('/ask'),
             ),
             AccountMenuTile(
               icon: Icons.info_outline_rounded,
@@ -720,6 +745,26 @@ class _FeatureRow extends StatelessWidget {
         children: [
           Icon(Icons.check_circle,
               size: 18, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+}
+
+class _WatchFeature extends StatelessWidget {
+  const _WatchFeature({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(child: Text(text)),
         ],

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/app_secrets.dart';
 import '../../../core/storage/user_prefs.dart';
 
 class PayPalCheckoutResult {
@@ -21,8 +22,7 @@ class PayPalCheckoutResult {
 class PayPalService {
   PayPalService({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
 
-  static const _baseUrl =
-      'https://us-central1-lune-7d956.cloudfunctions.net';
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
   static const pendingOrderKey = 'paypal_pending_order_id';
 
   final FirebaseAuth _auth;

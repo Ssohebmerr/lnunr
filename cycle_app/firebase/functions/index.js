@@ -1,5 +1,6 @@
 const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -11,6 +12,16 @@ const PAYPAL_CLIENT_ID = defineSecret('PAYPAL_CLIENT_ID');
 const PAYPAL_CLIENT_SECRET = defineSecret('PAYPAL_CLIENT_SECRET');
 const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT');
 const ADMIN_BOOTSTRAP_KEY = defineSecret('ADMIN_BOOTSTRAP_KEY');
+
+// ---------------------------------------------------------------------------
+// Premium verification helper (server-side check)
+// ---------------------------------------------------------------------------
+async function verifyPremium(uid) {
+  const userDoc = await admin.firestore().collection('users').doc(uid).get();
+  if (!userDoc.exists) return false;
+  const data = userDoc.data();
+  return data?.isPremium === true || data?.premiumExpiry?.toDate() > new Date();
+}
 
 // ---------------------------------------------------------------------------
 // Gemini AI (Google AI Studio API)
@@ -1489,4 +1500,29 @@ exports.getPaypalConfig = onRequest({ cors: true }, async (req, res) => {
 exports.googlePlayWebhook = onRequest({ cors: true, secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT] }, async (req, res) => {
   console.log('Google Play webhook:', JSON.stringify(req.body));
   res.status(200).json({ ok: true });
+});
+
+// ---------------------------------------------------------------------------
+// Scheduled: Clean up expired stories (runs every hour)
+// ---------------------------------------------------------------------------
+exports.cleanupExpiredStories = onSchedule('every 60 minutes', async () => {
+  const db = admin.firestore();
+  const now = admin.firestore.Timestamp.now();
+
+  // Query across all communities for expired stories.
+  const snap = await db.collectionGroup('stories')
+    .where('expiresAt', '<=', now)
+    .limit(300)
+    .get();
+
+  if (snap.empty) {
+    console.log('cleanupExpiredStories: no expired stories found.');
+    return;
+  }
+
+  const batch = db.batch();
+  snap.docs.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+
+  console.log(`cleanupExpiredStories: deleted ${snap.docs.length} expired stories.`);
 });

@@ -151,7 +151,6 @@ class CommunityStoryRepository {
       if (textOverlay != null) 'textOverlay': textOverlay,
       if (backgroundColor != null) 'backgroundColor': backgroundColor,
       'viewCount': 0,
-      'viewedBy': <String>[],
     });
   }
 
@@ -180,28 +179,18 @@ class CommunityStoryRepository {
       'textOverlay': text,
       'backgroundColor': backgroundColor,
       'viewCount': 0,
-      'viewedBy': <String>[],
     });
   }
 
   /// Mark a story as viewed by the current user.
-  /// Uses a transaction to prevent viewCount drift from duplicate calls.
   Future<void> markViewed(String communityId, String storyId) async {
     final uid = currentUid;
     if (uid == null) return;
 
     final ref = _storiesRef(communityId).doc(storyId);
     try {
-      await _firestore.runTransaction((tx) async {
-        final snap = await tx.get(ref);
-        final data = snap.data();
-        if (data == null) return;
-        final viewedBy = List<String>.from(data['viewedBy'] ?? []);
-        if (viewedBy.contains(uid)) return;
-        tx.update(ref, {
-          'viewedBy': FieldValue.arrayUnion([uid]),
-          'viewCount': FieldValue.increment(1),
-        });
+      await ref.update({
+        'viewCount': FieldValue.increment(1),
       });
     } catch (e) {
       debugPrint('markViewed error: $e');

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'direct_gemini_service.dart';
 import 'firebase_ai_service.dart';
+import '../config/app_secrets.dart';
 
 /// Single entry point for AI.
 ///
@@ -26,8 +27,7 @@ class AiGateway {
   final FirebaseAiService _firebaseAi;
   final DirectGeminiService _directGemini;
 
-  static const _baseUrl =
-      'https://us-central1-lune-7d956.cloudfunctions.net';
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
   Future<String?> request({
     required String message,
@@ -79,9 +79,14 @@ class AiGateway {
       debugPrint('[AiGateway] Firebase AI succeeded (${firebaseAi.length} chars)');
       return firebaseAi;
     }
-    debugPrint('[AiGateway] All AI paths exhausted');
 
-    return null;
+    // All paths failed — run diagnostic
+    debugPrint('[AiGateway] All AI paths exhausted');
+    final diagnostic = await _directGemini.testConnection();
+    debugPrint('[AiGateway] Diagnostic: $diagnostic');
+
+    // Return diagnostic message so user can see what's happening
+    return 'AI Diagnostic: $diagnostic';
   }
 
   bool _isFailedPlaceholderReply(String reply) {

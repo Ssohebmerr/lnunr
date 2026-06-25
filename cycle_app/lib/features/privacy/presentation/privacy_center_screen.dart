@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/privacy/consent_data_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/privacy/privacy_constants.dart';
+import '../../../core/storage/user_prefs.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
@@ -23,6 +25,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
   bool _cloudSync = false;
   bool _ai = false;
   bool _communities = false;
+  bool _stealthMode = false;
   bool _loading = true;
   bool _purging = false;
   final _consentData = ConsentDataService();
@@ -37,11 +40,13 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
     final cloud = await ConsentManager.hasCloudSyncConsent();
     final ai = await ConsentManager.hasAiConsent();
     final communities = await ConsentManager.hasCommunitiesConsent();
+    final stealth = await UserPrefs.isStealthModeEnabled();
     if (mounted) {
       setState(() {
         _cloudSync = cloud;
         _ai = ai;
         _communities = communities;
+        _stealthMode = stealth;
         _loading = false;
       });
     }
@@ -95,6 +100,66 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.consentDataPurged)),
+    );
+  }
+
+  Future<String?> _showPinDialog() async {
+    final pinController = TextEditingController();
+    final confirmController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set Stealth PIN'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter a 4-6 digit PIN to unlock the real app from the calculator.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'PIN',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: confirmController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirm PIN',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final pin = pinController.text;
+              final confirm = confirmController.text;
+              if (pin.length >= 4 && pin == confirm) {
+                Navigator.pop(ctx, pin);
+              } else {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('PINs must match and be at least 4 digits')),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -252,6 +317,63 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                   ],
                 ),
               ),
+            const SizedBox(height: 12),
+
+            // Stealth Mode
+            AppGlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calculate_outlined, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Stealth Mode', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Disguise the app as a calculator. Enter your secret PIN + = to unlock.',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Enable Stealth Mode'),
+                    value: _stealthMode,
+                    onChanged: (v) async {
+                      if (v) {
+                        // Show PIN setup dialog
+                        final pin = await _showPinDialog();
+                        if (pin == null || pin.length < 4) return;
+                        await UserPrefs.setStealthModePin(pin);
+                        await UserPrefs.setStealthModeEnabled(true);
+                        if (mounted) {
+                          setState(() => _stealthMode = true);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Stealth mode enabled! Restart the app to activate.')),
+                          );
+                        }
+                      } else {
+                        await UserPrefs.setStealthModeEnabled(false);
+                        if (mounted) setState(() => _stealthMode = false);
+                      }
+                    },
+                  ),
+                  if (_stealthMode)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'To unlock: open the calculator, type your PIN, then press =',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
             AppGlassCard(
               child: Column(

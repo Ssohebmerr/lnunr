@@ -303,11 +303,36 @@ class PeriodService extends ChangeNotifier {
     }
   }
 
-  /// Syncs circle data with the Wear OS watch.
+  /// Syncs circle data with the watch (Apple Watch + Wear OS).
   Future<void> _syncWatchData() async {
+    // Determine current phase
+    String phase = 'Unknown';
+    if (_isPeriodOngoing) {
+      phase = 'Menstruation';
+    } else if (_predictedCurrentCycle != null) {
+      final today = DateUtils.dateOnly(DateTime.now());
+      final ovulation = DateUtils.dateOnly(_predictedCurrentCycle!.ovulationDay);
+      final luteal = DateUtils.dateOnly(_predictedCurrentCycle!.lutealStart);
+      final nextPeriod = DateUtils.dateOnly(_predictedCurrentCycle!.nextPeriodStart);
+
+      if (today.isBefore(ovulation)) {
+        phase = 'Follicular';
+      } else if (today == ovulation || today == ovulation.subtract(const Duration(days: 1))) {
+        phase = 'Ovulation';
+      } else if (today.isBefore(nextPeriod)) {
+        phase = 'Luteal';
+      } else {
+        phase = 'Menstruation';
+      }
+    }
+
+    final daysUntil = _circleCurrentValue;
+
     await _watchSyncService.sendCircleData(
       circleMaxValue: _circleMaxValue,
       circleCurrentValue: _circleCurrentValue,
+      phase: phase,
+      daysUntilPeriod: daysUntil,
     );
   }
 

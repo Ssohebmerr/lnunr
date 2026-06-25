@@ -67,6 +67,53 @@ class CycleReportExporter {
     return buf.toString().trim();
   }
 
+  /// CSV export of cycle data for spreadsheet import.
+  static String toCsv({
+    required AppLocalizations l10n,
+    required CycleReportData report,
+    CycleDashboardData? dashboard,
+    required String exportedDate,
+  }) {
+    final buf = StringBuffer();
+    final km = report.keyMatrix;
+    final pm = report.predictionMatrix;
+    final dash = dashboard;
+
+    // Header
+    buf.writeln('Metric,Value');
+    buf.writeln('"${l10n.healthReportExportedOn(exportedDate)}",""');
+    buf.writeln('"${l10n.reportAvgCycle}","${_days(km['avg_cycle_length'] ?? dash?.avgCycleLength)}"');
+    buf.writeln('"${l10n.reportAvgPeriod}","${_days(km['avg_period_duration'] ?? dash?.avgPeriodDuration)}"');
+    buf.writeln('"${l10n.healthReportPrevCycleLength}","${_days(km['prev_cycle_length'])}"');
+    buf.writeln('"${l10n.healthReportPrevPeriodDuration}","${_days(km['prev_period_duration'])}"');
+    buf.writeln('"${l10n.healthReportNextPeriodDay}","${_t(pm['next_period_day'] ?? dash?.nextPeriod)}"');
+    buf.writeln('"${l10n.healthReportNextOvulationDay}","${_t(pm['next_ovulation_day'] ?? dash?.ovulation)}"');
+    buf.writeln();
+
+    // Cycle history
+    if (report.cycles.isNotEmpty) {
+      buf.writeln('Cycle Start,Cycle Length (days)');
+      for (final c in report.cycles.take(12)) {
+        final len = c.cycleLength ?? 0;
+        final start = c.periodStartDate ?? c.cycleStartDate ?? '';
+        buf.writeln('"$start","$len"');
+      }
+      buf.writeln();
+    }
+
+    // Symptom patterns
+    if (report.symptomPatterns.isNotEmpty) {
+      buf.writeln('Symptom,% of Cycles');
+      for (final p in report.symptomPatterns.take(20)) {
+        final name = p.name?.trim();
+        if (name == null || name.isEmpty) continue;
+        buf.writeln('"$name","${p.percentageOfCycles ?? 0}%"');
+      }
+    }
+
+    return buf.toString().trim();
+  }
+
   static void _line(StringBuffer buf, String label, String value) {
     buf.writeln('• $label: $value');
   }

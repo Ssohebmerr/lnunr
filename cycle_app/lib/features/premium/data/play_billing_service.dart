@@ -7,14 +7,15 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import '../../../core/config/app_secrets.dart';
+
 /// Google Play Billing for Premium on Android (required by Play policy).
 class PlayBillingService {
   PlayBillingService({InAppPurchase? iap}) : _iap = iap ?? InAppPurchase.instance;
 
   static const productId = 'premium_monthly';
   static const packageName = 'com.lune.app';
-  static const _baseUrl =
-      'https://us-central1-lune-7d956.cloudfunctions.net';
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
   final InAppPurchase _iap;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;

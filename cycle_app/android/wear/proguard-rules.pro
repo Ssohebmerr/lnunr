@@ -1,0 +1,2 @@
+-keep class com.cycleaura.wear.** { *; }
+-keep class com.google.android.gms.wearable.** { *; }

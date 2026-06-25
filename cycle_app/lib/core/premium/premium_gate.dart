@@ -12,7 +12,6 @@ class PremiumGate {
   static const freeAiMessagesPerDay = 5;
   static const freeReportsTotal = 1;
   static const _aiCountPrefix = 'ai_msg_count_';
-  static const _reportCountKey = 'doctor_report_count';
 
   static Future<bool> hasPremium() => UserPrefs.isPremium();
 
@@ -47,7 +46,7 @@ class PremiumGate {
     return (freeAiMessagesPerDay - used).clamp(0, freeAiMessagesPerDay);
   }
 
-  /// Check if user can generate a doctor report (1 free, then premium).
+  /// Check if user can generate a doctor report (1 free per month, then premium).
   static Future<bool> canGenerateDoctorReport() async {
     if (await hasPremium()) return true;
     final count = await _reportCount();
@@ -65,15 +64,18 @@ class PremiumGate {
   static Future<void> recordDoctorReport() async {
     if (await hasPremium()) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(
-      _reportCountKey,
-      (prefs.getInt(_reportCountKey) ?? 0) + 1,
-    );
+    final key = _reportCountKey();
+    await prefs.setInt(key, (prefs.getInt(key) ?? 0) + 1);
   }
 
   static Future<int> _reportCount() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_reportCountKey) ?? 0;
+    return prefs.getInt(_reportCountKey()) ?? 0;
+  }
+
+  static String _reportCountKey() {
+    final today = DateTime.now();
+    return 'doctor_report_count_${today.year}_${today.month}';
   }
 
   static Future<int> _todayAiCount() async {

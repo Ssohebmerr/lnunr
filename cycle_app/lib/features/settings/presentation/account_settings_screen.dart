@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/ai/direct_gemini_service.dart';
 import '../../../core/locale/locale_cubit.dart';
 import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
@@ -40,6 +41,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   final _sync = CycleSyncService();
   final _syncService = CloudSyncService();
   final _localBackup = LocalBackupService();
+  final _geminiController = TextEditingController();
+  bool _geminiSaved = false;
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final syncConsent = await ConsentManager.hasCloudSyncConsent();
     final communityNotif = await NotificationPrefs.communityEnabled();
     final goal = await _sync.getUserGoal();
+    final gemini = await DirectGeminiService().hasKey();
     if (mounted) {
       setState(() {
         _premium = p;
@@ -62,6 +66,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         _goal = goal;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _geminiController.dispose();
+    super.dispose();
   }
 
   String _goalLabel(AppLocalizations l10n) =>
@@ -322,6 +332,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
+              _GeminiKeyCard(),
+              const SizedBox(height: 12),
               AccountMenuCard(
                 children: [
                   AccountMenuTile(
@@ -341,6 +353,105 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _GeminiKeyCard extends StatefulWidget {
+  @override
+  State<_GeminiKeyCard> createState() => _GeminiKeyCardState();
+}
+
+class _GeminiKeyCardState extends State<_GeminiKeyCard> {
+  final _controller = TextEditingController();
+  final _gemini = DirectGeminiService();
+  bool _hasKey = false;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final has = await _gemini.hasKey();
+    if (mounted) setState(() => _hasKey = has);
+  }
+
+  Future<void> _save() async {
+    final key = _controller.text.trim();
+    if (key.isEmpty) return;
+    setState(() => _saving = true);
+    await _gemini.setKey(key);
+    final l10n = AppLocalizations.of(context)!;
+    if (mounted) {
+      setState(() { _hasKey = true; _saving = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.accountGeminiKeySaved)),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return AccountMenuCard(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.accountGeminiKeyLabel,
+                  style: theme.textTheme.titleSmall),
+              const SizedBox(height: 4),
+              Text(l10n.accountGeminiKeyHelp,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: 'AIzaSy...',
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                        suffixIcon: _hasKey
+                            ? const Icon(Icons.check_circle,
+                                color: Colors.green, size: 20)
+                            : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: _saving ? null : _save,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined, size: 18),
+                    label: Text(l10n.accountGeminiKeySave),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

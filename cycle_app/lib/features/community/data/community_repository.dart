@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/ai/firebase_ai_service.dart';
 import '../../../core/ai/direct_gemini_service.dart';
+import '../../../core/config/app_secrets.dart';
 import '../../../core/storage/user_prefs.dart';
 import 'community_catalog_repository.dart';
 import 'community_icon_registry.dart';
@@ -41,8 +42,7 @@ class CommunityRepository {
   final DirectGeminiService _directGemini;
   final CommunityCatalogRepository _catalog;
 
-  static const _baseUrl =
-      'https://us-central1-lune-7d956.cloudfunctions.net';
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
   String? get currentUid => _auth.currentUser?.uid;
 
@@ -292,6 +292,9 @@ class CommunityRepository {
       _postsRef(communityId).doc(postId).collection('likes');
 
   /// Merged feed from all joined communities.
+  /// Maximum number of communities to subscribe to simultaneously.
+  static const _maxConcurrentCommunities = 10;
+
   Stream<List<CommunityPost>> watchJoinedFeed(List<String> joinedIds) {
     if (joinedIds.isEmpty) return Stream.value(const []);
 
@@ -305,7 +308,10 @@ class CommunityRepository {
       if (!controller.isClosed) controller.add(list.take(50).toList());
     }
 
-    for (final communityId in joinedIds) {
+    // Limit concurrent subscriptions to avoid excessive Firestore listeners.
+    final limitedIds = joinedIds.take(_maxConcurrentCommunities).toList();
+
+    for (final communityId in limitedIds) {
       subs.add(
         watchPosts(communityId).listen(
           (posts) {
@@ -437,6 +443,48 @@ class CommunityRepository {
         );
   }
 
+  /// Fetch a single page of posts for infinite scroll.
+  /// Pass [lastDocument] from the previous page to get the next batch.
+  static const int postsPerPage = 20;
+
+  Future<List<CommunityPost>> fetchPostsPage(
+    String communityId, {
+    DocumentSnapshot? lastDocument,
+  }) async {
+    final viewerUid = _auth.currentUser?.uid;
+    var query = _postsRef(communityId)
+        .orderBy('createdAt', descending: true)
+        .limit(postsPerPage);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final snap = await query.get();
+    return snap.docs
+        .map((d) => CommunityPost.fromMap(d.id, d.data()))
+        .where((p) => p.isVisibleTo(viewerUid))
+        .toList();
+  }
+
+  /// Returns the last DocumentSnapshot from the most recent page fetch,
+  /// used as cursor for the next page.
+  Future<DocumentSnapshot?> fetchPostsPageRaw(
+    String communityId, {
+    DocumentSnapshot? lastDocument,
+  }) async {
+    var query = _postsRef(communityId)
+        .orderBy('createdAt', descending: true)
+        .limit(postsPerPage);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final snap = await query.get();
+    return snap.docs.isNotEmpty ? snap.docs.last : null;
+  }
+
   CommunityPost? _postFromSnapshot(
     DocumentSnapshot<Map<String, dynamic>> snap, {
     String? viewerUid,
@@ -496,7 +544,7 @@ class CommunityRepository {
     if (direct != null) {
       if (direct.approved) return direct;
       if (_isModerationUnavailable(direct.reason)) {
-        return const ModerationResult(approved: true, pendingReview: true);
+        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
       }
       return direct;
     }
@@ -506,7 +554,7 @@ class CommunityRepository {
     if (firebaseAi != null) {
       if (firebaseAi.approved) return firebaseAi;
       if (_isModerationUnavailable(firebaseAi.reason)) {
-        return const ModerationResult(approved: true, pendingReview: true);
+        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
       }
       return firebaseAi;
     }
@@ -516,13 +564,13 @@ class CommunityRepository {
     if (cloud != null) {
       if (cloud.approved) return cloud;
       if (_isModerationUnavailable(cloud.reason)) {
-        return const ModerationResult(approved: true, pendingReview: true);
+        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
       }
       return cloud;
     }
 
-    // Cloud AI unavailable — allow with pending review after local filter passed.
-    return const ModerationResult(approved: true, pendingReview: true);
+    // All AI services unavailable — block until reviewed.
+    return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
   }
 
   /// Local safety net used when both cloud and local Gemini are unavailable.
@@ -731,25 +779,30 @@ class CommunityRepository {
           .limit(50)
           .snapshots()
           .asyncMap((snap) async {
-        final results = <CommunityPost>[];
-        for (final doc in snap.docs) {
+        if (snap.docs.isEmpty) return const <CommunityPost>[];
+
+        // Parallel fetch all saved post references instead of sequential N+1.
+        final futures = snap.docs.map((doc) async {
           final data = doc.data();
           final communityId = data['communityId'] as String?;
           final postId = data['postId'] as String?;
-          if (communityId == null || postId == null) continue;
+          if (communityId == null || postId == null) return null;
           try {
             final postDoc = await _postsRef(communityId).doc(postId).get();
-            if (!postDoc.exists) continue;
+            if (!postDoc.exists) return null;
             final postData = postDoc.data();
             if (postData == null || !(CommunityPost.fromMap(postId, postData).isVisibleTo(uid))) {
-              continue;
+              return null;
             }
-            results.add(CommunityPost.fromMap(postId, postData));
+            return CommunityPost.fromMap(postId, postData);
           } catch (e, st) {
             debugPrint('CommunityRepository.watchSavedPosts item failed: $e\n$st');
+            return null;
           }
-        }
-        return results;
+        });
+
+        final results = await Future.wait(futures);
+        return results.whereType<CommunityPost>().toList();
       });
 
   Future<void> deletePost({

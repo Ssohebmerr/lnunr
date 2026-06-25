@@ -19,10 +19,12 @@ class LuneCycleRing extends StatelessWidget {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final palette = _LuneCyclePalette.forTheme(isDark);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        MenstrualCyclePhaseView(
+    return Semantics(
+      label: isAr ? 'حلقة تتبع الدورة الشهرية' : 'Cycle tracking ring',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MenstrualCyclePhaseView(
           key: ValueKey(
             'lune-ring-${Localizations.localeOf(context).languageCode}',
           ),
@@ -66,7 +68,8 @@ class LuneCycleRing extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _LunePhaseLegend(isAr: isAr, palette: palette, theme: theme),
-      ],
+        ],
+      ),
     );
   }
 }

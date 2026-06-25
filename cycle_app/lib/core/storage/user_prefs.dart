@@ -7,6 +7,8 @@ class UserPrefs {
   static const _profileNameKey = 'profile_name';
   static const _profileGoalKey = 'profile_goal';
   static const avatarIndexKey = 'profile_avatar_index';
+  static const _stealthEnabledKey = 'stealth_mode_enabled';
+  static const _stealthPinKey = 'stealth_mode_pin';
 
   /// Fixed uid for offline AI chat (stored on device only).
   static const localChatUid = 'local_guest';
@@ -65,5 +67,25 @@ class UserPrefs {
   static Future<String?> getProfileGoal() async {
     final p = await SharedPreferences.getInstance();
     return p.getString(_profileGoalKey);
+  }
+
+  static Future<bool> isStealthModeEnabled() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(_stealthEnabledKey) ?? false;
+  }
+
+  static Future<void> setStealthModeEnabled(bool value) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_stealthEnabledKey, value);
+  }
+
+  static Future<String?> getStealthModePin() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_stealthPinKey);
+  }
+
+  static Future<void> setStealthModePin(String pin) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setString(_stealthPinKey, pin);
   }
 }

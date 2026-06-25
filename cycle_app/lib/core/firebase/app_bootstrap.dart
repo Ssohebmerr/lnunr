@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'firebase_options.dart';
 
-/// Initializes Firebase, App Check, and Crashlytics error reporting.
+/// Initializes Firebase, App Check, Firestore persistence, and Crashlytics.
 class AppBootstrap {
   AppBootstrap._();
 
@@ -18,6 +19,12 @@ class AppBootstrap {
   static Future<void> initialize() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Enable Firestore offline persistence so the app works without network.
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
 
     await FirebaseAppCheck.instance.activate(

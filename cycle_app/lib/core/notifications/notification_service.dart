@@ -195,7 +195,7 @@ class NotificationService {
       NotificationDetails(
         android: AndroidNotificationDetails(
           'cycle_aura_reminders',
-          'Cycle Reminders',
+          'Lune',
           importance: high ? Importance.high : Importance.defaultImportance,
         ),
         iOS: const DarwinNotificationDetails(),

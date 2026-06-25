@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/cms/app_settings.dart';
@@ -25,7 +26,7 @@ class _AdminScreenState extends State<AdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 4, vsync: this);
     _checkAdmin();
   }
 
@@ -85,6 +86,7 @@ class _AdminScreenState extends State<AdminScreen>
             Tab(icon: const Icon(Icons.dashboard_rounded), text: l10n.adminDashboard),
             Tab(icon: const Icon(Icons.flag_rounded), text: l10n.adminReports),
             Tab(icon: const Icon(Icons.settings_rounded), text: l10n.adminSettings),
+            Tab(icon: const Icon(Icons.question_answer_rounded), text: 'Q&A'),
           ],
         ),
       ),
@@ -94,6 +96,7 @@ class _AdminScreenState extends State<AdminScreen>
           _DashboardTab(repo: _repo, l10n: l10n, theme: theme),
           _ReportsTab(repo: _repo, l10n: l10n, theme: theme),
           _SettingsTab(repo: _repo, settingsRepo: _settingsRepo, l10n: l10n, theme: theme),
+          const _QATab(),
         ],
       ),
     );
@@ -859,5 +862,322 @@ class _SettingsTabState extends State<_SettingsTab> {
         const SizedBox(height: 100),
       ],
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Q&A Tab — Anonymous health questions from users
+// ---------------------------------------------------------------------------
+class _QATab extends StatefulWidget {
+  const _QATab();
+
+  @override
+  State<_QATab> createState() => _QATabState();
+}
+
+class _QATabState extends State<_QATab> {
+  String _filter = 'pending'; // pending | answered | all
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        // Filter chips
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              _filterChip('pending', 'Pending', theme),
+              const SizedBox(width: 8),
+              _filterChip('answered', 'Answered', theme),
+              const SizedBox(width: 8),
+              _filterChip('all', 'All', theme),
+            ],
+          ),
+        ),
+
+        // Questions list
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _queryStream(),
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return Center(child: Text('Error: ${snap.error}'));
+              }
+              if (!snap.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final docs = snap.data!.docs;
+              if (docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.question_answer_outlined,
+                          size: 56, color: theme.colorScheme.outline),
+                      const SizedBox(height: 12),
+                      Text('No ${_filter == 'all' ? '' : _filter} questions yet.',
+                          style: theme.textTheme.bodyLarge),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: docs.length,
+                itemBuilder: (context, i) {
+                  final data = docs[i].data() as Map<String, dynamic>;
+                  return _QuestionCard(
+                    docId: docs[i].id,
+                    data: data,
+                    theme: theme,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _filterChip(String value, String label, ThemeData theme) {
+    final isSelected = _filter == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _filter = value),
+      selectedColor: theme.colorScheme.primary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Stream<QuerySnapshot> _queryStream() {
+    final ref = FirebaseFirestore.instance.collection('anonymousQuestions');
+    if (_filter == 'all') {
+      return ref.orderBy('createdAt', descending: true).snapshots();
+    }
+    return ref
+        .where('status', isEqualTo: _filter)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+}
+
+class _QuestionCard extends StatefulWidget {
+  const _QuestionCard({
+    required this.docId,
+    required this.data,
+    required this.theme,
+  });
+
+  final String docId;
+  final Map<String, dynamic> data;
+  final ThemeData theme;
+
+  @override
+  State<_QuestionCard> createState() => _QuestionCardState();
+}
+
+class _QuestionCardState extends State<_QuestionCard> {
+  final _answerController = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _answer() async {
+    final answer = _answerController.text.trim();
+    if (answer.isEmpty) return;
+
+    setState(() => _saving = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('anonymousQuestions')
+          .doc(widget.docId)
+          .update({
+        'status': 'answered',
+        'answer': answer,
+        'answeredBy': 'admin',
+        'answeredAt': FieldValue.serverTimestamp(),
+      });
+      _answerController.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _reject() async {
+    await FirebaseFirestore.instance
+        .collection('anonymousQuestions')
+        .doc(widget.docId)
+        .update({'status': 'rejected'});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    final theme = widget.theme;
+    final question = data['question'] ?? '';
+    final category = data['category'] ?? 'general';
+    final status = data['status'] ?? 'pending';
+    final answer = data['answer'];
+    final createdAt = data['createdAt'] as Timestamp?;
+
+    return AppGlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  category.toString().toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (createdAt != null)
+                Text(
+                  _ago(createdAt.toDate()),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(width: 8),
+              Icon(
+                status == 'answered'
+                    ? Icons.check_circle
+                    : status == 'rejected'
+                        ? Icons.cancel
+                        : Icons.hourglass_top,
+                size: 18,
+                color: status == 'answered'
+                    ? Colors.green
+                    : status == 'rejected'
+                        ? Colors.red
+                        : Colors.orange,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Question
+          Text(
+            question,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          // Existing answer
+          if (answer != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.medical_services_outlined,
+                          size: 16, color: Colors.green),
+                      const SizedBox(width: 6),
+                      Text('Expert Answer',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green,
+                          )),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(answer, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ],
+
+          // Answer input (only for pending)
+          if (status == 'pending') ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _answerController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Type expert answer...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _answer,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check, size: 18),
+                    label: const Text('Publish Answer'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _reject,
+                  icon: const Icon(Icons.close_rounded, color: Colors.red),
+                  tooltip: 'Reject',
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _ago(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${diff.inDays}d';
   }
 }

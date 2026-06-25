@@ -3,6 +3,7 @@ import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart'
 import 'package:cycle_aura/menstrudel_integration/menstrudel_init.dart';
 import 'package:cycle_aura/menstrudel_integration/menstrudel_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ import 'core/ai/ai_gateway.dart';
 import 'core/ai/ai_insights_service.dart';
 import 'core/ai/direct_gemini_service.dart';
 import 'core/ai/firebase_ai_service.dart';
+import 'core/config/app_secrets.dart';
 import 'core/firebase/app_bootstrap.dart';
 import 'core/locale/locale_cubit.dart';
 import 'core/notifications/notification_service.dart';
@@ -44,6 +46,8 @@ import 'features/cycle/data/cycle_sync_service.dart';
 import 'features/admin/presentation/admin_screen.dart';
 import 'features/home/home_shell.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
+import 'features/education/presentation/anonymous_qa_screen.dart';
+import 'features/privacy/presentation/stealth_calculator_screen.dart';
 import 'features/sync/data/cloud_sync_service.dart';
 import 'l10n/app_localizations.dart';
 
@@ -52,9 +56,13 @@ void main() async {
 
   await AppBootstrap.initialize();
 
-  // Save Gemini API key (always update to ensure latest key)
-  final geminiService = DirectGeminiService();
-  await geminiService.setKey('AQ.Ab8RN6JDt8j5_eTQN7Xx5Z9l6x3WZTWef5x5ka-_FwbOhDLOBA');
+  // Load Gemini API key from build-time --dart-define only.
+  // Does NOT overwrite any key the user has saved in Settings > Gemini key.
+  if (AppSecrets.geminiApiKey.isNotEmpty) {
+    final geminiService = DirectGeminiService();
+    await geminiService.setKey(AppSecrets.geminiApiKey);
+    if (kDebugMode) debugPrint('[Main] Gemini API key set from --dart-define');
+  }
 
   tz_data.initializeTimeZones();
   try {
@@ -210,11 +218,17 @@ final _router = GoRouter(
   redirect: (context, state) async {
     final done = await UserPrefs.isOnboardingDone();
     final path = state.matchedLocation;
+    final stealthEnabled = await UserPrefs.isStealthModeEnabled();
+
+    // Stealth mode: show calculator as the first screen.
+    // The calculator internally navigates to /home when PIN is entered.
+    if (stealthEnabled && done && path == '/') return '/stealth';
 
     // Auth screens are optional — never block them.
     if (path == '/login' ||
         path == '/register' ||
-        path == '/forgot-password') {
+        path == '/forgot-password' ||
+        path == '/stealth') {
       return null;
     }
 
@@ -235,9 +249,11 @@ final _router = GoRouter(
   },
   routes: [
     GoRoute(path: '/', builder: (_, _) => const _SplashScreen()),
+    GoRoute(path: '/stealth', builder: (_, _) => const StealthCalculatorScreen()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
     GoRoute(path: '/home', builder: (context, _) => _buildHome(context)),
     GoRoute(path: '/admin', builder: (_, _) => const AdminScreen()),
+    GoRoute(path: '/ask', builder: (_, _) => const AnonymousQAScreen()),
     GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
     GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
     GoRoute(

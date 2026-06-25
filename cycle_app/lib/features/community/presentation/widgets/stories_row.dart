@@ -32,14 +32,15 @@ class StoriesRow extends StatelessWidget {
       builder: (context, snap) {
         if (snap.hasError) {
           debugPrint('StoriesRow stream error: ${snap.error}');
-          // Show "create story" button even on error, so the feature isn't hidden.
           return SizedBox(
             height: 100,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                StoryRing(
+            child: Semantics(
+              label: 'Stories',
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  StoryRing(
                   group: StoryGroup(
                     authorUid: uid ?? '',
                     authorAlias: alias ?? 'You',
@@ -52,6 +53,7 @@ class StoriesRow extends StatelessWidget {
                   onTap: onCreateStory,
                 ),
               ],
+              ),
             ),
           );
         }
@@ -91,7 +93,9 @@ class StoriesRow extends StatelessWidget {
 
         return SizedBox(
           height: 100,
-          child: ListView.separated(
+          child: Semantics(
+            label: 'Stories',
+            child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: groups.length + (hasMyStory ? 0 : 1),
@@ -130,6 +134,7 @@ class StoriesRow extends StatelessWidget {
                 },
               );
             },
+          ),
           ),
         );
       },

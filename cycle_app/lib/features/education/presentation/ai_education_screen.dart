@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
@@ -130,6 +131,11 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
       appBar: AppBar(
         title: Text(l10n.educationTitle),
         actions: [
+          IconButton(
+            tooltip: 'Anonymous Q&A',
+            onPressed: () => context.push('/ask'),
+            icon: const Icon(Icons.question_answer_rounded),
+          ),
           IconButton(
             tooltip: l10n.educationAskAi,
             onPressed: () => setState(() => _showAiChat = !_showAiChat),

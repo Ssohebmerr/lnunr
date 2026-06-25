@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/config/app_secrets.dart';
 import '../../../core/security/secure_storage_service.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -16,8 +17,7 @@ class DataDeletionService {
         _authRepository = authRepository ?? AuthRepository(),
         _secureStorage = secureStorage ?? SecureStorageService();
 
-  static const _baseUrl =
-      'https://us-central1-lune-7d956.cloudfunctions.net';
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
   final FirebaseAuth _auth;
   final AuthRepository _authRepository;

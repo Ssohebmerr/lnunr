@@ -3,18 +3,21 @@ import 'package:cycle_aura/menstrudel/models/cycle_phase/cycle_phase.dart';
 /// A utility class for calculating when each cycle phase is due based on user data.
 /// This is to be used with natural cycles only. If user is on the pill it should not be used.
 class CyclePhasePredictor {
-  /// This is a constant value for now.
-  /// Tracking Cervical Mucus would help better predict this.
-  /// So I will look into adding this in the future.
-  static const int _lutealPhaseLength = 14;
+  /// Default luteal phase length. Real range is 10-16 days across individuals.
+  static const int _defaultLutealPhaseLength = 14;
 
   static PredictedCycle predictCycle({
     required DateTime lastPeriodStartDate,
     required int averageCycleLength,
     required int averagePeriodDuration,
+    int? lutealPhaseLength,
   }) {
+    final clampedCycleLength = averageCycleLength.clamp(18, 45);
+    final clampedPeriodDuration = averagePeriodDuration.clamp(1, 10);
+    final luteal = (lutealPhaseLength ?? _defaultLutealPhaseLength)
+        .clamp(10, 16);
 
-    final ovulationDayOffset = averageCycleLength - _lutealPhaseLength;
+    final ovulationDayOffset = clampedCycleLength - luteal;
     final ovulationDay = lastPeriodStartDate.add(Duration(days: ovulationDayOffset - 1));
 
     final fertileStart = ovulationDay.subtract(const Duration(days: 5));
@@ -23,11 +26,11 @@ class CyclePhasePredictor {
 
     return PredictedCycle(
       menstruationStart: lastPeriodStartDate,
-      follicularStart: lastPeriodStartDate.add(Duration(days: averagePeriodDuration)),
+      follicularStart: lastPeriodStartDate.add(Duration(days: clampedPeriodDuration)),
       fertileWindowStart: fertileStart,
       ovulationDay: ovulationDay,
       lutealStart: lutealStart,
-      nextPeriodStart: lastPeriodStartDate.add(Duration(days: averageCycleLength)),
+      nextPeriodStart: lastPeriodStartDate.add(Duration(days: clampedCycleLength)),
     );
   }
 }

@@ -8,7 +8,7 @@ import '../menstrual_cycle_widget.dart';
 
 class MenstrualCycleDbHelper {
   static const _databaseName = "MenstrualCycleAppDatabase.db";
-  static const _databaseVersion = 4;
+  static const _databaseVersion = 5;
 
   /// Common Columns
   static const String columnID = "id";
@@ -101,6 +101,7 @@ class MenstrualCycleDbHelper {
 
   Future _onCreate(Database db, int version) async {
     await db.execute(createTableDailyLogs);
+    await db.execute("CREATE INDEX IF NOT EXISTS idx_logs_date_customer ON $tableDailyLogs ($columnCustomerId, $columnLogDate)");
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -191,6 +192,9 @@ class MenstrualCycleDbHelper {
             columnCreatedDateTime: null,
           });
         }
+      }
+      if (oldVersion < 5) {
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_logs_date_customer ON $tableDailyLogs ($columnCustomerId, $columnLogDate)");
       }
     } catch (_) {}
   }

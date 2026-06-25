@@ -1,36 +1,108 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/community/data/moderation_result.dart';
+import '../security/secure_storage_service.dart';
+import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
 
-/// Direct Gemini API client — uses Google AI Studio key from SharedPreferences.
+/// Direct Gemini API client — uses Google AI Studio key from secure storage.
 /// Works on Spark plan (free), no Firebase billing required.
 class DirectGeminiService {
-  static const _models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-  static const _prefKey = 'gemini_api_key';
+  DirectGeminiService({SecureStorageService? secureStorage})
+      : _secure = secureStorage ?? SecureStorageService();
 
+  static const _models = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-pro',
+  ];
+  static const _secureKey = 'gemini_api_key';
+  static const _legacyPrefKey = 'gemini_api_key'; // Old SharedPreferences key
+
+  final SecureStorageService _secure;
   String? _cachedKey;
 
   Future<String?> _getKey() async {
     if (_cachedKey != null && _cachedKey!.isNotEmpty) return _cachedKey;
+
+    // 1. Try secure storage first
+    _cachedKey = await _secure.read(_secureKey);
+    if (_cachedKey != null && _cachedKey!.isNotEmpty) return _cachedKey;
+
+    // 2. Migrate from SharedPreferences if found (one-time)
     final prefs = await SharedPreferences.getInstance();
-    _cachedKey = prefs.getString(_prefKey);
-    return _cachedKey;
+    final legacyKey = prefs.getString(_legacyPrefKey);
+    if (legacyKey != null && legacyKey.isNotEmpty) {
+      await _secure.write(_secureKey, legacyKey);
+      await prefs.remove(_legacyPrefKey); // Clean up legacy
+      _cachedKey = legacyKey;
+      if (kDebugMode) debugPrint('[DirectGemini] Migrated key from SharedPreferences to SecureStorage');
+      return _cachedKey;
+    }
+
+    return null;
   }
 
   Future<void> setKey(String key) async {
     _cachedKey = key.trim();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefKey, _cachedKey!);
+    await _secure.write(_secureKey, _cachedKey!);
   }
 
   Future<bool> hasKey() async {
     final key = await _getKey();
     return key != null && key.isNotEmpty;
+  }
+
+  /// Test if the API key works by making a direct HTTP request.
+  /// Returns a diagnostic message.
+  Future<String> testConnection() async {
+    final apiKey = await _getKey();
+    if (apiKey == null || apiKey.isEmpty) return 'No API key found';
+
+    // Test with direct HTTP call to Gemini API
+    try {
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
+      );
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': 'Say hello in one word'}
+              ]
+            }
+          ]
+        }),
+      );
+
+      if (kDebugMode) {
+        debugPrint('[DirectGemini] Test response status: ${response.statusCode}');
+        debugPrint('[DirectGemini] Test response body: ${response.body.substring(0, response.body.length.clamp(0, 200))}');
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
+        return 'SUCCESS: API key works! Response: $text';
+      } else if (response.statusCode == 400) {
+        return 'ERROR 400: Bad request - key might be invalid format';
+      } else if (response.statusCode == 403) {
+        return 'ERROR 403: Forbidden - API not enabled or key revoked';
+      } else if (response.statusCode == 429) {
+        return 'ERROR 429: Rate limit exceeded';
+      } else {
+        return 'ERROR ${response.statusCode}: ${response.body}';
+      }
+    } catch (e) {
+      return 'EXCEPTION: $e';
+    }
   }
 
   Future<String?> generate({
@@ -39,11 +111,14 @@ class DirectGeminiService {
     String mode = 'chat',
   }) async {
     final apiKey = await _getKey();
-    if (apiKey == null || apiKey.isEmpty) return null;
+    if (apiKey == null || apiKey.isEmpty) {
+      if (kDebugMode) debugPrint('[DirectGemini] No API key found');
+      return null;
+    }
 
     final isPregnant = cycleContext['userGoal'] == 'pregnant';
     final systemPrompt = AiPromptStyle.forMode(mode, isPregnant: isPregnant);
-    final userPrompt = _buildUserPrompt(message, cycleContext, mode);
+    final userPrompt = AiPromptBuilder.buildUserPrompt(message, cycleContext, mode);
 
     final maxTokens = switch (mode) {
       'doctor' => 1200,
@@ -85,17 +160,20 @@ class DirectGeminiService {
             ? response.candidates.first.finishReason
             : null;
         if (finish == FinishReason.maxTokens) {
-          text = '$text\n\n… [اكتمل الحد الأقصى للرد]';
+          text = '$text\n\n... [response truncated]';
         } else if (finish != null &&
             finish != FinishReason.stop &&
             finish != FinishReason.maxTokens) {
-          text = '$text\n\n[توقف الرد: $finish]';
+          text = '$text\n\n[response stopped: $finish]';
         }
 
-        debugPrint('[DirectGemini] $modelName succeeded (${text.length} chars)');
         return text;
       } catch (e) {
-        debugPrint('[DirectGemini] $modelName failed: $e');
+        final error = e.toString();
+        // Return the error from the last model attempt
+        if (modelName == _models.last) {
+          return '[$modelName error] $error';
+        }
       }
     }
     return null;
@@ -138,69 +216,8 @@ class DirectGeminiService {
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('[DirectGemini] moderate failed: $e');
+      if (kDebugMode) debugPrint('[DirectGemini] moderate failed: $e');
     }
     return null;
-  }
-
-  String _buildUserPrompt(String message, Map<String, dynamic> ctx, String mode) {
-    final hub = ctx['wellnessHub'];
-    String hubText = 'none';
-    if (hub is Map && hub.isNotEmpty) {
-      final encoded = jsonEncode(hub);
-      hubText = encoded.substring(0, encoded.length.clamp(0, 2500));
-    }
-
-    final locale = ctx['userLocale']?.toString() ?? 'ar';
-    final contextLines = <String>[
-      'User locale: $locale',
-      'User goal: ${ctx['userGoal'] ?? 'unknown'}',
-      if (ctx['userGoal'] == 'pregnant') ...[
-        'Pregnancy week: ${ctx['pregnancyWeek'] ?? 'unknown'}',
-        'Trimester: ${ctx['trimester'] ?? 'unknown'}',
-        'Due date: ${ctx['expectedDueDate'] ?? 'unknown'}',
-        'Gestational day: ${ctx['gestationalDay'] ?? 'unknown'}',
-        'Fetal development: ${ctx['fetalDevelopmentSnippet'] ?? 'unknown'}',
-        'Maternal changes: ${ctx['maternalSnippet'] ?? 'unknown'}',
-        'Pregnancy tracking: ${ctx['pregnancyTracking'] ?? {}}',
-      ] else ...[
-        'Cycle length: ${ctx['cycleLength'] ?? 'unknown'}',
-        'Period duration: ${ctx['periodDuration'] ?? 'unknown'}',
-        'Current phase: ${ctx['currentPhase'] ?? 'unknown'}',
-        'Current cycle day: ${ctx['currentCycleDay'] ?? 'unknown'}',
-        'Next period: ${ctx['nextPeriodDate'] ?? 'unknown'}',
-        'Ovulation: ${ctx['ovulationDate'] ?? 'unknown'}',
-      ],
-      'Today\'s log: ${ctx['todayLog'] ?? 'nothing yet'}',
-      'Recent symptoms (30d): ${ctx['recentSymptoms'] ?? {}}',
-      'Wellness logs: ${ctx['wellnessLogCount'] ?? 0}',
-      'Wellness hub: $hubText',
-      'Summary: ${ctx['summary'] ?? {}}',
-      if (ctx['cycleHistory'] != null)
-        'Cycle history (last 6): ${ctx['cycleHistory']}',
-    ];
-
-    final header = switch (mode) {
-      'briefing' => '=== DAILY BRIEFING REQUEST ===',
-      'patterns' => '=== PATTERN ANALYSIS REQUEST ===',
-      'emergency' => '=== EMERGENCY ===',
-      'nutrition' => '=== NUTRITION REQUEST ===',
-      'partner' => '=== PARTNER MESSAGE REQUEST ===',
-      'mood' => '=== MOOD JOURNAL ENTRY ===',
-      'doctor' => '=== DOCTOR REPORT REQUEST ===',
-      _ => '=== APP DATA (use to personalize) ===',
-    };
-
-    final userHeader = mode == 'mood'
-        ? '=== USER JOURNAL ENTRY (analyze emotions gently) ==='
-        : '=== USER MESSAGE (answer THIS directly) ===';
-
-    return [
-      header,
-      ...contextLines,
-      '',
-      userHeader,
-      message,
-    ].join('\n');
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -516,10 +517,88 @@ class _PostsListState extends State<_PostsList> {
   final _searchController = TextEditingController();
   String _search = '';
 
+  // Pagination state
+  final List<CommunityPost> _posts = [];
+  bool _loading = false;
+  bool _hasMore = true;
+  DocumentSnapshot? _lastDoc;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _loadInitial();
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 300 &&
+        !_loading &&
+        _hasMore) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadInitial() async {
+    final repo = context.read<CommunityRepository>();
+    setState(() => _loading = true);
+    try {
+      final posts = await repo.fetchPostsPage(widget.communityId);
+      final lastDoc = await repo.fetchPostsPageRaw(widget.communityId);
+      if (mounted) {
+        setState(() {
+          _posts
+            ..clear()
+            ..addAll(posts);
+          _lastDoc = lastDoc;
+          _hasMore = posts.length >= CommunityRepository.postsPerPage;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_lastDoc == null || !_hasMore) return;
+    final repo = context.read<CommunityRepository>();
+    setState(() => _loading = true);
+    try {
+      final posts = await repo.fetchPostsPage(
+        widget.communityId,
+        lastDocument: _lastDoc,
+      );
+      final lastDoc = await repo.fetchPostsPageRaw(
+        widget.communityId,
+        lastDocument: _lastDoc,
+      );
+      if (mounted) {
+        setState(() {
+          _posts.addAll(posts);
+          _lastDoc = lastDoc;
+          _hasMore = posts.length >= CommunityRepository.postsPerPage;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _refresh() async {
+    _lastDoc = null;
+    _hasMore = true;
+    await _loadInitial();
   }
 
   @override
@@ -558,34 +637,48 @@ class _PostsListState extends State<_PostsList> {
             stream: uid != null ? repo.watchBlockedUids(uid) : Stream.value(const {}),
             builder: (context, blockedSnap) {
               final blocked = blockedSnap.data ?? const <String>{};
-              return StreamBuilder<List<CommunityPost>>(
-                stream: repo.watchPosts(widget.communityId),
-                builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final posts = filterAndSortCommunityPosts(
-                    posts: (snap.data ?? [])
-                        .where((p) => !blocked.contains(p.authorUid))
-                        .toList(),
-                    query: _search,
-                    sort: CommunityFeedSort.newest,
-                  );
-                  if (posts.isEmpty) {
-                    return CommunityEmptyState(
-                      icon: Icons.article_outlined,
-                      title: l10n.communityNoPosts,
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: posts.length,
-                    itemBuilder: (_, i) => PostCard(
+              final posts = filterAndSortCommunityPosts(
+                posts: _posts
+                    .where((p) => !blocked.contains(p.authorUid))
+                    .toList(),
+                query: _search,
+                sort: CommunityFeedSort.newest,
+              );
+
+              if (posts.isEmpty && _loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (posts.isEmpty) {
+                return CommunityEmptyState(
+                  icon: Icons.article_outlined,
+                  title: l10n.communityNoPosts,
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: posts.length + (_hasMore ? 1 : 0),
+                  itemBuilder: (_, i) {
+                    if (i >= posts.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      );
+                    }
+                    return PostCard(
                       post: posts[i],
                       onTap: () => widget.onPostTap(posts[i]),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           ),
