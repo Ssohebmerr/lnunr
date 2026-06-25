@@ -156,6 +156,19 @@ class AdminActivity {
   final DateTime createdAt;
 }
 
+class AdminUser {
+  const AdminUser({
+    required this.uid,
+    required this.email,
+    required this.isBanned,
+    required this.isPremium,
+  });
+  final String uid;
+  final String email;
+  final bool isBanned;
+  final bool isPremium;
+}
+
 class AdminRepository {
   AdminRepository({
     FirebaseFirestore? firestore,
@@ -352,6 +365,33 @@ class AdminRepository {
       return snap.count ?? 0;
     } catch (_) {
       return 0;
+    }
+  }
+
+  Future<List<AdminUser>> searchUsers(String query) async {
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .limit(50)
+          .get();
+      final results = <AdminUser>[];
+      final lower = query.toLowerCase();
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final email = (data['email'] as String? ?? '').toLowerCase();
+        final uid = doc.id.toLowerCase();
+        if (email.contains(lower) || uid.contains(lower)) {
+          results.add(AdminUser(
+            uid: doc.id,
+            email: data['email'] as String? ?? '',
+            isBanned: data['communityBanned'] == true,
+            isPremium: data['isPremium'] == true,
+          ));
+        }
+      }
+      return results;
+    } catch (_) {
+      return [];
     }
   }
 

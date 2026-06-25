@@ -26,7 +26,7 @@ class _AdminScreenState extends State<AdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 5, vsync: this);
+    _tabs = TabController(length: 6, vsync: this);
     _checkAdmin();
   }
 
@@ -86,6 +86,7 @@ class _AdminScreenState extends State<AdminScreen>
             Tab(icon: const Icon(Icons.dashboard_rounded), text: l10n.adminDashboard),
             Tab(icon: const Icon(Icons.flag_rounded), text: l10n.adminReports),
             Tab(icon: const Icon(Icons.settings_rounded), text: l10n.adminSettings),
+            Tab(icon: const Icon(Icons.people_outline_rounded), text: 'Users'),
             Tab(icon: const Icon(Icons.question_answer_rounded), text: 'Q&A'),
           Tab(icon: const Icon(Icons.campaign_rounded), text: 'Broadcast'),
           ],
@@ -97,6 +98,7 @@ class _AdminScreenState extends State<AdminScreen>
           _DashboardTab(repo: _repo, l10n: l10n, theme: theme),
           _ReportsTab(repo: _repo, l10n: l10n, theme: theme),
           _SettingsTab(repo: _repo, settingsRepo: _settingsRepo, l10n: l10n, theme: theme),
+          _UsersTab(repo: _repo, l10n: l10n),
           const _QATab(),
           _BroadcastTab(repo: _repo, l10n: l10n),
         ],
@@ -105,7 +107,7 @@ class _AdminScreenState extends State<AdminScreen>
   }
 }
 
-class _DashboardTab extends StatelessWidget {
+class _DashboardTab extends StatefulWidget {
   const _DashboardTab({
     required this.repo,
     required this.l10n,
@@ -116,12 +118,30 @@ class _DashboardTab extends StatelessWidget {
   final ThemeData theme;
 
   @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
+  late Future<int> _userCount;
+  late Future<int> _reportsCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _userCount = widget.repo.approximateUserCount();
+    _reportsCount = widget.repo.pendingReportsCount();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final theme = widget.theme;
+    final repo = widget.repo;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         FutureBuilder<int>(
-          future: repo.approximateUserCount(),
+          future: _userCount,
           builder: (context, snap) => _StatCard(
             icon: Icons.people_rounded,
             label: l10n.adminTotalUsers,
@@ -131,7 +151,7 @@ class _DashboardTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         FutureBuilder<int>(
-          future: repo.pendingReportsCount(),
+          future: _reportsCount,
           builder: (context, snap) => _StatCard(
             icon: Icons.flag_rounded,
             label: l10n.adminPendingReports,
@@ -497,11 +517,25 @@ class _PendingPostCard extends StatelessWidget {
             children: [
               ActionChip(
                 label: Text(l10n.adminApprovePost),
-                onPressed: () => repo.approvePost(post.communityId, post.postId),
+                onPressed: () async {
+                  await repo.approvePost(post.communityId, post.postId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.adminApprovePost)),
+                    );
+                  }
+                },
               ),
               ActionChip(
                 label: Text(l10n.adminRejectPost),
-                onPressed: () => repo.rejectPendingPost(post.communityId, post.postId),
+                onPressed: () async {
+                  await repo.rejectPendingPost(post.communityId, post.postId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.adminRejectPost)),
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -567,19 +601,33 @@ class _PendingCommentCard extends StatelessWidget {
             children: [
               ActionChip(
                 label: Text(l10n.adminApproveComment),
-                onPressed: () => repo.approveComment(
-                  comment.communityId,
-                  comment.postId,
-                  comment.commentId,
-                ),
+                onPressed: () async {
+                  await repo.approveComment(
+                    comment.communityId,
+                    comment.postId,
+                    comment.commentId,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.adminApproveComment)),
+                    );
+                  }
+                },
               ),
               ActionChip(
                 label: Text(l10n.adminRejectComment),
-                onPressed: () => repo.rejectPendingComment(
-                  comment.communityId,
-                  comment.postId,
-                  comment.commentId,
-                ),
+                onPressed: () async {
+                  await repo.rejectPendingComment(
+                    comment.communityId,
+                    comment.postId,
+                    comment.commentId,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.adminRejectComment)),
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -868,6 +916,139 @@ class _SettingsTabState extends State<_SettingsTab> {
 }
 
 // ---------------------------------------------------------------------------
+// Users Tab — search users, ban/unban
+// ---------------------------------------------------------------------------
+class _UsersTab extends StatefulWidget {
+  const _UsersTab({required this.repo, required this.l10n});
+  final AdminRepository repo;
+  final AppLocalizations l10n;
+
+  @override
+  State<_UsersTab> createState() => _UsersTabState();
+}
+
+class _UsersTabState extends State<_UsersTab> {
+  final _searchCtrl = TextEditingController();
+  List<AdminUser>? _results;
+  bool _searching = false;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search() async {
+    final query = _searchCtrl.text.trim();
+    if (query.isEmpty) return;
+    setState(() { _searching = true; _results = null; });
+    final results = await widget.repo.searchUsers(query);
+    if (mounted) setState(() { _results = results; _searching = false; });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by email or UID...',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    prefixIcon: Icon(Icons.search_rounded),
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonalIcon(
+                onPressed: _searching ? null : _search,
+                icon: _searching
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.search_rounded, size: 18),
+                label: const Text('Search'),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _results == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_search_rounded,
+                          size: 56, color: Theme.of(context).colorScheme.outline),
+                      const SizedBox(height: 12),
+                      const Text('Search users by email or UID'),
+                    ],
+                  ),
+                )
+              : _results!.isEmpty
+                  ? const Center(child: Text('No users found'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: _results!.length,
+                      itemBuilder: (context, i) {
+                        final u = _results![i] as AdminUser;
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child: Text(u.email.isNotEmpty
+                                ? u.email[0].toUpperCase()
+                                : '?'),
+                          ),
+                          title: Text(u.email.isEmpty ? '(no email)' : u.email),
+                          subtitle: Text('ID: ${u.uid.substring(0, 12)}...'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (u.isPremium)
+                                const Icon(Icons.star_rounded,
+                                    color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              if (u.isBanned)
+                                const Chip(
+                                  label: Text('Banned', style: TextStyle(fontSize: 11)),
+                                  backgroundColor: Colors.red,
+                                  labelStyle: TextStyle(color: Colors.white),
+                                  visualDensity: VisualDensity.compact,
+                                )
+                              else
+                                ActionChip(
+                                  label: Text(l10n.adminBanUser,
+                                      style: const TextStyle(fontSize: 11)),
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () async {
+                                    await widget.repo.banUser(u.uid);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(l10n.adminUserBanned)),
+                                      );
+                                      _search();
+                                    }
+                                  },
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Q&A Tab — Anonymous health questions from users
 // ---------------------------------------------------------------------------
 class _QATab extends StatefulWidget {
@@ -1026,10 +1207,23 @@ class _QuestionCardState extends State<_QuestionCard> {
   }
 
   Future<void> _reject() async {
-    await FirebaseFirestore.instance
-        .collection('anonymousQuestions')
-        .doc(widget.docId)
-        .update({'status': 'rejected'});
+    try {
+      await FirebaseFirestore.instance
+          .collection('anonymousQuestions')
+          .doc(widget.docId)
+          .update({'status': 'rejected'});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Question rejected')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -1200,6 +1394,7 @@ class _BroadcastTabState extends State<_BroadcastTab> {
   final _titleCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
   bool _sending = false;
+  bool _isError = false;
   String? _result;
 
   @override
@@ -1224,9 +1419,13 @@ class _BroadcastTabState extends State<_BroadcastTab> {
     if (mounted) {
       setState(() {
         _sending = false;
+        _titleCtrl.clear();
+        _bodyCtrl.clear();
         if (res.containsKey('error')) {
+          _isError = true;
           _result = 'Error: ${res['error']}';
         } else {
+          _isError = false;
           _result = 'Sent: ${res['sent']} users, Failed: ${res['failed']}';
         }
       });
@@ -1269,9 +1468,9 @@ class _BroadcastTabState extends State<_BroadcastTab> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _result!.startsWith('Sent')
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
+              color: _isError
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(_result!),

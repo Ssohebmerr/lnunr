@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/community/data/moderation_result.dart';
+import '../config/app_secrets.dart';
 import '../security/secure_storage_service.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
@@ -41,6 +42,14 @@ class DirectGeminiService {
       await prefs.remove(_legacyPrefKey); // Clean up legacy
       _cachedKey = legacyKey;
       if (kDebugMode) debugPrint('[DirectGemini] Migrated key from SharedPreferences to SecureStorage');
+      return _cachedKey;
+    }
+
+    // 3. Fallback to AppSecrets (build-time --dart-define or hardcoded)
+    if (AppSecrets.geminiApiKey.isNotEmpty) {
+      _cachedKey = AppSecrets.geminiApiKey;
+      await _secure.write(_secureKey, _cachedKey!);
+      if (kDebugMode) debugPrint('[DirectGemini] Using key from AppSecrets');
       return _cachedKey;
     }
 
