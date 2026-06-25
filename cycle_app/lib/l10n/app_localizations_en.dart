@@ -2538,6 +2538,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storyPickImage => 'Photo from gallery';
 
   @override
+  String get storyPickMultiple => 'Multiple photos';
+
+  @override
   String get storyTextOnly => 'Text story';
 
   @override

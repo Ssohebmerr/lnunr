@@ -2517,6 +2517,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get storyPickImage => 'صورة من المعرض';
 
   @override
+  String get storyPickMultiple => 'عدة صور';
+
+  @override
   String get storyTextOnly => 'قصة نصية';
 
   @override

@@ -927,6 +927,7 @@
   "adminRejectComment": "رفض التعليق",
   "storyCreate": "إنشاء قصة",
   "storyPickImage": "صورة من المعرض",
+  "storyPickMultiple": "عدة صور",
   "storyTextOnly": "قصة نصية",
   "storyTextOnlyHint": "خلفية ملونة مع نص",
   "storyTextHint": "ماذا تفكرين؟",

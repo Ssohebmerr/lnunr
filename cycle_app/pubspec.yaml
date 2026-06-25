@@ -1,7 +1,7 @@
 name: cycle_aura
 description: "Lune — private menstrual cycle tracker with AI wellness assistant."
 publish_to: 'none'
-version: 1.0.9+10
+version: 1.0.10+11
 
 environment:
   sdk: ^3.11.4

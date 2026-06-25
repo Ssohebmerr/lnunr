@@ -439,7 +439,6 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
           symptomsLogDate: DateTime.parse(logDate),
           onSuccess: (id) {
             widget.onSuccess?.call(id);
-            _maybePopRoute();
           },
           waterValue: (logReportList[4].finalValue!.isNotEmpty)
               ? logReportList[4].finalValue.toString()
@@ -457,6 +456,8 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
           sleepWakeUpTime: TimeOfDay(
               hour: logReportList[5].mainValue!.toInt(),
               minute: logReportList[5].subValue!.toInt()));
+      if (mounted) await init(DateTime.parse(logDate));
+      _maybePopRoute();
     } catch (e) {
       widget.onError?.call();
     }

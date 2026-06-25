@@ -36,7 +36,7 @@ Future<void> showStoryComposer({
                   ),
             ),
           ),
-          if (kCommunityMediaUploadsEnabled)
+          if (kCommunityMediaUploadsEnabled) ...[
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: Text(l10n.storyPickImage),
@@ -57,6 +57,27 @@ Future<void> showStoryComposer({
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.burst_mode_outlined),
+              title: Text(l10n.storyPickMultiple),
+              subtitle: Text(l10n.storyTextOnlyHint),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final picker = ImagePicker();
+                final files = await picker.pickMultiImage(
+                  imageQuality: 85,
+                );
+                if (files.isEmpty || !context.mounted) return;
+                await _uploadMultipleStories(
+                  context: context,
+                  communityId: communityId,
+                  alias: alias,
+                  profile: profile,
+                  files: files,
+                );
+              },
+            ),
+          ],
           ListTile(
             leading: const Icon(Icons.text_fields_rounded),
             title: Text(l10n.storyTextOnly),
@@ -117,6 +138,50 @@ Future<void> _uploadStory({
         SnackBar(content: Text(l10n.errorGeneric)),
       );
     }
+  }
+}
+
+Future<void> _uploadMultipleStories({
+  required BuildContext context,
+  required String communityId,
+  required String alias,
+  required CommunityProfile profile,
+  required List<XFile> files,
+}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null || !context.mounted) return;
+
+  final l10n = AppLocalizations.of(context)!;
+  final messenger = ScaffoldMessenger.of(context);
+  final repo = context.read<CommunityStoryRepository>();
+
+  int successCount = 0;
+  for (final file in files) {
+    try {
+      await repo.createStory(
+        communityId: communityId,
+        uid: user.uid,
+        alias: alias,
+        file: file,
+        authorAvatarIndex: profile.avatarIndex,
+      );
+      successCount++;
+    } on MediaRequiresPremiumException {
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.storyPremiumRequired)),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Multi-story upload failed for ${file.name}: $e');
+    }
+  }
+
+  if (context.mounted && successCount > 0) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('${l10n.storyPublished} ($successCount/${files.length})')),
+    );
   }
 }
 

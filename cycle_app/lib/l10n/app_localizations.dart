@@ -4760,6 +4760,12 @@ abstract class AppLocalizations {
   /// **'Photo from gallery'**
   String get storyPickImage;
 
+  /// No description provided for @storyPickMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple photos'**
+  String get storyPickMultiple;
+
   /// No description provided for @storyTextOnly.
   ///
   /// In en, this message translates to:

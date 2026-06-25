@@ -52,11 +52,9 @@ void main() async {
 
   await AppBootstrap.initialize();
 
-  // Save Gemini API key if not already stored
+  // Save Gemini API key (always update to ensure latest key)
   final geminiService = DirectGeminiService();
-  if (!await geminiService.hasKey()) {
-    await geminiService.setKey('AIzaSyBxgJvWFTFPpRE8IvTlVED5Lb6cTpI-4R5Y');
-  }
+  await geminiService.setKey('AQ.Ab8RN6JDt8j5_eTQN7Xx5Z9l6x3WZTWef5x5ka-_FwbOhDLOBA');
 
   tz_data.initializeTimeZones();
   try {

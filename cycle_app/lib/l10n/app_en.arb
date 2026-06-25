@@ -955,6 +955,7 @@
   "adminRejectComment": "Reject comment",
   "storyCreate": "Create Story",
   "storyPickImage": "Photo from gallery",
+  "storyPickMultiple": "Multiple photos",
   "storyTextOnly": "Text story",
   "storyTextOnlyHint": "Colored background with text",
   "storyTextHint": "What's on your mind?",
