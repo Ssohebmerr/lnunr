@@ -1,5 +1,6 @@
-package com.cycleaura.wear.ui
+package com.lune.wear.ui
 
+import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -20,6 +21,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,9 +29,52 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
-import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import com.cycleaura.wear.data.CycleData
+import com.lune.wear.data.CycleData
+
+// ---------------------------------------------------------------------------
+// Bilingual strings (Arabic + English)
+// ---------------------------------------------------------------------------
+private object WatchStrings {
+    fun days(context: Context, current: Int, max: Int): String {
+        val locale = context.resources.configuration.locales[0].language
+        return if (locale == "ar") "$current من $max يوم" else "$current of $max days"
+    }
+
+    fun daysUntil(context: Context, days: Int): String {
+        val locale = context.resources.configuration.locales[0].language
+        return if (locale == "ar") "$days يوم حتى الدورة" else "$days days until period"
+    }
+
+    fun logPeriod(context: Context): String {
+        val locale = context.resources.configuration.locales[0].language
+        return if (locale == "ar") "تسجيل الدورة" else "Log Period"
+    }
+
+    fun synced(context: Context): String {
+        val locale = context.resources.configuration.locales[0].language
+        return if (locale == "ar") "متزامن" else "Synced"
+    }
+
+    fun noConnection(context: Context): String {
+        val locale = context.resources.configuration.locales[0].language
+        return if (locale == "ar") "لا يوجد اتصال" else "No connection"
+    }
+
+    fun phase(context: Context, phase: String): String {
+        val locale = context.resources.configuration.locales[0].language
+        if (locale == "ar") {
+            return when (phase.lowercase()) {
+                "menstruation", "period" -> "حيض"
+                "follicular" -> "جريبية"
+                "ovulation" -> "تبويض"
+                "luteal" -> "لوتينية"
+                else -> phase
+            }
+        }
+        return phase.replaceFirstChar { it.uppercase() }
+    }
+}
 
 @Composable
 fun CycleScreen(
@@ -37,6 +82,7 @@ fun CycleScreen(
     connected: Boolean,
     onLogPeriod: () -> Unit
 ) {
+    val context = LocalContext.current
     val animatedProgress by animateFloatAsState(
         targetValue = cycleData.progress,
         animationSpec = tween(durationMillis = 800),
@@ -67,7 +113,7 @@ fun CycleScreen(
                         color = Color.White
                     )
                     Text(
-                        text = "of ${cycleData.maxValue} days",
+                        text = WatchStrings.days(context, cycleData.currentValue, cycleData.maxValue),
                         fontSize = 10.sp,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -78,7 +124,7 @@ fun CycleScreen(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = cycleData.phase,
+                text = WatchStrings.phase(context, cycleData.phase),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = phaseColor(cycleData.phase),
@@ -89,7 +135,7 @@ fun CycleScreen(
         item {
             if (cycleData.daysUntilPeriod > 0) {
                 Text(
-                    text = "${cycleData.daysUntilPeriod} days until period",
+                    text = WatchStrings.daysUntil(context, cycleData.daysUntilPeriod),
                     fontSize = 10.sp,
                     color = Color.White.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
@@ -107,7 +153,7 @@ fun CycleScreen(
                 modifier = Modifier.size(60.dp)
             ) {
                 Text(
-                    text = "Log Period",
+                    text = WatchStrings.logPeriod(context),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -117,7 +163,7 @@ fun CycleScreen(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = if (connected) "Synced" else "No connection",
+                text = if (connected) WatchStrings.synced(context) else WatchStrings.noConnection(context),
                 fontSize = 9.sp,
                 color = if (connected) Color(0xFF4CAF50) else Color(0xFFFF5722),
                 textAlign = TextAlign.Center
@@ -137,7 +183,6 @@ fun CycleRing(progress: Float, phase: String) {
         val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
         val topLeft = Offset(padding, padding)
 
-        // Background track
         drawArc(
             color = trackColor,
             startAngle = -90f,
@@ -148,7 +193,6 @@ fun CycleRing(progress: Float, phase: String) {
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
         )
 
-        // Progress arc
         drawArc(
             color = ringColor,
             startAngle = -90f,

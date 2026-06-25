@@ -8,9 +8,10 @@ class AppSecrets {
 
   /// Google AI Studio key for direct Gemini access.
   /// Passed at build time: --dart-define=GEMINI_API_KEY=...
+  /// Falls back to hardcoded key for development/testing.
   static const geminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
-    defaultValue: '',
+    defaultValue: 'AQ.Ab8RN6JDt8j5_eTQN7Xx5Z9l6x3WZTWef5x5ka-_FwbOhDLOBA',
   );
 
   /// Firebase Cloud Functions base URL.

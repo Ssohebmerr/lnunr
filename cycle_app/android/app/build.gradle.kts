@@ -70,6 +70,9 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // Wear OS: embed watch APK for auto-install on paired watch
+    wearApp(project(":wear"))
 }
 
 flutter {

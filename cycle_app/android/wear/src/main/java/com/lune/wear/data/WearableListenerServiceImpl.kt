@@ -1,4 +1,4 @@
-package com.cycleaura.wear.data
+package com.lune.wear.data
 
 import android.util.Log
 import com.google.android.gms.wearable.DataEventBuffer

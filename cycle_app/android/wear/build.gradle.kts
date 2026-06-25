@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.cycleaura.wear"
+    namespace = "com.lune.wear"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.cycleaura.wear"
+        applicationId = "com.lune.app"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

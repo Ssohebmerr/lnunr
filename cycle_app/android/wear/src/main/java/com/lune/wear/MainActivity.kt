@@ -1,11 +1,11 @@
-package com.cycleaura.wear
+package com.lune.wear
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material3.MaterialTheme
-import com.cycleaura.wear.ui.LuneWearApp
+import com.lune.wear.ui.LuneWearApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

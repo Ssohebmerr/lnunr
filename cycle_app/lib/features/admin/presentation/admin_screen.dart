@@ -26,7 +26,7 @@ class _AdminScreenState extends State<AdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 5, vsync: this);
     _checkAdmin();
   }
 
@@ -87,6 +87,7 @@ class _AdminScreenState extends State<AdminScreen>
             Tab(icon: const Icon(Icons.flag_rounded), text: l10n.adminReports),
             Tab(icon: const Icon(Icons.settings_rounded), text: l10n.adminSettings),
             Tab(icon: const Icon(Icons.question_answer_rounded), text: 'Q&A'),
+          Tab(icon: const Icon(Icons.campaign_rounded), text: 'Broadcast'),
           ],
         ),
       ),
@@ -97,6 +98,7 @@ class _AdminScreenState extends State<AdminScreen>
           _ReportsTab(repo: _repo, l10n: l10n, theme: theme),
           _SettingsTab(repo: _repo, settingsRepo: _settingsRepo, l10n: l10n, theme: theme),
           const _QATab(),
+          _BroadcastTab(repo: _repo, l10n: l10n),
         ],
       ),
     );
@@ -1179,5 +1181,103 @@ class _QuestionCardState extends State<_QuestionCard> {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m';
     if (diff.inHours < 24) return '${diff.inHours}h';
     return '${diff.inDays}d';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Broadcast Tab — send push notification to all users
+// ---------------------------------------------------------------------------
+class _BroadcastTab extends StatefulWidget {
+  const _BroadcastTab({required this.repo, required this.l10n});
+  final AdminRepository repo;
+  final AppLocalizations l10n;
+
+  @override
+  State<_BroadcastTab> createState() => _BroadcastTabState();
+}
+
+class _BroadcastTabState extends State<_BroadcastTab> {
+  final _titleCtrl = TextEditingController();
+  final _bodyCtrl = TextEditingController();
+  bool _sending = false;
+  String? _result;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _bodyCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final title = _titleCtrl.text.trim();
+    final body = _bodyCtrl.text.trim();
+    if (title.isEmpty || body.isEmpty) return;
+
+    setState(() { _sending = true; _result = null; });
+
+    final res = await widget.repo.sendBroadcast(
+      title: title,
+      body: body,
+    );
+
+    if (mounted) {
+      setState(() {
+        _sending = false;
+        if (res.containsKey('error')) {
+          _result = 'Error: ${res['error']}';
+        } else {
+          _result = 'Sent: ${res['sent']} users, Failed: ${res['failed']}';
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        TextField(
+          controller: _titleCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Notification Title',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _bodyCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Notification Body',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _sending ? null : _send,
+          icon: _sending
+              ? const SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.send_rounded),
+          label: Text(_sending ? 'Sending...' : 'Send Broadcast'),
+        ),
+        if (_result != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _result!.startsWith('Sent')
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(_result!),
+          ),
+        ],
+      ],
+    );
   }
 }

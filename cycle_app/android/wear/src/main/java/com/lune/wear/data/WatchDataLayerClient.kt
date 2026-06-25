@@ -1,4 +1,4 @@
-package com.cycleaura.wear.data
+package com.lune.wear.data
 
 import android.content.Context
 import android.util.Log

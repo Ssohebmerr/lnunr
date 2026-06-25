@@ -55,6 +55,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Wear OS Companion: auto-install watch app on paired watch -->
+        <meta-data
+            android:name="com.google.android.wearable.versionCode"
+            android:value="1" />
+        <meta-data
+            android:name="com.google.android.wearable.minSdkVersion"
+            android:value="30" />
     </application>
     <queries>
         <intent>

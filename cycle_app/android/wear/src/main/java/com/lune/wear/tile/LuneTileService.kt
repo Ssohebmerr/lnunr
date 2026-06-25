@@ -1,4 +1,4 @@
-package com.cycleaura.wear.tile
+package com.lune.wear.tile
 
 /**
  * Lune Wear OS Tile Service

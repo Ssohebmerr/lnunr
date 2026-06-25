@@ -3,6 +3,7 @@ import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart'
 import 'package:cycle_aura/menstrudel_integration/menstrudel_init.dart';
 import 'package:cycle_aura/menstrudel_integration/menstrudel_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -14,6 +15,10 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'core/notifications/app_notifications.dart';
 
 import 'core/ai/ai_context_engine.dart';
 import 'core/ai/ai_gateway.dart';
@@ -51,8 +56,15 @@ import 'features/privacy/presentation/stealth_calculator_screen.dart';
 import 'features/sync/data/cloud_sync_service.dart';
 import 'l10n/app_localizations.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('[FCM Background] ${message.notification?.title}');
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await AppBootstrap.initialize();
 
@@ -73,6 +85,28 @@ void main() async {
   }
 
   await NotificationService.initialize();
+
+  // FCM foreground listener — show local notification when app is open
+  FirebaseMessaging.onMessage.listen((message) {
+    final title = message.notification?.title;
+    final body = message.notification?.body;
+    if (title != null && body != null) {
+      AppNotifications.plugin.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'cycle_aura_reminders',
+            'Cycle Reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+      );
+    }
+  });
+
   await MenstrudelInit.initialize();
 
   final keys = await CycleEncryptionKeys.loadOrCreate();

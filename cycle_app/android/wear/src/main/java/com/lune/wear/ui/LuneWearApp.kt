@@ -1,11 +1,11 @@
-package com.cycleaura.wear.ui
+package com.lune.wear.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.cycleaura.wear.data.WatchDataLayerClient
+import com.lune.wear.data.WatchDataLayerClient
 
 @Composable
 fun LuneWearApp() {
