@@ -1344,6 +1344,7 @@ class MenstrualCycleWidget {
     // printMenstrualCycleLogs("symptomsPatternData ${symptomsPatternData.length}");
     List<PeriodsDateRange> allPeriodRange = await getAllPeriodsDetails();
     int numberOfCycle = allPeriodRange.length;
+    if (numberOfCycle == 0) return symptomAnalysisData;
 
     for (var symptomsPattern in symptomsPatternData) {
       SymptomsPatterns symptomsPatterns = SymptomsPatterns();

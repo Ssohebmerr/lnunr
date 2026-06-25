@@ -62,7 +62,10 @@ class _MenstrualCycleHistoryGraphState
         allPeriodRange.add(periodRange[i]);
       }
     }
-    // TODO Add Condition to not allow widget.viewCycleHistoryLength is less then zero
+    if (widget.viewCycleHistoryLength < 1) {
+      isGetData = true;
+      return;
+    }
     isGetData = true;
     setState(() {});
   }

@@ -578,21 +578,20 @@ class _CalendarCellState extends State<CalendarCell> {
 
   /// Return true if current day is ovulation day else return false
   bool checkIsOvulationDay() {
-    bool isOvlDay = false;
-    if (widget.previousPeriodDate!.isNotEmpty) {
-      DateTime ovulationDay = CalenderDateUtils.dateFormat
-          .parse(widget.previousPeriodDate!)
-          .add(Duration(days: widget.cycleLength))
-          .add(const Duration(days: -14)); // TODO get backed on period cycle
-      //  printLogs("ovulationDay ${defaultDateFormat.format(ovulationDay)}");
-      bool isBefore = widget.currentDay!.isBefore(DateTime.now());
-      if (!isBefore) {
-        if (widget.currentDay!.compareTo(ovulationDay) == 0) {
-          isOvlDay = true;
-        }
-      }
+    if (widget.previousPeriodDate == null ||
+        widget.previousPeriodDate!.isEmpty ||
+        widget.cycleLength < 14) {
+      return false;
     }
-    return isOvlDay;
+    DateTime ovulationDay = CalenderDateUtils.dateFormat
+        .parse(widget.previousPeriodDate!)
+        .add(Duration(days: widget.cycleLength))
+        .add(const Duration(days: -14));
+    if (widget.currentDay == null) return false;
+    if (widget.currentDay!.isAfter(DateTime.now())) {
+      return widget.currentDay!.compareTo(ovulationDay) == 0;
+    }
+    return false;
   }
 
   /// Return true if current day is future ovulation day else return false
