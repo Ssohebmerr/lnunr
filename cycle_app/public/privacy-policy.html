@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lune - Privacy Policy</title>
+    <style>
+        :root {
+            --primary: #D4618C;
+            --primary-light: #F5B8D0;
+            --bg: #FAFAFA;
+            --card: #FFFFFF;
+            --text: #1A1A2E;
+            --text-secondary: #555;
+            --border: #E8E8E8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            text-align: center;
+            padding: 48px 20px 40px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: -20px auto 40px;
+            padding: 0 16px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: var(--primary);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            margin-top: 28px;
+        }
+        h2:first-child { margin-top: 0; }
+        p, li {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        .contact-box {
+            background: #F8F0F4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        .contact-box h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        .contact-box a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .contact-box a:hover { text-decoration: underline; }
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+        .back-link:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back-link">&larr; Back to Lune</a>
+        <h1>Privacy Policy</h1>
+        <p>Effective Date: June 21, 2026</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>1. Introduction</h2>
+            <p>Lune ("we", "us", or "our") is a menstrual cycle tracking application designed to help users monitor their health and wellness. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our mobile application and related services.</p>
+            <p>By using Lune, you agree to the practices described in this policy. If you do not agree, please discontinue use of the application.</p>
+
+            <h2>2. Information We Collect</h2>
+            <p>We collect the following types of information:</p>
+            <ul>
+                <li><strong>Health &amp; Cycle Data:</strong> Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.</li>
+                <li><strong>Account Information:</strong> If you create an account, we collect your email address and display name via Firebase Authentication.</li>
+                <li><strong>Community Content:</strong> Posts, comments, and profile information you share in community features.</li>
+                <li><strong>Device Information:</strong> Basic device identifiers required for push notifications and app functionality.</li>
+                <li><strong>AI Chat Data:</strong> Messages you send to our AI assistant are processed to generate responses and are not permanently stored on our servers.</li>
+            </ul>
+
+            <h2>3. How We Use Your Information</h2>
+            <p>Your information is used to:</p>
+            <ul>
+                <li>Provide core cycle tracking, predictions, and personalized insights.</li>
+                <li>Deliver AI-powered health guidance and daily briefings.</li>
+                <li>Enable community features (posts, comments, stories) if you opt in.</li>
+                <li>Process cloud backups if you enable encrypted backup.</li>
+                <li>Send optional notifications (period reminders, pill reminders).</li>
+                <li>Improve app performance and fix bugs.</li>
+                <li>Ensure safety and prevent misuse of community features.</li>
+            </ul>
+
+            <h2>4. Data Storage &amp; Security</h2>
+            <p>Your cycle and health data is stored locally on your device by default. If you enable cloud sync, your data is encrypted using AES-256 encryption and stored securely in Google Firebase (Firestore).</p>
+            <p>Encryption keys are stored in your device's secure storage (Android Keystore / iOS Keychain). We implement industry-standard security measures including TLS encryption, secure authentication, and access controls.</p>
+
+            <h2>5. Third-Party Services</h2>
+            <p>We use the following third-party services:</p>
+            <ul>
+                <li><strong>Google Firebase</strong> (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.</li>
+                <li><strong>Google Gemini AI:</strong> For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.</li>
+                <li><strong>Google Play Billing:</strong> For processing in-app subscriptions.</li>
+                <li><strong>PayPal:</strong> For alternative payment processing.</li>
+            </ul>
+            <p>Each service has its own privacy policy. We encourage you to review them.</p>
+
+            <h2>6. Your Data Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li><strong>Access your data:</strong> View all data stored about you within the app.</li>
+                <li><strong>Export your data:</strong> Download your cycle data as a local backup file.</li>
+                <li><strong>Delete your data:</strong> Delete your account and all associated data permanently from the Privacy Center.</li>
+                <li><strong>Revoke consent:</strong> Withdraw consent for cloud sync, AI features, or community participation at any time.</li>
+                <li><strong>Opt out of notifications:</strong> Disable any notification type from settings.</li>
+            </ul>
+            <p>To exercise these rights, use the in-app Privacy Center or contact us at the email below.</p>
+
+            <h2>7. Children's Privacy</h2>
+            <p>Lune is not intended for children under 13 years of age (or the applicable age of consent in your jurisdiction). We do not knowingly collect personal information from children. If we discover that a child has provided us with personal data, we will delete it promptly.</p>
+
+            <h2>8. Data Retention</h2>
+            <p>We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, all personal data is permanently removed from our servers within 30 days. Local data on your device remains until you uninstall the app or manually delete it.</p>
+
+            <h2>9. International Data Transfers</h2>
+            <p>Your data may be processed in countries other than your own, including the United States where Google Firebase servers are located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers.</p>
+
+            <h2>10. Medical Disclaimer</h2>
+            <p>Lune is designed for informational and wellness tracking purposes only. It is not a medical device and does not provide medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical concerns. Do not rely solely on Lune's predictions or AI-generated content for health decisions.</p>
+
+            <h2>11. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify you of significant changes through in-app notifications or email. Your continued use of Lune after changes constitutes acceptance of the updated policy.</p>
+
+            <h2>12. Contact Us</h2>
+            <p>For questions, concerns, or data requests related to this Privacy Policy, please contact us at:</p>
+            <div class="contact-box">
+                <h3>Lune Support</h3>
+                <p>Email: <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 Lune. All rights reserved.
+    </div>
+</body>
+</html>

@@ -1,0 +1,5318 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_ar.dart';
+import 'app_localizations_en.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
+    Locale('en'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune'**
+  String get appTitle;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get navLog;
+
+  /// No description provided for @navInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get navInsights;
+
+  /// No description provided for @navWellness.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness'**
+  String get navWellness;
+
+  /// No description provided for @navCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get navCommunity;
+
+  /// No description provided for @navAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI'**
+  String get navAi;
+
+  /// No description provided for @navAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get navAccount;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private cycle companion'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your cycle locally. Cloud & AI are optional and encrypted.'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @cycleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle length (days)'**
+  String get cycleLength;
+
+  /// No description provided for @periodDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Period duration (days)'**
+  String get periodDuration;
+
+  /// No description provided for @lastPeriodDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last period start date'**
+  String get lastPeriodDate;
+
+  /// No description provided for @continueBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueBtn;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in for cloud features'**
+  String get loginTitle;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — your data stays on device by default'**
+  String get loginSubtitle;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get registerTitle;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we will send a reset link.'**
+  String get forgotPasswordHint;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get resetPassword;
+
+  /// No description provided for @resetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent.'**
+  String get resetSent;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get passwordMismatch;
+
+  /// No description provided for @registerFieldsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and password.'**
+  String get registerFieldsRequired;
+
+  /// No description provided for @authPrivacyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept the Privacy Policy and Terms to continue.'**
+  String get authPrivacyRequired;
+
+  /// No description provided for @authErrorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password.'**
+  String get authErrorInvalidCredentials;
+
+  /// No description provided for @authErrorUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email.'**
+  String get authErrorUserNotFound;
+
+  /// No description provided for @authErrorEmailInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered.'**
+  String get authErrorEmailInUse;
+
+  /// No description provided for @authErrorWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get authErrorWeakPassword;
+
+  /// No description provided for @authErrorTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again later.'**
+  String get authErrorTooManyRequests;
+
+  /// No description provided for @authErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your connection.'**
+  String get authErrorNetwork;
+
+  /// No description provided for @authErrorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was cancelled.'**
+  String get authErrorCancelled;
+
+  /// No description provided for @consentDataPurged.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud data for this feature was removed.'**
+  String get consentDataPurged;
+
+  /// No description provided for @consentRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off this feature?'**
+  String get consentRevokeTitle;
+
+  /// No description provided for @consentRevokeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your consent will be withdrawn and cloud data for this feature will be deleted from our servers. Local data on your device stays.'**
+  String get consentRevokeBody;
+
+  /// No description provided for @consentRevokeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off & delete cloud data'**
+  String get consentRevokeConfirm;
+
+  /// No description provided for @communityBirthYearTooYoung.
+  ///
+  /// In en, this message translates to:
+  /// **'Community access is for adults 18+. Choose an earlier birth year.'**
+  String get communityBirthYearTooYoung;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signIn;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get signUp;
+
+  /// No description provided for @signInGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get signInGoogle;
+
+  /// No description provided for @signInApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get signInApple;
+
+  /// No description provided for @skipLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without account'**
+  String get skipLogin;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @aiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI'**
+  String get aiTitle;
+
+  /// No description provided for @aiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private cycle companion. Ask about your cycle, symptoms, or wellness — not medical advice.'**
+  String get aiSubtitle;
+
+  /// No description provided for @aiWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I\'m Lune — your wellness companion.'**
+  String get aiWelcome;
+
+  /// No description provided for @aiWelcomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Short, helpful answers about your cycle, mood, and self-care.'**
+  String get aiWelcomeHint;
+
+  /// No description provided for @aiSuggestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'What helps with period cramps?'**
+  String get aiSuggestion1;
+
+  /// No description provided for @aiSuggestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'What should I eat in my current phase?'**
+  String get aiSuggestion2;
+
+  /// No description provided for @aiSuggestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'How is my cycle looking?'**
+  String get aiSuggestion3;
+
+  /// No description provided for @aiAnalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze my cycle'**
+  String get aiAnalyze;
+
+  /// No description provided for @aiPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Lune...'**
+  String get aiPlaceholder;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is thinking...'**
+  String get aiThinking;
+
+  /// No description provided for @premiumTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune Premium'**
+  String get premiumTitle;
+
+  /// No description provided for @premiumSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock advanced AI analysis & cloud backup'**
+  String get premiumSubtitle;
+
+  /// No description provided for @premiumFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Lune chat & cycle analysis'**
+  String get premiumFeature1;
+
+  /// No description provided for @premiumFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted cloud backup'**
+  String get premiumFeature2;
+
+  /// No description provided for @premiumFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority support'**
+  String get premiumFeature3;
+
+  /// No description provided for @subscribePayPal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe with PayPal'**
+  String get subscribePayPal;
+
+  /// No description provided for @subscribePlayStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe with Google Play'**
+  String get subscribePlayStore;
+
+  /// No description provided for @premiumPayPalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll pay securely in PayPal, then return here to activate Premium.'**
+  String get premiumPayPalHint;
+
+  /// No description provided for @premiumPayPalReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete payment in PayPal, then come back to the app.'**
+  String get premiumPayPalReturn;
+
+  /// No description provided for @premiumPayPalActivating.
+  ///
+  /// In en, this message translates to:
+  /// **'Activating your Premium subscription…'**
+  String get premiumPayPalActivating;
+
+  /// No description provided for @premiumPayPalActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium is now active. Thank you!'**
+  String get premiumPayPalActivated;
+
+  /// No description provided for @premiumPayPalUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'PayPal checkout is not available right now. Try again later or contact support.'**
+  String get premiumPayPalUnavailable;
+
+  /// No description provided for @premiumActivatePayPal.
+  ///
+  /// In en, this message translates to:
+  /// **'I completed PayPal payment'**
+  String get premiumActivatePayPal;
+
+  /// No description provided for @premiumPlayOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions are available on Android via Google Play.'**
+  String get premiumPlayOnly;
+
+  /// No description provided for @premiumProductUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Product unavailable. Set up the subscription in Play Console first.'**
+  String get premiumProductUnavailable;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @restorePurchasesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchases were checked.'**
+  String get restorePurchasesDone;
+
+  /// No description provided for @communityMediaDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo and video uploads are temporarily disabled for community safety.'**
+  String get communityMediaDisabled;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your privacy matters'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle data is encrypted on your device. Cloud sync and AI only run when you sign in and opt in.'**
+  String get privacyBody;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @premiumActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium active'**
+  String get premiumActive;
+
+  /// No description provided for @notPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Free plan'**
+  String get notPremium;
+
+  /// No description provided for @phaseToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s phase'**
+  String get phaseToday;
+
+  /// No description provided for @nextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get nextPeriod;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errorGeneric;
+
+  /// No description provided for @loginRequiredAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use Gemini AI chat'**
+  String get loginRequiredAi;
+
+  /// No description provided for @loginRequiredPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to subscribe'**
+  String get loginRequiredPremium;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @notificationsEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable reminders'**
+  String get notificationsEnable;
+
+  /// No description provided for @periodReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Period reminder'**
+  String get periodReminder;
+
+  /// No description provided for @dailyLogReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily log reminder'**
+  String get dailyLogReminder;
+
+  /// No description provided for @cloudSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup'**
+  String get cloudSync;
+
+  /// No description provided for @cloudSyncEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable encrypted cloud backup'**
+  String get cloudSyncEnable;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @syncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup synced successfully.'**
+  String get syncSuccess;
+
+  /// No description provided for @syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Try again.'**
+  String get syncFailed;
+
+  /// No description provided for @logSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Log saved!'**
+  String get logSaved;
+
+  /// No description provided for @logSavedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on your device. See it on Home, in Reports, and in Insights.'**
+  String get logSavedHint;
+
+  /// No description provided for @logChangesDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes discarded'**
+  String get logChangesDiscarded;
+
+  /// No description provided for @logChangesDiscardedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloaded the last saved data for this day — nothing new was saved.'**
+  String get logChangesDiscardedHint;
+
+  /// No description provided for @logSaveFailedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again.'**
+  String get logSaveFailedHint;
+
+  /// No description provided for @homeTodayLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s log'**
+  String get homeTodayLogTitle;
+
+  /// No description provided for @homeTodayLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet today. Tap + to log mood and symptoms.'**
+  String get homeTodayLogEmpty;
+
+  /// No description provided for @homeTodayLogSymptoms.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood & symptoms'**
+  String get homeTodayLogSymptoms;
+
+  /// No description provided for @homeTodayLogWater.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cups of water'**
+  String homeTodayLogWater(int count);
+
+  /// No description provided for @homeTodayLogStoredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on your device — full charts in Reports → Insights'**
+  String get homeTodayLogStoredHint;
+
+  /// No description provided for @homeAiChipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI'**
+  String get homeAiChipLabel;
+
+  /// No description provided for @homeAiCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI'**
+  String get homeAiCardTitle;
+
+  /// No description provided for @homeAiCardTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to start chatting'**
+  String get homeAiCardTap;
+
+  /// No description provided for @homeAiCardSubtitleFree.
+  ///
+  /// In en, this message translates to:
+  /// **'5 free messages daily — {count} left today'**
+  String homeAiCardSubtitleFree(int count);
+
+  /// No description provided for @homeAiCardSubtitlePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Your smart assistant — unlimited daily chat'**
+  String get homeAiCardSubtitlePremium;
+
+  /// No description provided for @logTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily log'**
+  String get logTabTitle;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @weeklyCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly view'**
+  String get weeklyCalendar;
+
+  /// No description provided for @graphsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get graphsWeight;
+
+  /// No description provided for @graphsSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get graphsSleep;
+
+  /// No description provided for @graphsWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get graphsWater;
+
+  /// No description provided for @graphsTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Body temperature'**
+  String get graphsTemperature;
+
+  /// No description provided for @graphsMeditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Meditation'**
+  String get graphsMeditation;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get haveAccount;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Sign up'**
+  String get noAccount;
+
+  /// No description provided for @geminiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API Key (optional local fallback)'**
+  String get geminiKeyLabel;
+
+  /// No description provided for @communityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Small Communities'**
+  String get communityTitle;
+
+  /// No description provided for @communityLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to manage blocking and reports'**
+  String get communityLoginRequired;
+
+  /// No description provided for @communityPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle logs never leave your device. Communities use a nickname only.'**
+  String get communityPrivacyNote;
+
+  /// No description provided for @communityYourAlias.
+  ///
+  /// In en, this message translates to:
+  /// **'Your community nickname'**
+  String get communityYourAlias;
+
+  /// No description provided for @communityBrowse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse groups'**
+  String get communityBrowse;
+
+  /// No description provided for @communitySetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a nickname'**
+  String get communitySetupTitle;
+
+  /// No description provided for @communitySetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a nickname — not your real name. Cycle data is never shared.'**
+  String get communitySetupSubtitle;
+
+  /// No description provided for @communityAliasLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname'**
+  String get communityAliasLabel;
+
+  /// No description provided for @communityAliasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Luna_92'**
+  String get communityAliasHint;
+
+  /// No description provided for @communityJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join group'**
+  String get communityJoin;
+
+  /// No description provided for @communityLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get communityLeave;
+
+  /// No description provided for @communityJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined the group'**
+  String get communityJoined;
+
+  /// No description provided for @communityLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the group'**
+  String get communityLeft;
+
+  /// No description provided for @communityNewPost.
+  ///
+  /// In en, this message translates to:
+  /// **'New post'**
+  String get communityNewPost;
+
+  /// No description provided for @communityPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share support, ask a question...'**
+  String get communityPostHint;
+
+  /// No description provided for @communityPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get communityPublish;
+
+  /// No description provided for @communityPostPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Post published'**
+  String get communityPostPublished;
+
+  /// No description provided for @communityModerationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Post not approved'**
+  String get communityModerationFailed;
+
+  /// No description provided for @communityDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer support only — not medical advice. Posts are reviewed by AI.'**
+  String get communityDisclaimer;
+
+  /// No description provided for @communityNoPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet. Be the first to share!'**
+  String get communityNoPosts;
+
+  /// No description provided for @communityPostDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get communityPostDetail;
+
+  /// No description provided for @communityComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get communityComments;
+
+  /// No description provided for @communityNoComments.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet'**
+  String get communityNoComments;
+
+  /// No description provided for @communityCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a supportive comment...'**
+  String get communityCommentHint;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @navReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get navReports;
+
+  /// No description provided for @navAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis'**
+  String get navAnalysis;
+
+  /// No description provided for @accountUpgradePro.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get accountUpgradePro;
+
+  /// No description provided for @accountMenuReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts & reports'**
+  String get accountMenuReports;
+
+  /// No description provided for @accountMenuAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune chat'**
+  String get accountMenuAi;
+
+  /// No description provided for @accountMenuCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Period & calendar'**
+  String get accountMenuCalendar;
+
+  /// No description provided for @accountMenuInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle insights'**
+  String get accountMenuInsights;
+
+  /// No description provided for @accountMenuEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn & guides'**
+  String get accountMenuEducation;
+
+  /// No description provided for @accountMenuCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get accountMenuCommunity;
+
+  /// No description provided for @accountMenuReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get accountMenuReminders;
+
+  /// No description provided for @accountMenuSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get accountMenuSettings;
+
+  /// No description provided for @accountMenuHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & instructions'**
+  String get accountMenuHelp;
+
+  /// No description provided for @homeExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get homeExplore;
+
+  /// No description provided for @homeUpdatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates & news'**
+  String get homeUpdatesTitle;
+
+  /// No description provided for @homeUpdatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements and offers'**
+  String get homeUpdatesSubtitle;
+
+  /// No description provided for @homeMoreThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'More this week'**
+  String get homeMoreThisWeek;
+
+  /// No description provided for @homeGoalMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More for your goal'**
+  String get homeGoalMoreTitle;
+
+  /// No description provided for @homeGoalMoreGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats, dates, tips & education'**
+  String get homeGoalMoreGeneral;
+
+  /// No description provided for @homeGoalMoreConceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility stats, tips & guides'**
+  String get homeGoalMoreConceive;
+
+  /// No description provided for @homeGoalMoreAvoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection stats, tips & guides'**
+  String get homeGoalMoreAvoid;
+
+  /// No description provided for @homeQuickLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get homeQuickLog;
+
+  /// No description provided for @homeQuickAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat'**
+  String get homeQuickAi;
+
+  /// No description provided for @homeQuickCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get homeQuickCalendar;
+
+  /// No description provided for @reportsMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed charts & history'**
+  String get reportsMoreTitle;
+
+  /// No description provided for @reportsMoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full stats, cycle log & patterns'**
+  String get reportsMoreSubtitle;
+
+  /// No description provided for @reportsChecklistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personalized action list'**
+  String get reportsChecklistHint;
+
+  /// No description provided for @goalModeGeneralReportStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle overview'**
+  String get goalModeGeneralReportStats;
+
+  /// No description provided for @goalModeConceiveReportStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility overview'**
+  String get goalModeConceiveReportStats;
+
+  /// No description provided for @goalModeAvoidReportStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection overview'**
+  String get goalModeAvoidReportStats;
+
+  /// No description provided for @selfCareMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More self-care'**
+  String get selfCareMoreTitle;
+
+  /// No description provided for @selfCareMoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI tips, challenges, rituals & wellness hub'**
+  String get selfCareMoreSubtitle;
+
+  /// No description provided for @accountSectionTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools & features'**
+  String get accountSectionTools;
+
+  /// No description provided for @accountSectionPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get accountSectionPersonal;
+
+  /// No description provided for @accountSectionSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support & settings'**
+  String get accountSectionSupport;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @wellnessHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness Hub'**
+  String get wellnessHubTitle;
+
+  /// No description provided for @wellnessHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth control, symptoms, and daily care — all in one place.'**
+  String get wellnessHubSubtitle;
+
+  /// No description provided for @wellnessCustomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize goals'**
+  String get wellnessCustomize;
+
+  /// No description provided for @wellnessSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load wellness features. Please try again.'**
+  String get wellnessSetupFailed;
+
+  /// No description provided for @wellnessDailyLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom journal'**
+  String get wellnessDailyLog;
+
+  /// No description provided for @wellnessDailyLogDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Log mood, pain, and daily symptoms'**
+  String get wellnessDailyLogDesc;
+
+  /// No description provided for @wellnessPills.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth control pills'**
+  String get wellnessPills;
+
+  /// No description provided for @wellnessPillsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your pill pack and reminders'**
+  String get wellnessPillsDesc;
+
+  /// No description provided for @wellnessSanitary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sanitary products'**
+  String get wellnessSanitary;
+
+  /// No description provided for @wellnessSanitaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Products, timers, and period care'**
+  String get wellnessSanitaryDesc;
+
+  /// No description provided for @wellnessSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex activity'**
+  String get wellnessSex;
+
+  /// No description provided for @wellnessSexDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Private activity log and insights'**
+  String get wellnessSexDesc;
+
+  /// No description provided for @wellnessLarc.
+  ///
+  /// In en, this message translates to:
+  /// **'LARC / IUD'**
+  String get wellnessLarc;
+
+  /// No description provided for @wellnessLarcDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-acting reversible contraceptives'**
+  String get wellnessLarcDesc;
+
+  /// No description provided for @navSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-care'**
+  String get navSelfCare;
+
+  /// No description provided for @selfCareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-care space'**
+  String get selfCareTitle;
+
+  /// No description provided for @selfCareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathe, reflect, and care for yourself through every phase.'**
+  String get selfCareSubtitle;
+
+  /// No description provided for @selfCareTodayTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s tip'**
+  String get selfCareTodayTip;
+
+  /// No description provided for @selfCareActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities'**
+  String get selfCareActivities;
+
+  /// No description provided for @selfCareBreathe.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathing'**
+  String get selfCareBreathe;
+
+  /// No description provided for @selfCareBreatheDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Box breathing — 4 seconds each phase'**
+  String get selfCareBreatheDesc;
+
+  /// No description provided for @selfCareStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get selfCareStart;
+
+  /// No description provided for @selfCarePause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get selfCarePause;
+
+  /// No description provided for @selfCareAffirmations.
+  ///
+  /// In en, this message translates to:
+  /// **'Affirmations'**
+  String get selfCareAffirmations;
+
+  /// No description provided for @selfCareJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get selfCareJournal;
+
+  /// No description provided for @selfCareJournalPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get selfCareJournalPrompt;
+
+  /// No description provided for @selfCareJournalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write freely — stored only on your device'**
+  String get selfCareJournalHint;
+
+  /// No description provided for @selfCareJournalSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save entry'**
+  String get selfCareJournalSave;
+
+  /// No description provided for @selfCareJournalSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal saved'**
+  String get selfCareJournalSaved;
+
+  /// No description provided for @selfCareStretch.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle stretch'**
+  String get selfCareStretch;
+
+  /// No description provided for @selfCareStretchTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Try 5 minutes of neck and hip stretches today.'**
+  String get selfCareStretchTip;
+
+  /// No description provided for @selfCareRituals.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily rituals'**
+  String get selfCareRituals;
+
+  /// No description provided for @selfCareRitualWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Drank enough water'**
+  String get selfCareRitualWater;
+
+  /// No description provided for @selfCareRitualRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Took time to rest'**
+  String get selfCareRitualRest;
+
+  /// No description provided for @selfCareRitualStretch.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle movement'**
+  String get selfCareRitualStretch;
+
+  /// No description provided for @selfCareRitualMindful.
+  ///
+  /// In en, this message translates to:
+  /// **'5 min mindfulness'**
+  String get selfCareRitualMindful;
+
+  /// No description provided for @selfCareHealthTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Health tracking'**
+  String get selfCareHealthTools;
+
+  /// No description provided for @selfCareHealthToolsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pills, sanitary, sex & more'**
+  String get selfCareHealthToolsDesc;
+
+  /// No description provided for @communityTabFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get communityTabFeed;
+
+  /// No description provided for @communityTabDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get communityTabDiscover;
+
+  /// No description provided for @communityTabMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My groups'**
+  String get communityTabMine;
+
+  /// No description provided for @communityFeedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a group to see posts from your communities here.'**
+  String get communityFeedEmpty;
+
+  /// No description provided for @communityMineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t joined any groups yet.'**
+  String get communityMineEmpty;
+
+  /// No description provided for @communitySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search communities...'**
+  String get communitySearchHint;
+
+  /// No description provided for @communityCatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get communityCatAll;
+
+  /// No description provided for @communityCatGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get communityCatGeneral;
+
+  /// No description provided for @communityCatConception.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility'**
+  String get communityCatConception;
+
+  /// No description provided for @communityCatContraception.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth control'**
+  String get communityCatContraception;
+
+  /// No description provided for @communityCatCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get communityCatCondition;
+
+  /// No description provided for @communityCatSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get communityCatSupport;
+
+  /// No description provided for @communityPostsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get communityPostsTab;
+
+  /// No description provided for @communityAboutTab.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get communityAboutTab;
+
+  /// No description provided for @communityRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Community rules'**
+  String get communityRules;
+
+  /// No description provided for @communityPostType.
+  ///
+  /// In en, this message translates to:
+  /// **'Post type'**
+  String get communityPostType;
+
+  /// No description provided for @communityReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted. Thank you.'**
+  String get communityReported;
+
+  /// No description provided for @communityAliasTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname must be at least 2 characters'**
+  String get communityAliasTooShort;
+
+  /// No description provided for @communityAliasInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a nickname without spaces or email'**
+  String get communityAliasInvalid;
+
+  /// No description provided for @communityBirthYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth year'**
+  String get communityBirthYearLabel;
+
+  /// No description provided for @communityBirthYearRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your birth year'**
+  String get communityBirthYearRequired;
+
+  /// No description provided for @communityBirthYearWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Used only to keep the community safe for younger members. It is never shown to anyone.'**
+  String get communityBirthYearWhy;
+
+  /// No description provided for @communityMinorBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You can read posts, but joining, posting, and commenting unlock at 18 — this keeps you safe.'**
+  String get communityMinorBanner;
+
+  /// No description provided for @communityMinorRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining and posting are available from age 18.'**
+  String get communityMinorRestricted;
+
+  /// No description provided for @communityBannedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is banned from the community. Contact support if this is a mistake.'**
+  String get communityBannedMessage;
+
+  /// No description provided for @communityFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This community is full. Try another group.'**
+  String get communityFull;
+
+  /// No description provided for @communityPostNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This post is no longer available.'**
+  String get communityPostNotFound;
+
+  /// No description provided for @communityBlockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block author'**
+  String get communityBlockUser;
+
+  /// No description provided for @communityBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Author blocked. You won\'t see their posts anymore.'**
+  String get communityBlocked;
+
+  /// No description provided for @communityReportPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Report post'**
+  String get communityReportPost;
+
+  /// No description provided for @communityReportComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Report comment'**
+  String get communityReportComment;
+
+  /// No description provided for @communityReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting?'**
+  String get communityReportTitle;
+
+  /// No description provided for @communityReportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment or bullying'**
+  String get communityReportReasonHarassment;
+
+  /// No description provided for @communityReportReasonHate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hate speech'**
+  String get communityReportReasonHate;
+
+  /// No description provided for @communityReportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam or ads'**
+  String get communityReportReasonSpam;
+
+  /// No description provided for @communityReportReasonInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get communityReportReasonInappropriate;
+
+  /// No description provided for @communityReportReasonMisinformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Misinformation'**
+  String get communityReportReasonMisinformation;
+
+  /// No description provided for @communityReportReasonSelfHarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-harm or danger'**
+  String get communityReportReasonSelfHarm;
+
+  /// No description provided for @communityReportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get communityReportReasonOther;
+
+  /// No description provided for @communityBlockConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this author?'**
+  String get communityBlockConfirmTitle;
+
+  /// No description provided for @communityBlockConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see posts or comments from {alias} anymore.'**
+  String communityBlockConfirmMessage(String alias);
+
+  /// No description provided for @communityBlockConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get communityBlockConfirmAction;
+
+  /// No description provided for @communityBlockCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get communityBlockCancel;
+
+  /// No description provided for @communityBlockedUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get communityBlockedUsersTitle;
+
+  /// No description provided for @communityBlockedUsersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage who you blocked in communities'**
+  String get communityBlockedUsersSubtitle;
+
+  /// No description provided for @communityBlockedUsersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users.'**
+  String get communityBlockedUsersEmpty;
+
+  /// No description provided for @communityBlockedUserUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown user'**
+  String get communityBlockedUserUnknown;
+
+  /// No description provided for @communityUnblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get communityUnblockUser;
+
+  /// No description provided for @communityUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked.'**
+  String get communityUnblocked;
+
+  /// No description provided for @accountBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Community blocked users'**
+  String get accountBlockedUsers;
+
+  /// No description provided for @aiInsightDailyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s tip for you'**
+  String get aiInsightDailyTitle;
+
+  /// No description provided for @aiInsightMoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your emotional weather'**
+  String get aiInsightMoodTitle;
+
+  /// No description provided for @aiInsightCycleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle health'**
+  String get aiInsightCycleTitle;
+
+  /// No description provided for @aiInsightWeeklyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your week in review'**
+  String get aiInsightWeeklyTitle;
+
+  /// No description provided for @aiInsightBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura AI'**
+  String get aiInsightBadge;
+
+  /// No description provided for @aiInsightRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'New insight'**
+  String get aiInsightRefresh;
+
+  /// No description provided for @aiInsightDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-generated wellness suggestion — not medical advice.'**
+  String get aiInsightDisclaimer;
+
+  /// No description provided for @doctorReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Cycle Report'**
+  String get doctorReportTitle;
+
+  /// No description provided for @doctorReportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View full report'**
+  String get doctorReportButton;
+
+  /// No description provided for @doctorReportGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your report...'**
+  String get doctorReportGenerating;
+
+  /// No description provided for @doctorReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet. Log your cycle first, then try again.'**
+  String get doctorReportFailed;
+
+  /// No description provided for @doctorReportRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get doctorReportRetry;
+
+  /// No description provided for @doctorReportCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get doctorReportCopy;
+
+  /// No description provided for @doctorReportCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Report copied'**
+  String get doctorReportCopied;
+
+  /// No description provided for @doctorReportShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get doctorReportShare;
+
+  /// No description provided for @doctorReportDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get doctorReportDownload;
+
+  /// No description provided for @doctorReportExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export report'**
+  String get doctorReportExportTitle;
+
+  /// No description provided for @doctorReportExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file format to save or share'**
+  String get doctorReportExportSubtitle;
+
+  /// No description provided for @doctorReportExportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF document'**
+  String get doctorReportExportPdf;
+
+  /// No description provided for @doctorReportExportPdfHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Best for printing or sending to your doctor'**
+  String get doctorReportExportPdfHint;
+
+  /// No description provided for @doctorReportExportTxt.
+  ///
+  /// In en, this message translates to:
+  /// **'Text file (.txt)'**
+  String get doctorReportExportTxt;
+
+  /// No description provided for @doctorReportExportTxtHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text — works everywhere'**
+  String get doctorReportExportTxtHint;
+
+  /// No description provided for @doctorReportExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Spreadsheet (.csv)'**
+  String get doctorReportExportCsv;
+
+  /// No description provided for @doctorReportExportCsvHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Excel or Google Sheets'**
+  String get doctorReportExportCsvHint;
+
+  /// No description provided for @doctorReportExportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON data (.json)'**
+  String get doctorReportExportJson;
+
+  /// No description provided for @doctorReportExportJsonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Structured data for apps and backups'**
+  String get doctorReportExportJsonHint;
+
+  /// No description provided for @doctorReportExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing file...'**
+  String get doctorReportExporting;
+
+  /// No description provided for @doctorReportExportShared.
+  ///
+  /// In en, this message translates to:
+  /// **'File ready — pick where to save it'**
+  String get doctorReportExportShared;
+
+  /// No description provided for @doctorReportExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed. Please try again.'**
+  String get doctorReportExportFailed;
+
+  /// No description provided for @doctorReportDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal tracking summary from the app — not a medical diagnosis. Always consult your healthcare provider.'**
+  String get doctorReportDisclaimer;
+
+  /// No description provided for @healthReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Report'**
+  String get healthReportTitle;
+
+  /// No description provided for @healthReportCreatedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Created by Lune'**
+  String get healthReportCreatedBy;
+
+  /// No description provided for @healthReportExportedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported on: {date}'**
+  String healthReportExportedOn(String date);
+
+  /// No description provided for @healthReportCyclePeriodLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle and Period Length'**
+  String get healthReportCyclePeriodLength;
+
+  /// No description provided for @healthReportPredictions.
+  ///
+  /// In en, this message translates to:
+  /// **'Predictions'**
+  String get healthReportPredictions;
+
+  /// No description provided for @healthReportCycleHistorySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle History Summary'**
+  String get healthReportCycleHistorySummary;
+
+  /// No description provided for @healthReportSymptomPatternsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom Patterns Summary'**
+  String get healthReportSymptomPatternsSummary;
+
+  /// No description provided for @healthReportPrevCycleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous cycle length'**
+  String get healthReportPrevCycleLength;
+
+  /// No description provided for @healthReportPrevPeriodDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period duration'**
+  String get healthReportPrevPeriodDuration;
+
+  /// No description provided for @healthReportCycleRegularityScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle regularity score'**
+  String get healthReportCycleRegularityScore;
+
+  /// No description provided for @healthReportPeriodRegularityScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Period regularity score'**
+  String get healthReportPeriodRegularityScore;
+
+  /// No description provided for @healthReportNextPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period day'**
+  String get healthReportNextPeriodDay;
+
+  /// No description provided for @healthReportNextOvulationDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ovulation day'**
+  String get healthReportNextOvulationDay;
+
+  /// No description provided for @healthReportDaysCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days cycle'**
+  String healthReportDaysCycle(int count);
+
+  /// No description provided for @healthReportUntilNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get healthReportUntilNow;
+
+  /// No description provided for @healthReportFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'© Lune'**
+  String get healthReportFooter;
+
+  /// No description provided for @communityAdultsOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities are for adults'**
+  String get communityAdultsOnlyTitle;
+
+  /// No description provided for @communityAdultsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Community features are available from age 18. You can still use all other app features.'**
+  String get communityAdultsOnly;
+
+  /// No description provided for @communityGuidelinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Community guidelines'**
+  String get communityGuidelinesTitle;
+
+  /// No description provided for @communityGuidelinesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Before joining, please read and accept our community rules:'**
+  String get communityGuidelinesIntro;
+
+  /// No description provided for @communityGuidelinesAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to follow the community guidelines'**
+  String get communityGuidelinesAgree;
+
+  /// No description provided for @communityGuidelinesAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Join community'**
+  String get communityGuidelinesAccept;
+
+  /// No description provided for @challengesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My challenges'**
+  String get challengesTitle;
+
+  /// No description provided for @challengesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s challenges'**
+  String get challengesToday;
+
+  /// No description provided for @challengesAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazing! You completed everything today.'**
+  String get challengesAllDone;
+
+  /// No description provided for @challengeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge completed'**
+  String get challengeDone;
+
+  /// No description provided for @challengeStreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day streak'**
+  String get challengeStreakLabel;
+
+  /// No description provided for @challengePointsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get challengePointsLabel;
+
+  /// No description provided for @challengeStreakValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String challengeStreakValue(int count);
+
+  /// No description provided for @challengeHydrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Drink 6-8 glasses of water'**
+  String get challengeHydrate;
+
+  /// No description provided for @challengeStretch.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle stretch for 5 minutes'**
+  String get challengeStretch;
+
+  /// No description provided for @challengeWalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a 10-minute walk'**
+  String get challengeWalk;
+
+  /// No description provided for @challengeMindful.
+  ///
+  /// In en, this message translates to:
+  /// **'One mindful breathing break'**
+  String get challengeMindful;
+
+  /// No description provided for @challengeLogToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your symptoms and mood'**
+  String get challengeLogToday;
+
+  /// No description provided for @challengeSleepEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind down before 11 PM'**
+  String get challengeSleepEarly;
+
+  /// No description provided for @badgesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get badgesTitle;
+
+  /// No description provided for @badgeEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'New achievement'**
+  String get badgeEarned;
+
+  /// No description provided for @badgeFirstStep.
+  ///
+  /// In en, this message translates to:
+  /// **'First step'**
+  String get badgeFirstStep;
+
+  /// No description provided for @badgeStreak3.
+  ///
+  /// In en, this message translates to:
+  /// **'3-day streak'**
+  String get badgeStreak3;
+
+  /// No description provided for @badgeStreak7.
+  ///
+  /// In en, this message translates to:
+  /// **'Week of care'**
+  String get badgeStreak7;
+
+  /// No description provided for @badgeStreak30.
+  ///
+  /// In en, this message translates to:
+  /// **'30-day champion'**
+  String get badgeStreak30;
+
+  /// No description provided for @badgePoints100.
+  ///
+  /// In en, this message translates to:
+  /// **'100 points'**
+  String get badgePoints100;
+
+  /// No description provided for @badgePoints500.
+  ///
+  /// In en, this message translates to:
+  /// **'500 points'**
+  String get badgePoints500;
+
+  /// No description provided for @badgeAllInADay.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect day'**
+  String get badgeAllInADay;
+
+  /// No description provided for @educationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get educationTitle;
+
+  /// No description provided for @educationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted, age-appropriate articles about your cycle, body, and wellbeing.'**
+  String get educationSubtitle;
+
+  /// No description provided for @educationCatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get educationCatAll;
+
+  /// No description provided for @educationCatBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle basics'**
+  String get educationCatBasics;
+
+  /// No description provided for @educationCatHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health & symptoms'**
+  String get educationCatHealth;
+
+  /// No description provided for @educationCatNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Food & movement'**
+  String get educationCatNutrition;
+
+  /// No description provided for @educationCatMind.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind & mood'**
+  String get educationCatMind;
+
+  /// No description provided for @educationCatAdult.
+  ///
+  /// In en, this message translates to:
+  /// **'18+ topics'**
+  String get educationCatAdult;
+
+  /// No description provided for @educationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min read'**
+  String educationMinutes(int count);
+
+  /// No description provided for @educationDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Educational content only — not a substitute for medical advice.'**
+  String get educationDisclaimer;
+
+  /// No description provided for @educationArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'articles'**
+  String get educationArticles;
+
+  /// No description provided for @educationNoArticles.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles available'**
+  String get educationNoArticles;
+
+  /// No description provided for @educationPoweredByAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by AI'**
+  String get educationPoweredByAi;
+
+  /// No description provided for @educationAskAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI'**
+  String get educationAskAi;
+
+  /// No description provided for @educationAskAnything.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask any health question'**
+  String get educationAskAnything;
+
+  /// No description provided for @educationAskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about any health topic...'**
+  String get educationAskHint;
+
+  /// No description provided for @educationThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking...'**
+  String get educationThinking;
+
+  /// No description provided for @educationTopicPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'My current phase'**
+  String get educationTopicPhase;
+
+  /// No description provided for @educationTopicPhasePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about my current cycle phase and what I should know'**
+  String get educationTopicPhasePrompt;
+
+  /// No description provided for @educationTopicNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition tips'**
+  String get educationTopicNutrition;
+
+  /// No description provided for @educationTopicNutritionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What foods are best for my current cycle phase?'**
+  String get educationTopicNutritionPrompt;
+
+  /// No description provided for @educationTopicExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get educationTopicExercise;
+
+  /// No description provided for @educationTopicExercisePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What exercises are best for my current cycle phase?'**
+  String get educationTopicExercisePrompt;
+
+  /// No description provided for @educationTopicPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Pain management'**
+  String get educationTopicPain;
+
+  /// No description provided for @educationTopicPainPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I manage period pain naturally?'**
+  String get educationTopicPainPrompt;
+
+  /// No description provided for @educationTopicSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep better'**
+  String get educationTopicSleep;
+
+  /// No description provided for @educationTopicSleepPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I improve my sleep during my cycle?'**
+  String get educationTopicSleepPrompt;
+
+  /// No description provided for @educationTopicMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood & stress'**
+  String get educationTopicMood;
+
+  /// No description provided for @educationTopicMoodPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I manage mood changes during my cycle?'**
+  String get educationTopicMoodPrompt;
+
+  /// No description provided for @reportCycleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Health'**
+  String get reportCycleHealth;
+
+  /// No description provided for @reportFertility.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility & Pregnancy'**
+  String get reportFertility;
+
+  /// No description provided for @reportFullHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Cycle History'**
+  String get reportFullHistory;
+
+  /// No description provided for @reportSymptomPatterns.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom Patterns'**
+  String get reportSymptomPatterns;
+
+  /// No description provided for @reportsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports yet. Log your cycle and symptoms with + for a few days, then check back here.'**
+  String get reportsEmpty;
+
+  /// No description provided for @reportsLoadPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Some report data could not load. Pull down to refresh.'**
+  String get reportsLoadPartial;
+
+  /// No description provided for @reportsSetupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete cycle setup during onboarding first, then open Reports again.'**
+  String get reportsSetupRequired;
+
+  /// No description provided for @doctorReportQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan to share a report summary'**
+  String get doctorReportQrHint;
+
+  /// No description provided for @doctorReportUpgradeUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited reports with Pro'**
+  String get doctorReportUpgradeUnlimited;
+
+  /// No description provided for @reportCycleSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Summary'**
+  String get reportCycleSummary;
+
+  /// No description provided for @reportCycleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle day'**
+  String get reportCycleDay;
+
+  /// No description provided for @reportPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Period day'**
+  String get reportPeriodDay;
+
+  /// No description provided for @reportAvgCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg cycle'**
+  String get reportAvgCycle;
+
+  /// No description provided for @reportAvgPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg period'**
+  String get reportAvgPeriod;
+
+  /// No description provided for @reportTotalCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cycles'**
+  String get reportTotalCycles;
+
+  /// No description provided for @reportRegularity.
+  ///
+  /// In en, this message translates to:
+  /// **'Regularity'**
+  String get reportRegularity;
+
+  /// No description provided for @reportOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation'**
+  String get reportOvulation;
+
+  /// No description provided for @reportPregnancyChance.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy chance'**
+  String get reportPregnancyChance;
+
+  /// No description provided for @reportDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get reportDueDate;
+
+  /// No description provided for @reportPregnancyWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy week'**
+  String get reportPregnancyWeek;
+
+  /// No description provided for @reportTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Trimester'**
+  String get reportTrimester;
+
+  /// No description provided for @accountExportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export local backup'**
+  String get accountExportBackup;
+
+  /// No description provided for @accountImportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Import local backup'**
+  String get accountImportBackup;
+
+  /// No description provided for @accountRestoreCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from cloud'**
+  String get accountRestoreCloud;
+
+  /// No description provided for @accountAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get accountAdvanced;
+
+  /// No description provided for @accountGeminiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini key saved'**
+  String get accountGeminiKeySaved;
+
+  /// No description provided for @accountGeminiKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional Gemini API key fallback if Cloud Functions are not deployed.'**
+  String get accountGeminiKeyHelp;
+
+  /// No description provided for @accountGeminiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini API Key'**
+  String get accountGeminiKeyLabel;
+
+  /// No description provided for @accountGeminiKeySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Gemini key'**
+  String get accountGeminiKeySave;
+
+  /// No description provided for @widgetLanguageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget language (19 languages)'**
+  String get widgetLanguageLabel;
+
+  /// No description provided for @reportPatternFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get reportPatternFallback;
+
+  /// No description provided for @reportPercentOfCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of cycles'**
+  String reportPercentOfCycles(Object percent);
+
+  /// No description provided for @postTypeSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get postTypeSupport;
+
+  /// No description provided for @postTypeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get postTypeQuestion;
+
+  /// No description provided for @postTypeTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get postTypeTip;
+
+  /// No description provided for @postTypeVent.
+  ///
+  /// In en, this message translates to:
+  /// **'Vent'**
+  String get postTypeVent;
+
+  /// No description provided for @onboardingPrivacyAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the Privacy Policy. Cycle data stays on my device unless I enable cloud sync.'**
+  String get onboardingPrivacyAgree;
+
+  /// No description provided for @privacyCenterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & data'**
+  String get privacyCenterTitle;
+
+  /// No description provided for @privacyCenterIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is privacy-first. Health data is stored locally and encrypted. Cloud, AI, and community features are optional and require your consent.'**
+  String get privacyCenterIntro;
+
+  /// No description provided for @privacyDataLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on your device'**
+  String get privacyDataLocal;
+
+  /// No description provided for @privacyDataOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional (with your consent)'**
+  String get privacyDataOptional;
+
+  /// No description provided for @privacyDataNotCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'We never'**
+  String get privacyDataNotCollected;
+
+  /// No description provided for @privacyBulletLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle logs, journal, and wellness data stay on your phone by default.'**
+  String get privacyBulletLocal;
+
+  /// No description provided for @privacyBulletEncrypt.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption keys are stored in Android Keystore / iOS Keychain.'**
+  String get privacyBulletEncrypt;
+
+  /// No description provided for @privacyBulletCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup only when you sign in and turn on sync.'**
+  String get privacyBulletCloud;
+
+  /// No description provided for @privacyBulletAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat sends messages to Google Gemini only when you opt in.'**
+  String get privacyBulletAi;
+
+  /// No description provided for @privacyBulletCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities use an anonymous alias — never your real name or cycle data.'**
+  String get privacyBulletCommunity;
+
+  /// No description provided for @privacyBulletNoSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell or share your health data with advertisers.'**
+  String get privacyBulletNoSell;
+
+  /// No description provided for @privacyBulletNoTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track you across other apps for ads.'**
+  String get privacyBulletNoTrack;
+
+  /// No description provided for @privacyPolicyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Read full Privacy Policy'**
+  String get privacyPolicyLink;
+
+  /// No description provided for @privacyMedicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is not a medical device. Always consult a healthcare professional.'**
+  String get privacyMedicalDisclaimer;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes cloud data and your sign-in permanently.'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account, cloud backups, AI chats, community posts and comments, partner data, and profile photos from our servers. Local data on this device stays until you uninstall the app.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get deleteAccountDone;
+
+  /// No description provided for @deleteAccountReauth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again, then retry deletion.'**
+  String get deleteAccountReauth;
+
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete your account. Please try again or contact support.'**
+  String get deleteAccountFailed;
+
+  /// No description provided for @termsOfServiceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfServiceLink;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// No description provided for @contactSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions, abuse reports, or account help'**
+  String get contactSupportSubtitle;
+
+  /// No description provided for @consentManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your consents'**
+  String get consentManageTitle;
+
+  /// No description provided for @consentManageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn optional features off anytime. Core tracking on your device is unaffected.'**
+  String get consentManageBody;
+
+  /// No description provided for @premiumRequiredCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup is a Premium feature. Subscribe in Account.'**
+  String get premiumRequiredCloud;
+
+  /// No description provided for @premiumRequiredAi.
+  ///
+  /// In en, this message translates to:
+  /// **'This AI feature requires Premium. Subscribe in Account.'**
+  String get premiumRequiredAi;
+
+  /// No description provided for @premiumAiLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used today\'s free AI messages. Upgrade to Premium for unlimited chat.'**
+  String get premiumAiLimitReached;
+
+  /// No description provided for @premiumAiFreeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} free AI messages left today'**
+  String premiumAiFreeRemaining(int count);
+
+  /// No description provided for @openPrivacyCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & data settings'**
+  String get openPrivacyCenter;
+
+  /// No description provided for @consentCloudTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable cloud backup?'**
+  String get consentCloudTitle;
+
+  /// No description provided for @consentCloudBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted cycle backups will be stored in your Firebase account. You can turn this off anytime.'**
+  String get consentCloudBody;
+
+  /// No description provided for @consentAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable AI features?'**
+  String get consentAiTitle;
+
+  /// No description provided for @consentAiBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat messages may be sent to Google Gemini via our secure server for responses. No ads. You can disable this anytime.'**
+  String get consentAiBody;
+
+  /// No description provided for @consentCommunityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join communities?'**
+  String get consentCommunityTitle;
+
+  /// No description provided for @consentCommunityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will use an anonymous alias. Posts are moderated by AI. Your cycle data is never shared.'**
+  String get consentCommunityBody;
+
+  /// No description provided for @consentAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree'**
+  String get consentAccept;
+
+  /// No description provided for @consentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept to continue'**
+  String get consentRequired;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get homeGreeting;
+
+  /// No description provided for @homeGreetingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String homeGreetingName(String name);
+
+  /// No description provided for @homeSubtitleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day} · {phase}'**
+  String homeSubtitleDay(int day, String phase);
+
+  /// No description provided for @homeOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ovulation'**
+  String get homeOvulation;
+
+  /// No description provided for @homeRegularity.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle regularity'**
+  String get homeRegularity;
+
+  /// No description provided for @homeCycleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle day {day}'**
+  String homeCycleDay(int day);
+
+  /// No description provided for @homePeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Period day {day}'**
+  String homePeriodDay(int day);
+
+  /// No description provided for @homeOvulationToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation today'**
+  String get homeOvulationToday;
+
+  /// No description provided for @homeKeyDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Important dates'**
+  String get homeKeyDates;
+
+  /// No description provided for @homeDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected due date'**
+  String get homeDueDate;
+
+  /// No description provided for @homeCycleProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle progress'**
+  String get homeCycleProgress;
+
+  /// No description provided for @homeWeeklyCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get homeWeeklyCalendar;
+
+  /// No description provided for @homeTipsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips & insights'**
+  String get homeTipsSection;
+
+  /// No description provided for @homeLearnSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn & watch'**
+  String get homeLearnSection;
+
+  /// No description provided for @homeVideoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get homeVideoLabel;
+
+  /// No description provided for @homeArticleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Article'**
+  String get homeArticleLabel;
+
+  /// No description provided for @homeCycleView.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle overview'**
+  String get homeCycleView;
+
+  /// No description provided for @homeOpenCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'View full calendar'**
+  String get homeOpenCalendar;
+
+  /// No description provided for @homeStatsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load cycle stats. Pull to refresh.'**
+  String get homeStatsError;
+
+  /// No description provided for @homeLoadingStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your cycle data…'**
+  String get homeLoadingStats;
+
+  /// No description provided for @homeDayShort.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get homeDayShort;
+
+  /// No description provided for @onboardingStepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String onboardingStepLabel(int current, int total);
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Lune'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private cycle & wellness companion'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingWelcomeHelps.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll help you:'**
+  String get onboardingWelcomeHelps;
+
+  /// No description provided for @onboardingWelcomeTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your cycle, symptoms & mood'**
+  String get onboardingWelcomeTrack;
+
+  /// No description provided for @onboardingWelcomeAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart AI chat to answer your questions'**
+  String get onboardingWelcomeAi;
+
+  /// No description provided for @onboardingWelcomeCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Supportive community of women'**
+  String get onboardingWelcomeCommunity;
+
+  /// No description provided for @onboardingWelcomePregnancy.
+  ///
+  /// In en, this message translates to:
+  /// **'Week-by-week pregnancy tracking'**
+  String get onboardingWelcomePregnancy;
+
+  /// No description provided for @onboardingWelcomeSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized self-care tips'**
+  String get onboardingWelcomeSelfCare;
+
+  /// No description provided for @onboardingFeaturesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your app at a glance'**
+  String get onboardingFeaturesTitle;
+
+  /// No description provided for @onboardingFeaturesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here are the main screens:'**
+  String get onboardingFeaturesSubtitle;
+
+  /// No description provided for @onboardingFeatureHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get onboardingFeatureHome;
+
+  /// No description provided for @onboardingFeatureHomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick cycle overview, fast logging, and predictions'**
+  String get onboardingFeatureHomeDesc;
+
+  /// No description provided for @onboardingFeatureSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-care'**
+  String get onboardingFeatureSelfCare;
+
+  /// No description provided for @onboardingFeatureSelfCareDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathing exercises, affirmations, journal, and challenges'**
+  String get onboardingFeatureSelfCareDesc;
+
+  /// No description provided for @onboardingFeatureCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get onboardingFeatureCommunity;
+
+  /// No description provided for @onboardingFeatureCommunityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Support groups, questions & discussions with women like you'**
+  String get onboardingFeatureCommunityDesc;
+
+  /// No description provided for @onboardingFeatureReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get onboardingFeatureReports;
+
+  /// No description provided for @onboardingFeatureReportsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle analysis, charts, and a doctor-ready report'**
+  String get onboardingFeatureReportsDesc;
+
+  /// No description provided for @onboardingFeatureAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get onboardingFeatureAccount;
+
+  /// No description provided for @onboardingFeatureAccountDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile, settings, Premium'**
+  String get onboardingFeatureAccountDesc;
+
+  /// No description provided for @educationNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Education section is not available yet'**
+  String get educationNotAvailable;
+
+  /// No description provided for @selfCareWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to your self-care space'**
+  String get selfCareWelcomeTitle;
+
+  /// No description provided for @selfCareWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking your cycle to get personalized tips, or explore activities now.'**
+  String get selfCareWelcomeSubtitle;
+
+  /// No description provided for @onboardingProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s get to know you'**
+  String get onboardingProfileTitle;
+
+  /// No description provided for @onboardingProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name helps personalize AI tips, self-care, and your home screen.'**
+  String get onboardingProfileSubtitle;
+
+  /// No description provided for @onboardingNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get onboardingNameLabel;
+
+  /// No description provided for @onboardingNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How should we greet you?'**
+  String get onboardingNameHint;
+
+  /// No description provided for @onboardingGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your focus?'**
+  String get onboardingGoalTitle;
+
+  /// No description provided for @onboardingGoalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your cycle, follow your pregnancy, conceive, or avoid — the whole app adapts to your choice.'**
+  String get onboardingGoalSubtitle;
+
+  /// No description provided for @onboardingCycleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle basics'**
+  String get onboardingCycleTitle;
+
+  /// No description provided for @onboardingCycleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These power predictions, reminders, reports, and AI — everywhere in the app.'**
+  String get onboardingCycleSubtitle;
+
+  /// No description provided for @onboardingPregnancyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pregnancy'**
+  String get onboardingPregnancyDataTitle;
+
+  /// No description provided for @onboardingPregnancyDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the first day of your last period to estimate your week, due date, and how your baby is growing.'**
+  String get onboardingPregnancyDataSubtitle;
+
+  /// No description provided for @onboardingPregnancyLmp.
+  ///
+  /// In en, this message translates to:
+  /// **'First day of last period (LMP)'**
+  String get onboardingPregnancyLmp;
+
+  /// No description provided for @pregnancyModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy tracking'**
+  String get pregnancyModeTitle;
+
+  /// No description provided for @pregnancyWeekDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Week {week} · day {day}'**
+  String pregnancyWeekDay(int week, int day);
+
+  /// No description provided for @pregnancyTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Trimester {n}'**
+  String pregnancyTrimester(int n);
+
+  /// No description provided for @pregnancyDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String pregnancyDueDate(String date);
+
+  /// No description provided for @pregnancyBabyThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Baby this week'**
+  String get pregnancyBabyThisWeek;
+
+  /// No description provided for @pregnancyBabyVisualTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your baby now'**
+  String get pregnancyBabyVisualTitle;
+
+  /// No description provided for @pregnancyBabyNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week preview'**
+  String get pregnancyBabyNextWeek;
+
+  /// No description provided for @pregnancyWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'wk'**
+  String get pregnancyWeekShort;
+
+  /// No description provided for @pregnancyExploreWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore by week'**
+  String get pregnancyExploreWeeks;
+
+  /// No description provided for @pregnancyWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Week {week}'**
+  String pregnancyWeekLabel(int week);
+
+  /// No description provided for @pregnancySizeLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Your baby is the size of a {item}'**
+  String pregnancySizeLike(String item);
+
+  /// No description provided for @pregnancySizeComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Size comparison'**
+  String get pregnancySizeComparison;
+
+  /// No description provided for @pregnancyGrowthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate growth'**
+  String get pregnancyGrowthTitle;
+
+  /// No description provided for @pregnancyLengthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get pregnancyLengthLabel;
+
+  /// No description provided for @pregnancyWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get pregnancyWeightLabel;
+
+  /// No description provided for @pregnancyYourBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body this week'**
+  String get pregnancyYourBody;
+
+  /// No description provided for @pregnancySelfCareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prenatal self-care'**
+  String get pregnancySelfCareTitle;
+
+  /// No description provided for @pregnancySelfCareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle rituals and tips for your trimester.'**
+  String get pregnancySelfCareSubtitle;
+
+  /// No description provided for @pregnancyReportOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy overview'**
+  String get pregnancyReportOverview;
+
+  /// No description provided for @pregnancyReportChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Trimester checklist'**
+  String get pregnancyReportChecklist;
+
+  /// No description provided for @pregnancyDaysToDue.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days to due date'**
+  String pregnancyDaysToDue(int days);
+
+  /// No description provided for @pregnancyCheckFirstVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule your first prenatal visit'**
+  String get pregnancyCheckFirstVisit;
+
+  /// No description provided for @pregnancyCheckPrenatalVitamins.
+  ///
+  /// In en, this message translates to:
+  /// **'Take prenatal vitamins as advised'**
+  String get pregnancyCheckPrenatalVitamins;
+
+  /// No description provided for @pregnancyCheckRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest when you feel tired'**
+  String get pregnancyCheckRest;
+
+  /// No description provided for @pregnancyCheckAnatomyScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Anatomy scan around week 20'**
+  String get pregnancyCheckAnatomyScan;
+
+  /// No description provided for @pregnancyCheckMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Note baby movements daily'**
+  String get pregnancyCheckMovement;
+
+  /// No description provided for @pregnancyCheckHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay hydrated throughout the day'**
+  String get pregnancyCheckHydration;
+
+  /// No description provided for @pregnancyCheckBirthPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Discuss your birth plan with your provider'**
+  String get pregnancyCheckBirthPlan;
+
+  /// No description provided for @pregnancyCheckHospitalBag.
+  ///
+  /// In en, this message translates to:
+  /// **'Start packing your hospital bag'**
+  String get pregnancyCheckHospitalBag;
+
+  /// No description provided for @pregnancyCheckKickCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Count kicks once daily in the third trimester'**
+  String get pregnancyCheckKickCounts;
+
+  /// No description provided for @aiInsightPrenatalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prenatal tip'**
+  String get aiInsightPrenatalTitle;
+
+  /// No description provided for @aiInsightConceiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility tip'**
+  String get aiInsightConceiveTitle;
+
+  /// No description provided for @aiInsightAvoidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection tip'**
+  String get aiInsightAvoidTitle;
+
+  /// No description provided for @aiInsightWellnessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness tip'**
+  String get aiInsightWellnessTitle;
+
+  /// No description provided for @goalModeConceiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trying to conceive'**
+  String get goalModeConceiveTitle;
+
+  /// No description provided for @goalModeAvoidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Avoiding pregnancy'**
+  String get goalModeAvoidTitle;
+
+  /// No description provided for @goalModeGeneralTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'General wellness'**
+  String get goalModeGeneralTitle;
+
+  /// No description provided for @goalModeTodayFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s focus'**
+  String get goalModeTodayFocus;
+
+  /// No description provided for @goalModeChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Your checklist'**
+  String get goalModeChecklist;
+
+  /// No description provided for @goalModeReportInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights for your goal'**
+  String get goalModeReportInsights;
+
+  /// No description provided for @goalModeFertilityToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility today'**
+  String get goalModeFertilityToday;
+
+  /// No description provided for @goalModeFertilityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get goalModeFertilityHigh;
+
+  /// No description provided for @goalModeFertilityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get goalModeFertilityModerate;
+
+  /// No description provided for @goalModeFertilityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get goalModeFertilityLow;
+
+  /// No description provided for @goalModeFertilityUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Track more'**
+  String get goalModeFertilityUnknown;
+
+  /// No description provided for @goalModeTestDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy test'**
+  String get goalModeTestDate;
+
+  /// No description provided for @goalModeOvulationToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation day today'**
+  String get goalModeOvulationToday;
+
+  /// No description provided for @goalModeConceiveSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility self-care'**
+  String get goalModeConceiveSelfCare;
+
+  /// No description provided for @goalModeConceiveSelfCareSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Small daily habits that support conception.'**
+  String get goalModeConceiveSelfCareSub;
+
+  /// No description provided for @goalModeAvoidSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection self-care'**
+  String get goalModeAvoidSelfCare;
+
+  /// No description provided for @goalModeAvoidSelfCareSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay aware of fertile days and your contraception routine.'**
+  String get goalModeAvoidSelfCareSub;
+
+  /// No description provided for @goalModeGeneralSelfCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle wellness'**
+  String get goalModeGeneralSelfCare;
+
+  /// No description provided for @goalModeGeneralSelfCareSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Holistic care for your body across every phase.'**
+  String get goalModeGeneralSelfCareSub;
+
+  /// No description provided for @pregnancyTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your pregnancy'**
+  String get pregnancyTrackingTitle;
+
+  /// No description provided for @pregnancyTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log weight, count kicks, and time contractions — like Flo.'**
+  String get pregnancyTrackingSubtitle;
+
+  /// No description provided for @pregnancyWeightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get pregnancyWeightTitle;
+
+  /// No description provided for @pregnancyWeightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s weight'**
+  String get pregnancyWeightHint;
+
+  /// No description provided for @pregnancyWeightUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get pregnancyWeightUnit;
+
+  /// No description provided for @pregnancyWeightSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get pregnancyWeightSave;
+
+  /// No description provided for @pregnancyWeightSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight saved'**
+  String get pregnancyWeightSaved;
+
+  /// No description provided for @pregnancyWeightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid weight between 30 and 200 kg'**
+  String get pregnancyWeightInvalid;
+
+  /// No description provided for @pregnancyWeightLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'{kg} kg (latest)'**
+  String pregnancyWeightLatest(double kg);
+
+  /// No description provided for @pregnancyKicksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kick counter'**
+  String get pregnancyKicksTitle;
+
+  /// No description provided for @pregnancyKicksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Count 10 kicks — tap each time baby moves. Contact your provider if movement drops.'**
+  String get pregnancyKicksHint;
+
+  /// No description provided for @pregnancyKicksStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start counting'**
+  String get pregnancyKicksStart;
+
+  /// No description provided for @pregnancyKicksTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Kick!'**
+  String get pregnancyKicksTap;
+
+  /// No description provided for @pregnancyKicksEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get pregnancyKicksEnd;
+
+  /// No description provided for @pregnancyKicksToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} kicks today'**
+  String pregnancyKicksToday(int count);
+
+  /// No description provided for @pregnancyContractionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contraction timer'**
+  String get pregnancyContractionsTitle;
+
+  /// No description provided for @pregnancyContractionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start when a contraction begins, stop when it ends. Call your provider if contractions are regular before 37 weeks.'**
+  String get pregnancyContractionsHint;
+
+  /// No description provided for @pregnancyContractionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Contraction started'**
+  String get pregnancyContractionStart;
+
+  /// No description provided for @pregnancyContractionEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Contraction ended'**
+  String get pregnancyContractionEnd;
+
+  /// No description provided for @pregnancyContractionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} today'**
+  String pregnancyContractionsToday(int count);
+
+  /// No description provided for @pregnancyContractionAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg {seconds}s'**
+  String pregnancyContractionAvg(int seconds);
+
+  /// No description provided for @pregnancyContractionInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {minutes} min'**
+  String pregnancyContractionInterval(int minutes);
+
+  /// No description provided for @pregnancyContractionRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent today'**
+  String get pregnancyContractionRecent;
+
+  /// No description provided for @pregnancyContractionDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String pregnancyContractionDuration(int seconds);
+
+  /// No description provided for @onboardingDateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get onboardingDateFormat;
+
+  /// No description provided for @cycleSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle settings'**
+  String get cycleSettingsTitle;
+
+  /// No description provided for @cycleSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates Home, AI, reminders, and predictions across the app.'**
+  String get cycleSettingsSubtitle;
+
+  /// No description provided for @cycleSettingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & sync'**
+  String get cycleSettingsSave;
+
+  /// No description provided for @onboardingNoEmailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'No email required — your data stays on this device.'**
+  String get onboardingNoEmailNote;
+
+  /// No description provided for @onboardingPartialSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup saved locally. You can adjust cycle settings anytime from Account.'**
+  String get onboardingPartialSave;
+
+  /// No description provided for @accountRerunSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Run setup again'**
+  String get accountRerunSetup;
+
+  /// No description provided for @accountRerunSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your name, goal, and cycle basics'**
+  String get accountRerunSetupSubtitle;
+
+  /// No description provided for @rerunSetupConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get rerunSetupConfirmTitle;
+
+  /// No description provided for @rerunSetupConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will restart the initial setup. Your existing data won\'t be lost, but you\'ll need to re-enter your preferences.'**
+  String get rerunSetupConfirmBody;
+
+  /// No description provided for @rerunSetupConfirmYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, restart'**
+  String get rerunSetupConfirmYes;
+
+  /// No description provided for @rerunSetupConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get rerunSetupConfirmCancel;
+
+  /// No description provided for @accountChangeGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your goal'**
+  String get accountChangeGoal;
+
+  /// No description provided for @accountChangeGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The app adapts instantly — home, reports, self-care, and AI.'**
+  String get accountChangeGoalHint;
+
+  /// No description provided for @goalChangedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal updated — the app is now tailored to you'**
+  String get goalChangedSnackbar;
+
+  /// No description provided for @guestModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Private guest mode'**
+  String get guestModeTitle;
+
+  /// No description provided for @guestModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Local profile · no email'**
+  String get guestModeLabel;
+
+  /// No description provided for @guestModeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re using Lune privately. Sign in only for Communities, Premium, or cloud backup.'**
+  String get guestModeBody;
+
+  /// No description provided for @signInOptionalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in (optional)'**
+  String get signInOptionalTitle;
+
+  /// No description provided for @signInOptionalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For communities, Premium subscription, and cloud backup'**
+  String get signInOptionalSubtitle;
+
+  /// No description provided for @communityRequiresAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities need a sign-in to protect everyone\'s privacy. Your cycle data is never shared.'**
+  String get communityRequiresAccount;
+
+  /// No description provided for @aiGuestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Works on your device. Sign in for full cloud AI features.'**
+  String get aiGuestHint;
+
+  /// No description provided for @editProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile'**
+  String get editProfileTitle;
+
+  /// No description provided for @avatarPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your character'**
+  String get avatarPickTitle;
+
+  /// No description provided for @avatarUsePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my photo'**
+  String get avatarUsePhoto;
+
+  /// No description provided for @communityAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get communityAttachPhoto;
+
+  /// No description provided for @communityAttachVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add video'**
+  String get communityAttachVideo;
+
+  /// No description provided for @editProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a fun character or your own photo.'**
+  String get editProfileSubtitle;
+
+  /// No description provided for @editProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save profile'**
+  String get editProfileSave;
+
+  /// No description provided for @partnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner mode'**
+  String get partnerTitle;
+
+  /// No description provided for @partnerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share only what you choose with one trusted partner'**
+  String get partnerSubtitle;
+
+  /// No description provided for @partnerIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your partner sees a limited card: cycle phase, days until the next period — nothing else. You control every item and can unlink anytime.'**
+  String get partnerIntro;
+
+  /// No description provided for @partnerSignInPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner mode needs a sign-in so the link stays private and secure.'**
+  String get partnerSignInPrompt;
+
+  /// No description provided for @partnerOwnerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my cycle'**
+  String get partnerOwnerSection;
+
+  /// No description provided for @partnerYourCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invite code'**
+  String get partnerYourCode;
+
+  /// No description provided for @partnerCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get partnerCodeCopied;
+
+  /// No description provided for @partnerRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get partnerRegenerate;
+
+  /// No description provided for @partnerShareWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What your partner can see'**
+  String get partnerShareWhat;
+
+  /// No description provided for @partnerSharePhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle phase & day'**
+  String get partnerSharePhase;
+
+  /// No description provided for @partnerShareNextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Days until next period'**
+  String get partnerShareNextPeriod;
+
+  /// No description provided for @partnerSharePain.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent pain level'**
+  String get partnerSharePain;
+
+  /// No description provided for @partnerLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner linked'**
+  String get partnerLinked;
+
+  /// No description provided for @partnerNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'No partner linked yet — share your code'**
+  String get partnerNotLinked;
+
+  /// No description provided for @partnerUnlink.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink partner'**
+  String get partnerUnlink;
+
+  /// No description provided for @partnerUnlinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner unlinked'**
+  String get partnerUnlinked;
+
+  /// No description provided for @partnerPublishNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update shared card now'**
+  String get partnerPublishNow;
+
+  /// No description provided for @partnerPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared card updated'**
+  String get partnerPublished;
+
+  /// No description provided for @partnerNothingToPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing shared — link a partner first'**
+  String get partnerNothingToPublish;
+
+  /// No description provided for @partnerPartnerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m the partner'**
+  String get partnerPartnerSection;
+
+  /// No description provided for @partnerEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter her invite code'**
+  String get partnerEnterCode;
+
+  /// No description provided for @partnerCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. K7XF2M'**
+  String get partnerCodeHint;
+
+  /// No description provided for @partnerJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get partnerJoin;
+
+  /// No description provided for @partnerJoinedOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked successfully'**
+  String get partnerJoinedOk;
+
+  /// No description provided for @partnerInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or expired code'**
+  String get partnerInvalidCode;
+
+  /// No description provided for @partnerLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove link'**
+  String get partnerLeave;
+
+  /// No description provided for @partnerStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Her cycle today'**
+  String get partnerStatusTitle;
+
+  /// No description provided for @partnerStatusPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase'**
+  String get partnerStatusPhase;
+
+  /// No description provided for @partnerStatusCycleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle day'**
+  String get partnerStatusCycleDay;
+
+  /// No description provided for @partnerStatusNextPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days until next period'**
+  String partnerStatusNextPeriod(int days);
+
+  /// No description provided for @partnerStatusPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent pain level'**
+  String get partnerStatusPain;
+
+  /// No description provided for @partnerStatusPeriodActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Period is active now'**
+  String get partnerStatusPeriodActive;
+
+  /// No description provided for @partnerStatusEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing shared yet — ask her to update the shared card.'**
+  String get partnerStatusEmpty;
+
+  /// No description provided for @partnerStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String partnerStatusUpdated(String time);
+
+  /// No description provided for @partnerTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to support her today'**
+  String get partnerTipTitle;
+
+  /// No description provided for @partnerTipMenstruation.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy may be low. A warm drink, patience, and taking something off her plate go a long way.'**
+  String get partnerTipMenstruation;
+
+  /// No description provided for @partnerTipFollicular.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy is rising — a great time to plan something fun together.'**
+  String get partnerTipFollicular;
+
+  /// No description provided for @partnerTipOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'She is likely feeling at her best. Enjoy quality time together.'**
+  String get partnerTipOvulation;
+
+  /// No description provided for @partnerTipLuteal.
+  ///
+  /// In en, this message translates to:
+  /// **'PMS may show up: be patient and extra kind, small gestures matter most now.'**
+  String get partnerTipLuteal;
+
+  /// No description provided for @partnerTipDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in with her and ask how she is feeling today.'**
+  String get partnerTipDefault;
+
+  /// No description provided for @communityFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get communityFilterAll;
+
+  /// No description provided for @communityAnswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get communityAnswered;
+
+  /// No description provided for @communityTabSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get communityTabSaved;
+
+  /// No description provided for @communitySavedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved posts yet. Tap the bookmark on a post to save it.'**
+  String get communitySavedEmpty;
+
+  /// No description provided for @communityShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get communityShare;
+
+  /// No description provided for @communityShareVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared from Lune'**
+  String get communityShareVia;
+
+  /// No description provided for @communityPostSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Post saved'**
+  String get communityPostSaved;
+
+  /// No description provided for @communityPostUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from saved'**
+  String get communityPostUnsaved;
+
+  /// No description provided for @communityDeletePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete post'**
+  String get communityDeletePost;
+
+  /// No description provided for @communityDeleteComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete comment'**
+  String get communityDeleteComment;
+
+  /// No description provided for @communityDeletePostConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post permanently?'**
+  String get communityDeletePostConfirm;
+
+  /// No description provided for @communityDeleteCommentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this comment?'**
+  String get communityDeleteCommentConfirm;
+
+  /// No description provided for @communityPostDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted'**
+  String get communityPostDeleted;
+
+  /// No description provided for @communityCommentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment deleted'**
+  String get communityCommentDeleted;
+
+  /// No description provided for @communityReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get communityReply;
+
+  /// No description provided for @communityReplyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to {alias}'**
+  String communityReplyingTo(String alias);
+
+  /// No description provided for @communityMarkBestAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as best answer'**
+  String get communityMarkBestAnswer;
+
+  /// No description provided for @communityBestAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Best answer'**
+  String get communityBestAnswer;
+
+  /// No description provided for @communityCatCulture.
+  ///
+  /// In en, this message translates to:
+  /// **'Culture'**
+  String get communityCatCulture;
+
+  /// No description provided for @communityCatAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Young adults'**
+  String get communityCatAge;
+
+  /// No description provided for @communityHomeCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get communityHomeCardTitle;
+
+  /// No description provided for @communityHomeCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support, questions, and sisterhood — nickname only'**
+  String get communityHomeCardSubtitle;
+
+  /// No description provided for @communityNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Community activity'**
+  String get communityNotifTitle;
+
+  /// No description provided for @communityNotifSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes and comments on your posts'**
+  String get communityNotifSubtitle;
+
+  /// No description provided for @communityTextOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos & videos are Premium. Community reports auto-hide unsafe posts.'**
+  String get communityTextOnlyNote;
+
+  /// No description provided for @communityEditPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit post'**
+  String get communityEditPost;
+
+  /// No description provided for @communityPostUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Post updated'**
+  String get communityPostUpdated;
+
+  /// No description provided for @communityEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get communityEdited;
+
+  /// No description provided for @communityActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get communityActivityTitle;
+
+  /// No description provided for @communityActivityEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet. When someone likes or comments on your posts, it appears here.'**
+  String get communityActivityEmpty;
+
+  /// No description provided for @communityActivityComment.
+  ///
+  /// In en, this message translates to:
+  /// **'{alias} commented on your post'**
+  String communityActivityComment(String alias);
+
+  /// No description provided for @communityActivityLike.
+  ///
+  /// In en, this message translates to:
+  /// **'{alias} liked your post'**
+  String communityActivityLike(String alias);
+
+  /// No description provided for @communityActivityReply.
+  ///
+  /// In en, this message translates to:
+  /// **'{alias} replied to your comment'**
+  String communityActivityReply(String alias);
+
+  /// No description provided for @communityMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get communityMarkAllRead;
+
+  /// No description provided for @communitySortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get communitySortNewest;
+
+  /// No description provided for @communitySortDiscussed.
+  ///
+  /// In en, this message translates to:
+  /// **'Most discussed'**
+  String get communitySortDiscussed;
+
+  /// No description provided for @communityFilterMyPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'My posts'**
+  String get communityFilterMyPosts;
+
+  /// No description provided for @communitySearchPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search posts...'**
+  String get communitySearchPosts;
+
+  /// No description provided for @communityCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get communityCopied;
+
+  /// No description provided for @communityCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get communityCopy;
+
+  /// No description provided for @communityGuidelinesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidelines'**
+  String get communityGuidelinesShort;
+
+  /// No description provided for @premiumUpsellTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune Premium'**
+  String get premiumUpsellTitle;
+
+  /// No description provided for @premiumUpsellSubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'View subscription'**
+  String get premiumUpsellSubscribe;
+
+  /// No description provided for @premiumUpsellNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get premiumUpsellNotNow;
+
+  /// No description provided for @moderationRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Content not approved'**
+  String get moderationRejectedTitle;
+
+  /// No description provided for @moderationRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post or comment did not pass our community guidelines review.'**
+  String get moderationRejectedBody;
+
+  /// No description provided for @moderationRejectedTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips: no phone numbers, links, or email addresses. Keep it supportive and respectful. Medical topics need a healthcare provider.'**
+  String get moderationRejectedTips;
+
+  /// No description provided for @moderationContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get moderationContactSupport;
+
+  /// No description provided for @moderationTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit and try again'**
+  String get moderationTryAgain;
+
+  /// No description provided for @aboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutTitle;
+
+  /// No description provided for @aboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String aboutVersion(String version);
+
+  /// No description provided for @aboutTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'A private, secure cycle tracker — your data stays on device. Cloud, AI, and communities are optional.'**
+  String get aboutTagline;
+
+  /// No description provided for @insightsCycleRegularityScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle regularity (CRS)'**
+  String get insightsCycleRegularityScore;
+
+  /// No description provided for @insightsPeriodRegularityScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Period regularity (PRS)'**
+  String get insightsPeriodRegularityScore;
+
+  /// No description provided for @insightsGraphEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Log more data to see this chart — track symptoms, weight, sleep, and more in Daily Log.'**
+  String get insightsGraphEmpty;
+
+  /// No description provided for @predictedSymptomsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely symptoms'**
+  String get predictedSymptomsTitle;
+
+  /// No description provided for @predictedSymptomsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your past cycles on this cycle day — not a medical prediction.'**
+  String get predictedSymptomsDisclaimer;
+
+  /// No description provided for @predictedSymptomsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get predictedSymptomsToday;
+
+  /// No description provided for @predictedSymptomsTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get predictedSymptomsTomorrow;
+
+  /// No description provided for @predictedSymptomsLikelihood.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% likely'**
+  String predictedSymptomsLikelihood(int percent);
+
+  /// No description provided for @reportCycleHistoryTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent cycles'**
+  String get reportCycleHistoryTable;
+
+  /// No description provided for @reportCycleHistoryStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get reportCycleHistoryStart;
+
+  /// No description provided for @reportCycleHistoryCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle'**
+  String get reportCycleHistoryCycle;
+
+  /// No description provided for @reportCycleHistoryPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get reportCycleHistoryPeriod;
+
+  /// No description provided for @reportPregnancyTestDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected pregnancy test'**
+  String get reportPregnancyTestDate;
+
+  /// No description provided for @ovulationReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation reminder'**
+  String get ovulationReminder;
+
+  /// No description provided for @notificationsWellnessNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill, sanitary, and LARC reminders in Wellness follow the main toggle above.'**
+  String get notificationsWellnessNote;
+
+  /// No description provided for @graphExportShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart ready to share.'**
+  String get graphExportShared;
+
+  /// No description provided for @adminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Panel'**
+  String get adminTitle;
+
+  /// No description provided for @adminAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have admin access.'**
+  String get adminAccessDenied;
+
+  /// No description provided for @adminDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get adminDashboard;
+
+  /// No description provided for @adminReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get adminReports;
+
+  /// No description provided for @adminSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get adminSettings;
+
+  /// No description provided for @adminTotalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total users'**
+  String get adminTotalUsers;
+
+  /// No description provided for @adminPendingReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending reports'**
+  String get adminPendingReports;
+
+  /// No description provided for @adminRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get adminRecentActivity;
+
+  /// No description provided for @adminNoActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet.'**
+  String get adminNoActivity;
+
+  /// No description provided for @adminReportAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get adminReportAuthor;
+
+  /// No description provided for @adminReportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get adminReportReason;
+
+  /// No description provided for @adminReportStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get adminReportStatus;
+
+  /// No description provided for @adminReportPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get adminReportPending;
+
+  /// No description provided for @adminReportResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report resolved'**
+  String get adminReportResolved;
+
+  /// No description provided for @adminReportDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss report'**
+  String get adminReportDismiss;
+
+  /// No description provided for @adminHidePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide post'**
+  String get adminHidePost;
+
+  /// No description provided for @adminBanUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban user'**
+  String get adminBanUser;
+
+  /// No description provided for @adminUnbanUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unban user'**
+  String get adminUnbanUser;
+
+  /// No description provided for @adminUserBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'User banned'**
+  String get adminUserBanned;
+
+  /// No description provided for @adminUserUnbanned.
+  ///
+  /// In en, this message translates to:
+  /// **'User unbaned'**
+  String get adminUserUnbanned;
+
+  /// No description provided for @adminPostHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Post hidden'**
+  String get adminPostHidden;
+
+  /// No description provided for @adminSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved'**
+  String get adminSettingsSaved;
+
+  /// No description provided for @adminCommunityEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Community enabled'**
+  String get adminCommunityEnabled;
+
+  /// No description provided for @adminAiEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Education enabled'**
+  String get adminAiEducation;
+
+  /// No description provided for @adminAnnouncement.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement'**
+  String get adminAnnouncement;
+
+  /// No description provided for @adminAnnouncementTitleEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (English)'**
+  String get adminAnnouncementTitleEn;
+
+  /// No description provided for @adminAnnouncementTitleAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (Arabic)'**
+  String get adminAnnouncementTitleAr;
+
+  /// No description provided for @adminAnnouncementBodyEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Body (English)'**
+  String get adminAnnouncementBodyEn;
+
+  /// No description provided for @adminAnnouncementBodyAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Body (Arabic)'**
+  String get adminAnnouncementBodyAr;
+
+  /// No description provided for @adminSupportUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Support URL'**
+  String get adminSupportUrl;
+
+  /// No description provided for @adminPrivacyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy URL'**
+  String get adminPrivacyUrl;
+
+  /// No description provided for @adminSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save settings'**
+  String get adminSave;
+
+  /// No description provided for @communityEditComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit comment'**
+  String get communityEditComment;
+
+  /// No description provided for @communityCommentUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment updated'**
+  String get communityCommentUpdated;
+
+  /// No description provided for @communityPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get communityPickImage;
+
+  /// No description provided for @communityPickVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose video'**
+  String get communityPickVideo;
+
+  /// No description provided for @communityAddMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo or video'**
+  String get communityAddMedia;
+
+  /// No description provided for @communityPostAnonymously.
+  ///
+  /// In en, this message translates to:
+  /// **'Post anonymously'**
+  String get communityPostAnonymously;
+
+  /// No description provided for @communityMediaPremiumGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Attaching photos and videos is a Premium feature. Upgrade to unlock media posts.'**
+  String get communityMediaPremiumGate;
+
+  /// No description provided for @premiumFeatureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium feature'**
+  String get premiumFeatureTitle;
+
+  /// No description provided for @upgradeToPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get upgradeToPremium;
+
+  /// No description provided for @communityPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending review'**
+  String get communityPendingReview;
+
+  /// No description provided for @communityThreadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies'**
+  String get communityThreadTitle;
+
+  /// No description provided for @communityNoReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'No replies yet'**
+  String get communityNoReplies;
+
+  /// No description provided for @communityViewReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'View {count} replies'**
+  String communityViewReplies(int count);
+
+  /// No description provided for @adminPendingModeration.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending moderation'**
+  String get adminPendingModeration;
+
+  /// No description provided for @adminApprovePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve post'**
+  String get adminApprovePost;
+
+  /// No description provided for @adminRejectPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject post'**
+  String get adminRejectPost;
+
+  /// No description provided for @adminNoReports.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending reports or moderation'**
+  String get adminNoReports;
+
+  /// No description provided for @adminPendingComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending comments'**
+  String get adminPendingComments;
+
+  /// No description provided for @adminApproveComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve comment'**
+  String get adminApproveComment;
+
+  /// No description provided for @adminRejectComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject comment'**
+  String get adminRejectComment;
+
+  /// No description provided for @storyCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Story'**
+  String get storyCreate;
+
+  /// No description provided for @storyPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo from gallery'**
+  String get storyPickImage;
+
+  /// No description provided for @storyTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Text story'**
+  String get storyTextOnly;
+
+  /// No description provided for @storyTextOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Colored background with text'**
+  String get storyTextOnlyHint;
+
+  /// No description provided for @storyTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s on your mind?'**
+  String get storyTextHint;
+
+  /// No description provided for @storyPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Story'**
+  String get storyPublish;
+
+  /// No description provided for @storyPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Story shared!'**
+  String get storyPublished;
+
+  /// No description provided for @storyPremiumRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories with media require Premium'**
+  String get storyPremiumRequired;
+
+  /// No description provided for @storyYourStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Your story'**
+  String get storyYourStory;
+
+  /// No description provided for @storyViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all stories'**
+  String get storyViewAll;
+
+  /// No description provided for @aiQuickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like?'**
+  String get aiQuickActionsTitle;
+
+  /// No description provided for @aiFeatureBriefing.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Briefing'**
+  String get aiFeatureBriefing;
+
+  /// No description provided for @aiFeatureBriefingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Give me my daily briefing'**
+  String get aiFeatureBriefingPrompt;
+
+  /// No description provided for @aiFeaturePatterns.
+  ///
+  /// In en, this message translates to:
+  /// **'My Patterns'**
+  String get aiFeaturePatterns;
+
+  /// No description provided for @aiFeaturePatternsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze my cycle patterns from recent months'**
+  String get aiFeaturePatternsPrompt;
+
+  /// No description provided for @aiFeatureNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Tips'**
+  String get aiFeatureNutrition;
+
+  /// No description provided for @aiFeatureNutritionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'What should I eat today based on my cycle phase?'**
+  String get aiFeatureNutritionPrompt;
+
+  /// No description provided for @aiFeaturePartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner Message'**
+  String get aiFeaturePartner;
+
+  /// No description provided for @aiFeaturePartnerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me tell my partner how I\'m feeling today'**
+  String get aiFeaturePartnerPrompt;
+
+  /// No description provided for @aiFeatureMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Journal'**
+  String get aiFeatureMood;
+
+  /// No description provided for @aiFeatureMoodPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to write about how I\'m feeling'**
+  String get aiFeatureMoodPrompt;
+
+  /// No description provided for @aiFeatureEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Help'**
+  String get aiFeatureEmergency;
+
+  /// No description provided for @aiEmergencyPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m in pain and need help right now'**
+  String get aiEmergencyPrompt;
+
+  /// No description provided for @aiEmergencyTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick pain relief guidance'**
+  String get aiEmergencyTooltip;
+
+  /// No description provided for @dailyBriefingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Briefing'**
+  String get dailyBriefingTitle;
+
+  /// No description provided for @dailyBriefingLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your daily briefing...'**
+  String get dailyBriefingLoading;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyEffectiveDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective Date'**
+  String get privacyEffectiveDate;
+
+  /// No description provided for @privacyOpenExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get privacyOpenExternal;
+
+  /// No description provided for @privacyContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Us'**
+  String get privacyContactTitle;
+
+  /// No description provided for @privacyContactBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at: {email}'**
+  String privacyContactBody(Object email);
+
+  /// No description provided for @privacyP1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Introduction'**
+  String get privacyP1Title;
+
+  /// No description provided for @privacyP1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune (\"we\", \"us\", or \"our\") is a menstrual cycle tracking application designed to help users monitor their health and wellness. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our mobile application and related services. By using Lune, you agree to the practices described in this policy. If you do not agree, please discontinue use of the application.'**
+  String get privacyP1Body;
+
+  /// No description provided for @privacyP2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Information We Collect'**
+  String get privacyP2Title;
+
+  /// No description provided for @privacyP2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: If you create an account, we collect your email address and display name via Firebase Authentication.\n• Community Content: Posts, comments, and profile information you share in community features.\n• Device Information: Basic device identifiers required for push notifications and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed to generate responses and are not permanently stored on our servers.'**
+  String get privacyP2Body;
+
+  /// No description provided for @privacyP3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. How We Use Your Information'**
+  String get privacyP3Title;
+
+  /// No description provided for @privacyP3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance and fix bugs.\n• Ensure safety and prevent misuse of community features.'**
+  String get privacyP3Body;
+
+  /// No description provided for @privacyP4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Data Storage & Security'**
+  String get privacyP4Title;
+
+  /// No description provided for @privacyP4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle and health data is stored locally on your device by default. If you enable cloud sync, your data is encrypted using AES-256 encryption and stored securely in Google Firebase (Firestore). Encryption keys are stored in your device\'s secure storage (Android Keystore / iOS Keychain). We implement industry-standard security measures including TLS encryption, secure authentication, and access controls.'**
+  String get privacyP4Body;
+
+  /// No description provided for @privacyP5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Third-Party Services'**
+  String get privacyP5Title;
+
+  /// No description provided for @privacyP5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.\n• Google Gemini AI: For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.\n• Google Play Billing: For processing in-app subscriptions.\n• PayPal: For alternative payment processing.\n\nEach service has its own privacy policy. We encourage you to review them.'**
+  String get privacyP5Body;
+
+  /// No description provided for @privacyP6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'6. Your Data Rights'**
+  String get privacyP6Title;
+
+  /// No description provided for @privacyP6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the right to:\n\n• Access your data: View all data stored about you within the app.\n• Export your data: Download your cycle data as a local backup file.\n• Delete your data: Delete your account and all associated data permanently from the Privacy Center.\n• Revoke consent: Withdraw consent for cloud sync, AI features, or community participation at any time.\n• Opt out of notifications: Disable any notification type from settings.\n\nTo exercise these rights, use the in-app Privacy Center or contact us at the email below.'**
+  String get privacyP6Body;
+
+  /// No description provided for @privacyP7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'7. Children\'s Privacy'**
+  String get privacyP7Title;
+
+  /// No description provided for @privacyP7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is not intended for children under 13 years of age (or the applicable age of consent in your jurisdiction). We do not knowingly collect personal information from children. If we discover that a child has provided us with personal data, we will delete it promptly. Parents or guardians who believe a child has used Lune should contact us immediately.'**
+  String get privacyP7Body;
+
+  /// No description provided for @privacyP8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'8. Data Retention'**
+  String get privacyP8Title;
+
+  /// No description provided for @privacyP8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, all personal data is permanently removed from our servers within 30 days. Local data on your device remains until you uninstall the app or manually delete it.'**
+  String get privacyP8Body;
+
+  /// No description provided for @privacyP9Title.
+  ///
+  /// In en, this message translates to:
+  /// **'9. International Data Transfers'**
+  String get privacyP9Title;
+
+  /// No description provided for @privacyP9Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data may be processed in countries other than your own, including the United States where Google Firebase servers are located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers.'**
+  String get privacyP9Body;
+
+  /// No description provided for @privacyP10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'10. Medical Disclaimer'**
+  String get privacyP10Title;
+
+  /// No description provided for @privacyP10Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is designed for informational and wellness tracking purposes only. It is not a medical device and does not provide medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical concerns. Do not rely solely on Lune\'s predictions or AI-generated content for health decisions.'**
+  String get privacyP10Body;
+
+  /// No description provided for @privacyP11Title.
+  ///
+  /// In en, this message translates to:
+  /// **'11. Changes to This Policy'**
+  String get privacyP11Title;
+
+  /// No description provided for @privacyP11Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We may update this Privacy Policy from time to time. We will notify you of significant changes through in-app notifications or email. Your continued use of Lune after changes constitutes acceptance of the updated policy. We encourage you to review this policy periodically.'**
+  String get privacyP11Body;
+
+  /// No description provided for @privacyP12Title.
+  ///
+  /// In en, this message translates to:
+  /// **'12. Contact Us'**
+  String get privacyP12Title;
+
+  /// No description provided for @privacyP12Body.
+  ///
+  /// In en, this message translates to:
+  /// **'For questions, concerns, or data requests related to this Privacy Policy, please contact us at:'**
+  String get privacyP12Body;
+
+  /// No description provided for @termsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsTitle;
+
+  /// No description provided for @termsP1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Acceptance of Terms'**
+  String get termsP1Title;
+
+  /// No description provided for @termsP1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'By downloading, installing, or using Lune (the \"App\"), you agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, do not use the App. These Terms constitute a legally binding agreement between you and Lune.'**
+  String get termsP1Body;
+
+  /// No description provided for @termsP2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Description of Service'**
+  String get termsP2Title;
+
+  /// No description provided for @termsP2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content.\n\nThe App is intended for personal, non-commercial use only.'**
+  String get termsP2Body;
+
+  /// No description provided for @termsP3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. User Accounts'**
+  String get termsP3Title;
+
+  /// No description provided for @termsP3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'To access certain features, you may create an account using email/password or Google Sign-In. You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. You must be at least 13 years old to create an account. We reserve the right to suspend or terminate accounts that violate these Terms.'**
+  String get termsP3Body;
+
+  /// No description provided for @termsP4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'4. User Conduct'**
+  String get termsP4Title;
+
+  /// No description provided for @termsP4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You agree NOT to:\n\n• Use the App for any unlawful purpose.\n• Post harmful, abusive, or misleading content in community features.\n• Impersonate another person or entity.\n• Attempt to access other users\' accounts or data.\n• Upload viruses or malicious code.\n• Scrape, reverse-engineer, or decompile the App.\n• Use automated tools to interact with the App.\n• Spam or harass other community members.\n\nViolation of these rules may result in immediate account termination.'**
+  String get termsP4Body;
+
+  /// No description provided for @termsP5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Community Features'**
+  String get termsP5Title;
+
+  /// No description provided for @termsP5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune offers optional community features where users can share posts, comments, and stories. By posting content, you grant Lune a non-exclusive, royalty-free license to display, distribute, and store your content within the App. You retain ownership of your content. We reserve the right to remove content that violates these Terms or is reported by other users. You may block other users and manage your community privacy settings at any time.'**
+  String get termsP5Body;
+
+  /// No description provided for @termsP6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'6. Subscriptions & Payments'**
+  String get termsP6Title;
+
+  /// No description provided for @termsP6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune offers premium features through in-app subscriptions processed via Google Play Billing or PayPal. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage subscriptions through your Google Play account settings. Refunds are handled according to Google Play\'s refund policy. Free features remain available without a subscription.'**
+  String get termsP6Body;
+
+  /// No description provided for @termsP7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'7. Intellectual Property'**
+  String get termsP7Title;
+
+  /// No description provided for @termsP7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The App, including its design, code, graphics, logos, and content, is the intellectual property of Lune and is protected by copyright, trademark, and other laws. You may not copy, modify, distribute, or create derivative works based on the App without our express written permission. The Lune name, logo, and related marks are trademarks of Lune.'**
+  String get termsP7Body;
+
+  /// No description provided for @termsP8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'8. Disclaimer of Warranties'**
+  String get termsP8Title;
+
+  /// No description provided for @termsP8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'THE APP IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE APP WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. THE APP IS NOT A MEDICAL DEVICE AND SHOULD NOT BE USED AS A SUBSTITUTE FOR PROFESSIONAL MEDICAL ADVICE, DIAGNOSIS, OR TREATMENT. CYCLE PREDICTIONS ARE ESTIMATES AND MAY NOT BE ACCURATE.'**
+  String get termsP8Body;
+
+  /// No description provided for @termsP9Title.
+  ///
+  /// In en, this message translates to:
+  /// **'9. Limitation of Liability'**
+  String get termsP9Title;
+
+  /// No description provided for @termsP9Body.
+  ///
+  /// In en, this message translates to:
+  /// **'TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUNE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE APP IN THE 12 MONTHS PRECEDING THE CLAIM. THIS LIMITATION APPLIES REGARDLESS OF THE LEGAL THEORY.'**
+  String get termsP9Body;
+
+  /// No description provided for @termsP10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'10. Termination'**
+  String get termsP10Title;
+
+  /// No description provided for @termsP10Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You may stop using the App at any time and delete your account through the Privacy Center. We may suspend or terminate your access if you violate these Terms or engage in harmful behavior. Upon termination, your right to use the App ceases immediately. Sections regarding intellectual property, disclaimers, and liability limitations survive termination.'**
+  String get termsP10Body;
+
+  /// No description provided for @termsP11Title.
+  ///
+  /// In en, this message translates to:
+  /// **'11. Governing Law & Contact'**
+  String get termsP11Title;
+
+  /// No description provided for @termsP11Body.
+  ///
+  /// In en, this message translates to:
+  /// **'These Terms are governed by applicable laws without regard to conflict of law principles. Any disputes shall be resolved through good-faith negotiation first. If you have questions about these Terms, contact us at:'**
+  String get termsP11Body;
+
+  /// No description provided for @notifRationaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on Track'**
+  String get notifRationaleTitle;
+
+  /// No description provided for @notifRationaleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune can send you gentle reminders about your upcoming period, ovulation, and daily check-ins. You can customize or turn off notifications anytime in Settings.'**
+  String get notifRationaleBody;
+
+  /// No description provided for @notifRationaleAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Notifications'**
+  String get notifRationaleAllow;
+
+  /// No description provided for @notifRationaleSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Now'**
+  String get notifRationaleSkip;
+
+  /// No description provided for @ageGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How old are you?'**
+  String get ageGateTitle;
+
+  /// No description provided for @ageGateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is designed for users aged 13 and older. Some features like community discussions are restricted to users 18+.'**
+  String get ageGateBody;
+
+  /// No description provided for @ageGateUnder13.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 13'**
+  String get ageGateUnder13;
+
+  /// No description provided for @ageGate13to17.
+  ///
+  /// In en, this message translates to:
+  /// **'13 – 17'**
+  String get ageGate13to17;
+
+  /// No description provided for @ageGate18plus.
+  ///
+  /// In en, this message translates to:
+  /// **'18 or older'**
+  String get ageGate18plus;
+
+  /// No description provided for @ageGateUnder13Message.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re sorry, but Lune is not available for users under 13. Please ask a parent or guardian for help.'**
+  String get ageGateUnder13Message;
+
+  /// No description provided for @ageGateMinorNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Some features like community discussions are restricted to users 18+.'**
+  String get ageGateMinorNote;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

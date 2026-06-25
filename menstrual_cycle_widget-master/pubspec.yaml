@@ -1,0 +1,69 @@
+name: menstrual_cycle_widget
+description: "The 'Menstrual Cycle Widget' Widget is a comprehensive and customizable widget designed to help users to show their menstrual cycles seamlessly."
+version: 4.0.0
+repository: https://github.com/sandipkalola/menstrual_cycle_widget
+issue_tracker: https://github.com/sandipkalola/menstrual_cycle_widget/issues
+screenshots:
+  - description: 'Menstrual Cycle View'
+    path: example/screenshots/menstrual_cycle_view_type3.png
+  - description: 'Log Periods'
+    path: example/screenshots/month_view.jpg
+  - description: 'Multi-Language Support'
+    path: example/screenshots/language_ar.jpg
+  - description: 'Estrogen-Progesterone Graph'
+    path: example/screenshots/estrogen.jpg
+  - description: 'Cycle Trends'
+    path: example/screenshots/cycle_trends.jpg
+  - description: 'Meditation Graph'
+    path: example/screenshots/meditation_graph.jpg
+  - description: 'Period Graph'
+    path: example/screenshots/period_graph.jpg
+  - description: 'Sleep Graph'
+    path: example/screenshots/sleep_graph.jpg
+  - description: 'Weekly Calender View'
+    path: example/screenshots/week.jpg
+  - description: 'Log Symptoms'
+    path: example/screenshots/log_symptoms2.jpg
+
+funding:
+  - https://github.com/sponsors/sandipkalola
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  intl: ^0.20.2
+  encrypt: ^5.0.3
+  crypto: ^3.0.7
+  http: ^1.6.0
+  syncfusion_flutter_charts: ^32.1.19
+  syncfusion_flutter_pdf: ^32.1.19
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+
+flutter:
+  assets:
+    - assets/images/
+
+# This package supports all platforms listed below.
+platforms:
+  android:
+  ios:
+
+topics:
+  - menstrualcycle
+  - calenderview
+  - period
+  - health
+  - menstruation

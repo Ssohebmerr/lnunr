@@ -1,0 +1,14 @@
+{
+  "name": "cycle-aura-functions",
+  "description": "Cloud Functions for Cycle Aura — Gemini AI + PayPal",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.3.0",
+    "googleapis": "^144.0.0"
+  }
+}

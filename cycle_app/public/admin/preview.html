@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Lune — لوحة التحكم</title>
+<style>
+  :root {
+    --rose: #E8A0BF;
+    --rose-deep: #D484A8;
+    --lavender: #C9B8E8;
+    --plum: #5C3D52;
+    --plum-muted: #8B6B7A;
+    --cream: #FFFBF8;
+    --card: rgba(255, 255, 255, 0.75);
+    --danger: #C94F5E;
+    --ok: #4F9E84;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: var(--plum);
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FADADD 0%, #FFFBF8 45%, #D4C4F0 100%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose), var(--lavender));
+    display: grid; place-items: center; color: #fff; font-size: 22px;
+    box-shadow: 0 6px 18px rgba(232, 160, 191, 0.45);
+  }
+  h1 { font-size: 20px; }
+  .subtitle { font-size: 12px; color: var(--plum-muted); }
+  .card {
+    background: var(--card); backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 20px; padding: 20px;
+    box-shadow: 0 8px 28px rgba(92, 61, 82, 0.08);
+    margin-bottom: 16px;
+  }
+  .btn {
+    border: none; cursor: pointer; border-radius: 999px;
+    padding: 10px 22px; font-size: 14px; font-weight: 600;
+    background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+    color: #fff; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .9; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--plum-muted); border: 1px solid var(--plum-muted); }
+  .btn.danger { background: var(--danger); }
+  .btn.ok { background: var(--ok); }
+  .btn.sm { padding: 6px 14px; font-size: 12px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 20px; border-radius: 999px; cursor: pointer; font-size: 14px;
+    background: rgba(255,255,255,0.55); border: 1px solid transparent;
+    color: var(--plum-muted); font-weight: 600;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--rose), var(--lavender));
+    color: #fff;
+  }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .stat { text-align: center; padding: 18px 8px; }
+  .stat .num { font-size: 28px; font-weight: 800; color: var(--rose-deep); }
+  .stat .label { font-size: 12px; color: var(--plum-muted); margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: right; padding: 10px 8px; color: var(--plum-muted); font-size: 12px; border-bottom: 1px solid #EBDDE5; }
+  td { padding: 10px 8px; border-bottom: 1px solid #F3EAEF; vertical-align: top; }
+  .pill {
+    display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+  .pill.pending { background: #FFE9C7; color: #9A6B1F; }
+  .pill.resolved { background: #D8F0E6; color: #2E6B55; }
+  .pill.dismissed { background: #EAE5EE; color: #6E5E78; }
+  .pill.premium { background: linear-gradient(135deg, #FFCDB2, var(--rose)); color: #fff; }
+  .pill.free { background: #EAE5EE; color: #6E5E78; }
+  .pill.minor { background: #FBD3DB; color: #9C3A4D; }
+  .muted { color: var(--plum-muted); font-size: 12px; }
+  .content-quote {
+    background: #FFF4F8; border-inline-start: 3px solid var(--rose);
+    padding: 8px 12px; border-radius: 8px; margin-top: 6px;
+    font-size: 13px; white-space: pre-wrap; word-break: break-word;
+  }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .err { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .hidden { display: none !important; }
+  .empty { text-align: center; color: var(--plum-muted); padding: 32px; }
+  .spinner {
+    width: 28px; height: 28px; margin: 24px auto; border-radius: 50%;
+    border: 3px solid #F0E0E8; border-top-color: var(--rose-deep);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .toolbar input, .toolbar select { margin-bottom: 0; flex: 1; min-width: 140px; }
+  .toolbar .btn { flex-shrink: 0; }
+  input, select, textarea {
+    width: 100%; padding: 12px 14px; border-radius: 14px;
+    border: 1px solid #E5D5DE; background: #fff; font-size: 14px;
+    margin-bottom: 12px; color: var(--plum); font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--rose); border-color: transparent; }
+  textarea { resize: vertical; min-height: 100px; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(30, 20, 32, 0.55);
+    backdrop-filter: blur(6px); display: grid; place-items: center;
+    z-index: 100; padding: 16px;
+  }
+  .modal {
+    background: var(--cream); border-radius: 24px; padding: 28px 24px;
+    max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(92, 61, 82, 0.25);
+    position: relative;
+  }
+  .modal h2 { font-size: 17px; margin-bottom: 14px; }
+  .modal .field { margin-bottom: 10px; }
+  .modal .field-label { font-size: 11px; color: var(--plum-muted); margin-bottom: 2px; }
+  .modal .field-value { font-size: 14px; word-break: break-all; }
+  .modal-close {
+    position: absolute; top: 14px; left: 14px; background: none; border: none;
+    font-size: 20px; cursor: pointer; color: var(--plum-muted); padding: 4px 8px;
+    border-radius: 8px;
+  }
+  .modal-close:hover { background: rgba(0,0,0,0.06); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .activity-item {
+    padding: 10px 0; border-bottom: 1px solid #F3EAEF;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .activity-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 14px; flex-shrink: 0;
+  }
+  .activity-icon.delete { background: #FEE2E2; }
+  .activity-icon.premium { background: linear-gradient(135deg, #FFCDB2, var(--rose)); }
+  .activity-icon.report { background: #FEF3C7; }
+  .activity-icon.user { background: #E0E7FF; }
+  .chart-bar {
+    height: 20px; border-radius: 10px; margin-bottom: 8px;
+    background: linear-gradient(90deg, var(--rose), var(--lavender));
+    transition: width 0.5s ease;
+  }
+  .progress-bar {
+    height: 8px; border-radius: 4px; background: #F0E0E8; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--rose), var(--lavender));
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="logo">🌸</div>
+      <div>
+        <h1>لوحة تحكم Lune</h1>
+        <div class="subtitle">admin@cycleaura.com</div>
+      </div>
+    </div>
+    <button class="btn ghost sm">تسجيل الخروج</button>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">نظرة عامة</div>
+    <div class="tab" data-tab="daily">إحصائيات يومية</div>
+    <div class="tab" data-tab="reports">البلاغات</div>
+    <div class="tab" data-tab="users">المستخدمون</div>
+    <div class="tab" data-tab="communities">المجتمعات</div>
+    <div class="tab" data-tab="notifications">الإشعارات</div>
+    <div class="tab" data-tab="revenue">الإيرادات</div>
+    <div class="tab" data-tab="activity">سجل النشاطات</div>
+  </div>
+
+  <!-- ======== نظرة عامة ======== -->
+  <div id="tab-overview">
+    <div class="stats">
+      <div class="card stat"><div class="num">1,247</div><div class="label">إجمالي المستخدمين</div></div>
+      <div class="card stat"><div class="num">89</div><div class="label">مشتركو Premium</div></div>
+      <div class="card stat"><div class="num">3,456</div><div class="label">المنشورات</div></div>
+      <div class="card stat"><div class="num">12</div><div class="label">بلاغات معلقة</div></div>
+      <div class="card stat"><div class="num">342</div><div class="label">نشطون اليوم</div></div>
+      <div class="card stat"><div class="num">$4,230</div><div class="label">إيرادات الشهر</div></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">📈 نمو المستخدمين (آخر 7 أيام)</h3>
+      <div style="display:flex;align-items:end;gap:8px;height:120px;padding-top:20px">
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:40%"></div><div class="muted">الأحد</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:55%"></div><div class="muted">الإثنين</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:45%"></div><div class="muted">الثلاثاء</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:70%"></div><div class="muted">الأربعاء</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:60%"></div><div class="muted">الخميس</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:80%"></div><div class="muted">الجمعة</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:65%"></div><div class="muted">السبت</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== إحصائيات يومية ======== -->
+  <div id="tab-daily" class="hidden">
+    <div class="stats">
+      <div class="card stat"><div class="num">342</div><div class="label">مستخدم نشط اليوم</div></div>
+      <div class="card stat"><div class="num">87</div><div class="label">منشورات جديدة</div></div>
+      <div class="card stat"><div class="num">234</div><div class="label">تعليقات جديدة</div></div>
+      <div class="card stat"><div class="num">45</div><div class="label">مستخدمين جدد</div></div>
+      <div class="card stat"><div class="num">12</div><div class="label">بلاغات جديدة</div></div>
+      <div class="card stat"><div class="num">5</div><div class="label">اشتراكات جديدة</div></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">⏰ نشاط المستخدمين خلال اليوم</h3>
+      <div style="display:flex;align-items:end;gap:4px;height:100px">
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:10%"></div><div class="muted" style="font-size:10px">12ص</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:5%"></div><div class="muted" style="font-size:10px">3</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:8%"></div><div class="muted" style="font-size:10px">6</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:30%"></div><div class="muted" style="font-size:10px">9</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:60%"></div><div class="muted" style="font-size:10px">12م</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:85%"></div><div class="muted" style="font-size:10px">3</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:70%"></div><div class="muted" style="font-size:10px">6</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:90%"></div><div class="muted" style="font-size:10px">9</div></div>
+        <div style="flex:1;text-align:center"><div class="chart-bar" style="height:50%"></div><div class="muted" style="font-size:10px">12</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">🔥 الأكثر تفاعلاً</h3>
+      <p class="muted">1. مجتمع صحة الدورة — 156 تفاعل</p>
+      <p class="muted">2. مجتمع التغذية — 98 تفاعل</p>
+      <p class="muted">3. مجتمع الرياضة — 67 تفاعل</p>
+    </div>
+  </div>
+
+  <!-- ======== البلاغات ======== -->
+  <div id="tab-reports" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:16px">بلاغات المجتمع</h2>
+        <button class="btn sm">تحديث</button>
+      </div>
+      <div class="toolbar">
+        <select>
+          <option value="all">الكل</option>
+          <option value="pending" selected>معلق</option>
+          <option value="resolved">تم الحل</option>
+          <option value="dismissed">مرفوض</option>
+        </select>
+      </div>
+      <div id="reportsList"></div>
+    </div>
+  </div>
+
+  <!-- ======== المستخدمون ======== -->
+  <div id="tab-users" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:16px">المستخدمون</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost sm">تصدير CSV</button>
+          <button class="btn sm">تحديث</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input type="text" placeholder="بحث بالاسم أو الـ UID..." />
+      </div>
+      <div id="usersList"></div>
+    </div>
+  </div>
+
+  <!-- ======== المجتمعات ======== -->
+  <div id="tab-communities" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:16px">إدارة المجتمعات</h2>
+        <button class="btn sm" onclick="document.getElementById('addCommunityModal').classList.remove('hidden')">إضافة مجتمع</button>
+      </div>
+      <div id="communitiesList"></div>
+    </div>
+  </div>
+
+  <!-- ======== الإشعارات ======== -->
+  <div id="tab-notifications" class="hidden">
+    <div class="card">
+      <h2 style="font-size:16px;margin-bottom:16px">إرسال إشعار جماعي</h2>
+      <input type="text" placeholder="عنوان الإشعار" />
+      <textarea placeholder="نص الإشعار..."></textarea>
+      <div class="toolbar">
+        <select>
+          <option>جميع المستخدمين</option>
+          <option>مشتركو Premium فقط</option>
+          <option>مستخدمين جدد</option>
+          <option>مستخدمين نشطين</option>
+        </select>
+        <button class="btn">إرسال</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">📨 آخر الإشعارات المرسلة</h3>
+      <div id="notificationsList"></div>
+    </div>
+  </div>
+
+  <!-- ======== الإيرادات ======== -->
+  <div id="tab-revenue" class="hidden">
+    <div class="stats">
+      <div class="card stat"><div class="num">$4,230</div><div class="label">إيرادات الشهر</div></div>
+      <div class="card stat"><div class="num">$12,450</div><div class="label">إيرادات السنة</div></div>
+      <div class="card stat"><div class="num">89</div><div class="label">مشتركين نشطين</div></div>
+      <div class="card stat"><div class="num">$47.5</div><div class="label">متوسط الدخل/مشترك</div></div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">💳 مصادر الدخل</h3>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span class="muted">Google Play</span>
+          <span class="muted">$2,890 (68%)</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span class="muted">PayPal</span>
+          <span class="muted">$1,340 (32%)</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:32%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">📊 المعاملات الأخيرة</h3>
+      <div id="transactionsList"></div>
+    </div>
+  </div>
+
+  <!-- ======== سجل النشاطات ======== -->
+  <div id="tab-activity" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:16px">سجل النشاطات</h2>
+        <div class="toolbar" style="margin-bottom:0">
+          <select>
+            <option>الكل</option>
+            <option>حذف</option>
+            <option>منح Premium</option>
+            <option>بلاغات</option>
+            <option>مستخدمين جدد</option>
+          </select>
+        </div>
+      </div>
+      <div id="activityList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======== نافذة إضافة مجتمع ======== -->
+<div id="addCommunityModal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('addCommunityModal').classList.add('hidden')">&times;</button>
+    <h2>إضافة مجتمع جديد</h2>
+    <input type="text" placeholder="اسم المجتمع (عربي)" />
+    <input type="text" placeholder="اسم المجتمع (إنجليزي)" />
+    <textarea placeholder="وصف المجتمع..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('addCommunityModal').classList.add('hidden')">إضافة</button>
+      <button class="btn ghost" onclick="document.getElementById('addCommunityModal').classList.add('hidden')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== نافذة تفاصيل المستخدم ======== -->
+<div id="userModal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('userModal').classList.add('hidden')">&times;</button>
+    <h2>تفاصيل المستخدم</h2>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+// Mock data
+const mockReports = [
+  { id: 'rpt_001', status: 'pending', reason: 'محتوى مسيء', authorAlias: 'أحمد', communityId: 'general', content: 'هذا المنشور يحتوي على محتوى غير لائق', createdAt: '2026-06-15 14:30' },
+  { id: 'rpt_002', status: 'pending', reason: 'تواصل غير لائق', authorAlias: 'سارة', communityId: 'health', content: 'تعليق يحتوي على معلومات طبية خاطئة', createdAt: '2026-06-14 09:15' },
+  { id: 'rpt_003', status: 'resolved', reason: 'سبام', authorAlias: 'محمد', communityId: 'general', content: 'رابط لموقع خارجي مشبوه', createdAt: '2026-06-13 18:45' },
+];
+
+const mockUsers = [
+  { id: 'uid_001', name: 'نورا', email: 'nora@email.com', premium: true, birthYear: 1995, minor: false },
+  { id: 'uid_002', name: 'سارة', email: 'sara@email.com', premium: false, birthYear: 1998, minor: false },
+  { id: 'uid_003', name: 'مريم', email: 'mريم@email.com', premium: true, birthYear: 1990, minor: false },
+  { id: 'uid_004', name: 'فاطمة', email: 'fatima@email.com', premium: false, birthYear: 2012, minor: true },
+];
+
+const mockCommunities = [
+  { id: 'general', nameAr: 'عام', nameEn: 'General', members: 890, posts: 1234 },
+  { id: 'health', nameAr: 'صحة الدورة', nameEn: 'Cycle Health', members: 654, posts: 890 },
+  { id: 'nutrition', nameAr: 'التغذية', nameEn: 'Nutrition', members: 432, posts: 567 },
+  { id: 'exercise', nameAr: 'الرياضة', nameEn: 'Exercise', members: 321, posts: 456 },
+  { id: 'mood', nameAr: 'المزاج والتوتر', nameEn: 'Mood & Stress', members: 234, posts: 345 },
+];
+
+const mockNotifications = [
+  { title: 'مرحباً بك في Lune', sent: '2026-06-15', recipients: 'الجميع' },
+  { title: 'تحديث جديد متاح', sent: '2026-06-10', recipients: 'الجميع' },
+  { title: 'عرض خاص للمشتركين', sent: '2026-06-05', recipients: 'Premium' },
+];
+
+const mockTransactions = [
+  { user: 'نورا', amount: '$4.99', method: 'Google Play', date: '2026-06-15' },
+  { user: 'سارة', amount: '$4.99', method: 'PayPal', date: '2026-06-14' },
+  { user: 'مريم', amount: '$4.99', method: 'Google Play', date: '2026-06-13' },
+  { user: 'هدى', amount: '$4.99', method: 'PayPal', date: '2026-06-12' },
+];
+
+const mockActivity = [
+  { type: 'delete', icon: '🗑️', text: 'حذف منشور مسيء', user: 'Admin', time: 'منذ 5 دقائق' },
+  { type: 'premium', icon: '⭐', text: 'منح Premium للمستخدم uid_002', user: 'Admin', time: 'منذ 15 دقيقة' },
+  { type: 'report', icon: '⚠️', text: 'بلاغ جديد من المجتمع general', user: 'النظام', time: 'منذ 30 دقيقة' },
+  { type: 'user', icon: '👤', text: 'مستخدم جديد: فاطمة', user: 'النظام', time: 'منذ ساعة' },
+  { type: 'delete', icon: '🗑️', text: 'حذف تعليق مسيء', user: 'Admin', time: 'منذ ساعتين' },
+  { type: 'premium', icon: '⭐', text: 'إلغاء Premium للمستخدم uid_005', user: 'Admin', time: 'منذ 3 ساعات' },
+];
+
+// Tab switching
+document.querySelectorAll('.tab').forEach((t) => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+    t.classList.add('active');
+    ['overview', 'daily', 'reports', 'users', 'communities', 'notifications', 'revenue', 'activity'].forEach((name) => {
+      document.getElementById(`tab-${name}`).classList.toggle('hidden', name !== t.dataset.tab);
+    });
+  };
+});
+
+// Render reports
+function renderReports() {
+  const box = document.getElementById('reportsList');
+  box.innerHTML = mockReports.map(r => `
+    <div style="padding:12px 0;border-bottom:1px solid #F3EAEF">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="pill ${r.status}">${r.status === 'pending' ? 'معلق' : 'تم الحل'}</span>
+        <strong>${r.commentId ? 'تعليق' : 'منشور'}</strong>
+        <span class="muted">${r.communityId} · ${r.createdAt}</span>
+      </div>
+      <div class="muted" style="margin-top:4px">السبب: ${r.reason}</div>
+      <div class="content-quote">${r.content}</div>
+      ${r.status === 'pending' ? `
+      <div class="row-actions">
+        <button class="btn danger sm">حذف المحتوى</button>
+        <button class="btn ok sm">تم الحل</button>
+        <button class="btn ghost sm">تجاهل</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+// Render users
+function renderUsers() {
+  const box = document.getElementById('usersList');
+  box.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>المستخدم</th><th>سنة الميلاد</th><th>الاشتراك</th><th></th></tr></thead>
+      <tbody>
+        ${mockUsers.map(u => `
+          <tr style="cursor:pointer">
+            <td>
+              <strong>${u.name}</strong>
+              ${u.minor ? '<span class="pill minor">قاصر</span>' : ''}
+              <div class="muted">${u.id}</div>
+            </td>
+            <td>${u.birthYear}</td>
+            <td><span class="pill ${u.premium ? 'premium' : 'free'}">${u.premium ? 'Premium' : 'مجاني'}</span></td>
+            <td><button class="btn sm">${u.premium ? 'إلغاء' : 'منح'} Premium</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+// Render communities
+function renderCommunities() {
+  const box = document.getElementById('communitiesList');
+  box.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>المجتمع</th><th>الأعضاء</th><th>المنشورات</th><th></th></tr></thead>
+      <tbody>
+        ${mockCommunities.map(c => `
+          <tr>
+            <td><strong>${c.nameAr}</strong><div class="muted">${c.nameEn}</div></td>
+            <td>${c.members}</td>
+            <td>${c.posts}</td>
+            <td>
+              <button class="btn ghost sm">تعديل</button>
+              <button class="btn danger sm">حذف</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+// Render notifications
+function renderNotifications() {
+  const box = document.getElementById('notificationsList');
+  box.innerHTML = mockNotifications.map(n => `
+    <div style="padding:10px 0;border-bottom:1px solid #F3EAEF">
+      <strong>${n.title}</strong>
+      <div class="muted">${n.sent} — ${n.recipients}</div>
+    </div>
+  `).join('');
+}
+
+// Render transactions
+function renderTransactions() {
+  const box = document.getElementById('transactionsList');
+  box.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>المستخدم</th><th>المبلغ</th><th>الطريقة</th><th>التاريخ</th></tr></thead>
+      <tbody>
+        ${mockTransactions.map(t => `
+          <tr>
+            <td>${t.user}</td>
+            <td><strong>${t.amount}</strong></td>
+            <td>${t.method}</td>
+            <td class="muted">${t.date}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+// Render activity
+function renderActivity() {
+  const box = document.getElementById('activityList');
+  box.innerHTML = mockActivity.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon ${a.type}">${a.icon}</div>
+      <div>
+        <div>${a.text}</div>
+        <div class="muted">${a.user} · ${a.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Initialize
+renderReports();
+renderUsers();
+renderCommunities();
+renderNotifications();
+renderTransactions();
+renderActivity();
+</script>
+</body>
+</html>

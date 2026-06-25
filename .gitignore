@@ -1,0 +1,39 @@
+# Flutter
+*.iml
+.idea/
+.gradle/
+local.properties
+*.lock
+*.keystore
+*.jks
+build/
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Node
+node_modules/
+
+# Env
+*.env
+.env.local
+serviceAccountKey.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# APK
+*.apk
+*.aab
+
+# Code indexing
+.codetb-index.json

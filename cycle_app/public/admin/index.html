@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Lune — لوحة التحكم</title>
+<style>
+  :root {
+    --rose: #E8A0BF;
+    --rose-deep: #D484A8;
+    --lavender: #C9B8E8;
+    --plum: #5C3D52;
+    --plum-muted: #8B6B7A;
+    --cream: #FFFBF8;
+    --card: rgba(255, 255, 255, 0.75);
+    --danger: #C94F5E;
+    --ok: #4F9E84;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: var(--plum);
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FADADD 0%, #FFFBF8 45%, #D4C4F0 100%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose), var(--lavender));
+    display: grid; place-items: center; color: #fff; font-size: 22px;
+    box-shadow: 0 6px 18px rgba(232, 160, 191, 0.45);
+  }
+  h1 { font-size: 20px; }
+  .subtitle { font-size: 12px; color: var(--plum-muted); }
+  .card {
+    background: var(--card); backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 20px; padding: 20px;
+    box-shadow: 0 8px 28px rgba(92, 61, 82, 0.08);
+    margin-bottom: 16px;
+  }
+  .btn {
+    border: none; cursor: pointer; border-radius: 999px;
+    padding: 10px 22px; font-size: 14px; font-weight: 600;
+    background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+    color: #fff; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .9; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--plum-muted); border: 1px solid var(--plum-muted); }
+  .btn.danger { background: var(--danger); }
+  .btn.ok { background: var(--ok); }
+  .btn.sm { padding: 6px 14px; font-size: 12px; }
+  input, select, textarea {
+    width: 100%; padding: 12px 14px; border-radius: 14px;
+    border: 1px solid #E5D5DE; background: #fff; font-size: 14px;
+    margin-bottom: 12px; color: var(--plum);
+    font-family: inherit;
+  }
+  textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--rose); border-color: transparent; }
+  .login-box { max-width: 380px; margin: 10vh auto 0; text-align: center; }
+  .login-box .logo-big {
+    width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--rose), var(--lavender));
+    display: grid; place-items: center; color: #fff; font-size: 34px;
+    box-shadow: 0 8px 24px rgba(232, 160, 191, 0.5);
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 20px; border-radius: 999px; cursor: pointer; font-size: 14px;
+    background: rgba(255,255,255,0.55); border: 1px solid transparent;
+    color: var(--plum-muted); font-weight: 600;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, var(--rose), var(--lavender));
+    color: #fff;
+  }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stat { text-align: center; padding: 18px 8px; }
+  .stat .num { font-size: 30px; font-weight: 800; color: var(--rose-deep); }
+  .stat .label { font-size: 13px; color: var(--plum-muted); margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: right; padding: 10px 8px; color: var(--plum-muted); font-size: 12px; border-bottom: 1px solid #EBDDE5; }
+  td { padding: 10px 8px; border-bottom: 1px solid #F3EAEF; vertical-align: top; }
+  .pill {
+    display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+  .pill.pending { background: #FFE9C7; color: #9A6B1F; }
+  .pill.resolved { background: #D8F0E6; color: #2E6B55; }
+  .pill.dismissed { background: #EAE5EE; color: #6E5E78; }
+  .pill.premium { background: linear-gradient(135deg, #FFCDB2, var(--rose)); color: #fff; }
+  .pill.free { background: #EAE5EE; color: #6E5E78; }
+  .pill.minor { background: #FBD3DB; color: #9C3A4D; }
+  .pill.draft { background: #EAE5EE; color: #6E5E78; }
+  .pill.live { background: #D8F0E6; color: #2E6B55; }
+  .muted { color: var(--plum-muted); font-size: 12px; }
+  .content-quote {
+    background: #FFF4F8; border-inline-start: 3px solid var(--rose);
+    padding: 8px 12px; border-radius: 8px; margin-top: 6px;
+    font-size: 13px; white-space: pre-wrap; word-break: break-word;
+  }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .err { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .hidden { display: none !important; }
+  .empty { text-align: center; color: var(--plum-muted); padding: 32px; }
+  .spinner {
+    width: 28px; height: 28px; margin: 24px auto; border-radius: 50%;
+    border: 3px solid #F0E0E8; border-top-color: var(--rose-deep);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* --- toolbar (search + filter + export) --- */
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .toolbar input, .toolbar select { margin-bottom: 0; flex: 1; min-width: 140px; }
+  .toolbar .btn { flex-shrink: 0; }
+
+  /* --- modal overlay --- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(30, 20, 32, 0.55);
+    backdrop-filter: blur(6px); display: grid; place-items: center;
+    z-index: 100; padding: 16px;
+  }
+  .modal {
+    background: var(--cream); border-radius: 24px; padding: 28px 24px;
+    max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(92, 61, 82, 0.25);
+    position: relative;
+  }
+  .modal h2 { font-size: 17px; margin-bottom: 14px; }
+  .modal .field { margin-bottom: 10px; }
+  .modal .field-label { font-size: 11px; color: var(--plum-muted); margin-bottom: 2px; }
+  .modal .field-value { font-size: 14px; word-break: break-all; }
+  .modal-close {
+    position: absolute; top: 14px; left: 14px; background: none; border: none;
+    font-size: 20px; cursor: pointer; color: var(--plum-muted); padding: 4px 8px;
+    border-radius: 8px;
+  }
+  .modal-close:hover { background: rgba(0,0,0,0.06); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ======== LOGIN ======== -->
+  <div id="loginView" class="login-box card">
+    <div class="logo-big">🌸</div>
+    <h1 style="margin-bottom:4px">Lune</h1>
+    <p class="subtitle" style="margin-bottom:12px">لوحة التحكم على الويب — للمسؤولين فقط (مو نفس دخول التطبيق)</p>
+    <div style="text-align:right;font-size:12px;color:var(--plum-muted);background:#FFF4F8;border-radius:12px;padding:12px 14px;margin-bottom:16px;line-height:1.55">
+      <strong>أول مرة أو نسيتِ كلمة المرور؟</strong><br/>
+      1) من PowerShell داخل المشروع شغّلي:<br/>
+      <code style="font-size:11px;word-break:break-all">.\cycle_app\scripts\setup-admin.ps1 -Email "بريدك@example.com" -Password "كلمة_السر_الجديدة"</code><br/>
+      2) افتحي الرابط: <a href="https://lune-7d956.web.app/admin/">lune-7d956.web.app/admin</a><br/>
+      3) سجّلي دخول بنفس البريد وكلمة السر<br/>
+      <span class="muted">إذا ظهر «صلاحيات غير كافية» بعد الدخول، السكربت أعلاه يعيد صلاحيات الأدمن تلقائياً.</span>
+    </div>
+    <input id="email" type="email" placeholder="بريد الأدمن (Firebase)" autocomplete="username" />
+    <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+    <button id="loginBtn" class="btn" style="width:100%">تسجيل الدخول</button>
+    <div id="loginErr" class="err"></div>
+  </div>
+
+  <!-- ======== DASHBOARD ======== -->
+  <div id="dashView" class="hidden">
+    <header>
+      <div class="brand">
+        <div class="logo">🌸</div>
+        <div>
+          <h1>لوحة تحكم Lune</h1>
+          <div class="subtitle" id="adminEmail"></div>
+        </div>
+      </div>
+      <button id="logoutBtn" class="btn ghost sm">تسجيل الخروج</button>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="overview">نظرة عامة</div>
+      <div class="tab" data-tab="articles">المقالات</div>
+      <div class="tab" data-tab="notifications">الإشعارات</div>
+      <div class="tab" data-tab="banners">البانرات</div>
+      <div class="tab" data-tab="settings">الإعدادات</div>
+      <div class="tab" data-tab="communities">المجتمعات</div>
+      <div class="tab" data-tab="moderation">المنشورات</div>
+      <div class="tab" data-tab="reports">البلاغات</div>
+      <div class="tab" data-tab="users">المستخدمون</div>
+      <div class="tab" data-tab="activity">السجل</div>
+    </div>
+
+    <!-- Overview -->
+    <div id="tab-overview">
+      <div class="stats">
+        <div class="card stat"><div class="num" id="statUsers">—</div><div class="label">المستخدمون</div></div>
+        <div class="card stat"><div class="num" id="statPremium">—</div><div class="label">مشتركو Premium</div></div>
+        <div class="card stat"><div class="num" id="statPosts">—</div><div class="label">المنشورات</div></div>
+        <div class="card stat"><div class="num" id="statArticles">—</div><div class="label">المقالات المنشورة</div></div>
+        <div class="card stat"><div class="num" id="statPending">—</div><div class="label">بلاغات معلقة</div></div>
+      </div>
+      <div class="card">
+        <p class="muted">حماية الصغار أولوية: راجعي البلاغات المعلقة يوميًا. أضيفي المقالات من تبويب «المقالات» — التطبيق يقرأها مباشرة من Firebase.</p>
+      </div>
+    </div>
+
+    <!-- Articles -->
+    <div id="tab-articles" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px">المقالات التعليمية</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="importArticles" class="btn ghost sm">استيراد الافتراضية</button>
+            <button id="addArticle" class="btn sm">مقال جديد</button>
+            <button id="refreshArticles" class="btn sm">تحديث</button>
+          </div>
+        </div>
+        <p class="muted" style="margin-bottom:12px">المقالات المنشورة تظهر في التطبيق فورًا. إذا كانت المجموعة فارغة، يستخدم التطبيق المقالات المدمجة.</p>
+        <div id="articlesList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div id="tab-reports" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2 style="font-size:16px">بلاغات المجتمع</h2>
+          <button id="refreshReports" class="btn sm">تحديث</button>
+        </div>
+        <div class="toolbar">
+          <select id="reportFilter">
+            <option value="all">الكل</option>
+            <option value="pending" selected>معلق</option>
+            <option value="resolved">تم الحل</option>
+            <option value="dismissed">مرفوض</option>
+          </select>
+        </div>
+        <div id="reportsList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div id="tab-users" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2 style="font-size:16px">المستخدمون</h2>
+          <div style="display:flex;gap:8px">
+            <button id="syncUsers" class="btn ghost sm">مزامنة من Auth</button>
+            <button id="exportUsers" class="btn ghost sm">تصدير CSV</button>
+            <button id="refreshUsers" class="btn sm">تحديث</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <input id="userSearch" type="text" placeholder="بحث بالاسم أو البريد أو الـ UID..." />
+        </div>
+        <div id="usersList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="tab-notifications" class="hidden">
+      <div class="card">
+        <h2 style="font-size:16px;margin-bottom:12px">إشعار جماعي (Push)</h2>
+        <input id="broadcastTitle" type="text" placeholder="عنوان الإشعار" />
+        <textarea id="broadcastBody" placeholder="نص الإشعار..."></textarea>
+        <div class="toolbar">
+          <select id="broadcastAudience">
+            <option value="all">جميع المستخدمين</option>
+            <option value="premium">مشتركو Premium فقط</option>
+          </select>
+          <button id="sendBroadcast" class="btn sm">إرسال</button>
+        </div>
+        <p class="muted">يصل للمستخدمات اللي فتحوا التطبيق وسجّلت أجهزتهم. يُحفظ أيضًا كإعلان في الإعدادات إذا فعّلته من تبويب الإعدادات.</p>
+        <div id="broadcastErr" class="err"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;margin-bottom:10px">آخر الإشعارات المرسلة</h3>
+        <div id="broadcastsList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Banners -->
+    <div id="tab-banners" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px">بانرات الصفحة الرئيسية</h2>
+          <button id="addBanner" class="btn sm">بانر جديد</button>
+        </div>
+        <div id="bannersList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="tab-settings" class="hidden">
+      <div class="card">
+        <h2 style="font-size:16px;margin-bottom:12px">إعدادات التطبيق</h2>
+        <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input id="setCommunityEnabled" type="checkbox" style="width:auto;margin:0" checked />
+          تفعيل المجتمع في التطبيق
+        </label>
+        <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input id="setAiEducationEnabled" type="checkbox" style="width:auto;margin:0" checked />
+          تفعيل التعليم بالذكاء الاصطناعي
+        </label>
+        <hr style="border:none;border-top:1px solid #EBDDE5;margin:14px 0" />
+        <h3 style="font-size:14px;margin-bottom:8px">إعلان داخل التطبيق (بدون Push)</h3>
+        <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input id="setAnnouncementActive" type="checkbox" style="width:auto;margin:0" />
+          إظهار الإعلان في الصفحة الرئيسية
+        </label>
+        <input id="setAnnouncementTitleAr" type="text" placeholder="عنوان الإعلان (عربي)" />
+        <input id="setAnnouncementTitleEn" type="text" placeholder="عنوان الإعلان (إنجليزي)" />
+        <textarea id="setAnnouncementBodyAr" placeholder="نص الإعلان (عربي)"></textarea>
+        <textarea id="setAnnouncementBodyEn" placeholder="نص الإعلان (إنجليزي)"></textarea>
+        <input id="setSupportUrl" type="url" placeholder="رابط الدعم (اختياري)" />
+        <button id="saveSettings" class="btn sm">حفظ الإعدادات</button>
+        <div id="settingsErr" class="err"></div>
+      </div>
+    </div>
+
+    <!-- Communities -->
+    <div id="tab-communities" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px">إدارة المجتمعات</h2>
+          <div style="display:flex;gap:8px">
+            <button id="importCommunities" class="btn ghost sm">استيراد الافتراضية</button>
+            <button id="refreshCommunities" class="btn sm">تحديث</button>
+          </div>
+        </div>
+        <p class="muted" style="margin-bottom:12px">تعديل الأسماء والوصف أو تعطيل مجتمع دون تحديث التطبيق.</p>
+        <div id="communitiesList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Moderation -->
+    <div id="tab-moderation" class="hidden">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px">المراجعة والمنشورات</h2>
+          <div style="display:flex;gap:8px">
+            <button id="reprocessPending" class="btn ghost sm">إعادة مراجعة المعلّق</button>
+            <button id="refreshModeration" class="btn sm">تحديث</button>
+          </div>
+        </div>
+        <div id="pendingModerationList" style="margin-bottom:16px"></div>
+        <h3 style="font-size:14px;margin-bottom:8px">أحدث المنشورات</h3>
+        <div id="moderationList"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Activity log -->
+    <div id="tab-activity" class="hidden">
+      <div class="card">
+        <h2 style="font-size:16px;margin-bottom:12px">سجل نشاط الأدمن</h2>
+        <div id="activityList"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not admin -->
+  <div id="deniedView" class="login-box card hidden">
+    <div class="logo-big">🚫</div>
+    <h1 style="margin-bottom:8px">صلاحيات غير كافية</h1>
+    <p class="subtitle" style="margin-bottom:20px">
+      هذا الحساب ليس مسؤولًا. أضف وثيقة admins/&lt;uid&gt; من وحدة تحكم Firebase.
+    </p>
+    <p class="muted" id="deniedUid" style="margin-bottom:16px;word-break:break-all"></p>
+    <button id="deniedLogout" class="btn ghost" style="width:100%">خروج</button>
+  </div>
+
+  <!-- User Detail Modal -->
+  <div id="userModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <h2>تفاصيل المستخدم</h2>
+      <div id="modalBody"></div>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- Article Editor Modal -->
+  <div id="articleModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:640px">
+      <button class="modal-close" id="articleModalClose">&times;</button>
+      <h2 id="articleModalTitle">مقال جديد</h2>
+      <input id="articleId" type="text" placeholder="معرّف المقال (إنجليزي، بدون مسافات) مثل: cycle_basics" />
+      <input id="articleTitleAr" type="text" placeholder="العنوان بالعربية" />
+      <input id="articleTitleEn" type="text" placeholder="العنوان بالإنجليزية" />
+      <div class="toolbar">
+        <select id="articleCategory">
+          <option value="basics">أساسيات</option>
+          <option value="health">صحة</option>
+          <option value="nutrition">تغذية ورياضة</option>
+          <option value="mind">نفسية</option>
+          <option value="adult">للبالغات (18+)</option>
+        </select>
+        <select id="articleIcon">
+          <option value="loop_outlined">دورة</option>
+          <option value="brightness_4_outlined">مراحل</option>
+          <option value="emoji_nature_outlined">طبيعة</option>
+          <option value="cloud_outlined">مزاج</option>
+          <option value="healing_outlined">علاج</option>
+          <option value="medical_services_outlined">طبيبة</option>
+          <option value="restaurant_outlined">تغذية</option>
+          <option value="fitness_center_outlined">رياضة</option>
+          <option value="psychology_outlined">نفسية</option>
+          <option value="volunteer_activism_outlined">لطف</option>
+          <option value="favorite_outline">خصوبة</option>
+          <option value="medication_outlined">دواء</option>
+          <option value="article_outlined">عام</option>
+        </select>
+      </div>
+      <div class="toolbar">
+        <input id="articleMinutes" type="number" min="1" max="30" placeholder="دقائق القراءة" style="flex:1" />
+        <input id="articleOrder" type="number" min="0" placeholder="الترتيب" style="flex:1" />
+      </div>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <input id="articleAdultsOnly" type="checkbox" style="width:auto;margin:0" />
+        للبالغات فقط (18+)
+      </label>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <input id="articlePublished" type="checkbox" style="width:auto;margin:0" checked />
+        منشور في التطبيق
+      </label>
+      <textarea id="articleBodyAr" placeholder="نص المقال بالعربية..."></textarea>
+      <textarea id="articleBodyEn" placeholder="نص المقال بالإنجليزية..."></textarea>
+      <div id="articleErr" class="err"></div>
+      <div class="modal-actions">
+        <button id="saveArticle" class="btn sm">حفظ</button>
+        <button id="cancelArticle" class="btn ghost sm">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner Editor Modal -->
+  <div id="bannerModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:560px">
+      <button class="modal-close" id="bannerModalClose">&times;</button>
+      <h2 id="bannerModalTitle">بانر جديد</h2>
+      <input id="bannerId" type="text" placeholder="معرّف البانر (إنجليزي)" />
+      <input id="bannerTitleAr" type="text" placeholder="العنوان عربي" />
+      <input id="bannerTitleEn" type="text" placeholder="العنوان إنجليزي" />
+      <textarea id="bannerBodyAr" placeholder="النص عربي"></textarea>
+      <textarea id="bannerBodyEn" placeholder="النص إنجليزي"></textarea>
+      <input id="bannerActionUrl" type="url" placeholder="رابط (اختياري)" />
+      <input id="bannerAccent" type="text" placeholder="لون (#E8A0BF)" value="#E8A0BF" />
+      <div class="toolbar">
+        <input id="bannerOrder" type="number" placeholder="الترتيب" style="flex:1" />
+        <label class="muted" style="display:flex;align-items:center;gap:6px;margin:0">
+          <input id="bannerPublished" type="checkbox" style="width:auto;margin:0" checked /> منشور
+        </label>
+      </div>
+      <div id="bannerErr" class="err"></div>
+      <div class="modal-actions">
+        <button id="saveBanner" class="btn sm">حفظ</button>
+        <button id="cancelBanner" class="btn ghost sm">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Community Editor Modal -->
+  <div id="communityModal" class="modal-overlay hidden">
+    <div class="modal" style="max-width:560px">
+      <button class="modal-close" id="communityModalClose">&times;</button>
+      <h2>تعديل مجتمع</h2>
+      <input id="communityId" type="text" disabled />
+      <input id="communityNameAr" type="text" placeholder="الاسم عربي" />
+      <input id="communityNameEn" type="text" placeholder="الاسم إنجليزي" />
+      <textarea id="communityDescAr" placeholder="الوصف عربي"></textarea>
+      <textarea id="communityDescEn" placeholder="الوصف إنجليزي"></textarea>
+      <input id="communityMaxMembers" type="number" placeholder="الحد الأقصى للأعضاء" />
+      <label class="muted" style="display:flex;align-items:center;gap:8px">
+        <input id="communityEnabled" type="checkbox" style="width:auto;margin:0" checked /> مفعّل
+      </label>
+      <div id="communityErr" class="err"></div>
+      <div class="modal-actions">
+        <button id="saveCommunity" class="btn sm">حفظ</button>
+        <button id="cancelCommunity" class="btn ghost sm">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { createAdminClient } from './admin-client.js';
+
+const FALLBACK_FIREBASE_CONFIG = {
+  // Must match Firebase Hosting /__/firebase/init.json (project lune-7d956).
+  apiKey: 'AIzaSyB7eZd1_CoG4ynhNc7AwCs1zR0G1sJpIEo',
+  authDomain: 'lune-7d956.firebaseapp.com',
+  projectId: 'lune-7d956',
+  storageBucket: 'lune-7d956.firebasestorage.app',
+  messagingSenderId: '113050193026',
+};
+
+const FUNCTIONS_BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
+
+async function loadFirebaseConfig() {
+  const config = { ...FALLBACK_FIREBASE_CONFIG };
+  try {
+    const res = await fetch('/__/firebase/init.json');
+    if (res.ok) {
+      const hosted = await res.json();
+      Object.assign(config, hosted);
+    }
+  } catch (_) {}
+
+  // appId is optional for Auth + Firestore on Firebase Hosting.
+  if (config.appId?.includes('REPLACE')) delete config.appId;
+
+  return config;
+}
+
+const firebaseConfig = await loadFirebaseConfig();
+let app, auth, admin;
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  admin = createAdminClient(auth);
+} catch (bootErr) {
+  console.error('Firebase init failed:', bootErr);
+  const loginErr = document.getElementById('loginErr');
+  if (loginErr) {
+    loginErr.textContent = 'فشل تهيئة Firebase: ' + (bootErr?.message || bootErr);
+  }
+}
+
+window.addEventListener('error', (e) => {
+  const loginErr = document.getElementById('loginErr');
+  if (loginErr && !loginErr.textContent) {
+    loginErr.textContent = 'خطأ في الصفحة: ' + (e.message || 'غير معروف');
+  }
+});
+
+const $ = (id) => document.getElementById(id);
+const show = (id) => $(id).classList.remove('hidden');
+const hide = (id) => $(id).classList.add('hidden');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+// cache for users (for search & export)
+let _allUsers = [];
+let _extraPanels = null;
+
+async function logAdminActivity(action, details) {
+  const user = auth.currentUser;
+  if (!user || !admin) return;
+  try {
+    await admin.add(['adminActivityLog'], {
+      adminUid: user.uid,
+      adminEmail: user.email || '',
+      action,
+      details: details || '',
+      createdAt: admin.SERVER_TS,
+    });
+    _extraPanels?.loadActivity?.();
+  } catch (_) {}
+}
+
+// ---------------- auth ----------------
+if (!auth || !admin) {
+  const loginErr = document.getElementById('loginErr');
+  if (loginErr) {
+    loginErr.textContent = 'تعذر الاتصال بـ Firebase — حدّثي الصفحة (Ctrl+F5) أو جرّبي متصفحاً آخر.';
+  }
+} else {
+
+async function userIsAdmin(user) {
+  try {
+    const token = await user.getIdTokenResult(true);
+    if (token.claims.admin === true) return true;
+  } catch (e) {
+    console.warn('admin claim check failed:', e);
+  }
+  try {
+    const { isAdmin } = await admin.checkAdmin();
+    return isAdmin === true;
+  } catch (e) {
+    console.error('admin API check failed:', e);
+    throw e;
+  }
+}
+
+$('loginBtn').onclick = async () => {
+  $('loginErr').textContent = '';
+  $('loginBtn').disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value);
+  } catch (e) {
+    const code = e?.code || '';
+    if (code === 'auth/invalid-api-key' || code === 'auth/invalid-app-credential') {
+      $('loginErr').textContent =
+        'إعداد Firebase Web غير صحيح — شغّل: cd cycle_app && flutterfire configure ثم firebase deploy --only hosting';
+    } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+      $('loginErr').textContent =
+        'فشل تسجيل الدخول — تحققي من البريد وكلمة المرور. لإعادة التعيين شغّلي scripts/setup-admin.ps1 من المشروع.';
+    } else {
+      $('loginErr').textContent = 'فشل تسجيل الدخول: ' + (e?.message || code || 'خطأ غير معروف');
+    }
+  } finally {
+    $('loginBtn').disabled = false;
+  }
+};
+$('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').onclick = () => signOut(auth);
+$('deniedLogout').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user) => {
+  hide('loginView'); hide('dashView'); hide('deniedView');
+  if (!user) { show('loginView'); return; }
+
+  let isAdmin = false;
+  try {
+    isAdmin = await userIsAdmin(user);
+  } catch (e) {
+    $('loginErr').textContent =
+      'تعذر التحقق من صلاحيات الأدمن: ' + (e?.message || e);
+    await signOut(auth);
+    show('loginView');
+    return;
+  }
+
+  if (!isAdmin) {
+    $('deniedUid').textContent = 'UID: ' + user.uid;
+    show('deniedView');
+    return;
+  }
+
+  // Refresh JWT so custom claims + Firestore use the same token.
+  try {
+    await user.getIdToken(true);
+  } catch (e) {
+    console.warn('token refresh failed:', e);
+  }
+
+  $('adminEmail').textContent = user.email || user.uid;
+  show('dashView');
+
+  try {
+    await admin.ensureAdmin();
+  } catch (e) {
+    console.error('ensureAdmin failed:', e);
+    $('adminEmail').textContent =
+      (user.email || user.uid) + ' — تعذر تفعيل ملف الأدمن: ' + (e?.message || e);
+  }
+
+  // Always load core dashboard data (even if cms-panels fails).
+  loadOverview();
+  loadArticles();
+  loadReports();
+  loadUsers();
+
+  try {
+    const { initExtraAdmin } = await import('./cms-panels.js');
+    _extraPanels = initExtraAdmin({
+      auth, admin, $, esc, show, hide,
+      loadOverview, logAdminActivity,
+    });
+  } catch (e) {
+    console.error('cms-panels load failed:', e);
+    $('adminEmail').textContent =
+      (user.email || user.uid) + ' — بعض التبويبات لم تُحمّل: ' + (e?.message || e);
+  }
+});
+
+// tabs handled in cms-panels.js
+
+// ---------------- overview ----------------
+async function loadOverview() {
+  try {
+    const stats = await admin.overview();
+    $('statUsers').textContent = stats.users ?? '—';
+    $('statPremium').textContent = stats.premium ?? '—';
+    $('statPosts').textContent = stats.posts ?? '—';
+    $('statPending').textContent = stats.pending ?? '—';
+    $('statArticles').textContent = stats.articles ?? '—';
+  } catch (e) {
+    console.error('loadOverview:', e);
+    $('statUsers').textContent = '—';
+    $('statPremium').textContent = '—';
+    $('statPosts').textContent = '—';
+    $('statPending').textContent = '—';
+    $('statArticles').textContent = '—';
+  }
+}
+
+// ---------------- articles CMS ----------------
+let _editingArticleId = null;
+
+const CATEGORY_LABELS = {
+  basics: 'أساسيات',
+  health: 'صحة',
+  nutrition: 'تغذية',
+  mind: 'نفسية',
+  adult: '18+',
+};
+
+$('refreshArticles').onclick = loadArticles;
+$('addArticle').onclick = () => openArticleModal(null);
+$('importArticles').onclick = importDefaultArticles;
+$('articleModalClose').onclick = closeArticleModal;
+$('cancelArticle').onclick = closeArticleModal;
+$('articleModal').onclick = (e) => { if (e.target === $('articleModal')) closeArticleModal(); };
+$('saveArticle').onclick = saveArticle;
+
+async function loadArticles() {
+  const box = $('articlesList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const snap = await admin.query({
+      collectionPath: ['educationArticles'],
+      orderBy: { field: 'order', dir: 'asc' },
+    });
+    if (snap.empty) {
+      box.innerHTML = '<div class="empty">لا توجد مقالات في Firebase بعد. اضغطي «استيراد الافتراضية» لرفع 12 مقالًا.</div>';
+      return;
+    }
+
+    const rows = snap.docs.map((d) => {
+      const a = d.data();
+      const published = a.published === true;
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid #F3EAEF">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill ${published ? 'live' : 'draft'}">${published ? 'منشور' : 'مسودة'}</span>
+            <span class="pill free">${esc(CATEGORY_LABELS[a.category] || a.category || '—')}</span>
+            ${a.adultsOnly ? '<span class="pill minor">18+</span>' : ''}
+            <strong>${esc(a.titleAr || a.titleEn || d.id)}</strong>
+            <span class="muted">#${esc(String(a.order ?? '—'))} · ${esc(String(a.minutes ?? '—'))} د</span>
+          </div>
+          <div class="muted" style="margin-top:4px;word-break:break-all">${esc(d.id)}</div>
+          <div class="row-actions">
+            <button class="btn sm" data-edit-article="${esc(d.id)}">تعديل</button>
+            <button class="btn ghost sm" data-toggle-article="${esc(d.id)}" data-published="${published}">
+              ${published ? 'إلغاء النشر' : 'نشر'}
+            </button>
+            <button class="btn danger sm" data-delete-article="${esc(d.id)}">حذف</button>
+          </div>
+        </div>`;
+    });
+
+    box.innerHTML = rows.join('');
+
+    box.querySelectorAll('[data-edit-article]').forEach((b) => {
+      b.onclick = () => openArticleModal(b.dataset.editArticle);
+    });
+    box.querySelectorAll('[data-toggle-article]').forEach((b) => {
+      b.onclick = () => toggleArticlePublished(b);
+    });
+    box.querySelectorAll('[data-delete-article]').forEach((b) => {
+      b.onclick = () => deleteArticle(b.dataset.deleteArticle);
+    });
+  } catch (e) {
+    box.innerHTML = `<div class="empty">فشل التحميل: ${esc(e.message)}</div>`;
+  }
+}
+
+function clearArticleForm() {
+  _editingArticleId = null;
+  $('articleModalTitle').textContent = 'مقال جديد';
+  $('articleId').value = '';
+  $('articleId').disabled = false;
+  $('articleTitleAr').value = '';
+  $('articleTitleEn').value = '';
+  $('articleCategory').value = 'basics';
+  $('articleIcon').value = 'article_outlined';
+  $('articleMinutes').value = '3';
+  $('articleOrder').value = '99';
+  $('articleAdultsOnly').checked = false;
+  $('articlePublished').checked = true;
+  $('articleBodyAr').value = '';
+  $('articleBodyEn').value = '';
+  $('articleErr').textContent = '';
+}
+
+async function openArticleModal(id) {
+  clearArticleForm();
+  if (id) {
+    _editingArticleId = id;
+    $('articleModalTitle').textContent = 'تعديل المقال';
+    $('articleId').value = id;
+    $('articleId').disabled = true;
+    try {
+      const snap = await admin.get(['educationArticles', id]);
+      if (!snap.exists()) {
+        $('articleErr').textContent = 'المقال غير موجود';
+        return;
+      }
+      const a = snap.data();
+      $('articleTitleAr').value = a.titleAr || '';
+      $('articleTitleEn').value = a.titleEn || '';
+      $('articleCategory').value = a.category || 'basics';
+      $('articleIcon').value = a.iconName || 'article_outlined';
+      $('articleMinutes').value = String(a.minutes ?? 3);
+      $('articleOrder').value = String(a.order ?? 0);
+      $('articleAdultsOnly').checked = a.adultsOnly === true;
+      $('articlePublished').checked = a.published !== false;
+      $('articleBodyAr').value = a.bodyAr || '';
+      $('articleBodyEn').value = a.bodyEn || '';
+    } catch (e) {
+      $('articleErr').textContent = e.message;
+    }
+  }
+  show('articleModal');
+}
+
+function closeArticleModal() { hide('articleModal'); }
+
+async function saveArticle() {
+  $('articleErr').textContent = '';
+  const id = ($('articleId').value.trim() || _editingArticleId || '').replace(/\s+/g, '_');
+  if (!id || !/^[a-z0-9_]+$/i.test(id)) {
+    $('articleErr').textContent = 'المعرّف مطلوب (حروف إنجليزية وأرقام و _ فقط)';
+    return;
+  }
+  const titleAr = $('articleTitleAr').value.trim();
+  const titleEn = $('articleTitleEn').value.trim();
+  const bodyAr = $('articleBodyAr').value.trim();
+  const bodyEn = $('articleBodyEn').value.trim();
+  if (!titleAr || !titleEn || !bodyAr || !bodyEn) {
+    $('articleErr').textContent = 'العناوين والنصوص بالعربية والإنجليزية مطلوبة';
+    return;
+  }
+
+  const payload = {
+    titleAr,
+    titleEn,
+    bodyAr,
+    bodyEn,
+    category: $('articleCategory').value,
+    iconName: $('articleIcon').value,
+    minutes: Math.max(1, parseInt($('articleMinutes').value, 10) || 3),
+    order: parseInt($('articleOrder').value, 10) || 0,
+    adultsOnly: $('articleAdultsOnly').checked,
+    published: $('articlePublished').checked,
+    updatedAt: admin.SERVER_TS,
+  };
+
+  $('saveArticle').disabled = true;
+  try {
+    await admin.set(['educationArticles', id], payload, true);
+    closeArticleModal();
+    await loadArticles();
+    loadOverview();
+  } catch (e) {
+    $('articleErr').textContent = e.message;
+  } finally {
+    $('saveArticle').disabled = false;
+  }
+}
+
+async function toggleArticlePublished(btn) {
+  const id = btn.dataset.toggleArticle;
+  const published = btn.dataset.published !== 'true';
+  btn.disabled = true;
+  try {
+    await admin.update(['educationArticles', id], {
+      published,
+      updatedAt: admin.SERVER_TS,
+    });
+    await loadArticles();
+    loadOverview();
+  } catch (e) {
+    alert('فشل: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+async function deleteArticle(id) {
+  if (!confirm(`حذف المقال «${id}» نهائيًا؟`)) return;
+  try {
+    await admin.delete(['educationArticles', id]);
+    await loadArticles();
+    loadOverview();
+  } catch (e) {
+    alert('فشل الحذف: ' + e.message);
+  }
+}
+
+async function importDefaultArticles() {
+  if (!confirm('استيراد 12 مقالًا افتراضيًا؟ المقالات الموجودة بنفس المعرّف ستُحدَّث.')) return;
+  $('importArticles').disabled = true;
+  try {
+    const res = await fetch('default-articles.json');
+    if (!res.ok) throw new Error('تعذر تحميل default-articles.json');
+    const articles = await res.json();
+    for (const a of articles) {
+      const { id, ...data } = a;
+      await admin.set(['educationArticles', id], {
+        ...data,
+        updatedAt: admin.SERVER_TS,
+      }, true);
+    }
+    alert(`تم استيراد ${articles.length} مقالًا بنجاح`);
+    await loadArticles();
+    loadOverview();
+  } catch (e) {
+    alert('فشل الاستيراد: ' + e.message);
+  } finally {
+    $('importArticles').disabled = false;
+  }
+}
+
+// ---------------- reports (with filter) ----------------
+$('refreshReports').onclick = loadReports;
+$('reportFilter').onchange = loadReports;
+
+async function loadReports() {
+  const box = $('reportsList');
+  const filter = $('reportFilter').value;
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    let snap;
+    if (filter === 'all') {
+      snap = await admin.query({
+        collectionPath: ['communityReports'],
+        orderBy: { field: 'createdAt', dir: 'desc' },
+        limit: 50,
+      });
+    } else {
+      snap = await admin.query({
+        collectionPath: ['communityReports'],
+        filters: [{ field: 'status', op: '==', value: filter }],
+        orderBy: { field: 'createdAt', dir: 'desc' },
+        limit: 50,
+      });
+    }
+    if (snap.empty) {
+      box.innerHTML = '<div class="empty">لا توجد بلاغات 🎉</div>';
+      return;
+    }
+
+    const rows = await Promise.all(snap.docs.map(async (d) => {
+      const r = d.data();
+      const status = r.status || 'pending';
+
+      let contentText = '';
+      let contentGone = false;
+      try {
+        if (r.commentId) {
+          const c = await admin.get(['communities', r.communityId, 'posts', r.postId, 'comments', r.commentId]);
+          contentGone = !c.exists();
+          contentText = c.data()?.text || '';
+        } else {
+          const p = await admin.get(['communities', r.communityId, 'posts', r.postId]);
+          contentGone = !p.exists();
+          contentText = p.data()?.text || '';
+        }
+      } catch (_) { contentText = ''; }
+
+      const kind = r.commentId ? 'تعليق' : 'منشور';
+      const when = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleString('ar') : '';
+
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid #F3EAEF" data-report="${d.id}">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill ${esc(status)}">${
+              status === 'pending' ? 'معلق' : status === 'resolved' ? 'تم الحل' : 'مرفوض'
+            }</span>
+            <strong>${kind}</strong>
+            <span class="muted">${esc(r.communityId)} · ${esc(when)}</span>
+          </div>
+          <div class="muted" style="margin-top:4px">السبب: ${esc(r.reason || '—')}</div>
+          <div class="muted" style="margin-top:2px">الكاتبة: ${esc(r.authorAlias || '—')} (${esc(r.authorUid || '—')})</div>
+          ${contentGone
+            ? '<div class="muted" style="margin-top:6px">⚠️ المحتوى محذوف بالفعل</div>'
+            : `<div class="content-quote">${esc(contentText) || '<span class="muted">تعذر تحميل النص</span>'}</div>`}
+          ${status === 'pending' ? `
+          <div class="row-actions">
+            ${contentGone ? '' : `<button class="btn danger sm" data-act="delete" data-id="${d.id}"
+              data-community="${esc(r.communityId)}" data-post="${esc(r.postId)}"
+              data-comment="${esc(r.commentId || '')}">حذف المحتوى</button>`}
+            <button class="btn ok sm" data-act="resolve" data-id="${d.id}">تم الحل</button>
+            <button class="btn ghost sm" data-act="dismiss" data-id="${d.id}">تجاهل</button>
+          </div>` : ''}
+        </div>`;
+    }));
+
+    box.innerHTML = rows.join('');
+    box.querySelectorAll('button[data-act]').forEach((b) => { b.onclick = () => handleReportAction(b); });
+  } catch (e) {
+    box.innerHTML = `<div class="empty">فشل التحميل: ${esc(e.message)}</div>`;
+  }
+}
+
+async function handleReportAction(btn) {
+  const { act, id, community, post, comment } = btn.dataset;
+  btn.disabled = true;
+  try {
+    if (act === 'delete') {
+      if (!confirm('حذف هذا المحتوى نهائيًا؟')) { btn.disabled = false; return; }
+      const postPath = ['communities', community, 'posts', post];
+      if (comment) {
+        await admin.delete([...postPath, 'comments', comment]);
+      } else {
+        await admin.delete(postPath);
+      }
+      await admin.update(['communityReports', id], { status: 'resolved' });
+    } else if (act === 'resolve') {
+      await admin.update(['communityReports', id], { status: 'resolved' });
+    } else if (act === 'dismiss') {
+      await admin.update(['communityReports', id], { status: 'dismissed' });
+    }
+    await loadReports();
+    loadOverview();
+  } catch (e) {
+    alert('فشلت العملية: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+// ---------------- users (with search + detail modal + delete + export) ----------------
+$('refreshUsers').onclick = loadUsers;
+$('syncUsers').onclick = () => loadUsers({ forceSync: true });
+$('userSearch').oninput = renderUsers;
+$('exportUsers').onclick = exportUsersCSV;
+$('modalClose').onclick = closeUserModal;
+$('userModal').onclick = (e) => { if (e.target === $('userModal')) closeUserModal(); };
+
+async function syncUsersFromAuth() {
+  const user = auth.currentUser;
+  if (!user) throw new Error('سجّلي الدخول أولاً');
+  const token = await user.getIdToken();
+  const res = await fetch(`${FUNCTIONS_BASE}/syncUsersFromAuth`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: '{}',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `فشل المزامنة (${res.status})`);
+  return data;
+}
+
+async function loadUsers({ forceSync = false } = {}) {
+  const box = $('usersList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    if (forceSync || _allUsers.length === 0) {
+      try {
+        const sync = await syncUsersFromAuth();
+        if (forceSync && sync?.synced != null) {
+          console.info(`synced ${sync.synced} users from Auth`);
+        }
+      } catch (syncErr) {
+        console.warn('syncUsersFromAuth:', syncErr);
+        if (forceSync) throw syncErr;
+      }
+    }
+    const snap = await admin.query({
+      collectionPath: ['users'],
+      limit: 500,
+    });
+    const year = new Date().getFullYear();
+    _allUsers = snap.docs.map((d) => {
+      const u = d.data();
+      return { id: d.id, ...u, _minor: u.communityBirthYear != null && (year - u.communityBirthYear) < 18 };
+    });
+    renderUsers();
+  } catch (e) {
+    box.innerHTML = `<div class="empty">فشل التحميل: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderUsers() {
+  const box = $('usersList');
+  const term = $('userSearch').value.trim().toLowerCase();
+  let list = _allUsers;
+  if (term) {
+    list = list.filter((u) =>
+      (u.communityAlias || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      u.id.toLowerCase().includes(term) ||
+      (u.name || '').toLowerCase().includes(term)
+    );
+  }
+  if (!list.length) {
+    box.innerHTML = '<div class="empty">لا يوجد مستخدمون بعد. اضغطي «مزامنة من Auth» لجلب الحسابات من Firebase Authentication.</div>';
+    return;
+  }
+
+  const rows = list.map((u) => {
+    const premium = u.isPremium === true;
+    const displayName = u.communityAlias || u.name || u.email || '—';
+    return `
+      <tr style="cursor:pointer" data-uid="${esc(u.id)}">
+        <td>
+          <strong>${esc(displayName)}</strong>
+          ${u._minor ? '<span class="pill minor">قاصر</span>' : ''}
+          <div class="muted" style="word-break:break-all">${esc(u.id)}</div>
+          ${u.email && displayName !== u.email ? `<div class="muted">${esc(u.email)}</div>` : ''}
+        </td>
+        <td>${u.communityBirthYear ? esc(u.communityBirthYear) : '—'}</td>
+        <td><span class="pill ${premium ? 'premium' : 'free'}">${premium ? 'Premium' : 'مجاني'}</span></td>
+        <td>
+          <button class="btn sm ${premium ? 'ghost' : ''}" data-toggle-premium="${esc(u.id)}" data-premium="${premium}">
+            ${premium ? 'إلغاء Premium' : 'منح Premium'}
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  box.innerHTML = `
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>المستخدم</th><th>سنة الميلاد</th><th>الاشتراك</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+
+  // row click → open detail modal
+  box.querySelectorAll('tr[data-uid]').forEach((tr) => {
+    tr.onclick = (e) => {
+      if (e.target.closest('button')) return; // don't open modal when clicking premium button
+      openUserModal(tr.dataset.uid);
+    };
+  });
+
+  // premium toggle
+  box.querySelectorAll('button[data-toggle-premium]').forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      const makePremium = b.dataset.premium !== 'true';
+      try {
+        await admin.set(['users', b.dataset.togglePremium], {
+          isPremium: makePremium,
+          ...(makePremium ? { premiumSince: new Date().toISOString() } : {}),
+        }, true);
+        await loadUsers();
+        loadOverview();
+      } catch (e) {
+        alert('فشل التحديث: ' + e.message);
+        b.disabled = false;
+      }
+    };
+  });
+}
+
+// --- user detail modal ---
+async function openUserModal(uid) {
+  const body = $('modalBody');
+  const actions = $('modalActions');
+  body.innerHTML = '<div class="spinner"></div>';
+  actions.innerHTML = '';
+  show('userModal');
+
+  try {
+    const snap = await admin.get(['users', uid]);
+    if (!snap.exists()) {
+      body.innerHTML = '<p class="muted">المستخدم غير موجود</p>';
+      return;
+    }
+    const u = snap.data();
+    const premium = u.isPremium === true;
+    const banned = u.communityBanned === true;
+    const created = u.premiumSince || '—';
+    const birthYear = u.communityBirthYear || '—';
+
+    body.innerHTML = `
+      <div class="field"><div class="field-label">الاسم المستعار</div><div class="field-value">${esc(u.communityAlias || '—')}</div></div>
+      <div class="field"><div class="field-label">الاسم</div><div class="field-value">${esc(u.name || '—')}</div></div>
+      <div class="field"><div class="field-label">البريد</div><div class="field-value">${esc(u.email || '—')}</div></div>
+      <div class="field"><div class="field-label">الـ UID</div><div class="field-value" style="font-size:12px">${esc(uid)}</div></div>
+      <div class="field"><div class="field-label">سنة الميلاد</div><div class="field-value">${esc(String(birthYear))}</div></div>
+      <div class="field"><div class="field-label">الاشتراك</div><div class="field-value"><span class="pill ${premium ? 'premium' : 'free'}">${premium ? 'Premium' : 'مجاني'}</span></div></div>
+      <div class="field"><div class="field-label">المجتمع</div><div class="field-value"><span class="pill ${banned ? 'minor' : 'live'}">${banned ? 'محظورة' : 'مسموحة'}</span></div></div>
+      ${premium ? `<div class="field"><div class="field-label">تاريخ الاشتراك</div><div class="field-value">${esc(created)}</div></div>` : ''}
+      <div class="field"><div class="field-label">الهدف</div><div class="field-value">${esc(u.goal || u.primaryGoal || '—')}</div></div>
+      <div class="field"><div class="field-label">البلد</div><div class="field-value">${esc(u.country || '—')}</div></div>
+    `;
+
+    actions.innerHTML = `
+      <button class="btn sm" data-action="toggle-premium" data-premium="${premium}">
+        ${premium ? 'إلغاء Premium' : 'منح Premium'}
+      </button>
+      <button class="btn sm ${banned ? 'ok' : 'danger'}" data-action="toggle-ban" data-banned="${banned}">
+        ${banned ? 'إلغاء حظر المجتمع' : 'حظر من المجتمع'}
+      </button>
+      <button class="btn danger sm" data-action="delete-user">حذف المستخدم</button>
+      <button class="btn ghost sm" data-action="close">إغلاق</button>
+    `;
+
+    actions.querySelector('[data-action="close"]').onclick = closeUserModal;
+
+    actions.querySelector('[data-action="toggle-premium"]').onclick = async (e) => {
+      e.target.disabled = true;
+      const make = e.target.dataset.premium !== 'true';
+      try {
+        await admin.set(['users', uid], {
+          isPremium: make,
+          ...(make ? { premiumSince: new Date().toISOString() } : {}),
+        }, true);
+        closeUserModal();
+        await loadUsers();
+        loadOverview();
+      } catch (err) {
+        alert('فشل: ' + err.message);
+        e.target.disabled = false;
+      }
+    };
+
+    actions.querySelector('[data-action="toggle-ban"]').onclick = async (e) => {
+      e.target.disabled = true;
+      const ban = e.target.dataset.banned !== 'true';
+      try {
+        await admin.set(['users', uid], {
+          communityBanned: ban,
+          ...(ban ? { communityBannedAt: admin.SERVER_TS } : {
+            communityBannedAt: { __delete: true },
+            communityBannedReason: { __delete: true },
+          }),
+        }, true);
+        await logAdminActivity(ban ? 'community_ban' : 'community_unban', uid);
+        closeUserModal();
+        await loadUsers();
+      } catch (err) {
+        alert('فشل: ' + err.message);
+        e.target.disabled = false;
+      }
+    };
+
+    actions.querySelector('[data-action="delete-user"]').onclick = async (e) => {
+      if (!confirm(`هل أنت متأكد من حذف المستخدم ${uid}؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return;
+      e.target.disabled = true;
+      try {
+        await admin.delete(['users', uid]);
+        closeUserModal();
+        await loadUsers();
+        loadOverview();
+      } catch (err) {
+        alert('فشل الحذف: ' + err.message);
+        e.target.disabled = false;
+      }
+    };
+  } catch (e) {
+    body.innerHTML = `<p class="muted">خطأ: ${esc(e.message)}</p>`;
+  }
+}
+
+function closeUserModal() { hide('userModal'); }
+
+// --- export users CSV ---
+function exportUsersCSV() {
+  if (!_allUsers.length) { alert('لا يوجد مستخدمون للتصدير'); return; }
+  const header = 'UID,الاسم,البريد,الاشتراك,سنة الميلاد,الهدف,القاصرين\n';
+  const rows = _allUsers.map((u) => {
+    return [
+      u.id,
+      u.communityAlias || u.name || '',
+      u.email || '',
+      u.isPremium ? 'Premium' : 'مجاني',
+      u.communityBirthYear || '',
+      u.goal || u.primaryGoal || '',
+      u._minor ? 'نعم' : 'لا',
+    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  }).join('\n');
+
+  const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cycle-aura-users-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+} // end if (auth && db)
+</script>
+</body>
+</html>

@@ -1,0 +1,837 @@
+{
+    "@@locale": "ar",
+    "appTitle": "Menstrudel",
+    "nextDue": "الموعد القادم",
+    "ongoing": "جارية",
+    "overdue": "متأخرة",
+    "total": "الإجمالي",
+    "shortest": "الأقصر",
+    "longest": "الأطول",
+    "unknown": "غير معروف",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "start": "البداية",
+    "end": "النهاية",
+    "next": "التالي",
+    "back": "رجوع",
+    "today": "اليوم",
+    "day": "يوم",
+    "days": "أيام",
+    "hours": "ساعات",
+    "dayCount": "{count, plural, one{يوم واحد} two{يومان} few{{count} أيام} many{{count} يومًا} other{{count} يوم}}",
+    "@dayCount": {
+        "description": "A message that displays a count of days, handling singular and plural forms.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
+    "monthCount": "{count, plural, one{شهر واحد} two{شهران} few{{count} أشهر} many{{count} شهرًا} other{{count} شهر}}",
+    "@monthCount": {
+        "description": "A message that displays a count of months, handling singular and plural forms.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "2"
+            }
+        }
+    },
+    "yearCount": "{count, plural, one{سنة واحدة} two{سنتان} few{{count} سنوات} many{{count} سنة} other{{count} سنة}}",
+    "@yearCount": {
+        "description": "A message that displays a count of years, handling singular and plural forms.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "3"
+            }
+        }
+    },
+    "countdown_daysLeft": "{days, plural, one{يوم واحد متبقٍ} two{يومان متبقيان} few{{days} أيام متبقية} many{{days} يومًا متبقيًا} other{{days} يوم متبقٍ}}",
+    "@countdown_daysLeft": {
+        "description": "A countdown message indicating the number of days left.",
+        "placeholders": {
+            "days": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
+    "countUp_day": "اليوم {day}",
+    "@countUp_day": {
+        "description": "A count up message indicating the current day. E.g. 'Day 1 of period'.",
+        "placeholders": {
+            "day": {
+                "type": "int",
+                "example": "1"
+            }
+        }
+    },
+    "logs": "السجلات",
+    "insights": "التحليلات",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "clear": "مسح",
+    "save": "حفظ",
+    "import": "استيراد",
+    "ok": "حسنًا",
+    "confirm": "تأكيد",
+    "set": "تعيين",
+    "yes": "نعم",
+    "no": "لا",
+    "cancel": "إلغاء",
+    "select": "اختيار",
+    "close": "إغلاق",
+    "reset": "إعادة تعيين",
+    "add": "إضافة",
+    "notSet": "غير محدد",
+    "removed": "تمت الإزالة",
+    "totalLogs": "إجمالي السجلات",
+    "note": "ملاحظة",
+    "systemDefault": "افتراضي النظام",
+    "flow": "التدفق",
+    "type": "النوع",
+    "other": "أخرى",
+    "navBar_logs": "السجلات",
+    "navBar_sanitary": "المنتجات الصحية",
+    "navBar_sexActivity": "النشاط الجنسي",
+    "navBar_pill": "الحبوب",
+    "navBar_reversibleContraceptive": "وسائل منع الحمل",
+    "navBar_settings": "الإعدادات",
+    "flowIntensity_none": "لا يوجد",
+    "flowIntensity_spotting": "تنقيط",
+    "flowIntensity_light": "خفيف",
+    "flowIntensity_moderate": "متوسط",
+    "flowIntensity_heavy": "غزير",
+    "builtInSymptom_acne": "حب الشباب",
+    "builtInSymptom_backPain": "ألم الظهر",
+    "builtInSymptom_bloating": "انتفاخ",
+    "builtInSymptom_cramps": "تشنجات",
+    "builtInSymptom_fatigue": "إرهاق",
+    "builtInSymptom_headache": "صداع",
+    "builtInSymptom_moodSwings": "تقلبات مزاجية",
+    "builtInSymptom_nausea": "غثيان",
+    "builtInSymptom_tenderBreasts": "ألم في الثديين",
+    "builtInSymptom_insomnia": "أرق",
+    "builtInSymptom_depressed": "اكتئاب",
+    "painLevel_title": "مستوى الألم",
+    "painLevel_none": "لا يوجد",
+    "painLevel_mild": "خفيف",
+    "painLevel_moderate": "متوسط",
+    "painLevel_severe": "شديد",
+    "pain_unbearable": "لا يُحتمل",
+    "reversibleContraceptive_hormonalIud": "لولب هرموني",
+    "reversibleContraceptive_copperIud": "لولب نحاسي",
+    "reversibleContraceptive_implant": "غرسة",
+    "reversibleContraceptive_injection": "حقنة",
+    "reversibleContraceptive_ring": "حلقة مهبلية",
+    "reversibleContraceptive_patch": "لصقة",
+    "sanitaryProduct_tampon": "سدادة قطنية",
+    "sanitaryProduct_pad": "فوطة صحية",
+    "sanitaryProduct_menstrualCup": "كأس الحيض",
+    "sanitaryProduct_periodUnderwear": "ملابس داخلية للدورة",
+    "sanitaryProducts_mostUsed": "الأكثر استخدامًا",
+    "sanitaryProducts_usageTrend": "اتجاه الاستخدام",
+    "sexProtection_none": "بدون وقاية",
+    "@sexProtection_none": {
+        "description": "Indicates that no sexual protection method was used."
+    },
+    "sexProtection_barrier": "وسيلة عازلة",
+    "@sexProtection_barrier": {
+        "description": "Indicates the use of barrier methods of sexual protection (Condoms)."
+    },
+    "sexProtection_hormonal": "هرمونية",
+    "@sexProtection_hormonal": {
+        "description": "Indicates the use of hormonal methods of sexual protection (The Pill)."
+    },
+    "sexProtection_nonHormonal": "غير هرمونية",
+    "@sexProtection_nonHormonal": {
+        "description": "Indicates the use of non-hormonal methods of sexual protection (Copper IUD)."
+    },
+    "sexProtection_natural": "طبيعية",
+    "@sexProtection_natural": {
+        "description": "Indicates the use of natural methods of sexual protection (Fertility awernass)."
+    },
+    "sexProtection_permanent": "دائمة",
+    "@sexProtection_permanent": {
+        "description": "Indicates the use of permanent methods of sexual protection (Sterilisation)."
+    },
+    "sexType_vaginal": "مهبلي",
+    "sexType_anal": "شرجي",
+    "sexType_oral": "فموي",
+    "sexType_manual": "يدوي",
+    "sexParticipation_solo": "فردي",
+    "sexParticipation_partner": "مع شريك",
+    "sexParticipation_group": "جماعي",
+    "userGoal_general": "الصحة العامة",
+    "@userGoal_general": {
+        "description": "For users tracking periods for general health."
+    },
+    "userGoal_sexual": "الصحة الجنسية",
+    "@userGoal_sexual": {
+        "description": "For users focusing on sexual health."
+    },
+    "userGoal_conceive": "محاولة الحمل",
+    "@userGoal_conceive": {
+        "description": "For users focusing on trying to conceive."
+    },
+    "userGoal_avoid": "تجنب الحمل",
+    "@userGoal_avoid": {
+        "description": "For users focusing on avoiding pregnancy."
+    },
+    "userGoal_pregnant": "أنا حامل",
+    "@userGoal_pregnant": {
+        "description": "For users tracking an active pregnancy."
+    },
+    "dayOfWeek_monday": "الاثنين",
+    "dayOfWeek_tuesday": "الثلاثاء",
+    "dayOfWeek_wednesday": "الأربعاء",
+    "dayOfWeek_thursday": "الخميس",
+    "dayOfWeek_friday": "الجمعة",
+    "dayOfWeek_saturday": "السبت",
+    "dayOfWeek_sunday": "الأحد",
+    "cyclePhase_menstruation": "في فترة الحيض",
+    "cyclePhase_follicular": "ما قبل التبويض",
+    "cyclePhase_fertileWindow": "نافذة الخصوبة",
+    "cyclePhase_ovulation": "ذروة الخصوبة",
+    "cyclePhase_luteal": "ما بعد التبويض",
+    "cyclePhase_late": "متأخرة",
+    "cyclePhase_unknown": "غير معروفة",
+    "cyclePhase_menstruationDescription": "دورتك الشهرية نشطة ويجري التخلص من بطانة الرحم.",
+    "cyclePhase_fertileWindowDescription": "نافذة الخصوبة لديكِ نشطة حاليًا.",
+    "cyclePhase_follicularDescription": "يرتفع هرمون الإستروجين لتهيئة البويضة؛ وقد تشعرين بازدياد مستويات طاقتك.",
+    "cyclePhase_ovulationDescription": "تم إطلاق بويضة. هذه أكثر فتراتك خصوبة.",
+    "cyclePhase_lutealDescription": "هرمون البروجسترون هو السائد. راقبي أعراض ما قبل الدورة مع اقتراب موعد دورتك القادمة.",
+    "cyclePhase_lateDescription": "دورتك الشهرية متأخرة.",
+    "cyclePhase_unknownDescription": "نحتاج إلى مزيد من البيانات للتنبؤ بمرحلة دورتك بدقة.",
+    "fertilityChance_high": "مرتفعة",
+    "@fertilityChance_high": {
+        "description": "Label shown when the user is in their peak fertile window or on ovulation day."
+    },
+    "fertilityChance_medium": "متوسطة",
+    "@fertilityChance_medium": {
+        "description": "Label shown when the user is at the very beginning or end of their fertile window."
+    },
+    "fertilityChance_low": "منخفضة",
+    "@fertilityChance_low": {
+        "description": "Label shown when the user is outside of their fertile window (e.g., during menstruation or the luteal phase)."
+    },
+    "error_valueMustbePositive": "يجب أن تكون القيمة موجبة",
+    "error_valueCannotBeNull": "لا يمكن أن تكون القيمة فارغة",
+    "notification_periodTitle": "اقتراب موعد الدورة",
+    "@notification_periodTitle": {
+        "description": "Title for the upcoming period notification."
+    },
+    "notification_periodBody": "{count, plural, =1{من المتوقع أن تبدأ دورتك القادمة خلال يوم واحد.} two{من المتوقع أن تبدأ دورتك القادمة خلال يومين.} few{من المتوقع أن تبدأ دورتك القادمة خلال {count} أيام.} many{من المتوقع أن تبدأ دورتك القادمة خلال {count} يومًا.} other{من المتوقع أن تبدأ دورتك القادمة خلال {count} يوم.}}",
+    "@notification_periodBody": {
+        "description": "Body for the upcoming period notification.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "notification_periodOverdueTitle": "تأخر الدورة",
+    "@notification_periodOverdueTitle": {
+        "description": "Title for the overdue period notification."
+    },
+    "notification_periodOverdueBody": "{count, plural, =1{دورتك القادمة متأخرة بيوم واحد.} two{دورتك القادمة متأخرة بيومين.} few{دورتك القادمة متأخرة بـ {count} أيام.} many{دورتك القادمة متأخرة بـ {count} يومًا.} other{دورتك القادمة متأخرة بـ {count} يوم.}}",
+    "@notification_periodOverdueBody": {
+        "description": "Body for the overdue period notification.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "notification_pillTitle": "تذكير بالحبة",
+    "@notification_pillTitle": {
+        "description": "Title for the daily pill reminder notification."
+    },
+    "notification_pillBody": "لا تنسي تناول حبتك لهذا اليوم.",
+    "@notification_pillBody": {
+        "description": "Body for the daily pill reminder notification."
+    },
+    "notification_reversibleContraceptiveTitle": "تذكير بوسيلة منع الحمل",
+    "@notification_reversibleContraceptiveTitle": {
+        "description": "Title for the Reversible Contraceptive reminder notification."
+    },
+    "notification_reversibleContraceptiveBody": "يحين موعد تجديد {type} خلال {days} {days, plural, =1{يوم} two{يوم} few{أيام} many{يومًا} other{يوم}}.",
+    "@notification_reversibleContraceptiveBody": {
+        "description": "The body of the Reversible Contraceptive reminder notification, indicating the type and days until renewal.",
+        "placeholders": {
+            "type": {
+                "type": "String",
+                "example": "IUD"
+            },
+            "days": {
+                "type": "int",
+                "example": "1"
+            }
+        }
+    },
+    "notification_loggingReminderTitle": "تذكير بالتسجيل",
+    "@notification_loggingReminderTitle": {
+        "description": "Title for the logging reminder notification."
+    },
+    "notification_loggingReminderBody": "اضغطي لتسجيل تدفقك لهذا اليوم.",
+    "@notification_loggingReminderBody": {
+        "description": "Body for the logging reminder notification."
+    },
+    "notification_SanitaryProductReminderTitle": "تذكير بالمنتج الصحي",
+    "notification_SanitaryProductReminderBody": "تذكري تغيير منتجك الصحي.",
+    "notification_fertileWindowTitle": "تذكير بنافذة الخصوبة",
+    "@notification_fertileWindowTitle": {
+        "description": "Title for the fertile window notification."
+    },
+    "notification_fertileWindowBody": "{count, plural, =1{من المتوقع أن تبدأ نافذة الخصوبة القادمة خلال يوم واحد.} two{من المتوقع أن تبدأ نافذة الخصوبة القادمة خلال يومين.} few{من المتوقع أن تبدأ نافذة الخصوبة القادمة خلال {count} أيام.} many{من المتوقع أن تبدأ نافذة الخصوبة القادمة خلال {count} يومًا.} other{من المتوقع أن تبدأ نافذة الخصوبة القادمة خلال {count} يوم.}}",
+    "@notification_fertileWindowBody": {
+        "description": "Body for the upcoming fertile window notification.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "notification_ovulationDayReminderTitle": "تذكير بيوم التبويض",
+    "@notification_ovulationDayReminderTitle": {
+        "description": "Title for the ovulation day notification."
+    },
+    "notification_ovulationDayReminderBody": "{count, plural, =1{من المتوقع أن يحل يوم التبويض القادم خلال يوم واحد.} two{من المتوقع أن يحل يوم التبويض القادم خلال يومين.} few{من المتوقع أن يحل يوم التبويض القادم خلال {count} أيام.} many{من المتوقع أن يحل يوم التبويض القادم خلال {count} يومًا.} other{من المتوقع أن يحل يوم التبويض القادم خلال {count} يوم.}}",
+    "@notification_ovulationDayReminderBody": {
+        "description": "Body for the upcoming ovulation day notification.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "onboardingScreen_welcomeToMenstrudel": "مرحبًا بكِ في Menstrudel",
+    "@onboardingScreen_welcomeToMenstrudel": {
+        "description": "Title for the onboarding screen."
+    },
+    "onboardingScreen_welcomeToMenstrudelDescription": "متتبع دورتك الشهرية الخاص الذي يعمل دون اتصال بالإنترنت.",
+    "@onboardingScreen_welcomeToMenstrudelDescription": {
+        "description": "Small into description for the onboarding screen."
+    },
+    "onBoardingScreen_byUsingMenstrudelYouAgreeTo": "باستخدامكِ Menstrudel، فإنكِ توافقين على ",
+    "@onBoardingScreen_byUsingMenstrudelYouAgreeTo": {
+        "description": "Part of the privacy policy agreement text on the onboarding screen."
+    },
+    "onBoardingScreen_privacyPolicy": "سياسة الخصوصية",
+    "@onBoardingScreen_privacyPolicy": {
+        "description": "Link text to the privacy policy on the onboarding screen."
+    },
+    "onboardingScreen_profileTitle": "نبذة عنكِ",
+    "@onboardingScreen_profileTitle": {
+        "description": "Title for the profile onboarding screen."
+    },
+    "onboardingScreen_profileName": "بماذا نناديكِ؟",
+    "@onboardingScreen_profileName": {
+        "description": "Name question for the profile onboarding screen."
+    },
+    "onboardingScreen_profileDate": "تاريخ الميلاد (اختياري)",
+    "@onboardingScreen_profileDate": {
+        "description": "Birth date for the profile onboarding screen. This field is optional."
+    },
+    "onboardingScreen_profileDatePlaceholder": "اضغطي لتحديد تاريخ ميلادك",
+    "@onboardingScreen_profileDatePlaceholder": {
+        "description": "Displays when birthday value is none (Due to being optional). Prompts user to set their birthday"
+    },
+    "onboardingScreen_goalTitle": "ما هدفك؟",
+    "@onboardingScreen_goalTitle": {
+        "description": "Title for the goal onboarding screen."
+    },
+    "onboardingScreen_goalDescription": "يساعدنا هذا في تخصيص التحليلات التي تظهر لكِ.",
+    "@onboardingScreen_goalDescription": {
+        "description": "Description for the goal onboarding screen."
+    },
+    "onboardingScreen_contraceptionHint": "ملاحظة: يمكنكِ تفعيل تتبع الحبوب أو وسائل منع الحمل لاحقًا من إعدادات التطبيق ضمن '{sectionName}' إذا رغبتِ.",
+    "@onboardingScreen_contraceptionHint": {
+        "description": "Hint for birth control settings",
+        "placeholders": {
+            "sectionName": {
+                "type": "String"
+            }
+        }
+    },
+    "onboardingScreen_getStarted": "ابدئي الآن",
+    "@onboardingScreen_getStarted": {
+        "description": "Button text for the get started navigation button"
+    },
+    "fabToolTip_logs": "تسجيل اليوم",
+    "@fabToolTip_logs": {
+        "description": "Used for the main logs screen fab button as a tooltip."
+    },
+    "fabToolTip_sanitary": "تسجيل منتج صحي",
+    "@fabToolTip_sanitary": {
+        "description": "Used for the sanitary screen fab button as a tooltip."
+    },
+    "fabToolTip_sexActivity": "تسجيل نشاط جنسي",
+    "@fabToolTip_sexActivity": {
+        "description": "Used for the sex activity screen fab button as a tooltip."
+    },
+    "fabToolTip_reversibleContraceptive": "تسجيل وسيلة منع حمل",
+    "@fabToolTip_reversibleContraceptive": {
+        "description": "Used for the Reversible Contraceptive screen fab button as a tooltip."
+    },
+    "mainScreen_logsPageTitle": "السجلات",
+    "mainSceen_sexActivityPageTitle": "النشاط الجنسي",
+    "mainScreen_sanitaryPageTitle": "المنتجات الصحية",
+    "mainScreen_pillsPageTitle": "الحبوب",
+    "mainScreen_reversibleContraceptivesPageTitle": "وسائل منع الحمل",
+    "mainScreen_settingsPageTitle": "الإعدادات",
+    "insightsScreen_errorPrefix": "خطأ:",
+    "insightsScreen_noDataAvailable": "لا توجد بيانات متاحة.",
+    "logsScreen_calculatingPrediction": "جارٍ حساب التوقعات...",
+    "logScreen_logAtLeastTwoPeriods": "سجّلي دورتين على الأقل لتقدير موعد الدورة القادمة.",
+    "logScreen_nextPeriodEstimate": "الدورة القادمة المتوقعة",
+    "logScreen_periodDueToday": "موعد الدورة اليوم",
+    "logScreen_periodOverdueBy": "{count, plural, =1{الدورة متأخرة بيوم واحد} two{الدورة متأخرة بيومين} few{الدورة متأخرة بـ {count} أيام} many{الدورة متأخرة بـ {count} يومًا} other{الدورة متأخرة بـ {count} يوم}}",
+    "@logScreen_periodOverdueBy": {
+        "description": "A label showing the total number of days period is overdue.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "pillScreen_pillForTodayMarkedAsTaken": "تم تسجيل حبة اليوم على أنها أُخذت.",
+    "pillScreen_pillForTodayMarkedAsSkipped": "تم تسجيل حبة اليوم على أنها تم تخطيها.",
+    "reversibleContraceptiveScreen_noRecordsFound": "لم يتم العثور على سجلات.",
+    "reversibleContraceptiveScreen_history": "السجل ({history})",
+    "@reversibleContraceptiveScreen_history": {
+        "description": "The total Reversible Contraceptive history count.",
+        "placeholders": {
+            "history": {
+                "type": "int",
+                "example": "12"
+            }
+        }
+    },
+    "reversibleContraceptiveScreen_activeReversibleContraceptives": "النشطة ({activeCount})",
+    "@reversibleContraceptiveScreen_activeReversibleContraceptives": {
+        "description": "The total active Reversible Contraceptive count.",
+        "placeholders": {
+            "activeCount": {
+                "type": "int",
+                "example": "2"
+            }
+        }
+    },
+    "reversibleContraceptiveScreen_activeReversibleContraceptivesDescription": "إدخالات وسائل منع الحمل قيد المتابعة حاليًا.",
+    "reversibleContraceptiveScreen_noActiveRecords": "لا توجد وسيلة منع حمل نشطة حاليًا. يرجى تسجيل إدخال جديد.",
+    "reversibleContraceptiveScreen_noHistoryRecords": "لم يتم العثور على سجلات سابقة أو متأخرة لوسائل منع الحمل.",
+    "sanitaryProductsScreen_noSanitaryProductRecordsFound": "لم يتم العثور على سجلات للمنتجات الصحية.",
+    "sanitaryProductsScreen_history": "السجل ({history})",
+    "@sanitaryProductsScreen_history": {
+        "description": "The total sanitary product history count.",
+        "placeholders": {
+            "history": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
+    "sanitaryProductsScreen_noHistoryRecords": "لم يتم العثور على سجلات سابقة للمنتجات الصحية.",
+    "sanitaryProductsScreen_activeProduct": "النشط حاليًا: {activeType}",
+    "@sanitaryProductsScreen_activeProduct": {
+        "description": "Label showing the type of active sanitary product.",
+        "placeholders": {
+            "activeType": {
+                "type": "String",
+                "example": "Tampon"
+            }
+        }
+    },
+    "sanitaryProductsScreen_changeDueAt": "موعد التغيير في {time}",
+    "@sanitaryProductsScreen_changeDueAt": {
+        "description": "Label showing the time when the sanitary product needs to be changed.",
+        "placeholders": {
+            "time": {
+                "type": "String",
+                "example": "3:30 PM"
+            }
+        }
+    },
+    "sexActivityScreen_noSexActivityRecordsFound": "لم يتم العثور على سجلات للنشاط الجنسي.",
+    "sexActivityScreen_history": "السجل ({history})",
+    "@sexActivityScreen_history": {
+        "description": "The total sex activity history count.",
+        "placeholders": {
+            "history": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
+    "sexActivityScreen_primaryMethod": "الوسيلة الأساسية",
+    "@sexActivityScreen_primaryMethod": {
+        "description": "Label showing the primary sexual protection method."
+    },
+    "sexActivityScreen_mostFrequent": "الأكثر تكرارًا",
+    "@sexActivityScreen_mostFrequent": {
+        "description": "Label showing the most frequent sex activity type."
+    },
+    "sexActivityScreen_protected": "بوقاية",
+    "@sexActivityScreen_protected": {
+        "description": "Label showing the total number of protected sex activities."
+    },
+    "sexActivityScreen_activityTrend": "اتجاه النشاط",
+    "@sexActivityScreen_activityTrend": {
+        "description": "Title for the sexual activity trend chart."
+    },
+    "sexActivityScreen_activityDistribution": "توزيع النشاط",
+    "@sexActivityScreen_activityDistribution": {
+        "description": "Title for the sex activity distribution chart."
+    },
+    "sexActivityScreen_protectionDistribution": "توزيع وسائل الوقاية",
+    "@sexActivityScreen_protectionDistribution": {
+        "description": "Title for the sexual protection distribution chart."
+    },
+    "settingsScreen_profile": "الملف الشخصي",
+    "@settingsScreen_profile": {
+        "description": "Title for the profile settings button."
+    },
+    "settingsScreen_name": "الاسم",
+    "settingsScreen_birthDate": "تاريخ الميلاد",
+    "settingsScreen_notSet": "غير محدد",
+    "@settingsScreen_notSet": {
+        "description": "Used when birth date is not set."
+    },
+    "settingsScreen_appGoal": "هدف التطبيق",
+    "settingsScreen_profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "settingsScreen_selectHistoryView": "اختاري طريقة عرض السجل",
+    "settingsScreen_deleteRegimen_question": "حذف نظام الحبوب؟",
+    "settingsScreen_deleteRegimenDescription": "سيؤدي هذا إلى حذف إعدادات شريط الحبوب الحالي وجميع سجلات الحبوب المرتبطة به. لا يمكن التراجع عن هذا الإجراء.",
+    "settingsScreen_allLogsHaveBeenCleared": "تم مسح جميع السجلات.",
+    "settingsScreen_clearAllLogs_question": "مسح جميع السجلات؟",
+    "settingsScreen_deleteAllLogsDescription": "سيؤدي هذا إلى حذف جميع سجلات دورتك الشهرية نهائيًا. لن تتأثر إعدادات التطبيق.",
+    "settingsScreen_appearance": "المظهر",
+    "settingsScreen_historyViewStyle": "نمط عرض السجل",
+    "settingsScreen_appTheme": "سمة التطبيق",
+    "settingsScreen_themeLight": "فاتح",
+    "settingsScreen_themeDark": "داكن",
+    "settingsScreen_themeSystem": "النظام",
+    "settingsScreen_dynamicTheme": "سمة ديناميكية",
+    "settingsScreen_useWallpaperColors": "استخدام ألوان الخلفية",
+    "settingsScreen_themeColor": "لون السمة",
+    "settingsScreen_pickAColor": "اختاري لونًا",
+    "settingsScreen_view": "عرض",
+    "settingsScreen_birthControl": "منع الحمل",
+    "settingsScreen_enablePillTracking": "تفعيل تتبع الحبوب",
+    "settingsScreen_pillDescription": "تتبعي تناولك اليومي للحبوب واحصلي على تذكيرات.",
+    "settingsScreen_setUpPillRegimen": "إعداد نظام الحبوب",
+    "settingsScreen_trackYourDailyPillIntake": "تتبعي تناولك اليومي للحبوب",
+    "settingsScreen_dailyPillReminder": "تذكير الحبوب اليومي",
+    "settingsScreen_reminderTime": "وقت التذكير",
+    "settingsScreen_cycleNotificationsAndPredictions": "إشعارات الدورة والتوقعات",
+    "@settingsScreen_cycleNotificationsAndPredictions": {
+        "description": "Header for the cycle notifications and predictions section"
+    },
+    "settingsScreen_enablePhasePredictions": "تفعيل توقعات مراحل الدورة",
+    "settingsScreen_displayFertileChance": "عرض فرصة الخصوبة",
+    "settingsScreen_displayFertileWindowOnCalendar": "عرض نافذة الخصوبة في التقويم",
+    "settingsScreen_notificationTime": "وقت الإشعار",
+    "settingsScreen_remindMeBefore": "ذكّرني قبل",
+    "settingsScreen_remindMeAfter": "ذكّرني بعد",
+    "settingsScreen_upcomingPeriodReminder": "تذكير بالدورة القادمة",
+    "settingsScreen_overduePeriodReminder": "تذكير بالدورة المتأخرة",
+    "settingsScreen_fertileWindowReminder": "تذكير بنافذة الخصوبة",
+    "settingsScreen_ovulationDayReminder": "تذكير بيوم التبويض",
+    "settingsScreen_enableReversibleContraceptiveTracking": "تفعيل تتبع وسائل منع الحمل",
+    "settingsScreen_reversibleContraceptiveDescription": "تتبعي وسائل منع الحمل طويلة المفعول.",
+    "settingsScreen_reversibleContraceptiveType": "نوع وسيلة منع الحمل",
+    "settingsScreen_setDuration": "تحديد المدة",
+    "settingsScreen_reversibleContraceptiveDuration": "مدة استبدال وسيلة منع الحمل",
+    "settingsScreen_enableReversibleContraceptiveReminder": "تفعيل تذكير وسيلة منع الحمل",
+    "settingsScreen_currentDuration": "المدة الحالية",
+    "settingsScreen_durationInDays": "المدة (بالأيام)",
+    "settingsScreen_LoggingScreen": "التسجيل",
+    "settingsScreen_enableLoggingReminders": "تفعيل تذكيرات التسجيل",
+    "settingsScreen_loggingReminderDescription": "إذا سجّلتِ يومًا به تدفق، فستتلقين إشعارًا في اليوم التالي لتسجيل حالتك.",
+    "settingsScreen_loggingReminderTime": "وقت تذكير التسجيل",
+    "settingsScreen_defaultSymptoms": "الأعراض الافتراضية",
+    "settingsScreen_defaultSymptomsSubtitle": "تكون هذه الأعراض متاحة دائمًا عند تسجيل دورات جديدة.\nاضغطي على عرَض موجود لحذفه أو على '+' لإضافة عرَض جديد.",
+    "settingsScreen_deleteDefaultSymptomQuestion": "حذف '{symptom}'؟",
+    "@settingsScreen_deleteDefaultSymptomQuestion": {
+        "description": "Question whether a symptom should be deleted.",
+        "placeholders": {
+            "symptom": {
+                "type": "String",
+                "example": "The name of the symptom."
+            }
+        }
+    },
+    "settingsScreen_resetSymptomsList": "إعادة تعيين قائمة الأعراض؟",
+    "settingsScreen_resetSymptomsListDescription": "سيؤدي هذا إلى إزالة جميع الأعراض المخصصة واستعادة القائمة الأصلية المدمجة.\n\nلن تتغير إدخالات السجل الحالية.",
+    "settingsScreen_deleteDefaultSymptomDescription": "لن يكون '{symptom}' متاحًا بعد الآن عند تسجيل الدورة.\n\n{usageCount, plural, zero{لا توجد حاليًا أي سجلات دورة بهذا العرَض!} one{يوجد بالفعل سجل دورة واحد بهذا العرَض!\nلن يتغير هذا السجل.} two{يوجد سجلا دورة بهذا العرَض!\nلن يتغير هذان السجلان.} few{توجد {usageCount} سجلات دورة بهذا العرَض!\nلن تتغير هذه السجلات.} many{يوجد {usageCount} سجل دورة بهذا العرَض!\nلن تتغير هذه السجلات.} other{يوجد {usageCount} سجل دورة بهذا العرَض!\nلن تتغير هذه السجلات.}}",
+    "@settingsScreen_deleteDefaultSymptomDescription": {
+        "description": "Question whether a symptom should be deleted.",
+        "placeholders": {
+            "symptom": {
+                "type": "String",
+                "example": "The name of the symptom."
+            },
+            "usageCount" : {
+
+            }
+        }
+    },
+    "settingsScreen_pillRegimens": "أنظمة الحبوب",
+    "@settingsScreen_pillRegimens": {
+        "description": "Header for the section listing all created pill regimens."
+    },
+    "settingsScreen_makeActive": "تعيين كنشط",
+    "@settingsScreen_makeActive": {
+        "description": "Button to select a regimen and set it as the one currently being tracked."
+    },
+    "settingsScreen_activeRegimenReminder": "إعدادات تذكير النظام النشط",
+    "@settingsScreen_activeRegimenReminder": {
+        "description": "Header for the daily reminder settings section."
+    },
+    "settingsScreen_pack": "الشريط",
+    "settingsScreen_dataManagement": "إدارة البيانات",
+    "settingsScreen_deleteZone": "منطقة الحذف",
+    "settingsScreen_clearLogsAndPeriods": "مسح السجلات والدورات",
+    "@settingsScreen_clearLogsAndPeriods": {
+        "description": "Title for the period logs data clearing section."
+    },
+    "settingsScreen_clearLogsAndPeriodsSubtitle": "يحذف كامل سجل دوراتك وأعراضك.",
+    "@settingsScreen_clearLogsAndPeriodsSubtitle": {
+        "description": "Subtitle for the period logs data clearing section."
+    },
+    "settingsScreen_clearPillLogs": "مسح سجلات الحبوب",
+    "@settingsScreen_clearPillLogs": {
+        "description": "Title for the pill logs data clearing section."
+    },
+    "settingsScreen_clearPillLogsSubtitle": "يزيل نظام الحبوب وسجل تناولها.",
+    "@settingsScreen_clearPillLogsSubtitle": {
+        "description": "Subtitle for the pill logs data clearing section."
+    },
+    "settingsScreen_clearReversibleContraceptiveLogs": "مسح سجلات وسائل منع الحمل",
+    "@settingsScreen_clearReversibleContraceptiveLogs": {
+        "description": "Title for the reversible contraceptive logs data clearing section."
+    },
+    "settingsScreen_clearReversibleContraceptiveLogsSubtitle": "يزيل سجل وسائل منع الحمل الخاص بكِ.",
+    "@settingsScreen_clearReversibleContraceptiveLogsSubtitle": {
+        "description": "Subtitle for the reversible contraceptive logs data clearing section."
+    },
+    "settingsScreen_clearSanitaryProductLogs": "مسح سجلات المنتجات الصحية",
+    "@settingsScreen_clearSanitaryProductLogs": {
+        "description": "Title for the sanitary product logs data clearing section."
+    },
+    "settingsScreen_clearSanitaryProductLogsSubtitle": "يزيل سجل منتجاتك الصحية.",
+    "@settingsScreen_clearSanitaryProductLogsSubtitle": {
+        "description": "Subtitle for the sanitary product logs data clearing section."
+    },
+    "settingsScreen_clearSexualActivityLogs": "مسح سجلات النشاط الجنسي",
+    "@settingsScreen_clearSexualActivityLogs": {
+        "description": "Title for the sexual activity logs data clearing section."
+    },
+    "settingsScreen_clearSexualActivityLogsSubtitle": "يزيل سجل نشاطك الجنسي.",
+    "@settingsScreen_clearSexualActivityLogsSubtitle": {
+        "description": "Subtitle for the sexual activity logs data clearing section."
+    },
+    "settingsScreen_logsAndPeriods": "السجلات والدورات",
+    "@settingsScreen_logsAndPeriods": {
+        "description": "Title for the period logs data section."
+    },
+    "settingsScreen_pillLogs": "سجلات الحبوب",
+    "@settingsScreen_pillLogs": {
+        "description": "Title for the pill logs data section."
+    },
+    "settingsScreen_reversibleContraceptivesLogs": "سجلات وسائل منع الحمل",
+    "@settingsScreen_reversibleContraceptivesLogs": {
+        "description": "Title for the reversible contraceptives data section."
+    },
+    "settingsScreen_sanitaryProductLogs": "سجلات المنتجات الصحية",
+    "@settingsScreen_sanitaryProductLogs": {
+        "description": "Title for the sanitary products data section."
+    },
+    "settingsScreen_sexualActivityLogs": "سجلات النشاط الجنسي",
+    "@settingsScreen_sexualActivityLogs": {
+        "description": "Title for the sexual activity data section."
+    },
+    "settingsScreen_importSupportNote": "الاستيراد مدعوم حاليًا فقط للملفات المصدَّرة من Menstrudel.",
+    "@settingsScreen_importSupportNote": {
+        "description": "Note indicating that import is only supported for files exported from Menstrudel."
+    },
+    "settingsScreen_exportSuccessful": "تم تصدير البيانات بنجاح.",
+    "settingsScreen_exportFailed": "فشل التصدير. يرجى المحاولة مرة أخرى.",
+    "settingsScreen_exportDataTitle": "تصدير البيانات",
+    "settingsScreen_importDataTitle": "استيراد البيانات",
+    "settingsScreen_importDataSubtitle": "يستبدل البيانات الحالية.",
+    "settingsScreen_importSuccessful": "تم استيراد البيانات بنجاح!",
+    "settingsScreen_importFailed": "فشل استيراد البيانات. يرجى المحاولة مرة أخرى.",
+    "settingsScreen_importErrorGeneral": "فشل استيراد البيانات. يرجى التأكد من أن الملف محفوظ محليًا.",
+    "@settingsScreen_importErrorGeneral": {
+        "description": "General message when file import fails for unknown reasons."
+    },
+    "settingsScreen_security": "الأمان",
+    "securityScreen_enableBiometricLock": "تفعيل القفل البيومتري",
+    "securityScreen_enableBiometricLockSubtitle": "طلب بصمة الإصبع أو بصمة الوجه لفتح التطبيق.",
+    "securityScreen_noBiometricsAvailable": "لم يتم العثور على رمز مرور أو بصمة إصبع أو بصمة وجه. يرجى إعداد إحداها في إعدادات جهازك.",
+    "settingsScreen_userProfile": "أنتِ",
+    "@settingsScreen_userProfile": {
+        "description": "Title for the user profile settings button."
+    },
+    "settingsScreen_preferences": "التفضيلات",
+    "preferencesScreen_language": "اللغة",
+    "preferencesScreen_enableSanitaryProductsScreen": "تفعيل شاشة المنتجات الصحية",
+    "preferencesScreen_enableSanitaryProductsScreenSubtitle": "إظهار تبويب المنتجات الصحية في شريط التنقل الرئيسي.",
+    "preferencesScreen_enableSexActivityScreen": "تفعيل شاشة النشاط الجنسي",
+    "preferencesScreen_enableSexActivityScreenSubtitle": "إظهار تبويب النشاط الجنسي في شريط التنقل الرئيسي.",
+    "preferencesScreen_StartingDayOfWeek": "أول أيام الأسبوع",
+    "settingsScreen_about": "حول التطبيق",
+    "@settingsScreen_about": {
+        "description": "Title for the about settings button."
+    },
+    "aboutScreen_version": "الإصدار",
+    "@aboutScreen_version": {
+        "description": "Label showing the current app version."
+    },
+    "aboutScreen_legalAndSource": "الشؤون القانونية والمصدر",
+    "@aboutScreen_legalAndSource": {
+        "description": "Title for the legal and source about section."
+    },
+    "aboutScreen_communityAndUpdates": "المجتمع والتحديثات",
+    "@aboutScreen_communityAndUpdates": {
+        "description": "Title for the community and updates about section."
+    },
+    "aboutScreen_privacyPolicy": "سياسة الخصوصية",
+    "@aboutScreen_privacyPolicy": {
+        "description": "Link text to the privacy policy on the about screen."
+    },
+    "aboutScreen_privacyPolicySubtitle": "اقرئي سياسة الخصوصية",
+    "@aboutScreen_privacyPolicySubtitle": {
+        "description": "Subtitle for the privacy policy link on the about screen."
+    },
+    "aboutScreen_releaseNotes": "ملاحظات الإصدار",
+    "@aboutScreen_releaseNotes": {
+        "description": "Link text to the release notes on the about screen."
+    },
+    "aboutScreen_releaseNotesSubtitle": "ما الجديد في {version}",
+    "@aboutScreen_releaseNotesSubtitle": {
+        "description": "Subtitle for the release notes link on the about screen.",
+        "placeholders": {
+            "version": {
+                "type": "String",
+                "example": "1.0.0"
+            }
+        }
+    },
+    "aboutScreen_github": "GitHub",
+    "@aboutScreen_github": {
+        "description": "Link text to the GitHub repository on the about screen."
+    },
+    "aboutScreen_githubSubtitle": "الشيفرة المصدرية وتتبع المشكلات",
+    "@aboutScreen_githubSubtitle": {
+        "description": "Subtitle for the GitHub link on the about screen."
+    },
+    "aboutScreen_discord": "Discord",
+    "@aboutScreen_discord": {
+        "description": "Link text to the Discord server on the about screen."
+    },
+    "aboutScreen_discordSubtitle": "الدعم والمجتمع",
+    "@aboutScreen_discordSubtitle": {
+        "description": "Subtitle for the Discord link on the about screen."
+    },
+    "aboutScreen_share": "مشاركة",
+    "@aboutScreen_share": {
+        "description": "Link button text for the share button on the about screen."
+    },
+    "aboutScreen_shareText": "جرّبي Menstrudel، تطبيق خاص لتتبع الدورة الشهرية يعمل دون اتصال بالإنترنت!",
+    "@aboutScreen_shareText": {
+        "description": "Text used when sharing the app from the about screen."
+    },
+    "aboutScreen_urlError": "تعذر فتح الرابط.",
+    "@aboutScreen_urlError": {
+        "description": "Error message shown when a link could not be opened."
+    },
+    "logSummaryWidget_loggedDays": "الأيام المسجلة",
+    "logSummaryWidget_trackingHistory": "سجل التتبع",
+    "cycleLengthVarianceWidget_logAtLeastTwoPeriods": "نحتاج إلى دورتين على الأقل لعرض التفاوت.",
+    "cycleLengthVarianceWidget_title": "تفاوت طول الدورة",
+    "cycleLengthVarianceWidget_averageCycle": "متوسط الدورة",
+    "cycleLengthVarianceWidget_cycle": "الدورة",
+    "periodDurationWidget_logAtLeastTwoPeriods": "سجّلي دورتين على الأقل لعرض إحصاءات الحيض.",
+    "periodDurationWidget_title": "تفاوت مدة الحيض",
+    "periodDurationWidget_averagePeriod": "متوسط الحيض",
+    "periodDurationWidget_period": "الحيض",
+    "flowIntensityWidget_flowIntensityBreakdown": "توزيع شدة التدفق",
+    "flowIntensityWidget_noFlowDataLoggedYet": "لم يتم تسجيل بيانات تدفق بعد.",
+    "painLevelWidget_noPainDataLoggedYet": "لم يتم تسجيل بيانات ألم بعد.",
+    "painLevelWidget_painLevelBreakdown": "توزيع مستوى الألم",
+    "monthlyFlowChartWidget_noDataToDisplay": "لا توجد بيانات للعرض.",
+    "monthlyFlowChartWidget_cycleFlowPatterns": "أنماط تدفق الدورة",
+    "monthlyFlowChartWidget_cycleFlowPatternsDescription": "يمثل كل خط دورة كاملة واحدة",
+    "symptomFrequencyWidget_noSymptomsLoggedYet": "لم يتم تسجيل أعراض بعد.",
+    "symptomFrequencyWidget_mostCommonSymptoms": "الأعراض الأكثر شيوعًا",
+    "journalViewWidget_logYourFirstPeriod": "سجّلي دورتك الأولى.",
+    "listViewWidget_noPeriodsLogged": "لم يتم تسجيل أي دورات بعد.\nاضغطي على زر + لإضافة واحدة.",
+    "listViewWidget_confirmDelete": "تأكيد الحذف",
+    "listViewWidget_confirmDeleteDescription": "هل أنتِ متأكدة من رغبتك في حذف هذا الإدخال؟",
+    "emptyPillStateWidget_noPillRegimenFound": "لم يتم العثور على نظام حبوب.",
+    "emptyPillStateWidget_noPillRegimenFoundDescription": "أعدّي شريط حبوبك في الإعدادات لبدء التتبع.",
+    "pillStatus_pillsOfTotal": "{count, plural, =1{من حبة واحدة} two{من حبتين} few{من {count} حبوب} many{من {count} حبة} other{من {count} حبة}}",
+    "@pillStatus_pillsOfTotal": {
+        "description": "A label showing the total number of pills.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "pillStatus_undo": "تراجع",
+    "pillStatus_skip": "تخطي",
+    "pillStatus_markAsTaken": "تحديد كمأخوذة",
+    "pillStatus_packStartInFuture": "يبدأ شريط حبوبك التالي في {date}.",
+    "@pillStatus_packStartInFuture": {
+        "description": "Message shown when the pill pack start date is in the future.",
+        "placeholders": {
+        "date": {
+            "type": "DateTime",
+            "format": "yMMMd"
+        }
+        }
+    },
+    "regimenSetupWidget_setUpPillRegimen": "إعداد نظام الحبوب",
+    "regimenSetupWidget_packName": "اسم الشريط",
+    "regimenSetupWidget_pleaseEnterAName": "يرجى إدخال اسم",
+    "regimenSetupWidget_activePills": "الحبوب الفعالة",
+    "regimenSetupWidget_enterANumber": "أدخلي رقمًا",
+    "regimenSetupWidget_placeboPills": "الحبوب الوهمية",
+    "regimenSetupWidget_firstDayOfThisPack": "اليوم الأول لهذا الشريط",
+    "symptomEntrySheet_logYourDay": "سجّلي يومك",
+    "symptomEntrySheet_symptomsOptional": "الأعراض (اختياري)",
+    "periodDetailsSheet_symptoms": "الأعراض",
+    "periodDetailsSheet_flow": "التدفق",
+    "reversibleContraceptiveEntrySheet_logReversibleContraceptiveDetails": "تسجيل تفاصيل وسيلة منع الحمل",
+    "sanitaryEntrySheet_logSanitaryProduct": "تسجيل منتج صحي",
+    "sanitaryEntrySheet_setReminderDuration": "تحديد مدة التذكير",
+    "sanitaryEntrySheet_maxDuration": "الحد الأقصى للمدة: {hours} ساعة",
+    "@sanitaryEntrySheet_maxDuration": {
+        "description": "Label showing the maximum duration for the selected sanitary product type.",
+        "placeholders": {
+            "hours": {
+                "type": "int"
+            }
+        }
+    },
+    "sanitaryEntrySheet_futureLogTimeError": "لا يمكن أن يكون وقت التسجيل في المستقبل.",
+    "sanitaryEntrySheet_pastReminderTimeError": "لا يمكن أن يكون وقت انتهاء التذكير في الماضي.",
+    "periodPredictionCircle_days": "{count, plural, =1{يوم} two{يومان} few{أيام} many{يومًا} other{يوم}}",
+    "@periodPredictionCircle_days": {
+        "description": "A label showing the total number of days until period is due.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "customSymptomDialog_newSymptom": "عرَض جديد",
+    "customSymptomDialog_enterCustomSymptom": "أدخلي عرَضًا مخصصًا",
+    "customSymptomDialog_temporarySymptom": "عرَض مؤقت"
+}

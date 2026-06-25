@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../l10n/app_localizations.dart';
+
+enum AgeGroup { under13, teen, adult }
+
+/// Shows an age selection screen during onboarding.
+/// Returns [AgeGroup] or null if dismissed.
+Future<AgeGroup?> showAgeGate(BuildContext context) async {
+  final l10n = AppLocalizations.of(context)!;
+  final theme = Theme.of(context);
+
+  return await showModalBottomSheet<AgeGroup>(
+    context: context,
+    isDismissible: false,
+    enableDrag: false,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => PopScope(
+      canPop: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(Icons.cake_outlined,
+                size: 40, color: theme.colorScheme.primary),
+            const SizedBox(height: 12),
+            Text(
+              l10n.ageGateTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.ageGateBody,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            _AgeOption(
+              icon: Icons.block_outlined,
+              label: l10n.ageGateUnder13,
+              color: Colors.red.shade300,
+              onTap: () => Navigator.of(ctx).pop(AgeGroup.under13),
+            ),
+            const SizedBox(height: 10),
+            _AgeOption(
+              icon: Icons.person_outline,
+              label: l10n.ageGate13to17,
+              color: Colors.orange.shade400,
+              onTap: () => Navigator.of(ctx).pop(AgeGroup.teen),
+            ),
+            const SizedBox(height: 10),
+            _AgeOption(
+              icon: Icons.verified_outlined,
+              label: l10n.ageGate18plus,
+              color: Colors.green.shade500,
+              onTap: () => Navigator.of(ctx).pop(AgeGroup.adult),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _AgeOption extends StatelessWidget {
+  const _AgeOption({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Stores the user's age group in SharedPreferences.
+Future<void> saveAgeGroup(AgeGroup group) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('user_age_group', group.name);
+  await prefs.setBool('age_gate_done', true);
+}
+
+/// Checks if the user has already completed the age gate.
+Future<bool> isAgeGateDone() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('age_gate_done') ?? false;
+}
+
+/// Returns true if the user is under 18.
+Future<bool> isMinor() async {
+  final prefs = await SharedPreferences.getInstance();
+  final group = prefs.getString('user_age_group');
+  return group == 'under13' || group == 'teen';
+}

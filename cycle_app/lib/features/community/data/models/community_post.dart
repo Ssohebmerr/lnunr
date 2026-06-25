@@ -1,0 +1,118 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'post_type.dart';
+
+class CommunityPost {
+  const CommunityPost({
+    required this.id,
+    required this.communityId,
+    required this.authorUid,
+    required this.authorAlias,
+    required this.text,
+    required this.createdAt,
+    this.commentCount = 0,
+    this.postType = PostType.support,
+    this.communityName,
+    this.authorAvatarIndex = 0,
+    this.mediaUrl,
+    this.mediaType,
+    this.hidden = false,
+    this.bestAnswerCommentId,
+    this.editedAt,
+    this.isAnonymous = false,
+    this.moderationStatus = 'approved',
+  });
+
+  final String id;
+  final String communityId;
+  final String authorUid;
+  final String authorAlias;
+  final String text;
+  final DateTime createdAt;
+  final int commentCount;
+  final PostType postType;
+  final String? communityName;
+  final int authorAvatarIndex;
+  final String? mediaUrl;
+  /// `image` or `video`
+  final String? mediaType;
+  final bool hidden;
+  final String? bestAnswerCommentId;
+  final DateTime? editedAt;
+  final bool isAnonymous;
+
+  /// `approved` | `pending_review`
+  final String moderationStatus;
+
+  bool get isPendingReview => moderationStatus == 'pending_review';
+
+  bool isVisibleTo(String? viewerUid) {
+    if (hidden) return false;
+    if (moderationStatus == 'rejected') return false;
+    if (!isPendingReview) return true;
+    return viewerUid != null && viewerUid == authorUid;
+  }
+
+  bool get hasImage =>
+      mediaUrl != null &&
+      (mediaType == 'image' || mediaType?.startsWith('image/') == true);
+  bool get isEdited => editedAt != null;
+  bool get hasBestAnswer =>
+      bestAnswerCommentId != null && bestAnswerCommentId!.isNotEmpty;
+  bool get hasVideo =>
+      mediaUrl != null &&
+      (mediaType == 'video' || mediaType?.startsWith('video/') == true);
+
+  factory CommunityPost.fromMap(String id, Map<String, dynamic> data) {
+    final ts = data['createdAt'];
+    return CommunityPost(
+      id: id,
+      communityId: data['communityId'] as String? ?? '',
+      authorUid: data['authorUid'] as String? ?? '',
+      authorAlias: data['authorAlias'] as String? ?? 'Anonymous',
+      text: data['text'] as String? ?? '',
+      createdAt: ts is Timestamp
+          ? ts.toDate()
+          : DateTime.tryParse(ts?.toString() ?? '') ?? DateTime.now(),
+      commentCount: data['commentCount'] as int? ?? 0,
+      postType: PostType.fromValue(data['postType'] as String?),
+      communityName: data['communityName'] as String?,
+      authorAvatarIndex: data['authorAvatarIndex'] as int? ?? 0,
+      mediaUrl: data['mediaUrl'] as String?,
+      mediaType: _normalizeMediaType(data['mediaType'] as String?),
+      hidden: data['hidden'] as bool? ?? false,
+      bestAnswerCommentId: data['bestAnswerCommentId'] as String?,
+      editedAt: _parseTs(data['editedAt']),
+      isAnonymous: data['isAnonymous'] as bool? ?? false,
+      moderationStatus: data['moderationStatus'] as String? ?? 'approved',
+    );
+  }
+
+  static DateTime? _parseTs(dynamic ts) {
+    if (ts == null) return null;
+    if (ts is Timestamp) return ts.toDate();
+    return DateTime.tryParse(ts.toString());
+  }
+
+  static String? _normalizeMediaType(String? raw) {
+    if (raw == null) return null;
+    if (raw == 'video' || raw.startsWith('video/')) return 'video';
+    if (raw == 'image' || raw.startsWith('image/')) return 'image';
+    return raw;
+  }
+
+  Map<String, dynamic> toMap() => {
+        'communityId': communityId,
+        'authorUid': authorUid,
+        'authorAlias': authorAlias,
+        'text': text,
+        'createdAt': FieldValue.serverTimestamp(),
+        'commentCount': commentCount,
+        'postType': postType.value,
+        if (communityName != null) 'communityName': communityName,
+        'authorAvatarIndex': authorAvatarIndex,
+        if (mediaUrl != null) 'mediaUrl': mediaUrl,
+        if (mediaType != null) 'mediaType': mediaType,
+        'isAnonymous': isAnonymous,
+      };
+}

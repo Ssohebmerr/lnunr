@@ -1,0 +1,781 @@
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+
+      return request.auth != null
+
+        && (
+
+          request.auth.token.admin == true
+
+          || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+
+          || (
+
+            exists(/databases/$(database)/documents/users/$(request.auth.uid))
+
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+
+                .get('isAdmin', false) == true
+
+          )
+
+        );
+
+    }
+
+
+
+    function isOwner(userId) {
+
+      return request.auth != null && request.auth.uid == userId;
+
+    }
+
+
+
+    // Billing / premium fields — Cloud Functions & admin only.
+
+    function protectedUserFields() {
+
+      return [
+
+        'isPremium', 'premiumSince', 'premiumPending',
+
+        'paypalOrderId', 'playPurchaseToken', 'playProductId',
+
+        'communityBanned', 'communityBannedAt', 'communityBannedReason',
+
+      ];
+
+    }
+
+
+
+    function userUpdateSafe() {
+
+      return !request.resource.data.diff(resource.data).affectedKeys()
+
+        .hasAny(protectedUserFields());
+
+    }
+
+
+
+    // Birth year is write-once (prevents age-gate bypass).
+
+    function birthYearImmutable() {
+
+      return !request.resource.data.diff(resource.data).affectedKeys()
+
+          .hasAny(['communityBirthYear'])
+
+        || !('communityBirthYear' in resource.data)
+
+        || request.resource.data.communityBirthYear == resource.data.communityBirthYear;
+
+    }
+
+
+
+    function birthYearValid(data) {
+
+      return !('communityBirthYear' in data)
+
+        || (data.communityBirthYear is int
+
+            && data.communityBirthYear >= 1940
+
+            && data.communityBirthYear <= 2010);
+
+    }
+
+
+
+    function approximateAge(birthYear) {
+
+      let yearNow = 1970 + int(request.time.toMillis() / 31557600000);
+
+      return yearNow - birthYear;
+
+    }
+
+
+
+    function isCommunityAdult() {
+
+      let birthYear = int(get(/databases/$(database)/documents/users/$(request.auth.uid))
+
+        .data.get('communityBirthYear', 0));
+
+      return birthYear > 0 && approximateAge(birthYear) >= 18;
+
+    }
+
+
+
+    function isPremiumUser() {
+
+      return request.auth != null
+
+        && get(/databases/$(database)/documents/users/$(request.auth.uid))
+
+            .data.get('isPremium', false) == true;
+
+    }
+
+
+
+    function postMediaAllowed(data) {
+
+      return !data.keys().hasAny(['mediaUrl', 'mediaType'])
+
+        || (
+
+          isPremiumUser()
+
+          && data.mediaUrl is string
+
+          && data.mediaUrl.size() > 0
+
+          && data.mediaType is string
+
+          && data.mediaType in ['image', 'video']
+
+        );
+
+    }
+
+
+
+    function isCommunityNotBanned() {
+
+      return request.auth != null
+
+        && get(/databases/$(database)/documents/users/$(request.auth.uid))
+
+            .data.get('communityBanned', false) != true;
+
+    }
+
+
+
+    function isCommunityMember(communityId) {
+
+      return exists(/databases/$(database)/documents/communities/$(communityId)/members/$(request.auth.uid));
+
+    }
+
+
+
+    function postReadable() {
+
+      return !resource.data.get('hidden', false)
+
+        && (
+
+          resource.data.get('moderationStatus', 'approved') == 'approved'
+
+          || resource.data.authorUid == request.auth.uid
+
+        );
+
+    }
+
+
+
+    function commentReadable() {
+
+      return !resource.data.get('hidden', false)
+
+        && (
+
+          resource.data.get('moderationStatus', 'approved') == 'approved'
+
+          || resource.data.authorUid == request.auth.uid
+
+        );
+
+    }
+
+
+
+    function clientModerationStatusOk() {
+
+      return !('moderationStatus' in request.resource.data)
+
+        || request.resource.data.moderationStatus == 'pending_review';
+
+    }
+
+
+
+    function noProtectedPostFieldsOnCreate() {
+
+      return !request.resource.data.keys().hasAny([
+
+        'hidden', 'hiddenAt', 'hiddenBy', 'reportCount',
+
+        'moderationReviewedAt', 'moderationReviewedBy',
+
+      ]);
+
+    }
+
+
+
+    match /admins/{adminId} {
+
+      allow get: if request.auth != null && request.auth.uid == adminId;
+
+      allow list, write: if false;
+
+    }
+
+
+
+    match /users/{userId} {
+
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
+
+        && !request.resource.data.keys().hasAny(protectedUserFields())
+
+        && birthYearValid(request.resource.data);
+
+
+
+      allow update: if isOwner(userId)
+
+        && userUpdateSafe()
+
+        && birthYearImmutable()
+
+        && birthYearValid(request.resource.data);
+
+      allow update: if isAdmin();
+
+
+
+      allow delete: if false;
+
+
+
+      match /chats/{chatId}/messages/{messageId} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+
+
+      match /backups/{backupId} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+
+
+      match /communityMemberships/{communityId} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+
+
+      match /blockedUsers/{blockedUid} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+      match /savedPosts/{savedId} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+      match /communityInbox/{inboxId} {
+
+        allow read, update: if isOwner(userId);
+
+        allow create, delete: if false;
+
+      }
+
+    }
+
+
+
+    match /communityReports/{reportId} {
+
+      allow create: if request.auth != null
+
+        && request.resource.data.reporterUid == request.auth.uid
+
+        && request.resource.data.reason is string
+
+        && request.resource.data.reason.size() <= 200
+
+        && request.resource.data.authorUid is string
+
+        && request.resource.data.authorAlias is string
+
+        && request.resource.data.authorAlias.size() <= 100;
+
+      allow get, list, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /communityRateLimits/{uid} {
+
+      allow read, write: if isOwner(uid);
+
+      match /actions/{actionId} {
+
+        allow read, write: if isOwner(uid);
+
+      }
+
+    }
+
+
+
+    match /communityContentHashes/{docId} {
+
+      allow read, write: if request.auth != null
+
+        && docId.matches('^' + request.auth.uid + '_.*');
+
+    }
+
+
+
+    match /educationArticles/{articleId} {
+
+      allow read: if request.auth != null;
+
+      allow create, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /appSettings/{docId} {
+
+      allow read: if request.auth != null;
+
+      allow write: if isAdmin();
+
+    }
+
+
+
+    match /appBanners/{bannerId} {
+
+      allow read: if request.auth != null;
+
+      allow create, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /communityCatalog/{communityId} {
+
+      allow read: if request.auth != null;
+
+      allow create, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /adminBroadcasts/{broadcastId} {
+
+      allow get, list, create, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /adminActivityLog/{logId} {
+
+      allow get, list, create, update, delete: if isAdmin();
+
+    }
+
+
+
+    match /{path=**}/posts/{postId} {
+
+      allow get, list: if isAdmin();
+
+    }
+
+    match /{path=**}/comments/{commentId} {
+
+      allow get, list: if isAdmin();
+
+    }
+
+
+
+    match /partnerLinks/{ownerUid} {
+
+      allow read, create, delete: if request.auth != null && request.auth.uid == ownerUid;
+
+      allow update: if request.auth != null && (
+
+        request.auth.uid == ownerUid
+
+        || (
+
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['partnerUid', 'updatedAt'])
+
+          && (
+
+            (resource.data.partnerUid == null && request.resource.data.partnerUid == request.auth.uid)
+
+            || (resource.data.partnerUid == request.auth.uid && request.resource.data.partnerUid == null)
+
+          )
+
+        )
+
+      );
+
+    }
+
+
+
+    match /partnerCodes/{code} {
+
+      allow get: if request.auth != null;
+
+      allow list: if false;
+
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      allow update: if false;
+
+    }
+
+
+
+    match /partnerStatus/{ownerUid} {
+
+      allow read: if request.auth != null
+
+        && (request.auth.uid == ownerUid || request.auth.uid == resource.data.partnerUid);
+
+      allow write: if request.auth != null && request.auth.uid == ownerUid;
+
+    }
+
+
+
+    match /communities/{communityId} {
+
+      allow read: if request.auth != null && isCommunityAdult();
+
+
+
+      match /members/{memberId} {
+
+        allow read: if request.auth != null && isCommunityAdult();
+
+        allow create: if request.auth != null
+
+          && request.auth.uid == memberId
+
+          && isCommunityAdult()
+
+          && isCommunityNotBanned();
+
+        allow delete: if request.auth != null && request.auth.uid == memberId;
+
+      }
+
+
+
+      match /posts/{postId} {
+
+        allow read: if request.auth != null && isCommunityAdult() && postReadable();
+
+        allow create: if request.auth != null
+
+          && request.resource.data.authorUid == request.auth.uid
+
+          && request.resource.data.text is string
+
+          && request.resource.data.text.size() >= 3
+
+          && request.resource.data.text.size() <= 2000
+
+          && postMediaAllowed(request.resource.data)
+
+          && (!('isAnonymous' in request.resource.data)
+
+              || request.resource.data.isAnonymous is bool)
+
+          && clientModerationStatusOk()
+
+          && noProtectedPostFieldsOnCreate()
+
+          && isCommunityAdult()
+
+          && isCommunityNotBanned()
+
+          && isCommunityMember(communityId);
+
+        allow update: if request.auth != null
+
+          && exists(/databases/$(database)/documents/communities/$(communityId)/members/$(request.auth.uid))
+
+          && (
+
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+
+            || (
+
+              resource.data.authorUid == request.auth.uid
+
+              && request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['bestAnswerCommentId'])
+
+            )
+
+            || (
+
+              resource.data.authorUid == request.auth.uid
+
+              && request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['text', 'postType', 'editedAt', 'moderationStatus'])
+
+              && request.resource.data.text is string
+
+              && request.resource.data.text.size() >= 3
+
+              && request.resource.data.text.size() <= 2000
+
+              && !request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasAny(['mediaUrl', 'mediaType'])
+
+              && (!('moderationStatus' in request.resource.data.diff(resource.data).affectedKeys())
+
+                  || request.resource.data.moderationStatus == 'pending_review')
+
+            )
+
+            || (
+
+              isAdmin()
+
+              && request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['hidden', 'hiddenAt', 'hiddenBy', 'reportCount'])
+
+            )
+
+            || (
+
+              isAdmin()
+
+              && request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['moderationStatus', 'moderationReviewedAt', 'moderationReviewedBy'])
+
+              && request.resource.data.moderationStatus in ['approved', 'rejected']
+
+            )
+
+            || (
+
+              isAdmin()
+
+              && request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly([
+
+                    'hidden', 'moderationStatus', 'hiddenAt', 'hiddenBy',
+
+                    'moderationReviewedAt', 'moderationReviewedBy',
+
+                  ])
+
+              && request.resource.data.moderationStatus in ['approved', 'rejected']
+
+            )
+
+          );
+
+        allow delete: if (request.auth != null
+
+          && resource.data.authorUid == request.auth.uid) || isAdmin();
+
+
+
+        match /comments/{commentId} {
+
+          allow read: if request.auth != null && isCommunityAdult() && commentReadable();
+
+          allow create: if request.auth != null
+
+            && request.resource.data.authorUid == request.auth.uid
+
+            && request.resource.data.text is string
+
+            && request.resource.data.text.size() >= 1
+
+            && request.resource.data.text.size() <= 1000
+
+            && clientModerationStatusOk()
+
+            && isCommunityAdult()
+
+            && isCommunityNotBanned()
+
+            && isCommunityMember(communityId);
+
+          allow update: if request.auth != null
+
+            && resource.data.authorUid == request.auth.uid
+
+            && isCommunityAdult()
+
+            && isCommunityNotBanned()
+
+            && request.resource.data.diff(resource.data).affectedKeys()
+
+                .hasOnly(['text', 'editedAt', 'moderationStatus'])
+
+            && request.resource.data.text is string
+
+            && request.resource.data.text.size() >= 1
+
+            && request.resource.data.text.size() <= 1000
+
+            && (!('moderationStatus' in request.resource.data.diff(resource.data).affectedKeys())
+
+                || request.resource.data.moderationStatus == 'pending_review')
+
+          || (
+
+            isAdmin()
+
+            && request.resource.data.diff(resource.data).affectedKeys()
+
+                .hasOnly(['moderationStatus', 'moderationReviewedAt', 'moderationReviewedBy'])
+
+            && request.resource.data.moderationStatus in ['approved', 'rejected']
+
+          )
+
+          || (
+
+            isAdmin()
+
+            && request.resource.data.diff(resource.data).affectedKeys()
+
+                .hasOnly([
+
+                  'hidden', 'moderationStatus', 'hiddenAt', 'hiddenBy',
+
+                  'moderationReviewedAt', 'moderationReviewedBy',
+
+                ])
+
+            && request.resource.data.moderationStatus in ['approved', 'rejected']
+
+          );
+
+          allow delete: if (request.auth != null
+
+            && resource.data.authorUid == request.auth.uid) || isAdmin();
+
+        }
+
+
+
+        match /likes/{likeUid} {
+
+          allow read: if request.auth != null && isCommunityAdult();
+
+          allow create, delete: if request.auth != null
+
+            && request.auth.uid == likeUid
+
+            && isCommunityAdult()
+
+            && isCommunityNotBanned()
+
+            && isCommunityMember(communityId);
+
+          allow update: if false;
+
+        }
+
+      }
+
+      match /stories/{storyId} {
+
+        allow read: if request.auth != null;
+
+        allow create: if request.auth != null
+
+          && request.resource.data.authorUid == request.auth.uid
+
+          && isCommunityAdult()
+
+          && isCommunityNotBanned()
+
+          && isCommunityMember(communityId);
+
+        allow update: if request.auth != null
+
+          && isCommunityAdult()
+
+          && (
+
+            // Owner can mark viewed (update viewedBy/viewCount)
+
+            resource.data.authorUid == request.auth.uid
+
+            || (
+
+              request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['viewedBy', 'viewCount'])
+
+            )
+
+          );
+
+        allow delete: if request.auth != null
+
+          && resource.data.authorUid == request.auth.uid;
+
+      }
+
+    }
+
+  }
+
+}
+
+

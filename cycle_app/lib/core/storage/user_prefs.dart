@@ -1,0 +1,69 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+class UserPrefs {
+  static const _uidKey = 'uid';
+  static const _onboardingKey = 'onboarding_done';
+  static const _premiumKey = 'is_premium';
+  static const _profileNameKey = 'profile_name';
+  static const _profileGoalKey = 'profile_goal';
+  static const avatarIndexKey = 'profile_avatar_index';
+
+  /// Fixed uid for offline AI chat (stored on device only).
+  static const localChatUid = 'local_guest';
+
+  static Future<void> saveUid(String uid) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setString(_uidKey, uid);
+  }
+
+  static Future<String?> getUid() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_uidKey);
+  }
+
+  static Future<void> clearUid() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove(_uidKey);
+  }
+
+  static Future<bool> isOnboardingDone() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(_onboardingKey) ?? false;
+  }
+
+  static Future<void> setOnboardingDone() async {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_onboardingKey, true);
+  }
+
+  static Future<void> clearOnboardingDone() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove(_onboardingKey);
+  }
+
+  static Future<bool> isPremium() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(_premiumKey) ?? false;
+  }
+
+  static Future<void> setPremium(bool value) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_premiumKey, value);
+  }
+
+  static Future<void> setProfile({required String name, required String goal}) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setString(_profileNameKey, name);
+    await p.setString(_profileGoalKey, goal);
+  }
+
+  static Future<String?> getProfileName() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_profileNameKey);
+  }
+
+  static Future<String?> getProfileGoal() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_profileGoalKey);
+  }
+}
