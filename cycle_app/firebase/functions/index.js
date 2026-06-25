@@ -227,7 +227,7 @@ function getMaxTokensForMode(mode) {
     case 'mood': return 400;
     case 'analyze': return 900;
     case 'doctor': return 1200;
-    default: return 2000;
+    default: return 4000;
   }
 }
 

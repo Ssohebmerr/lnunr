@@ -54,7 +54,7 @@ class DirectGeminiService {
       'nutrition' => 500,
       'partner' => 300,
       'mood' => 400,
-      _ => 2000,
+      _ => 4000,
     };
 
     final temperature = mode == 'emergency' ? 0.6 : 0.78;
@@ -84,12 +84,12 @@ class DirectGeminiService {
         final finish = response.candidates.isNotEmpty
             ? response.candidates.first.finishReason
             : null;
-        if (finish == FinishReason.maxTokens &&
-            !text.endsWith('.') &&
-            !text.endsWith('!') &&
-            !text.endsWith('?') &&
-            !text.endsWith('…')) {
-          text = '$text…';
+        if (finish == FinishReason.maxTokens) {
+          text = '$text\n\n… [اكتمل الحد الأقصى للرد]';
+        } else if (finish != null &&
+            finish != FinishReason.stop &&
+            finish != FinishReason.maxTokens) {
+          text = '$text\n\n[توقف الرد: $finish]';
         }
 
         debugPrint('[DirectGemini] $modelName succeeded (${text.length} chars)');
