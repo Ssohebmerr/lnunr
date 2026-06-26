@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cycle_aura/menstrudel/models/watch_sync/shared_context.dart';
@@ -127,7 +128,23 @@ class WatchSyncService {
 
     if (kDebugMode) debugPrint('[WatchSync] Sending: day $circleCurrentValue/$circleMaxValue, phase: $phase');
 
+    // Send via WatchConnectivity (works on both iOS and Android)
     _watch.updateApplicationContext(contextMap);
+
+    // Also send via direct Wear OS Data Layer method channel for reliability
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        const channel = MethodChannel('com.lune.app/wear_sync');
+        await channel.invokeMethod('sendCycleData', {
+          'currentValue': circleCurrentValue,
+          'maxValue': circleMaxValue,
+          'phase': phase,
+          'daysUntilPeriod': daysUntilPeriod,
+        });
+      } catch (e) {
+        if (kDebugMode) debugPrint('[WatchSync] Wear Data Layer channel failed: $e');
+      }
+    }
   }
 
   /// Get the last cached cycle data (for UI display or Wear OS Data Layer).

@@ -78,6 +78,9 @@ dependencies {
 
     // Wear OS: embed watch APK for auto-install on paired watch
     wearApp(project(":wear"))
+
+    // Wearable Data Layer for phone-to-watch sync
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
 }
 
 flutter {
