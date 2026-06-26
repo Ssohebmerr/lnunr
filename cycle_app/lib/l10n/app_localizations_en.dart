@@ -2851,4 +2851,129 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ageGateMinorNote =>
       'Some features like community discussions are restricted to users 18+.';
+
+  @override
+  String get adminActive => 'Active';
+
+  @override
+  String get adminSearch => 'Search';
+
+  @override
+  String get adminSearchHint => 'Search by email or UID...';
+
+  @override
+  String get adminSearchUsers => 'Search users by email or UID';
+
+  @override
+  String get adminNoUsers => 'No users found';
+
+  @override
+  String get adminBanReporter => 'Ban reporter';
+
+  @override
+  String get adminFailedSave => 'Failed to save settings';
+
+  @override
+  String get adminError => 'Error';
+
+  @override
+  String get adminQuestionRejected => 'Question rejected';
+
+  @override
+  String get adminPublishAnswer => 'Publish Answer';
+
+  @override
+  String get adminReject => 'Reject';
+
+  @override
+  String get adminExpertAnswerHint => 'Type expert answer...';
+
+  @override
+  String get adminNotifTitle => 'Notification Title';
+
+  @override
+  String get adminNotifBody => 'Notification Body';
+
+  @override
+  String get adminTitleEnglish => 'Title (English)';
+
+  @override
+  String get adminTitleArabic => 'Title (Arabic)';
+
+  @override
+  String get adminBodyEnglish => 'Body (English)';
+
+  @override
+  String get adminBodyArabic => 'Body (Arabic)';
+
+  @override
+  String get stealthSetPin => 'Set Stealth PIN';
+
+  @override
+  String get stealthPinHint =>
+      'Enter a 4-6 digit PIN to unlock the real app from the calculator.';
+
+  @override
+  String get stealthPin => 'PIN';
+
+  @override
+  String get stealthConfirmPin => 'Confirm PIN';
+
+  @override
+  String get stealthCancel => 'Cancel';
+
+  @override
+  String get stealthSave => 'Save';
+
+  @override
+  String get stealthPinMismatch => 'PINs must match and be at least 4 digits';
+
+  @override
+  String get stealthEnable => 'Enable Stealth Mode';
+
+  @override
+  String get stealthActivated =>
+      'Stealth mode enabled! Restart the app to activate.';
+
+  @override
+  String get premiumActivated => 'Premium activated!';
+
+  @override
+  String get gotIt => 'Got it';
+
+  @override
+  String get smartWatch => 'Smart Watch';
+
+  @override
+  String get anonymousQa => 'Anonymous Q&A';
+
+  @override
+  String get anonymousQaDesc => 'Ask health questions privately';
+
+  @override
+  String get activatePremiumTest => 'Activate Premium (Test)';
+
+  @override
+  String get dateFormatDDMMYYYY => 'DD/MM/YYYY';
+
+  @override
+  String get dateFormatMMDDYYYY => 'MM/DD/YYYY';
+
+  @override
+  String get dateFormatYYYYMMDD => 'YYYY/MM/DD';
+
+  @override
+  String get fileTooLarge => 'File too large (max 15 MB)';
+
+  @override
+  String get healthQuestionHint => 'Type your health question here...';
+
+  @override
+  String get geminiKeyHint => 'Paste your API key here';
+
+  @override
+  String get anonymousQaTooltip => 'Anonymous Q&A';
+
+  @override
+  String get dailyBriefingPrompt => 'Give me my daily briefing for today.';
 }

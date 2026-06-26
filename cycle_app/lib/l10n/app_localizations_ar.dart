@@ -2826,4 +2826,129 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get ageGateMinorNote =>
       'بعض الميزات مثل مناقشات المجتمع محصورة للمستخدمات فوق 18 عاماً.';
+
+  @override
+  String get adminActive => 'نشط';
+
+  @override
+  String get adminSearch => 'بحث';
+
+  @override
+  String get adminSearchHint => 'ابحث بالبريد الإلكتروني أو UID...';
+
+  @override
+  String get adminSearchUsers => 'ابحث عن مستخدمات بالبريد أو UID';
+
+  @override
+  String get adminNoUsers => 'لا توجد مستخدمات';
+
+  @override
+  String get adminBanReporter => 'حظر المبلغ';
+
+  @override
+  String get adminFailedSave => 'فشل حفظ الإعدادات';
+
+  @override
+  String get adminError => 'خطأ';
+
+  @override
+  String get adminQuestionRejected => 'تم رفض السؤال';
+
+  @override
+  String get adminPublishAnswer => 'نشر الإجابة';
+
+  @override
+  String get adminReject => 'رفض';
+
+  @override
+  String get adminExpertAnswerHint => 'اكتبي إجابة الخبير...';
+
+  @override
+  String get adminNotifTitle => 'عنوان الإشعار';
+
+  @override
+  String get adminNotifBody => 'محتوى الإشعار';
+
+  @override
+  String get adminTitleEnglish => 'العنوان (إنجليزي)';
+
+  @override
+  String get adminTitleArabic => 'العنوان (عربي)';
+
+  @override
+  String get adminBodyEnglish => 'المحتوى (إنجليزي)';
+
+  @override
+  String get adminBodyArabic => 'المحتوى (عربي)';
+
+  @override
+  String get stealthSetPin => 'تعيين PIN التخفي';
+
+  @override
+  String get stealthPinHint =>
+      'أدخلي PIN من 4-6 أرقام لفتح التطبيق الحقيقي من الآلة الحاسبة.';
+
+  @override
+  String get stealthPin => 'PIN';
+
+  @override
+  String get stealthConfirmPin => 'تأكيد PIN';
+
+  @override
+  String get stealthCancel => 'إلغاء';
+
+  @override
+  String get stealthSave => 'حفظ';
+
+  @override
+  String get stealthPinMismatch =>
+      'يجب أن يتطابق PIN وأن يكون 4 أرقام على الأقل';
+
+  @override
+  String get stealthEnable => 'تفعيل وضع التخفي';
+
+  @override
+  String get stealthActivated => 'تم تفعيل وضع التخفي! أعدي تشغيل التطبيق.';
+
+  @override
+  String get premiumActivated => 'تم تفعيل Premium!';
+
+  @override
+  String get gotIt => 'فهمت';
+
+  @override
+  String get smartWatch => 'الساعة الذكية';
+
+  @override
+  String get anonymousQa => 'أسئلة مجهولة';
+
+  @override
+  String get anonymousQaDesc => 'اسألي أسئلة صحية بشكل خاص';
+
+  @override
+  String get activatePremiumTest => 'تفعيل Premium (اختبار)';
+
+  @override
+  String get dateFormatDDMMYYYY => 'DD/MM/YYYY';
+
+  @override
+  String get dateFormatMMDDYYYY => 'MM/DD/YYYY';
+
+  @override
+  String get dateFormatYYYYMMDD => 'YYYY/MM/DD';
+
+  @override
+  String get fileTooLarge => 'الملف كبير جداً (الحد الأقصى 15 MB)';
+
+  @override
+  String get healthQuestionHint => 'اكتبي سؤالك الصحي هنا...';
+
+  @override
+  String get geminiKeyHint => 'الصقي مفتاح API هنا';
+
+  @override
+  String get anonymousQaTooltip => 'أسئلة مجهولة';
+
+  @override
+  String get dailyBriefingPrompt => 'أعطيني ملخص اليوم';
 }

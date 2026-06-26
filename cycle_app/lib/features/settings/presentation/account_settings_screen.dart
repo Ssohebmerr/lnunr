@@ -424,7 +424,7 @@ class _GeminiKeyCardState extends State<_GeminiKeyCard> {
                       controller: _controller,
                       obscureText: true,
                       decoration: InputDecoration(
-                        hintText: 'AIzaSy...',
+                        hintText: l10n.geminiKeyHint,
                         isDense: true,
                         border: const OutlineInputBorder(),
                         suffixIcon: _hasKey

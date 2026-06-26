@@ -175,7 +175,7 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
                 maxLines: 6,
                 maxLength: 500,
                 decoration: InputDecoration(
-                  hintText: 'Type your health question here...',
+                  hintText: l10n.healthQuestionHint,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
                   counterStyle: theme.textTheme.labelSmall,

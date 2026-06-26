@@ -17,6 +17,7 @@ import '../../../core/profile/local_profile.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/premium/premium_status_notifier.dart';
+import '../../../core/storage/user_prefs.dart';
 import '../../../core/cms/app_settings_repository.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_avatar.dart';
@@ -250,6 +251,18 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _activateTestPremium() async {
+    final l10n = AppLocalizations.of(context)!;
+    await UserPrefs.setPremium(true);
+    await PremiumStatusNotifier.instance.applyRemote(true);
+    setState(() => _premium = true);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.premiumActivated)),
+      );
+    }
+  }
+
   void _openSub(BuildContext context, String title, Widget child) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -259,6 +272,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
   }
 
   void _showWatchInfo(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -284,7 +298,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Got it'),
+              child: Text(l10n.gotIt),
             ),
           ],
         ),
@@ -313,6 +327,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
           onActivatePayPal: () => _tryCapturePayPal(silent: false),
           onSubscribePlayStore: Platform.isAndroid ? _subscribe : null,
           onRestore: Platform.isAndroid ? _restorePurchases : null,
+          onActivateTest: _premium ? null : _activateTestPremium,
         ),
       ),
     );
@@ -412,7 +427,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             ),
             AccountMenuTile(
               icon: Icons.watch_outlined,
-              title: 'Smart Watch',
+              title: l10n.smartWatch,
               subtitle: Platform.isIOS ? 'Apple Watch support' : 'Wear OS support',
               showDivider: false,
               onTap: () => _showWatchInfo(context),
@@ -463,8 +478,8 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             ),
             AccountMenuTile(
               icon: Icons.help_outline_rounded,
-              title: 'Anonymous Q&A',
-              subtitle: 'Ask health questions privately',
+              title: l10n.anonymousQa,
+              subtitle: l10n.anonymousQaDesc,
               onTap: () => context.push('/ask'),
             ),
             AccountMenuTile(
@@ -647,6 +662,7 @@ class _PremiumCard extends StatelessWidget {
     this.onActivatePayPal,
     this.onSubscribePlayStore,
     this.onRestore,
+    this.onActivateTest,
     this.paypalPending = false,
     this.paypalActivating = false,
   });
@@ -658,6 +674,7 @@ class _PremiumCard extends StatelessWidget {
   final VoidCallback? onActivatePayPal;
   final VoidCallback? onSubscribePlayStore;
   final VoidCallback? onRestore;
+  final VoidCallback? onActivateTest;
   final bool paypalPending;
   final bool paypalActivating;
 
@@ -723,6 +740,16 @@ class _PremiumCard extends StatelessWidget {
                   TextButton(
                     onPressed: onRestore,
                     child: Text(l10n.restorePurchases),
+                  ),
+                ],
+                if (onActivateTest != null) ...[
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: onActivateTest,
+                    icon: const Icon(Icons.star_outline),
+                    label: Text(l10n.activatePremiumTest),
                   ),
                 ],
               ],

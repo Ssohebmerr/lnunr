@@ -104,26 +104,27 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
   }
 
   Future<String?> _showPinDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final pinController = TextEditingController();
     final confirmController = TextEditingController();
 
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Set Stealth PIN'),
+        title: Text(l10n.stealthSetPin),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter a 4-6 digit PIN to unlock the real app from the calculator.'),
+            Text(l10n.stealthPinHint),
             const SizedBox(height: 16),
             TextField(
               controller: pinController,
               keyboardType: TextInputType.number,
               maxLength: 6,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'PIN',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.stealthPin,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
@@ -132,8 +133,8 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirm PIN',
+              decoration: InputDecoration(
+                labelText: l10n.stealthConfirmPin,
                 border: OutlineInputBorder(),
               ),
             ),
@@ -142,7 +143,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.stealthCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -152,11 +153,11 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                 Navigator.pop(ctx, pin);
               } else {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('PINs must match and be at least 4 digits')),
+                  SnackBar(content: Text(l10n.stealthPinMismatch)),
                 );
               }
             },
-            child: const Text('Save'),
+            child: Text(l10n.stealthSave),
           ),
         ],
       ),
@@ -339,7 +340,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                   const SizedBox(height: 8),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Enable Stealth Mode'),
+                    title: Text(l10n.stealthEnable),
                     value: _stealthMode,
                     onChanged: (v) async {
                       if (v) {
@@ -351,7 +352,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                         if (mounted) {
                           setState(() => _stealthMode = true);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Stealth mode enabled! Restart the app to activate.')),
+                            SnackBar(content: Text(l10n.stealthActivated)),
                           );
                         }
                       } else {

@@ -132,7 +132,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
         title: Text(l10n.educationTitle),
         actions: [
           IconButton(
-            tooltip: 'Anonymous Q&A',
+            tooltip: l10n.anonymousQaTooltip,
             onPressed: () => context.push('/ask'),
             icon: const Icon(Icons.question_answer_rounded),
           ),

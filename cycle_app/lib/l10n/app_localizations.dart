@@ -5323,6 +5323,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some features like community discussions are restricted to users 18+.'**
   String get ageGateMinorNote;
+
+  /// No description provided for @adminActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminActive;
+
+  /// No description provided for @adminSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get adminSearch;
+
+  /// No description provided for @adminSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by email or UID...'**
+  String get adminSearchHint;
+
+  /// No description provided for @adminSearchUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search users by email or UID'**
+  String get adminSearchUsers;
+
+  /// No description provided for @adminNoUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get adminNoUsers;
+
+  /// No description provided for @adminBanReporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban reporter'**
+  String get adminBanReporter;
+
+  /// No description provided for @adminFailedSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save settings'**
+  String get adminFailedSave;
+
+  /// No description provided for @adminError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get adminError;
+
+  /// No description provided for @adminQuestionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Question rejected'**
+  String get adminQuestionRejected;
+
+  /// No description provided for @adminPublishAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Answer'**
+  String get adminPublishAnswer;
+
+  /// No description provided for @adminReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get adminReject;
+
+  /// No description provided for @adminExpertAnswerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type expert answer...'**
+  String get adminExpertAnswerHint;
+
+  /// No description provided for @adminNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Title'**
+  String get adminNotifTitle;
+
+  /// No description provided for @adminNotifBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Body'**
+  String get adminNotifBody;
+
+  /// No description provided for @adminTitleEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (English)'**
+  String get adminTitleEnglish;
+
+  /// No description provided for @adminTitleArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (Arabic)'**
+  String get adminTitleArabic;
+
+  /// No description provided for @adminBodyEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Body (English)'**
+  String get adminBodyEnglish;
+
+  /// No description provided for @adminBodyArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Body (Arabic)'**
+  String get adminBodyArabic;
+
+  /// No description provided for @stealthSetPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Stealth PIN'**
+  String get stealthSetPin;
+
+  /// No description provided for @stealthPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 4-6 digit PIN to unlock the real app from the calculator.'**
+  String get stealthPinHint;
+
+  /// No description provided for @stealthPin.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get stealthPin;
+
+  /// No description provided for @stealthConfirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get stealthConfirmPin;
+
+  /// No description provided for @stealthCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get stealthCancel;
+
+  /// No description provided for @stealthSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get stealthSave;
+
+  /// No description provided for @stealthPinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs must match and be at least 4 digits'**
+  String get stealthPinMismatch;
+
+  /// No description provided for @stealthEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Stealth Mode'**
+  String get stealthEnable;
+
+  /// No description provided for @stealthActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Stealth mode enabled! Restart the app to activate.'**
+  String get stealthActivated;
+
+  /// No description provided for @premiumActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium activated!'**
+  String get premiumActivated;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
+
+  /// No description provided for @smartWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Watch'**
+  String get smartWatch;
+
+  /// No description provided for @anonymousQa.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous Q&A'**
+  String get anonymousQa;
+
+  /// No description provided for @anonymousQaDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask health questions privately'**
+  String get anonymousQaDesc;
+
+  /// No description provided for @activatePremiumTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Premium (Test)'**
+  String get activatePremiumTest;
+
+  /// No description provided for @dateFormatDDMMYYYY.
+  ///
+  /// In en, this message translates to:
+  /// **'DD/MM/YYYY'**
+  String get dateFormatDDMMYYYY;
+
+  /// No description provided for @dateFormatMMDDYYYY.
+  ///
+  /// In en, this message translates to:
+  /// **'MM/DD/YYYY'**
+  String get dateFormatMMDDYYYY;
+
+  /// No description provided for @dateFormatYYYYMMDD.
+  ///
+  /// In en, this message translates to:
+  /// **'YYYY/MM/DD'**
+  String get dateFormatYYYYMMDD;
+
+  /// No description provided for @fileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large (max 15 MB)'**
+  String get fileTooLarge;
+
+  /// No description provided for @healthQuestionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your health question here...'**
+  String get healthQuestionHint;
+
+  /// No description provided for @geminiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your API key here'**
+  String get geminiKeyHint;
+
+  /// No description provided for @anonymousQaTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous Q&A'**
+  String get anonymousQaTooltip;
+
+  /// No description provided for @dailyBriefingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Give me my daily briefing for today.'**
+  String get dailyBriefingPrompt;
 }
 
 class _AppLocalizationsDelegate

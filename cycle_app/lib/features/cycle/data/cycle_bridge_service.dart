@@ -75,30 +75,12 @@ class CycleBridgeService {
       };
 
   static const supportedLanguageCodes = [
-    'en', 'ar', 'hi', 'es', 'zh', 'fr', 'bn', 'ru', 'pt',
-    'ja', 'de', 'pa', 'jv', 'ko', 'ta', 'tr', 'ur', 'vi', 'it',
+    'en', 'ar',
   ];
 
   static String languageLabel(String code) => switch (code) {
         'en' => 'English',
         'ar' => 'العربية',
-        'hi' => 'हिन्दी',
-        'es' => 'Español',
-        'zh' => '中文',
-        'fr' => 'Français',
-        'bn' => 'বাংলা',
-        'ru' => 'Русский',
-        'pt' => 'Português',
-        'ja' => '日本語',
-        'de' => 'Deutsch',
-        'pa' => 'ਪੰਜਾਬੀ',
-        'jv' => 'Javanese',
-        'ko' => '한국어',
-        'ta' => 'தமிழ்',
-        'tr' => 'Türkçe',
-        'ur' => 'اردو',
-        'vi' => 'Tiếng Việt',
-        'it' => 'Italiano',
         _ => code,
       };
 

@@ -696,7 +696,7 @@ class _ReportCard extends StatelessWidget {
                   ),
                   if (report.reporterUid != report.authorUid)
                     ActionChip(
-                      label: Text('Ban reporter'),
+                      label: Text(l10n.adminBanReporter),
                       onPressed: () => repo.banUser(report.reporterUid),
                     ),
                 ],
@@ -833,7 +833,7 @@ class _SettingsTabState extends State<_SettingsTab> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save settings')),
+          SnackBar(content: Text(widget.l10n.adminFailedSave)),
         );
       }
     } finally {
@@ -865,40 +865,40 @@ class _SettingsTabState extends State<_SettingsTab> {
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
         SwitchListTile(
-          title: const Text('Active'),
+          title: Text(l10n.adminActive),
           value: _announcementActive,
           onChanged: (v) => setState(() => _announcementActive = v),
         ),
         TextField(
           controller: _titleEn,
-          decoration: const InputDecoration(labelText: 'Title (English)'),
+          decoration: InputDecoration(labelText: l10n.adminTitleEnglish),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _titleAr,
-          decoration: const InputDecoration(labelText: 'Title (Arabic)'),
+          decoration: InputDecoration(labelText: l10n.adminTitleArabic),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _bodyEn,
-          decoration: const InputDecoration(labelText: 'Body (English)'),
+          decoration: InputDecoration(labelText: l10n.adminBodyEnglish),
           maxLines: 3,
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _bodyAr,
-          decoration: const InputDecoration(labelText: 'Body (Arabic)'),
+          decoration: InputDecoration(labelText: l10n.adminBodyArabic),
           maxLines: 3,
         ),
         const Divider(height: 32),
         TextField(
           controller: _supportUrl,
-          decoration: const InputDecoration(labelText: 'Support URL'),
+          decoration: InputDecoration(labelText: l10n.adminSupportUrl),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _privacyUrl,
-          decoration: const InputDecoration(labelText: 'Privacy URL'),
+          decoration: InputDecoration(labelText: l10n.adminPrivacyUrl),
         ),
         const SizedBox(height: 24),
         FilledButton.icon(
@@ -958,9 +958,9 @@ class _UsersTabState extends State<_UsersTab> {
               Expanded(
                 child: TextField(
                   controller: _searchCtrl,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by email or UID...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: l10n.adminSearchHint,
+                    border: const OutlineInputBorder(),
                     isDense: true,
                     prefixIcon: Icon(Icons.search_rounded),
                   ),
@@ -975,7 +975,7 @@ class _UsersTabState extends State<_UsersTab> {
                         width: 16, height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.search_rounded, size: 18),
-                label: const Text('Search'),
+                label: Text(l10n.adminSearch),
               ),
             ],
           ),
@@ -989,12 +989,12 @@ class _UsersTabState extends State<_UsersTab> {
                       Icon(Icons.person_search_rounded,
                           size: 56, color: Theme.of(context).colorScheme.outline),
                       const SizedBox(height: 12),
-                      const Text('Search users by email or UID'),
+                      Text(l10n.adminSearchUsers),
                     ],
                   ),
                 )
               : _results!.isEmpty
-                  ? const Center(child: Text('No users found'))
+                  ? Center(child: Text(l10n.adminNoUsers))
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       itemCount: _results!.length,
@@ -1064,6 +1064,7 @@ class _QATabState extends State<_QATab> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -1087,7 +1088,7 @@ class _QATabState extends State<_QATab> {
             stream: _queryStream(),
             builder: (context, snap) {
               if (snap.hasError) {
-                return Center(child: Text('Error: ${snap.error}'));
+                return Center(child: Text('${l10n.adminError} ${snap.error}'));
               }
               if (!snap.hasData) {
                 return const Center(child: CircularProgressIndicator());
@@ -1180,6 +1181,7 @@ class _QuestionCardState extends State<_QuestionCard> {
   }
 
   Future<void> _answer() async {
+    final l10n = AppLocalizations.of(context)!;
     final answer = _answerController.text.trim();
     if (answer.isEmpty) return;
 
@@ -1198,7 +1200,7 @@ class _QuestionCardState extends State<_QuestionCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.adminError} $e')),
         );
       }
     } finally {
@@ -1207,6 +1209,7 @@ class _QuestionCardState extends State<_QuestionCard> {
   }
 
   Future<void> _reject() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await FirebaseFirestore.instance
           .collection('anonymousQuestions')
@@ -1214,13 +1217,13 @@ class _QuestionCardState extends State<_QuestionCard> {
           .update({'status': 'rejected'});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Question rejected')),
+          SnackBar(content: Text(l10n.adminQuestionRejected)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.adminError} $e')),
         );
       }
     }
@@ -1228,6 +1231,7 @@ class _QuestionCardState extends State<_QuestionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
     final theme = widget.theme;
     final question = data['question'] ?? '';
@@ -1332,7 +1336,7 @@ class _QuestionCardState extends State<_QuestionCard> {
               controller: _answerController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Type expert answer...',
+                hintText: l10n.adminExpertAnswerHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1352,14 +1356,14 @@ class _QuestionCardState extends State<_QuestionCard> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check, size: 18),
-                    label: const Text('Publish Answer'),
+                    label: Text(l10n.adminPublishAnswer),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: _reject,
                   icon: const Icon(Icons.close_rounded, color: Colors.red),
-                  tooltip: 'Reject',
+                  tooltip: l10n.adminReject,
                 ),
               ],
             ),
@@ -1423,7 +1427,7 @@ class _BroadcastTabState extends State<_BroadcastTab> {
         _bodyCtrl.clear();
         if (res.containsKey('error')) {
           _isError = true;
-          _result = 'Error: ${res['error']}';
+          _result = '${widget.l10n.adminError} ${res['error']}';
         } else {
           _isError = false;
           _result = 'Sent: ${res['sent']} users, Failed: ${res['failed']}';
@@ -1434,21 +1438,22 @@ class _BroadcastTabState extends State<_BroadcastTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = widget.l10n;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         TextField(
           controller: _titleCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Notification Title',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.adminNotifTitle,
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _bodyCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Notification Body',
+          decoration: InputDecoration(
+            labelText: l10n.adminNotifBody,
             border: OutlineInputBorder(),
           ),
           maxLines: 3,

@@ -48,13 +48,14 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
     }
 
     try {
+      final l10n = AppLocalizations.of(this.context)!;
       final engine = AiContextEngine();
-      final context = await engine.buildAnonymizedContext();
+      final ctx = await engine.buildAnonymizedContext();
 
       final gateway = AiGateway();
       final reply = await gateway.request(
-        message: 'Give me my daily briefing for today.',
-        context: context,
+        message: l10n.dailyBriefingPrompt,
+        context: ctx,
         mode: 'briefing',
       );
 

@@ -17,9 +17,9 @@ class DirectGeminiService {
       : _secure = secureStorage ?? SecureStorageService();
 
   static const _models = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-pro',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash-lite',
   ];
   static const _secureKey = 'gemini_api_key';
   static const _legacyPrefKey = 'gemini_api_key'; // Old SharedPreferences key
@@ -75,7 +75,7 @@ class DirectGeminiService {
     // Test with direct HTTP call to Gemini API
     try {
       final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
       );
       final response = await http.post(
         url,

@@ -83,7 +83,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     if (bytes > 15 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File too large (max 15 MB)')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.fileTooLarge)),
         );
       }
       return;

@@ -477,10 +477,10 @@ class _CycleStep extends StatelessWidget {
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             ),
-            items: const [
-              DropdownMenuItem(value: DateFormats.dmy, child: Text('DD/MM/YYYY')),
-              DropdownMenuItem(value: DateFormats.mdy, child: Text('MM/DD/YYYY')),
-              DropdownMenuItem(value: DateFormats.ymd, child: Text('YYYY/MM/DD')),
+            items: [
+              DropdownMenuItem(value: DateFormats.dmy, child: Text(l10n.dateFormatDDMMYYYY)),
+              DropdownMenuItem(value: DateFormats.mdy, child: Text(l10n.dateFormatMMDDYYYY)),
+              DropdownMenuItem(value: DateFormats.ymd, child: Text(l10n.dateFormatYYYYMMDD)),
             ],
             onChanged: (v) {
               if (v != null) onDateFormat(v);

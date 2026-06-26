@@ -43,31 +43,32 @@ class AiGateway {
     final isSignedIn = _auth.currentUser != null;
     debugPrint('[AiGateway] mode=$effectiveMode, signedIn=$isSignedIn');
 
-    // 1. Cloud Function (signed-in; key on Firebase Secrets)
+    // 1. Direct Gemini API (Google AI Studio key — free, works on Spark plan)
+    // Try this FIRST since it's the most reliable path
+    final direct = await _directGemini.generate(
+      message: message,
+      cycleContext: context,
+      mode: effectiveMode,
+    );
+    if (direct != null && direct.isNotEmpty && !_isFailedPlaceholderReply(direct)) {
+      debugPrint('[AiGateway] Direct Gemini succeeded (${direct.length} chars)');
+      return direct;
+    }
+    debugPrint('[AiGateway] Direct Gemini returned null or failed');
+
+    // 2. Cloud Function (signed-in; key on Firebase Secrets)
     if (isSignedIn) {
       final cloud = await _requestFromCloudFunction(
         message: message,
         context: context,
         mode: effectiveMode,
       );
-      if (cloud != null && cloud.isNotEmpty) {
+      if (cloud != null && cloud.isNotEmpty && !_isFailedPlaceholderReply(cloud)) {
         debugPrint('[AiGateway] Cloud Function succeeded (${cloud.length} chars)');
         return cloud;
       }
-      debugPrint('[AiGateway] Cloud Function returned null');
+      debugPrint('[AiGateway] Cloud Function returned null or failed');
     }
-
-    // 2. Direct Gemini API (Google AI Studio key — free, works on Spark plan)
-    final direct = await _directGemini.generate(
-      message: message,
-      cycleContext: context,
-      mode: effectiveMode,
-    );
-    if (direct != null && direct.isNotEmpty) {
-      debugPrint('[AiGateway] Direct Gemini succeeded (${direct.length} chars)');
-      return direct;
-    }
-    debugPrint('[AiGateway] Direct Gemini returned null');
 
     // 3. Firebase AI Logic (requires Firebase AI Logic enabled in console)
     final firebaseAi = await _firebaseAi.generate(
@@ -75,7 +76,7 @@ class AiGateway {
       cycleContext: context,
       mode: effectiveMode,
     );
-    if (firebaseAi != null && firebaseAi.isNotEmpty) {
+    if (firebaseAi != null && firebaseAi.isNotEmpty && !_isFailedPlaceholderReply(firebaseAi)) {
       debugPrint('[AiGateway] Firebase AI succeeded (${firebaseAi.length} chars)');
       return firebaseAi;
     }
