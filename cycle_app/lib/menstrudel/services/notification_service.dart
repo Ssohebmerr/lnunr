@@ -33,6 +33,7 @@ class NotificationService {
     required int notificationID,
     required String notificationChannelId,
     required String notificationChannelName,
+    String? payload,
   }) async {
 
     if (tzScheduledTime.isBefore(tz.TZDateTime.now(tz.local))) throw PastNotificationException();
@@ -54,6 +55,7 @@ class NotificationService {
       tzScheduledTime,
       details,
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      payload: payload,
     );
   }
 
@@ -75,9 +77,15 @@ class NotificationService {
       return;
     }
 
-    if(daysBefore != null && daysAfter != null){
-      debugPrint("daysBefore or daysAfter are required.");
+    // Exactly one of daysBefore / daysAfter must be supplied. The previous
+    // check rejected the case where BOTH were set, which is the opposite of
+    // what we want — fix it here.
+    if (daysBefore == null && daysAfter == null) {
+      debugPrint('schedulePeriodNotifications: either daysBefore or daysAfter is required.');
       return;
+    }
+    if (daysBefore != null && daysAfter != null) {
+      debugPrint('schedulePeriodNotifications: daysBefore and daysAfter are mutually exclusive — using daysBefore.');
     }
 
     final notificationDateTime = DateTime(
@@ -85,17 +93,14 @@ class NotificationService {
       notificationTime.hour, notificationTime.minute,
     );
 
-    tz.TZDateTime? tzScheduledTime;
+    final int offsetDays = daysBefore ?? -daysAfter!;
+    final tzScheduledTime = tz.TZDateTime.from(notificationDateTime, tz.local)
+        .subtract(Duration(days: offsetDays));
 
-    if (daysBefore != null) {
-      tzScheduledTime = tz.TZDateTime.from(notificationDateTime, tz.local)
-        .subtract(Duration(days: daysBefore));
+    if (tzScheduledTime.isBefore(tz.TZDateTime.now(tz.local))) {
+      debugPrint('schedulePeriodNotifications: skipped past time ($tzScheduledTime)');
+      return;
     }
-    else if (daysAfter != null) {
-      tzScheduledTime = tz.TZDateTime.from(notificationDateTime, tz.local)
-        .add(Duration(days: daysAfter));
-    }
-    if (tzScheduledTime == null) return;
 
     await _setNotification(
       tzScheduledTime: tzScheduledTime,
@@ -286,6 +291,7 @@ class NotificationService {
       details,
       androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: fln.DateTimeComponents.time,
+      payload: NotificationPayload.account(action: 'open_pill'),
     );
   }
 
@@ -328,6 +334,7 @@ class NotificationService {
       notificationID: sanitaryProductsID,
       notificationChannelId: sanitaryProductChannelId,
       notificationChannelName: sanitaryProductChannelName,
+      payload: NotificationPayload.account(action: 'open_sanitary'),
     ); 
   }
 
@@ -379,6 +386,7 @@ class NotificationService {
       notificationID: reversibleContraceptiveReminderId,
       notificationChannelId: reversibleContraceptivesReminderChannelId,
       notificationChannelName: reversibleContraceptivesReminderChannelName,
+      payload: NotificationPayload.account(action: 'open_larc'),
     ); 
   }
 

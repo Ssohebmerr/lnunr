@@ -6,10 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 import '../../../core/config/app_secrets.dart';
 
-/// Google Play Billing for Premium on Android (required by Play policy).
+/// Google Play Billing for Premium subscriptions on Android (Play policy).
 class PlayBillingService {
   PlayBillingService({InAppPurchase? iap}) : _iap = iap ?? InAppPurchase.instance;
 
@@ -43,6 +44,7 @@ class PlayBillingService {
           case PurchaseStatus.error:
             debugPrint('Play purchase error: ${purchase.error}');
           case PurchaseStatus.pending:
+            debugPrint('Play purchase pending: ${purchase.productID}');
           case PurchaseStatus.canceled:
             break;
         }
@@ -59,13 +61,18 @@ class PlayBillingService {
       debugPrint('Play product query error: ${response.error}');
       return null;
     }
+    if (response.notFoundIDs.isNotEmpty) {
+      debugPrint('Play product not found: ${response.notFoundIDs}');
+    }
     if (response.productDetails.isEmpty) return null;
     return response.productDetails.first;
   }
 
   Future<bool> subscribe(ProductDetails product) async {
     if (!await isAvailable()) return false;
-    final param = PurchaseParam(productDetails: product);
+    final PurchaseParam param = product is GooglePlayProductDetails
+        ? GooglePlayPurchaseParam(productDetails: product)
+        : PurchaseParam(productDetails: product);
     return _iap.buyNonConsumable(purchaseParam: param);
   }
 
@@ -78,22 +85,35 @@ class PlayBillingService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
 
-    final token = await user.getIdToken();
-    final response = await http.post(
-      Uri.parse('$_baseUrl/verifyPlayPurchase'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'purchaseToken': purchase.verificationData.serverVerificationData,
-        'productId': purchase.productID,
-        'packageName': packageName,
-      }),
-    );
+    try {
+      final token = await user.getIdToken();
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/verifyPlayPurchase'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'purchaseToken': purchase.verificationData.serverVerificationData,
+              'productId': purchase.productID,
+              'packageName': packageName,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode != 200) return false;
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return data['verified'] as bool? ?? false;
+      if (response.statusCode != 200) {
+        debugPrint(
+          'verifyPlayPurchase HTTP ${response.statusCode}: ${response.body}',
+        );
+        return false;
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data['verified'] as bool? ?? data['entitled'] as bool? ?? false;
+    } catch (e, st) {
+      debugPrint('verifyPlayPurchase failed: $e\n$st');
+      return false;
+    }
   }
 }

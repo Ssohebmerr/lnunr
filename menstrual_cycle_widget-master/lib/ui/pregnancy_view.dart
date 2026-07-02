@@ -147,19 +147,23 @@ class _PregnancyViewState extends State<PregnancyView> {
   /// Generate dynamic messages based on different conditions
   generateMessagesText(lastPeriodDate) {
     if (lastPeriodDate.isNotEmpty) {
-      final difference =
-          DateTime.now().difference(DateTime.parse(lastPeriodDate)).inDays + 1;
-      if (difference > 1) {
-        _title = "$difference ${WidgetBaseLanguage.phaseDaysLabel}";
-      } else {
-        _title = "$difference ${WidgetBaseLanguage.phaseDayLabel}";
+      try {
+        final difference =
+            DateTime.now().difference(DateTime.parse(lastPeriodDate)).inDays + 1;
+        if (difference > 1) {
+          _title = "$difference ${WidgetBaseLanguage.phaseDaysLabel}";
+        } else {
+          _title = "$difference ${WidgetBaseLanguage.phaseDayLabel}";
+        }
+        int weekNumber = (difference / 7).floor() + 1;
+        int monthNumber = (difference / 30).ceil();
+        _currentMonth = monthNumber - 1;
+        _message =
+            "$monthNumber${getOrdinalSuffix(monthNumber)} ${WidgetBaseLanguage.month}";
+        _message2 = "${WidgetBaseLanguage.week} $weekNumber";
+      } catch (e) {
+        debugPrint("Error parsing pregnancy last period date: $e");
       }
-      int weekNumber = (difference / 7).floor() + 1;
-      int monthNumber = (difference / 30).ceil();
-      _currentMonth = monthNumber - 1;
-      _message =
-          "$monthNumber${getOrdinalSuffix(monthNumber)} ${WidgetBaseLanguage.month}";
-      _message2 = "${WidgetBaseLanguage.week} $weekNumber";
     }
   }
 

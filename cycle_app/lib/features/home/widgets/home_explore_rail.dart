@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/cms/app_settings.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../core/widgets/feminine_icon.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../chat/presentation/ai_chat_page.dart';
 import '../../community/presentation/community_tab.dart';
@@ -30,7 +32,7 @@ class HomeExploreRail extends StatelessWidget {
 
     final items = <_ExploreItem>[
       _ExploreItem(
-        icon: Icons.auto_awesome_rounded,
+        icon: FeminineIcon.ai,
         label: l10n.accountMenuAi,
         color: theme.colorScheme.primary,
         onTap: () {
@@ -44,7 +46,7 @@ class HomeExploreRail extends StatelessWidget {
         },
       ),
       _ExploreItem(
-        icon: Icons.spa_outlined,
+        icon: FeminineIcon.selfCare,
         label: l10n.navSelfCare,
         color: const Color(0xFFE8917A),
         onTap: () => Navigator.of(context).push(
@@ -57,7 +59,7 @@ class HomeExploreRail extends StatelessWidget {
         ),
       ),
       _ExploreItem(
-        icon: Icons.calendar_month_rounded,
+        icon: FeminineIcon.calendar,
         label: l10n.accountMenuCalendar,
         color: theme.colorScheme.secondary,
         onTap: () => Navigator.of(context).push(
@@ -70,7 +72,7 @@ class HomeExploreRail extends StatelessWidget {
         ),
       ),
       _ExploreItem(
-        icon: Icons.insights_rounded,
+        icon: FeminineIcon.insights,
         label: l10n.accountMenuInsights,
         color: AppColors.accent,
         onTap: () => Navigator.of(context).push(
@@ -84,7 +86,7 @@ class HomeExploreRail extends StatelessWidget {
       ),
       if (settings.communityEnabled)
         _ExploreItem(
-          icon: Icons.groups_rounded,
+          icon: FeminineIcon.community,
           label: l10n.accountMenuCommunity,
           color: const Color(0xFF7E57C2),
           onTap: () => Navigator.of(context).push(
@@ -98,7 +100,7 @@ class HomeExploreRail extends StatelessWidget {
         ),
       if (settings.aiEducationEnabled)
         _ExploreItem(
-          icon: Icons.menu_book_rounded,
+          icon: FeminineIcon.education,
           label: l10n.accountMenuEducation,
           color: const Color(0xFF26A69A),
           onTap: () => Navigator.of(context).push(
@@ -107,14 +109,15 @@ class HomeExploreRail extends StatelessWidget {
             ),
           ),
         ),
-      _ExploreItem(
-        icon: Icons.favorite_outline,
-        label: l10n.partnerTitle,
-        color: theme.colorScheme.tertiary,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const PartnerPage()),
+      if (FeatureFlags.isEnabledSync(FeatureFlags.partnerSync))
+        _ExploreItem(
+          icon: FeminineIcon.partner,
+          label: l10n.partnerTitle,
+          color: theme.colorScheme.tertiary,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PartnerPage()),
+          ),
         ),
-      ),
     ];
 
     return Column(
@@ -129,7 +132,7 @@ class HomeExploreRail extends StatelessWidget {
                 (item) => SizedBox(
                   width: (MediaQuery.sizeOf(context).width - 52) / 3,
                   child: AppQuickTile(
-                    icon: item.icon,
+                    femIcon: item.icon,
                     label: item.label,
                     color: item.color,
                     onTap: item.onTap,
@@ -151,7 +154,7 @@ class _ExploreItem {
     required this.onTap,
   });
 
-  final IconData icon;
+  final FeminineIcon icon;
   final String label;
   final Color color;
   final VoidCallback onTap;

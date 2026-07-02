@@ -136,6 +136,39 @@ class CommunitySeed {
       icon: Icons.fitness_center_outlined,
       maxMembers: 150,
     ),
+    Community(
+      id: 'menopause-support',
+      nameEn: 'Menopause & Perimenopause',
+      nameAr: 'سن الأمل وانقطاع الطمث',
+      descriptionEn:
+          'Support and stories for navigating menopause and perimenopause.',
+      descriptionAr: 'الدعم والقصص للتعامل مع مرحلة ما قبل وانقطاع الطمث.',
+      topic: 'condition',
+      icon: Icons.wb_sunny_outlined,
+      maxMembers: 150,
+    ),
+    Community(
+      id: 'pms-pmdd-support',
+      nameEn: 'PMS & PMDD Support',
+      nameAr: 'دعم PMS و PMDD',
+      descriptionEn:
+          'A dedicated hub for sharing experiences and managing severe cycle mood swings.',
+      descriptionAr: 'ملتقى مخصص لمشاركة التجارب والتعامل مع تقلبات المزاج الحادة.',
+      topic: 'condition',
+      icon: Icons.mood_bad_outlined,
+      maxMembers: 200,
+    ),
+    Community(
+      id: 'lifestyle-wellness',
+      nameEn: 'Lifestyle & Nutrition',
+      nameAr: 'نمط الحياة والتغذية',
+      descriptionEn:
+          'Diet, workouts, and lifestyle tweaks to balance your hormones.',
+      descriptionAr: 'التغذية والرياضة وتعديلات نمط الحياة لتوازن الهرمونات.',
+      topic: 'general',
+      icon: Icons.restaurant_menu_outlined,
+      maxMembers: 250,
+    ),
   ];
 
   static List<Community> filterByTopic(String? topic) {

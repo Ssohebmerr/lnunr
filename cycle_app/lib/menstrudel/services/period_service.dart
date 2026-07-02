@@ -312,7 +312,6 @@ class PeriodService extends ChangeNotifier {
     } else if (_predictedCurrentCycle != null) {
       final today = DateUtils.dateOnly(DateTime.now());
       final ovulation = DateUtils.dateOnly(_predictedCurrentCycle!.ovulationDay);
-      final luteal = DateUtils.dateOnly(_predictedCurrentCycle!.lutealStart);
       final nextPeriod = DateUtils.dateOnly(_predictedCurrentCycle!.nextPeriodStart);
 
       if (today.isBefore(ovulation)) {
@@ -335,6 +334,9 @@ class PeriodService extends ChangeNotifier {
       daysUntilPeriod: daysUntil,
     );
   }
+
+  /// Exposes the private sync method to trigger smartwatch sync manually.
+  Future<void> syncWatch() => _syncWatchData();
 
   /// Populates the [_timelineItems] list for the list view.
   void _buildTimelineItems({required List<LogDay> currentLogs}) {

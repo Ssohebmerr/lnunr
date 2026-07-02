@@ -2,9 +2,11 @@ import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/premium/premium_badge.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -35,6 +37,8 @@ class PostCard extends StatelessWidget {
         PostType.question => const Color(0xFF7B6CF6),
         PostType.tip => const Color(0xFF3D9A78),
         PostType.vent => const Color(0xFFE88B4A),
+        PostType.milestone => const Color(0xFFE0B33B),
+        PostType.poll => const Color(0xFF4DA3CC),
       };
 
   IconData _typeIcon(PostType type) => switch (type) {
@@ -42,6 +46,8 @@ class PostCard extends StatelessWidget {
         PostType.question => Icons.help_outline_rounded,
         PostType.tip => Icons.lightbulb_outline_rounded,
         PostType.vent => Icons.whatshot_rounded,
+        PostType.milestone => Icons.emoji_events_rounded,
+        PostType.poll => Icons.poll_rounded,
       };
 
   String _typeLabel(PostType type, AppLocalizations l10n) => switch (type) {
@@ -49,6 +55,8 @@ class PostCard extends StatelessWidget {
         PostType.question => l10n.postTypeQuestion,
         PostType.tip => l10n.postTypeTip,
         PostType.vent => l10n.postTypeVent,
+        PostType.milestone => l10n.postTypeMilestone,
+        PostType.poll => l10n.postTypePoll,
       };
 
   @override
@@ -137,6 +145,7 @@ class PostCard extends StatelessWidget {
                                     radius: 20,
                                     avatarIndex: post.authorAvatarIndex,
                                     uidSeed: post.authorUid,
+                                    isPremium: post.authorIsPremium,
                                   ),
                           ),
                           const SizedBox(width: 12),
@@ -144,12 +153,22 @@ class PostCard extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  post.authorAlias,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -0.1,
-                                  ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        post.authorAlias,
+                                        style:
+                                            theme.textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: -0.1,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (post.authorIsPremium)
+                                      const PremiumNameBadge(),
+                                  ],
                                 ),
                                 const SizedBox(height: 3),
                                 Row(
@@ -318,6 +337,63 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    // ── Milestone celebration banner ──
+                    if (post.postType == PostType.milestone) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFFE0B33B),
+                                Color(0xFFFFC75A),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFE0B33B)
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.emoji_events_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.postTypeMilestone,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.celebration_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     // ── Text ──
                     if (post.text.isNotEmpty &&
                         post.text != '📷' &&
@@ -330,6 +406,9 @@ class PostCard extends StatelessWidget {
                           style: theme.textTheme.bodyLarge?.copyWith(
                             height: 1.5,
                             letterSpacing: 0.05,
+                            fontWeight: post.postType == PostType.milestone
+                                ? FontWeight.w600
+                                : null,
                           ),
                           maxLines: 5,
                           overflow: TextOverflow.ellipsis,
@@ -375,11 +454,14 @@ class PostCard extends StatelessWidget {
                                                 count > 0 ? '$count' : null,
                                             active: liked,
                                             activeColor: AuraColors.rose,
-                                            onTap: () => repo.toggleLike(
-                                              communityId: post.communityId,
-                                              postId: post.id,
-                                              uid: uid,
-                                            ),
+                                            onTap: () {
+                                              HapticFeedback.selectionClick();
+                                              repo.toggleLike(
+                                                communityId: post.communityId,
+                                                postId: post.id,
+                                                uid: uid,
+                                              );
+                                            },
                                           );
                                         },
                                       );

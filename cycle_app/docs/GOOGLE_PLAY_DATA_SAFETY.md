@@ -42,7 +42,7 @@ firebase deploy --only firestore:rules,functions
 - Contacts, SMS, call logs
 - Community post photos/videos (uploads disabled in current release)
 - Advertising ID for tracking
-- Financial info (card numbers) — handled by PayPal
+- Financial info (card numbers) — handled by Google Play Billing
 
 ---
 
@@ -73,7 +73,7 @@ firebase deploy --only firestore:rules,functions
 - [x] AI moderation fails closed (rejects when Gemini unavailable)
 - [x] Community media uploads disabled until visual moderation ships
 - [x] Firebase Storage rules (`storage.rules`) — community media writes blocked; profile photos owner-only
-- [x] Google Play Billing on Android (`in_app_purchase` + `verifyPlayPurchase` Cloud Function); PayPal removed from Android UI
+- [x] Google Play Billing on Android (`in_app_purchase` + `verifyPlayPurchase` + `googlePlayWebhook` RTDN); PayPal fully removed
 - [x] Terms of Service hosted at `/terms-of-service.html` + linked in onboarding & Privacy Center
 - [x] Contact support (`support@cycleaura.app`) in Account & Privacy Center
 - [x] Full account deletion Cloud Function (`deleteUserAccount`) — posts, comments, storage, partner data, Auth user

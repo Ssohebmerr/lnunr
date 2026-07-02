@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/locale/locale_cubit.dart';
+import '../../../core/locale/locale_controller.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_sync_service.dart';
@@ -50,21 +50,23 @@ class _PregnancyLmpSheetState extends State<PregnancyLmpSheet> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _lmp = picked);
+    if (picked != null) {
+      setState(() => _lmp = DateTime(picked.year, picked.month, picked.day));
+    }
   }
 
   Future<void> _confirm() async {
     setState(() => _saving = true);
-    final lang = context.read<LocaleCubit>().locale.languageCode;
+    final lang = context.read<LocaleController>().locale.languageCode;
     final api = MenstrualCycleWidget.instance;
     try {
-      await _sync.updateCycleConfig(
+      final ok = await _sync.updateCycleConfig(
         cycleLength: api?.getCycleLength() ?? 28,
         periodDuration: api?.getPeriodDuration() ?? 5,
         lastPeriodDate: _lmp,
         languageCode: lang,
       );
-      if (mounted) Navigator.of(context).pop(_lmp);
+      if (mounted && ok) Navigator.of(context).pop(_lmp);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

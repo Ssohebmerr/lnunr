@@ -7,4 +7,6 @@ class HomeShellActions {
   static void Function(int tabIndex)? switchTab;
   static VoidCallback? openLog;
   static VoidCallback? openAiChat;
+  static VoidCallback? openReports;
+  static VoidCallback? openReminders;
 }

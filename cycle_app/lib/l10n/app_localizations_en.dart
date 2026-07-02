@@ -199,31 +199,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumFeature3 => 'Priority support';
 
   @override
-  String get subscribePayPal => 'Subscribe with PayPal';
-
-  @override
   String get subscribePlayStore => 'Subscribe with Google Play';
 
   @override
-  String get premiumPayPalHint =>
-      'You\'ll pay securely in PayPal, then return here to activate Premium.';
-
-  @override
-  String get premiumPayPalReturn =>
-      'Complete payment in PayPal, then come back to the app.';
-
-  @override
-  String get premiumPayPalActivating => 'Activating your Premium subscription…';
-
-  @override
-  String get premiumPayPalActivated => 'Premium is now active. Thank you!';
-
-  @override
-  String get premiumPayPalUnavailable =>
-      'PayPal checkout is not available right now. Try again later or contact support.';
-
-  @override
-  String get premiumActivatePayPal => 'I completed PayPal payment';
+  String get premiumPlayHint =>
+      'Payment is handled securely by Google Play. Manage or cancel your subscription anytime in Play Store settings.';
 
   @override
   String get premiumPlayOnly =>
@@ -321,6 +301,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncFailed => 'Sync failed. Try again.';
+
+  @override
+  String get syncNeedsPremium => 'Cloud backup is a Premium feature.';
+
+  @override
+  String get syncNeedsConsent => 'Please enable cloud backup consent first.';
+
+  @override
+  String get syncNotSignedIn => 'Sign in to use cloud backup.';
+
+  @override
+  String get syncCycleUnavailable =>
+      'Cycle data is not ready yet. Open the home screen, then try again.';
+
+  @override
+  String get syncNoBackupFound => 'No cloud backup was found yet.';
+
+  @override
+  String get localBackupExportSuccess => 'Local backup is ready to share.';
+
+  @override
+  String get localBackupExportFailed => 'Could not export the local backup.';
+
+  @override
+  String get localBackupImportFailed => 'Could not import this backup file.';
 
   @override
   String get logSaved => 'Log saved!';
@@ -424,6 +429,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get communityBrowse => 'Browse groups';
+
+  @override
+  String get communityRecommendedTitle => 'Recommended for you';
+
+  @override
+  String get communityJoinedBadge => 'Joined';
 
   @override
   String get communitySetupTitle => 'Choose a nickname';
@@ -903,10 +914,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doctorReportFailed =>
-      'Not enough data yet. Log your cycle first, then try again.';
+      'Cycle data isn\'t ready yet. Open the home screen, then try again.';
 
   @override
   String get doctorReportRetry => 'Try again';
+
+  @override
+  String get doctorReportLimitedData =>
+      'This report is based on limited data. After about one month of logging, predictions and patterns become much more accurate.';
+
+  @override
+  String get doctorReportAiTitle => 'AI assistant notes';
+
+  @override
+  String get doctorReportAiSubtitle =>
+      'Helpful context for your doctor visit — not a diagnosis.';
+
+  @override
+  String get doctorReportAiLoading => 'AI is reviewing your data…';
+
+  @override
+  String get doctorReportAiFailed =>
+      'AI notes could not be generated right now. Your cycle data above is still complete.';
+
+  @override
+  String get doctorReportAiNeedsConsent =>
+      'Enable AI in Privacy settings to get assistant notes for your report.';
+
+  @override
+  String get doctorReportAiEnable => 'Enable AI assistant';
 
   @override
   String get doctorReportCopy => 'Copy';
@@ -968,6 +1004,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthReportTitle => 'Health Report';
+
+  @override
+  String get healthReportClinicalSummary => 'Clinical summary';
+
+  @override
+  String get healthReportObservedPatterns => 'Observed patterns';
+
+  @override
+  String get healthReportDiscussionPoints => 'Points for discussion';
+
+  @override
+  String get doctorReportRefining => 'Finalizing clinical summary…';
 
   @override
   String get healthReportCreatedBy => 'Created by Lune';
@@ -1208,6 +1256,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportCycleHealth => 'Cycle Health';
 
   @override
+  String get hormoneIndicatorsTitle => 'Hormone indicators';
+
+  @override
+  String get hormoneIndicatorsSubtitle =>
+      'Estrogen & progesterone through your cycle';
+
+  @override
+  String get hormoneIndicatorsCaption =>
+      'Estimated hormone levels based on your cycle day and length.';
+
+  @override
   String get reportFertility => 'Fertility & Pregnancy';
 
   @override
@@ -1296,9 +1355,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountGeminiKeySave => 'Save Gemini key';
 
   @override
-  String get widgetLanguageLabel => 'Widget language (19 languages)';
-
-  @override
   String get reportPatternFallback => 'Pattern';
 
   @override
@@ -1317,6 +1373,204 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postTypeVent => 'Vent';
+
+  @override
+  String get postTypeMilestone => 'Milestone';
+
+  @override
+  String get postTypePoll => 'Poll';
+
+  @override
+  String get weeklyRecapTitle => 'Your week with Lune';
+
+  @override
+  String get weeklyRecapPrompt =>
+      'Summarize my last 7 days based on the data — what went well, what to focus on next week.';
+
+  @override
+  String get weeklyRecapLoading => 'Reflecting on your week…';
+
+  @override
+  String get weeklyRecapRefresh => 'Refresh';
+
+  @override
+  String get dayLabelToday => 'Today';
+
+  @override
+  String get dayLabelYesterday => 'Yesterday';
+
+  @override
+  String aiActionLogged(String label) {
+    return 'Logged: $label';
+  }
+
+  @override
+  String aiActionLogMood(String mood) {
+    return 'Log mood: $mood';
+  }
+
+  @override
+  String aiActionLogSymptom(String symptom) {
+    return 'Log: $symptom';
+  }
+
+  @override
+  String aiActionLogWater(String count) {
+    return 'Log $count water';
+  }
+
+  @override
+  String aiActionLogPain(String level) {
+    return 'Log pain $level/10';
+  }
+
+  @override
+  String get aiActionOpenLog => 'Open log';
+
+  @override
+  String get aiActionOpenInsights => 'See insights';
+
+  @override
+  String get aiActionLogFailed =>
+      'Couldn\'t save that — open the log to add it';
+
+  @override
+  String get aiSuggestHowsMyDay => 'How\'s my day looking?';
+
+  @override
+  String get aiSuggestMoodCheck => 'Help me check in on my mood';
+
+  @override
+  String get aiSuggestFoodIdeas => 'Food ideas for today';
+
+  @override
+  String get aiSuggestExplainPhase => 'Explain my current phase';
+
+  @override
+  String get aiSuggestSymptomCheck => 'Should I worry about this symptom?';
+
+  @override
+  String get aiSuggestPrep => 'Prep for my doctor visit';
+
+  @override
+  String get aiSuggestEnergyBoost => 'Quick energy boost';
+
+  @override
+  String get aiSuggestMoveToday => 'Movement plan for today';
+
+  @override
+  String get aiSuggestSetGoal => 'Set me a tiny goal';
+
+  @override
+  String get adminTabUsers => 'Users';
+
+  @override
+  String get adminTabQA => 'Q&A';
+
+  @override
+  String get adminTabBroadcast => 'Broadcast';
+
+  @override
+  String get adminFilterPending => 'Pending';
+
+  @override
+  String get adminFilterAnswered => 'Answered';
+
+  @override
+  String get adminFilterAll => 'All';
+
+  @override
+  String adminQuestionsEmpty(String filter) {
+    return 'No $filter questions yet.';
+  }
+
+  @override
+  String get adminQAExpertAnswer => 'Expert answer';
+
+  @override
+  String get adminPostsToday => 'Posts today';
+
+  @override
+  String get adminAiToday => 'AI today';
+
+  @override
+  String get adminQuickActions => 'Quick actions';
+
+  @override
+  String get adminQuickViewReports => 'Review reports';
+
+  @override
+  String get adminQuickSendBroadcast => 'Send broadcast';
+
+  @override
+  String get adminQuickEditSettings => 'App settings';
+
+  @override
+  String get adminConfirmBan => 'Ban this user?';
+
+  @override
+  String get adminConfirmBanMsg =>
+      'They will lose access to community features immediately. You can unban later.';
+
+  @override
+  String get adminConfirmBroadcast => 'Send to all users?';
+
+  @override
+  String get adminConfirmBroadcastMsg =>
+      'This notification will be delivered to every signed-in user. Make sure the title and message are correct.';
+
+  @override
+  String adminBroadcastSent(String sent, String failed) {
+    return 'Broadcast sent · $sent delivered, $failed failed';
+  }
+
+  @override
+  String get adminConfirm => 'Confirm';
+
+  @override
+  String get adminCancel => 'Cancel';
+
+  @override
+  String get adminGroupFeatures => 'Features';
+
+  @override
+  String get adminGroupAnnouncement => 'Announcement';
+
+  @override
+  String get adminGroupLinks => 'Links';
+
+  @override
+  String get adminSending => 'Sending…';
+
+  @override
+  String get adminSendBroadcast => 'Send broadcast';
+
+  @override
+  String get adminNotifPreview => 'Preview';
+
+  @override
+  String get adminNoEmail => 'No email';
+
+  @override
+  String get adminBannedBadge => 'Banned';
+
+  @override
+  String get adminTimeNow => 'now';
+
+  @override
+  String adminTimeMinutes(int n) {
+    return '${n}m';
+  }
+
+  @override
+  String adminTimeHours(int n) {
+    return '${n}h';
+  }
+
+  @override
+  String adminTimeDays(int n) {
+    return '${n}d';
+  }
 
   @override
   String get onboardingPrivacyAgree =>
@@ -1405,6 +1659,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactSupportSubtitle =>
       'Questions, abuse reports, or account help';
+
+  @override
+  String get accountMenuFeedback => 'Feedback & promo codes';
+
+  @override
+  String get accountMenuFeedbackSubtitle => 'Send a note or apply a promo code';
+
+  @override
+  String get accountMenuAiDiagnostic => 'AI diagnostic';
+
+  @override
+  String get accountMenuAiDiagnosticSubtitle =>
+      'Test connection or update Gemini key';
 
   @override
   String get consentManageTitle => 'Your consents';
@@ -1566,6 +1833,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingFeaturesSubtitle => 'Here are the main screens:';
+
+  @override
+  String get onboardingReadyHint => 'Tap Get Started below to enter the app';
 
   @override
   String get onboardingFeatureHome => 'Home';
@@ -2370,6 +2640,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pill, sanitary, and LARC reminders in Wellness follow the main toggle above.';
 
   @override
+  String get smartPhaseReminder => 'Smart phase-based reminders';
+
+  @override
+  String get smartPhaseReminderSubtitle =>
+      'Get a supportive daily tip that adapts to your cycle phase or pregnancy week.';
+
+  @override
   String get graphExportShared => 'Chart ready to share.';
 
   @override
@@ -2684,7 +2961,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyP5Body =>
-      'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.\n• Google Gemini AI: For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.\n• Google Play Billing: For processing in-app subscriptions.\n• PayPal: For alternative payment processing.\n\nEach service has its own privacy policy. We encourage you to review them.';
+      'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.\n• Google Gemini AI: For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.\n• Google Play Billing: For processing in-app subscriptions.\n\nEach service has its own privacy policy. We encourage you to review them.';
 
   @override
   String get privacyP6Title => '6. Your Data Rights';
@@ -2778,7 +3055,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsP6Body =>
-      'Lune offers premium features through in-app subscriptions processed via Google Play Billing or PayPal. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage subscriptions through your Google Play account settings. Refunds are handled according to Google Play\'s refund policy. Free features remain available without a subscription.';
+      'Lune offers premium features through in-app subscriptions processed via Google Play Billing. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage subscriptions through your Google Play account settings. Refunds are handled according to Google Play\'s refund policy. Free features remain available without a subscription.';
 
   @override
   String get termsP7Title => '7. Intellectual Property';
@@ -2972,7 +3249,98 @@ class AppLocalizationsEn extends AppLocalizations {
   String get geminiKeyHint => 'Paste your API key here';
 
   @override
+  String get stealthTitle => 'Stealth Mode';
+
+  @override
+  String get stealthDescription =>
+      'Disguise the app as a calculator. Enter your secret PIN then press = to unlock.';
+
+  @override
+  String get stealthUnlockHint =>
+      'To unlock: open the calculator, type your PIN, then press =';
+
+  @override
+  String get stealthHideNow => 'Hide app now';
+
+  @override
+  String get stealthHideNowHint =>
+      'Instantly switch to the calculator disguise.';
+
+  @override
   String get anonymousQaTooltip => 'Anonymous Q&A';
+
+  @override
+  String get anonymousQaTitle => 'Anonymous Health Q&A';
+
+  @override
+  String get anonymousQaIntro =>
+      'Ask your health question anonymously. A certified expert will answer it and the answer will be published in the Education section.';
+
+  @override
+  String get anonymousQaPurposeTitle => 'What is this page?';
+
+  @override
+  String get anonymousQaStep1 =>
+      'Write your health question — your name is never shown';
+
+  @override
+  String get anonymousQaStep2 =>
+      'The Lune team reviews it and prepares an answer';
+
+  @override
+  String get anonymousQaStep3 =>
+      'The answer is published in Education to help everyone';
+
+  @override
+  String get anonymousQaDisclaimer =>
+      'For general education only — not medical diagnosis or treatment. For urgent concerns, contact your doctor or emergency services.';
+
+  @override
+  String get anonymousQaCategoryLabel => 'Category';
+
+  @override
+  String get anonymousQaQuestionLabel => 'Your Question';
+
+  @override
+  String get anonymousQaPrivacyNote =>
+      'Your identity is 100% anonymous. No name, email, or ID is stored.';
+
+  @override
+  String get anonymousQaSubmit => 'Submit Question';
+
+  @override
+  String get anonymousQaSubmitting => 'Submitting...';
+
+  @override
+  String get anonymousQaSubmitted => 'Your question was submitted. Thank you!';
+
+  @override
+  String get anonymousQaTooShort => 'Please write at least 10 characters.';
+
+  @override
+  String get anonymousQaError =>
+      'Could not submit your question. Please try again.';
+
+  @override
+  String get qaCatGeneral => 'General';
+
+  @override
+  String get qaCatCycle => 'Cycle & Period';
+
+  @override
+  String get qaCatPregnancy => 'Pregnancy';
+
+  @override
+  String get qaCatPcos => 'PCOS';
+
+  @override
+  String get qaCatContraception => 'Contraception';
+
+  @override
+  String get qaCatMental => 'Mental Health';
+
+  @override
+  String get qaCatNutrition => 'Nutrition';
 
   @override
   String get dailyBriefingPrompt => 'Give me my daily briefing for today.';

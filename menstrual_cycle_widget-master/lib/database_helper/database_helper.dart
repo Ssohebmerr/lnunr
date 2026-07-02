@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -456,19 +457,23 @@ class MenstrualCycleDbHelper {
 
   /// Load user config from database into memory
   void setCurrentUserDetail() async {
-    Database? db = await instance.database;
+    try {
+      Database? db = await instance.database;
 
-    final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "SELECT * FROM $tableDailyLogs WHERE $columnLogDate = ?",
-        [_configRowDate]);
+      final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
+          "SELECT * FROM $tableDailyLogs WHERE $columnLogDate = ?",
+          [_configRowDate]);
 
-    if (queryResponse.isNotEmpty) {
-      for (int i = 0; i < queryResponse.length; i++) {
-        MenstrualCycleWidget.instance!.setCurrentUserData(
-            queryResponse[i][columnCustomerId],
-            queryResponse[i][columnCycleLength],
-            queryResponse[i][columnPeriodDuration]);
+      if (queryResponse.isNotEmpty) {
+        for (int i = 0; i < queryResponse.length; i++) {
+          MenstrualCycleWidget.instance!.setCurrentUserData(
+              queryResponse[i][columnCustomerId],
+              queryResponse[i][columnCycleLength],
+              queryResponse[i][columnPeriodDuration]);
+        }
       }
+    } catch (e) {
+      debugPrint('setCurrentUserDetail failed (non-fatal): $e');
     }
   }
 

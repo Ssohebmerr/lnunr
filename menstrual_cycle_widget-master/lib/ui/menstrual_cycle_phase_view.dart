@@ -234,23 +234,27 @@ class _MenstrualCyclePhaseViewState extends State<MenstrualCyclePhaseView>
       _menstruationDayCount = _instance.getPeriodDuration();
       _follicularDayCount = _instance.getFollicularDayCounts();
       if (lastPeriodDate.isNotEmpty) {
-        DateTime lastPeriod = DateTime.parse(lastPeriodDate);
-        int inDays = DateTime.now().difference(lastPeriod).inDays;
-        if (widget.selectedDay == 0) {
-          if (_selectedDay == 0) {
-            if (inDays > _totalCycleDays) {
-              _selectedDay = inDays;
+        try {
+          DateTime lastPeriod = DateTime.parse(lastPeriodDate);
+          int inDays = DateTime.now().difference(lastPeriod).inDays;
+          if (widget.selectedDay == 0) {
+            if (_selectedDay == 0) {
+              if (inDays > _totalCycleDays) {
+                _selectedDay = inDays;
+              } else {
+                _selectedDay = (inDays + 1);
+              }
             } else {
-              _selectedDay = (inDays + 1);
+              _selectedDay = widget.selectedDay;
+            }
+            if (actuallySelectedDay == 0) {
+              actuallySelectedDay = _selectedDay;
             }
           } else {
             _selectedDay = widget.selectedDay;
           }
-          if (actuallySelectedDay == 0) {
-            actuallySelectedDay = _selectedDay;
-          }
-        } else {
-          _selectedDay = widget.selectedDay;
+        } catch (e) {
+          debugPrint("Error parsing last period date in phase view: $e");
         }
       }
 

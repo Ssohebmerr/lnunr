@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_design_tokens.dart';
+import 'feminine_icon.dart';
 export 'aura_scaffold.dart';
 import 'aura_scaffold.dart';
 
@@ -120,13 +121,16 @@ class AppStatChip extends StatelessWidget {
 class AppQuickTile extends StatelessWidget {
   const AppQuickTile({
     super.key,
-    required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
-  });
+    this.icon,
+    this.femIcon,
+  }) : assert(icon != null || femIcon != null,
+            'Provide either icon or femIcon');
 
-  final IconData icon;
+  final IconData? icon;
+  final FeminineIcon? femIcon;
   final String label;
   final Color color;
   final VoidCallback onTap;
@@ -161,7 +165,9 @@ class AppQuickTile extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: femIcon != null
+                ? FeminineIconView(femIcon!, color: color, size: 22)
+                : Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: 10),
           Text(

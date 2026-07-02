@@ -27,6 +27,7 @@ class CycleReportFileExporter {
     HealthSnapshot? snapshot,
     required String exportedDateLabel,
     required bool rtl,
+    String? plainText,
   }) async {
     final dir = await getTemporaryDirectory();
     final stamp = DateFormat('yyyyMMdd_HHmmss').format(exportedAt);
@@ -41,6 +42,7 @@ class CycleReportFileExporter {
           report: report,
           dashboard: dashboard,
           exportedDateLabel: exportedDateLabel,
+          plainText: plainText,
         );
       case CycleReportExportFormat.json:
         return _writeJson(
@@ -69,6 +71,7 @@ class CycleReportFileExporter {
           dashboard: dashboard,
           exportedDateLabel: exportedDateLabel,
           rtl: rtl,
+          plainText: plainText,
         );
     }
   }
@@ -80,13 +83,15 @@ class CycleReportFileExporter {
     required CycleReportData report,
     CycleDashboardData? dashboard,
     required String exportedDateLabel,
+    String? plainText,
   }) async {
-    final content = CycleReportExporter.toPlainText(
-      l10n: l10n,
-      report: report,
-      dashboard: dashboard,
-      exportedDate: exportedDateLabel,
-    );
+    final content = plainText ??
+        CycleReportExporter.toPlainText(
+          l10n: l10n,
+          report: report,
+          dashboard: dashboard,
+          exportedDate: exportedDateLabel,
+        );
     final file = File('${dir.path}/$name');
     await file.writeAsString(content);
     return file;
@@ -203,13 +208,15 @@ class CycleReportFileExporter {
     CycleDashboardData? dashboard,
     required String exportedDateLabel,
     required bool rtl,
+    String? plainText,
   }) async {
-    final plain = CycleReportExporter.toPlainText(
-      l10n: l10n,
-      report: report,
-      dashboard: dashboard,
-      exportedDate: exportedDateLabel,
-    );
+    final plain = plainText ??
+        CycleReportExporter.toPlainText(
+          l10n: l10n,
+          report: report,
+          dashboard: dashboard,
+          exportedDate: exportedDateLabel,
+        );
 
     final regular = await PdfGoogleFonts.cairoRegular();
     final bold = await PdfGoogleFonts.cairoBold();

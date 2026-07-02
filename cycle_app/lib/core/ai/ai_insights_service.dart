@@ -9,6 +9,7 @@ import '../premium/premium_gate.dart';
 import 'ai_context_engine.dart';
 import 'ai_gateway.dart';
 import 'models/ai_insight.dart';
+import 'models/doctor_report_enrichment.dart';
 import 'models/health_snapshot.dart';
 
 /// Generates typed AI insights for any screen in the app.
@@ -116,6 +117,107 @@ class AiInsightsService {
       return '$localReport$header${aiNotes.trim()}';
     }
     return localReport;
+  }
+
+  /// Enriches the printable doctor report with professional clinical sections
+  /// derived from on-device data. Returns null when AI consent is off or the
+  /// provider is unreachable — the report still renders without these sections.
+  Future<DoctorReportEnrichment?> enrichDoctorReport({
+    required String languageCode,
+    required bool limitedData,
+  }) async {
+    if (!await ConsentManager.hasAiConsent()) return null;
+
+    HealthSnapshot snapshot = const HealthSnapshot();
+    try {
+      snapshot = await _engine.buildSnapshot();
+    } catch (_) {}
+
+    final language = languageCode == 'ar' ? 'Arabic' : 'English';
+    final limitedHint = limitedData
+        ? (languageCode == 'ar'
+            ? 'البيانات محدودة — أضيفي جملة واحدة احترافية في data_quality_note '
+                'أن التتبع لمدة شهر تقريباً يحسّن دقة التقرير.'
+            : 'Data is limited — include one professional sentence in '
+                'data_quality_note that ~one month of daily logging improves accuracy.')
+        : 'Omit data_quality_note or set it to null.';
+
+    final isPregnant = snapshot.isPregnancyMode;
+    final prompt = 'Respond in $language with ONLY valid JSON (no markdown fences):\n'
+        '{\n'
+        '  "clinical_summary": "2-3 concise professional sentences for a physician",\n'
+        '  "patterns": ["observed pattern 1", "observed pattern 2"],\n'
+        '  "discussion_points": ["discussion point 1", "discussion point 2"],\n'
+        '  "data_quality_note": "optional single sentence or null"\n'
+        '}\n'
+        '${isPregnant ? "Context: prenatal tracking." : "Context: menstrual cycle tracking."}\n'
+        '$limitedHint\n'
+        'Never diagnose or prescribe. Write for a doctor reading a clean visit report.';
+
+    final context = Map<String, dynamic>.from(snapshot.toPromptMap());
+    if (limitedData) context['reportDataLimited'] = true;
+
+    final raw = await _gateway.request(
+      message: prompt,
+      context: context,
+      doctorReportMode: true,
+    );
+
+    if (raw == null || raw.trim().isEmpty) return null;
+    return _parseEnrichment(raw.trim(), limitedData: limitedData, languageCode: languageCode);
+  }
+
+  DoctorReportEnrichment? _parseEnrichment(
+    String raw, {
+    required bool limitedData,
+    required String languageCode,
+  }) {
+    try {
+      var jsonStr = raw;
+      final fence = RegExp(r'```(?:json)?\s*([\s\S]*?)```');
+      final match = fence.firstMatch(raw);
+      if (match != null) jsonStr = match.group(1)!.trim();
+
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is! Map<String, dynamic>) return _fallbackEnrichment(raw);
+
+      List<String> listOf(dynamic v) {
+        if (v is! List) return const [];
+        return v
+            .map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
+            .take(6)
+            .toList();
+      }
+
+      final summary = decoded['clinical_summary']?.toString().trim();
+      final patterns = listOf(decoded['patterns']);
+      final points = listOf(decoded['discussion_points']);
+      var note = decoded['data_quality_note']?.toString().trim();
+      if (note == null || note.isEmpty || note.toLowerCase() == 'null') {
+        note = limitedData
+            ? (languageCode == 'ar'
+                ? 'البيانات ما زالت محدودة؛ التتبع اليومي لمدة شهر تقريباً يجعل هذا التقرير أدق.'
+                : 'Data is still limited; about one month of daily logging will make this report more accurate.')
+            : null;
+      }
+
+      final enrichment = DoctorReportEnrichment(
+        clinicalSummary: summary,
+        patterns: patterns,
+        discussionPoints: points,
+        dataQualityNote: note,
+      );
+      return enrichment.isEmpty ? null : enrichment;
+    } catch (_) {
+      return _fallbackEnrichment(raw);
+    }
+  }
+
+  DoctorReportEnrichment? _fallbackEnrichment(String raw) {
+    final text = raw.trim();
+    if (text.length < 40) return null;
+    return DoctorReportEnrichment(clinicalSummary: text);
   }
 
   /// One cache slot per type per day per language.

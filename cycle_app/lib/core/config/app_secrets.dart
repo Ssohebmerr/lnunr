@@ -8,10 +8,15 @@ class AppSecrets {
 
   /// Google AI Studio key for direct Gemini access.
   /// Passed at build time: --dart-define=GEMINI_API_KEY=...
-  /// Falls back to hardcoded key for development/testing.
+  /// Falls back to the embedded key below.
+  ///
+  /// NOTE: Keep this repository private. Google automatically blocks API keys
+  /// detected in public source. If this key ever returns
+  /// API_KEY_SERVICE_BLOCKED, generate a new one at aistudio.google.com/apikey
+  /// and replace the value below.
   static const geminiApiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
-    defaultValue: 'AQ.Ab8RN6JDt8j5_eTQN7Xx5Z9l6x3WZTWef5x5ka-_FwbOhDLOBA',
+    defaultValue: 'AQ.Ab8RN6Kex3j9LyVqTEW6f6Y7KVctmxfBdAQKeATKhSXP_Dx5Vg',
   );
 
   /// Firebase Cloud Functions base URL.

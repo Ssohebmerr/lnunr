@@ -492,14 +492,14 @@ class CommunityFilterChips extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<({String id, String label})> items;
+  final List<({String id, String label, IconData? icon})> items;
   final String selected;
   final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -509,6 +509,7 @@ class CommunityFilterChips extends StatelessWidget {
           final item = items[i];
           return CommunityChoiceChip(
             label: item.label,
+            icon: item.icon,
             selected: selected == item.id,
             onTap: () => onSelected(item.id),
           );
@@ -524,9 +525,11 @@ class CommunityChoiceChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.icon,
   });
 
   final String label;
+  final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
 
@@ -557,16 +560,43 @@ class CommunityChoiceChip extends StatelessWidget {
                     : (isDark ? Colors.white : theme.colorScheme.outline)
                         .withValues(alpha: isDark ? 0.08 : 0.1),
               ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: AuraColors.rose.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-            child: Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: selected
-                    ? Colors.white
-                    : theme.colorScheme.onSurfaceVariant,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              ),
+            padding: EdgeInsets.symmetric(
+              horizontal: icon != null ? 12 : 16,
+              vertical: 9,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: selected
+                        ? Colors.white
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: selected
+                        ? Colors.white
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/ai/ai_gateway.dart';
+import '../../../core/ai/models/ai_turn.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/storage/user_prefs.dart';
 import 'chat_message.dart';
@@ -60,7 +61,7 @@ class ChatRepository {
     await _messagesRef(uid).add(message.toMap());
   }
 
-  /// Number of recent messages injected as conversation memory.
+  /// Number of recent messages passed to the model as multi-turn context.
   static const _historyWindow = 12;
 
   Future<String> requestAiReply({
@@ -72,10 +73,11 @@ class ChatRepository {
     String? unavailableMessage,
   }) async {
     final reply = await _gateway.request(
-      message: _withHistory(message, history),
+      message: message,
       context: cycleContext,
       analyzeMode: analyzeMode,
       mode: mode,
+      history: _toAiTurns(history),
     );
     if (reply != null && reply.isNotEmpty) return reply;
 
@@ -85,25 +87,36 @@ class ChatRepository {
         'AI unavailable — enable Firebase AI Logic and sign in.';
   }
 
-  /// Prepends recent conversation turns so the assistant remembers context.
-  /// Works with both the Cloud Function and the direct Gemini path, since
-  /// both treat the message as free text.
-  String _withHistory(String message, List<ChatMessage> history) {
-    if (history.isEmpty) return message;
+  /// Streaming variant of [requestAiReply] — yields partial text chunks
+  /// for use in chat UIs that want token-by-token rendering.
+  Stream<String> streamAiReply({
+    required String message,
+    required Map<String, dynamic> cycleContext,
+    String mode = 'chat',
+    List<ChatMessage> history = const [],
+  }) {
+    return _gateway.stream(
+      message: message,
+      context: cycleContext,
+      mode: mode,
+      history: _toAiTurns(history),
+    );
+  }
 
+  /// Converts saved chat messages into the trimmed [AiTurn] list passed
+  /// to the AI gateway. The most recent [_historyWindow] turns are kept.
+  List<AiTurn> _toAiTurns(List<ChatMessage> history) {
+    if (history.isEmpty) return const [];
     final recent = history.length > _historyWindow
         ? history.sublist(history.length - _historyWindow)
         : history;
-
-    final lines = recent
-        .map((m) => '${m.isUser ? 'User' : 'Assistant'}: ${m.text}')
-        .join('\n');
-
-    return 'Recent conversation (for context only — do not repeat verbatim):\n'
-        '$lines\n'
-        '---\n'
-        'Current user message (answer THIS message directly first):\n'
-        '$message';
+    return recent
+        .map(
+          (m) => m.isUser
+              ? AiTurn.user(m.text)
+              : AiTurn.model(m.text),
+        )
+        .toList();
   }
 
   Future<List<ChatMessage>> _loadLocalMessages() async {

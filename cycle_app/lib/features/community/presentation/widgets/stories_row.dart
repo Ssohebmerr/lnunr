@@ -163,7 +163,7 @@ class StoriesRow extends StatelessWidget {
           onMarkViewed: (communityId, storyId) =>
               repo.markViewed(communityId, storyId),
         ),
-        transitionsBuilder: (_, animation, __, child) {
+        transitionsBuilder: (_, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
             child: ScaleTransition(

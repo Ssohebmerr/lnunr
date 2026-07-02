@@ -4,7 +4,7 @@ import 'package:cycle_aura/features/community/data/models/post_type.dart';
 
 void main() {
   group('CommunityPost.isVisibleTo', () {
-    CommunityPost _post({
+    CommunityPost makePost({
       bool hidden = false,
       String moderationStatus = 'approved',
       String authorUid = 'user1',
@@ -21,26 +21,26 @@ void main() {
         );
 
     test('approved post is visible to everyone', () {
-      final post = _post();
+      final post = makePost();
       expect(post.isVisibleTo('other'), isTrue);
       expect(post.isVisibleTo(null), isTrue);
     });
 
     test('hidden post is not visible to anyone', () {
-      final post = _post(hidden: true);
+      final post = makePost(hidden: true);
       expect(post.isVisibleTo('user1'), isFalse);
       expect(post.isVisibleTo('other'), isFalse);
       expect(post.isVisibleTo(null), isFalse);
     });
 
     test('rejected post is not visible to anyone', () {
-      final post = _post(moderationStatus: 'rejected');
+      final post = makePost(moderationStatus: 'rejected');
       expect(post.isVisibleTo('user1'), isFalse);
       expect(post.isVisibleTo(null), isFalse);
     });
 
     test('pending_review post is only visible to its author', () {
-      final post = _post(moderationStatus: 'pending_review', authorUid: 'user1');
+      final post = makePost(moderationStatus: 'pending_review', authorUid: 'user1');
       expect(post.isVisibleTo('user1'), isTrue);
       expect(post.isVisibleTo('other'), isFalse);
       expect(post.isVisibleTo(null), isFalse);

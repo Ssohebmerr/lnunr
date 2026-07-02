@@ -2,7 +2,9 @@ enum PostType {
   support('support'),
   question('question'),
   tip('tip'),
-  vent('vent');
+  vent('vent'),
+  milestone('milestone'),
+  poll('poll');
 
   const PostType(this.value);
   final String value;

@@ -5,17 +5,42 @@ class SecureStorageService {
   SecureStorageService({FlutterSecureStorage? storage})
       : _storage = storage ??
             const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              // resetOnError clears a corrupted keystore entry instead of
+              // throwing forever (a known Android crash-loop after OS updates
+              // or backup restores).
+              aOptions: AndroidOptions(
+                encryptedSharedPreferences: true,
+                resetOnError: true,
+              ),
             );
 
   final FlutterSecureStorage _storage;
 
-  Future<String?> read(String key) => _storage.read(key: key);
+  /// Returns null on any platform error so callers never crash on a flaky
+  /// keystore read.
+  Future<String?> read(String key) async {
+    try {
+      return await _storage.read(key: key);
+    } catch (_) {
+      return null;
+    }
+  }
 
-  Future<void> write(String key, String value) =>
-      _storage.write(key: key, value: value);
+  Future<void> write(String key, String value) async {
+    try {
+      await _storage.write(key: key, value: value);
+    } catch (_) {}
+  }
 
-  Future<void> delete(String key) => _storage.delete(key: key);
+  Future<void> delete(String key) async {
+    try {
+      await _storage.delete(key: key);
+    } catch (_) {}
+  }
 
-  Future<void> deleteAll() => _storage.deleteAll();
+  Future<void> deleteAll() async {
+    try {
+      await _storage.deleteAll();
+    } catch (_) {}
+  }
 }

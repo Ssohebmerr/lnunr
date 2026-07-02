@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,8 +14,11 @@ import '../profile/presentation/profile_edit_sheet.dart';
 
 import '../../../core/app_home_refresh.dart';
 import '../../../core/profile/local_profile.dart';
+import '../../../core/config/feature_flags.dart';
+import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
+import '../../../core/premium/premium_badge.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/cms/app_settings_repository.dart';
@@ -28,18 +31,20 @@ import '../admin/presentation/admin_screen.dart';
 import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_event.dart';
 import '../auth/presentation/auth_navigation.dart';
-import '../premium/data/paypal_service.dart';
-import '../premium/data/play_billing_service.dart';
+import '../../../core/premium/play_billing_coordinator.dart';
 import '../education/presentation/education_hub_page.dart';
 import '../partner/presentation/partner_page.dart';
-import '../cycle/data/cycle_sync_service.dart';
-import '../goals/presentation/goal_change_flow.dart';
 import '../settings/presentation/about_screen.dart';
+import '../settings/presentation/ai_diagnostic_screen.dart';
+import '../support/presentation/support_sheet.dart';
+import '../../core/widgets/feminine_icon.dart';
 import '../settings/presentation/account_reminders_sheet.dart';
 import '../settings/presentation/account_settings_screen.dart';
 import 'insights_tab.dart';
 import 'sub_feature_page.dart';
 import 'widgets/account_menu_tile.dart';
+
+import '../../menstrudel/services/period_service.dart';
 
 class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
@@ -48,69 +53,42 @@ class AccountTab extends StatefulWidget {
   State<AccountTab> createState() => _AccountTabState();
 }
 
-class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
+class _AccountTabState extends State<AccountTab> {
   bool _premium = false;
   bool _notifications = true;
-  bool _paypalActivating = false;
-  bool _paypalPending = false;
-  final _playBilling = PlayBillingService();
-  final _paypal = PayPalService();
   String _localName = 'Guest';
   int _avatarIndex = 0;
   String? _photoPath;
   String? _photoUrl;
-  UserGoalTypes _goal = UserGoalTypes.general;
-  final _cycleSync = CycleSyncService();
   bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    HomeShellActions.openReminders = _openRemindersFromDeepLink;
     PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
     _loadAll();
     HomeRefreshScope.notifier.addListener(_onHomeRefresh);
-    _refreshPayPalPending();
-    _playBilling.startListening(onPremiumGranted: () {
-      if (mounted) _loadAll();
-    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tryCapturePayPal(silent: true);
       _checkAdmin();
     });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    if (HomeShellActions.openReminders == _openRemindersFromDeepLink) {
+      HomeShellActions.openReminders = null;
+    }
     HomeRefreshScope.notifier.removeListener(_onHomeRefresh);
     PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
-    _playBilling.dispose();
     super.dispose();
   }
 
-  void _onHomeRefresh() => _loadGoal();
+  void _onHomeRefresh() => _loadAll();
 
   void _onPremiumChanged() {
     if (!mounted) return;
     setState(() => _premium = PremiumStatusNotifier.instance.isPremium);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _tryCapturePayPal(silent: true);
-    }
-  }
-
-  Future<void> _refreshPayPalPending() async {
-    final pending = await _paypal.hasPendingOrder();
-    if (mounted) setState(() => _paypalPending = pending);
-  }
-
-  Future<void> _loadGoal() async {
-    final goal = await _cycleSync.getUserGoal();
-    if (mounted) setState(() => _goal = goal);
   }
 
   Future<void> _loadAll() async {
@@ -121,7 +99,6 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
     final avatar = await LocalProfile.avatarIndex();
     final path = await LocalProfile.customPhotoPath();
     final url = await LocalProfile.customPhotoUrl();
-    final goal = await _cycleSync.getUserGoal();
     if (mounted) {
       setState(() {
         _localName = localName;
@@ -129,7 +106,6 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
         _photoPath = path;
         _photoUrl = url;
         _premium = p;
-        _goal = goal;
         _notifications = prefs.getBool('notifications_enabled') ?? true;
       });
     }
@@ -144,65 +120,6 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
     await NotificationService.scheduleFromPrefs();
-  }
-
-  Future<void> _tryCapturePayPal({bool silent = false}) async {
-    if (_premium || _paypalActivating) return;
-    if (!await _paypal.hasPendingOrder()) return;
-    if (!mounted) return;
-
-    setState(() => _paypalActivating = true);
-
-    try {
-      final ok = await _paypal.capturePendingOrder();
-      await _refreshPayPalPending();
-      if (ok) {
-        await _loadAll();
-        if (mounted && !silent) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.premiumPayPalActivated)),
-          );
-        }
-      }
-    } finally {
-      if (mounted) setState(() => _paypalActivating = false);
-    }
-  }
-
-  Future<void> _subscribePayPal() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-
-    if (user == null) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.loginRequiredPremium)));
-      await openLoginScreen(context);
-      return;
-    }
-
-    final checkout = await _paypal.startCheckout();
-    if (checkout == null) {
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.premiumPayPalUnavailable)),
-        );
-      }
-      return;
-    }
-
-    final launched = await _paypal.launchApprovalPage(checkout.approvalUrl);
-    await _refreshPayPalPending();
-    if (!mounted) return;
-
-    if (!launched) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
-      return;
-    }
-
-    messenger.showSnackBar(
-      SnackBar(content: Text(l10n.premiumPayPalReturn)),
-    );
   }
 
   Future<void> _subscribe() async {
@@ -223,7 +140,8 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
       return;
     }
 
-    final product = await _playBilling.loadProduct();
+    final billing = PlayBillingCoordinator.instance.billing;
+    final product = await billing.loadProduct();
     if (product == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -233,7 +151,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
       return;
     }
 
-    final started = await _playBilling.subscribe(product);
+    final started = await billing.subscribe(product);
     if (!started && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.errorGeneric)),
@@ -243,7 +161,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
 
   Future<void> _restorePurchases() async {
     final l10n = AppLocalizations.of(context)!;
-    await _playBilling.restorePurchases();
+    await PlayBillingCoordinator.instance.billing.restorePurchases();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.restorePurchasesDone)),
@@ -252,6 +170,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
   }
 
   Future<void> _activateTestPremium() async {
+    if (!kDebugMode) return;
     final l10n = AppLocalizations.of(context)!;
     await UserPrefs.setPremium(true);
     await PremiumStatusNotifier.instance.applyRemote(true);
@@ -296,9 +215,49 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             _WatchFeature(icon: Icons.water_drop, text: 'Log period from watch'),
             _WatchFeature(icon: Icons.calendar_today, text: 'Current phase display'),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.gotIt),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                      try {
+                        final periodService = ctx.read<PeriodService>();
+                        await periodService.syncWatch();
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(isAr 
+                                ? 'تمت مزامنة بيانات الساعة بنجاح!' 
+                                : 'Watch data synced successfully!'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(isAr 
+                                ? 'فشلت المزامنة: يرجى التأكد من اتصال الساعة.' 
+                                : 'Sync failed: Make sure your watch is paired.'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.sync_rounded),
+                    label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مزامنة الآن' : 'Sync Now'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n.gotIt),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -321,13 +280,9 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
           l10n: l10n,
           theme: theme,
           premium: _premium,
-          paypalPending: _paypalPending,
-          paypalActivating: _paypalActivating,
-          onSubscribePayPal: _subscribePayPal,
-          onActivatePayPal: () => _tryCapturePayPal(silent: false),
           onSubscribePlayStore: Platform.isAndroid ? _subscribe : null,
           onRestore: Platform.isAndroid ? _restorePurchases : null,
-          onActivateTest: _premium ? null : _activateTestPremium,
+          onActivateTest: kDebugMode && !_premium ? _activateTestPremium : null,
         ),
       ),
     );
@@ -340,6 +295,11 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
       showDragHandle: true,
       builder: (_) => const AccountRemindersSheet(),
     ).then((_) => _loadAll());
+  }
+
+  void _openRemindersFromDeepLink() {
+    if (!mounted) return;
+    _showRemindersSheet();
   }
 
   @override
@@ -387,12 +347,12 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
           children: [
             if (!_premium)
               AccountMenuTile(
-                icon: Icons.workspace_premium_outlined,
+                femIcon: FeminineIcon.premium,
                 title: l10n.accountUpgradePro,
                 onTap: _showPremiumSheet,
               ),
             AccountMenuTile(
-              icon: Icons.insights_rounded,
+              femIcon: FeminineIcon.insights,
               title: l10n.accountMenuInsights,
               onTap: () => _openSub(
                 context,
@@ -401,7 +361,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
               ),
             ),
             AccountMenuTile(
-              icon: Icons.menu_book_rounded,
+              femIcon: FeminineIcon.education,
               title: l10n.accountMenuEducation,
               onTap: () async {
                 final settings = await AppSettingsRepository().fetch();
@@ -417,16 +377,17 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
                 );
               },
             ),
-            AccountMenuTile(
-              icon: Icons.favorite_outline,
-              title: l10n.partnerTitle,
-              subtitle: l10n.partnerSubtitle,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PartnerPage()),
+            if (FeatureFlags.isEnabledSync(FeatureFlags.partnerSync))
+              AccountMenuTile(
+                femIcon: FeminineIcon.partner,
+                title: l10n.partnerTitle,
+                subtitle: l10n.partnerSubtitle,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PartnerPage()),
+                ),
               ),
-            ),
             AccountMenuTile(
-              icon: Icons.watch_outlined,
+              femIcon: FeminineIcon.watch,
               title: l10n.smartWatch,
               subtitle: Platform.isIOS ? 'Apple Watch support' : 'Wear OS support',
               showDivider: false,
@@ -434,7 +395,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
             ),
             if (_isAdmin)
               AccountMenuTile(
-                icon: Icons.admin_panel_settings_rounded,
+                femIcon: FeminineIcon.settings,
                 title: l10n.adminTitle,
                 showDivider: false,
                 onTap: () => Navigator.of(context).push(
@@ -448,7 +409,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
         AccountMenuCard(
           children: [
             AccountMenuTile(
-              icon: Icons.notifications_outlined,
+              femIcon: FeminineIcon.notifications,
               title: l10n.accountMenuReminders,
               showDivider: false,
               trailing: Switch(
@@ -468,7 +429,7 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
         AccountMenuCard(
           children: [
             AccountMenuTile(
-              icon: Icons.settings_outlined,
+              femIcon: FeminineIcon.settings,
               title: l10n.accountMenuSettings,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -477,23 +438,39 @@ class _AccountTabState extends State<AccountTab> with WidgetsBindingObserver {
               ),
             ),
             AccountMenuTile(
-              icon: Icons.help_outline_rounded,
+              femIcon: FeminineIcon.help,
               title: l10n.anonymousQa,
               subtitle: l10n.anonymousQaDesc,
               onTap: () => context.push('/ask'),
             ),
             AccountMenuTile(
-              icon: Icons.info_outline_rounded,
+              femIcon: FeminineIcon.about,
               title: l10n.aboutTitle,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
               ),
             ),
             AccountMenuTile(
-              icon: Icons.mail_outline_rounded,
+              femIcon: FeminineIcon.support,
+              title: l10n.accountMenuFeedback,
+              subtitle: l10n.accountMenuFeedbackSubtitle,
+              onTap: () => SupportSheet.show(context),
+            ),
+            AccountMenuTile(
+              femIcon: FeminineIcon.ai,
+              title: l10n.accountMenuAiDiagnostic,
+              subtitle: l10n.accountMenuAiDiagnosticSubtitle,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AiDiagnosticScreen(),
+                ),
+              ),
+            ),
+            AccountMenuTile(
+              femIcon: FeminineIcon.support,
               title: l10n.contactSupport,
               showDivider: user != null,
-              onTap: openSupportEmail,
+              onTap: () => openSupportEmail(context),
             ),
             if (user == null)
               AccountMenuTile(
@@ -569,6 +546,7 @@ class _ProfileCard extends StatelessWidget {
                 avatarIndex: avatarIndex,
                 photoPath: photoPath,
                 networkUrl: photoUrl,
+                isPremium: premium,
               ),
               Positioned(
                 right: 0,
@@ -609,14 +587,8 @@ class _ProfileCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (premium) ...[
-            const SizedBox(height: 6),
-            Text(
-              l10n.premiumActive,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            const SizedBox(height: 8),
+            const PremiumBadge(size: 22, showLabel: true),
           ],
         ],
       );
@@ -631,6 +603,7 @@ class _ProfileCard extends StatelessWidget {
             avatarIndex: avatarIndex,
             photoPath: photoPath,
             networkUrl: photoUrl,
+            isPremium: premium,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -658,25 +631,17 @@ class _PremiumCard extends StatelessWidget {
     required this.l10n,
     required this.theme,
     required this.premium,
-    required this.onSubscribePayPal,
-    this.onActivatePayPal,
     this.onSubscribePlayStore,
     this.onRestore,
     this.onActivateTest,
-    this.paypalPending = false,
-    this.paypalActivating = false,
   });
 
   final AppLocalizations l10n;
   final ThemeData theme;
   final bool premium;
-  final VoidCallback onSubscribePayPal;
-  final VoidCallback? onActivatePayPal;
   final VoidCallback? onSubscribePlayStore;
   final VoidCallback? onRestore;
   final VoidCallback? onActivateTest;
-  final bool paypalPending;
-  final bool paypalActivating;
 
   @override
   Widget build(BuildContext context) {
@@ -697,8 +662,19 @@ class _PremiumCard extends StatelessWidget {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.premiumTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  const PremiumBadge(size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.premiumTitle,
+                      style: theme.textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               if (premium)
                 Text(l10n.premiumActive, style: theme.textTheme.titleSmall)
@@ -706,7 +682,7 @@ class _PremiumCard extends StatelessWidget {
                 Text(l10n.premiumSubtitle),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.premiumPayPalHint,
+                  l10n.premiumPlayHint,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -716,27 +692,21 @@ class _PremiumCard extends StatelessWidget {
                 _FeatureRow(text: l10n.premiumFeature2),
                 _FeatureRow(text: l10n.premiumFeature3),
                 const SizedBox(height: 16),
-                AppGradientButton(
-                  label: paypalActivating ? l10n.premiumPayPalActivating : l10n.subscribePayPal,
-                  icon: Icons.payment_outlined,
-                  loading: paypalActivating,
-                  onPressed: paypalActivating ? null : onSubscribePayPal,
-                ),
-                if (paypalPending && onActivatePayPal != null) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    onPressed: paypalActivating ? null : onActivatePayPal,
-                    child: Text(l10n.premiumActivatePayPal),
-                  ),
-                ],
-                if (onSubscribePlayStore != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton(
+                if (onSubscribePlayStore != null)
+                  AppGradientButton(
+                    label: l10n.subscribePlayStore,
+                    icon: Icons.shop_rounded,
                     onPressed: onSubscribePlayStore,
-                    child: Text(l10n.subscribePlayStore),
+                  )
+                else
+                  Text(
+                    l10n.premiumPlayOnly,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ],
                 if (onRestore != null) ...[
+                  const SizedBox(height: 8),
                   TextButton(
                     onPressed: onRestore,
                     child: Text(l10n.restorePurchases),

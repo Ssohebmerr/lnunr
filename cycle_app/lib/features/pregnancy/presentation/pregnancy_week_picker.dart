@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/pregnancy_development_content.dart';
 import '../data/pregnancy_growth_display.dart';
 import 'fetal_week_illustration.dart';
+import 'pregnancy_baby_hero_3d.dart';
 
 /// Horizontal week scrubber (Flo-style) centered on current gestational week.
 class PregnancyWeekPicker extends StatelessWidget {
@@ -84,6 +85,40 @@ class PregnancyBabyHeroCard extends StatelessWidget {
   final int week;
   final String lang;
 
+  String _fruitEmoji(String fruitEn) {
+    switch (fruitEn.toLowerCase()) {
+      case 'poppy seed': return '🌱';
+      case 'sesame seed': return '🌰';
+      case 'lentil': return '🫘';
+      case 'blueberry': return '🫐';
+      case 'raspberry': return '🍓';
+      case 'olive': return '🫒';
+      case 'prune': return '🍇';
+      case 'lime': return '🍋';
+      case 'lemon': return '🍋';
+      case 'apple': return '🍎';
+      case 'peach': return '🍑';
+      case 'pear': return '🍐';
+      case 'avocado': return '🥑';
+      case 'onion': return '🧅';
+      case 'sweet potato': return '🥔';
+      case 'mango': return '🥭';
+      case 'banana': return '🍌';
+      case 'coconut': return '🥥';
+      case 'grapefruit': return '🍊';
+      case 'cantaloupe': return '🍈';
+      case 'papaya': return '🍍';
+      case 'cabbage': return '🥬';
+      case 'cauliflower': return '🥦';
+      case 'cucumber': return '🥒';
+      case 'pineapple': return '🍍';
+      case 'squash': return '🎃';
+      case 'watermelon': return '🍉';
+      case 'pumpkin': return '🎃';
+      default: return '🍊';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -113,12 +148,11 @@ class PregnancyBabyHeroCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Center(
-            child: FetalWeekIllustration(
-              week: week,
-              size: 240,
-              hero: true,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: PregnancyBabyHero3DCard(week: week, size: 240),
             ),
           ),
           const SizedBox(height: 14),
@@ -136,7 +170,10 @@ class PregnancyBabyHeroCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.restaurant_rounded, size: 16, color: theme.colorScheme.primary),
+                  Text(
+                    _fruitEmoji(info.fruitEn),
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     l10n.pregnancySizeLike(info.fruitFor(lang)),

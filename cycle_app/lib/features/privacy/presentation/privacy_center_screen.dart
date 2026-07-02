@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/privacy/consent_data_service.dart';
@@ -7,6 +10,7 @@ import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/privacy/privacy_constants.dart';
 import '../../../core/storage/user_prefs.dart';
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,6 +38,206 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
   void initState() {
     super.initState();
     _loadConsents();
+  }
+
+  Future<void> _exportLocalData() async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final theme = Theme.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      final db = await MenstrualCycleDbHelper.instance.database;
+      final List<Map<String, dynamic>> allRows = await db!.query('tblDailyLogs');
+      
+      final p = await SharedPreferences.getInstance();
+      final Map<String, dynamic> prefsMap = {};
+      for (final key in p.getKeys()) {
+        if (key == 'uid' || key.contains('token') || key.contains('fcm') || key.contains('key')) continue;
+        final val = p.get(key);
+        if (val is String || val is int || val is double || val is bool || val is List<String>) {
+          prefsMap[key] = val;
+        }
+      }
+
+      final backupData = {
+        'version': 1,
+        'dailyLogs': allRows,
+        'preferences': prefsMap,
+      };
+
+      final jsonStr = jsonEncode(backupData);
+      await Clipboard.setData(ClipboardData(text: jsonStr));
+
+      if (mounted) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(isAr ? 'تم تصدير البيانات' : 'Data Exported'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(isAr
+                      ? 'تم نسخ رمز النسخة الاحتياطية بنجاح إلى الحافظة. يمكنك حفظه في مكان آمن لاستعادته لاحقاً.'
+                      : 'Backup code copied to clipboard successfully. You can save it somewhere safe to restore later.'),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        jsonStr,
+                        style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(isAr ? 'موافق' : 'OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text(isAr ? 'فشل تصدير البيانات: $e' : 'Export failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importLocalData() async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final inputController = TextEditingController();
+
+    final String? pasteStr = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isAr ? 'استيراد البيانات' : 'Import Data'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(isAr
+                ? 'ألصق رمز النسخة الاحتياطية الذي قمت بتصديره سابقاً لتتم استعادتها.'
+                : 'Paste the backup code you exported earlier to restore your data.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: inputController,
+              maxLines: 6,
+              decoration: InputDecoration(
+                hintText: isAr ? 'ألصق الرمز هنا...' : 'Paste backup code here...',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx, inputController.text.trim());
+            },
+            child: Text(isAr ? 'استيراد' : 'Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (pasteStr == null || pasteStr.isEmpty) return;
+
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(pasteStr);
+      final List<dynamic>? logs = decoded['dailyLogs'];
+      final Map<String, dynamic>? prefs = decoded['preferences'];
+
+      if (logs == null) {
+        throw Exception('No dailyLogs key found');
+      }
+
+      final db = await MenstrualCycleDbHelper.instance.database;
+      await db!.transaction((txn) async {
+        await txn.delete('tblDailyLogs');
+        for (final row in logs) {
+          if (row is Map<String, dynamic>) {
+            await txn.insert('tblDailyLogs', row);
+          }
+        }
+      });
+
+      if (prefs != null) {
+        final p = await SharedPreferences.getInstance();
+        for (final key in prefs.keys) {
+          final val = prefs[key];
+          if (val is bool) {
+            await p.setBool(key, val);
+          } else if (val is int) {
+            await p.setInt(key, val);
+          } else if (val is double) {
+            await p.setDouble(key, val);
+          } else if (val is String) {
+            await p.setString(key, val);
+          } else if (val is List) {
+            await p.setStringList(key, List<String>.from(val));
+          }
+        }
+      }
+
+      if (mounted) {
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text(isAr ? 'تم استيراد البيانات' : 'Data Imported'),
+            content: Text(isAr
+                ? 'تمت استعادة البيانات والخيارات بنجاح. يرجى إعادة تشغيل التطبيق لتطبيق كافة التغييرات.'
+                : 'Data and preferences successfully restored. Please restart the app to apply all changes.'),
+            actions: [
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _loadConsents();
+                },
+                child: Text(isAr ? 'موافق' : 'OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(isAr ? 'خطأ في الاستيراد' : 'Import Error'),
+            content: Text(isAr
+                ? 'رمز النسخة الاحتياطية غير صالح أو تالف. يرجى التأكد من نسخ الرمز بالكامل.'
+                : 'The backup code is invalid or corrupted. Please make sure you copied the entire code.'),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(isAr ? 'موافق' : 'OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadConsents() async {
@@ -211,11 +415,18 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.privacyCenterTitle),
       ),
       body: AppMeshBackground(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+            16,
+            16,
+          ),
           children: [
             AppGlassCard(
               child: Column(
@@ -329,12 +540,14 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                     children: [
                       Icon(Icons.calculate_outlined, color: theme.colorScheme.primary),
                       const SizedBox(width: 8),
-                      Text('Stealth Mode', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                      Text(l10n.stealthTitle,
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700)),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Disguise the app as a calculator. Enter your secret PIN + = to unlock.',
+                    l10n.stealthDescription,
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8),
@@ -344,36 +557,122 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                     value: _stealthMode,
                     onChanged: (v) async {
                       if (v) {
-                        // Show PIN setup dialog
+                        final messenger = ScaffoldMessenger.of(context);
                         final pin = await _showPinDialog();
                         if (pin == null || pin.length < 4) return;
                         await UserPrefs.setStealthModePin(pin);
                         await UserPrefs.setStealthModeEnabled(true);
-                        if (mounted) {
-                          setState(() => _stealthMode = true);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.stealthActivated)),
-                          );
-                        }
+                        if (!mounted) return;
+                        setState(() => _stealthMode = true);
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(l10n.stealthActivated)),
+                        );
                       } else {
                         await UserPrefs.setStealthModeEnabled(false);
                         if (mounted) setState(() => _stealthMode = false);
                       }
                     },
                   ),
-                  if (_stealthMode)
+                  if (_stealthMode) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        'To unlock: open the calculator, type your PIN, then press =',
+                        l10n.stealthUnlockHint,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    // Quick emergency hide — instantly shows the calculator.
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => context.push('/stealth'),
+                        icon: const Icon(Icons.visibility_off_rounded),
+                        label: Text(l10n.stealthHideNow),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.stealthHideNowHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+            // Local Backup & Restore
+            Builder(
+              builder: (context) {
+                final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                return AppGlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.backup_outlined, color: theme.colorScheme.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            isAr ? 'النسخ الاحتياطي المحلي' : 'Local Backup & Restore',
+                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isAr
+                            ? 'قم بتصدير أو استيراد بيانات دورتك وعافيتك محلياً بشكل آمن وبخصوصية تامة.'
+                            : 'Export or import your cycle and wellness data locally. Your data remains fully private.',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _exportLocalData,
+                              icon: const Icon(Icons.download_rounded, size: 18),
+                              label: Text(isAr ? 'تصدير البيانات' : 'Export Data'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _importLocalData,
+                              icon: const Icon(Icons.upload_rounded, size: 18),
+                              label: Text(isAr ? 'استيراد البيانات' : 'Import Data'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             AppGlassCard(
@@ -409,7 +708,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                     title: Text(l10n.contactSupport),
                     subtitle: Text(PrivacyConstants.supportEmail),
                     trailing: const Icon(Icons.open_in_new),
-                    onTap: openSupportEmail,
+                    onTap: () => openSupportEmail(context),
                   ),
                   const Divider(height: 1),
                   ListTile(

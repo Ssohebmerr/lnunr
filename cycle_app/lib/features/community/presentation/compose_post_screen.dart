@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,8 @@ import '../../../core/media/media_upload_service.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/models/community.dart';
@@ -230,18 +233,35 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final lang = Localizations.localeOf(context).languageCode;
     final communityName = widget.community.nameForLocale(lang);
     final isBusy = _sending || _uploadingMedia;
     final gradient = CommunityTopicPalette.gradient(widget.community.topic);
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: AppGlassCard(
+            radius: AppRadius.pill,
+            padding: const EdgeInsets.all(8),
+            onTap: () => Navigator.of(context).maybePop(),
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               widget.isEditing ? l10n.communityEditPost : l10n.communityNewPost,
@@ -254,6 +274,8 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -279,11 +301,17 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      body: Container(
+        decoration: AppTheme.gradientBackground(context),
+        child: Padding(
+          padding: EdgeInsets.only(top: topInset),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -349,13 +377,27 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                         PostType.question => l10n.postTypeQuestion,
                         PostType.tip => l10n.postTypeTip,
                         PostType.vent => l10n.postTypeVent,
+                        PostType.milestone => l10n.postTypeMilestone,
+                        PostType.poll => l10n.postTypePoll,
+                      };
+                      final icon = switch (t) {
+                        PostType.support => Icons.favorite_rounded,
+                        PostType.question => Icons.help_outline_rounded,
+                        PostType.tip => Icons.lightbulb_outline_rounded,
+                        PostType.vent => Icons.whatshot_rounded,
+                        PostType.milestone => Icons.emoji_events_rounded,
+                        PostType.poll => Icons.poll_rounded,
                       };
                       return Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),
                         child: CommunityChoiceChip(
                           label: label,
+                          icon: icon,
                           selected: _type == t,
-                          onTap: () => setState(() => _type = t),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _type = t);
+                          },
                         ),
                       );
                     }).toList(),
@@ -364,10 +406,14 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                    color: isDark
+                        ? AuraColors.darkCard.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(AppRadius.xl),
                     border: Border.all(
-                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.04),
                     ),
                   ),
                   child: TextField(
@@ -424,93 +470,128 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
               ],
             ),
           ),
-          Material(
-            elevation: 8,
-            shadowColor: Colors.black26,
-            color: theme.colorScheme.surface,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Row(
-                  children: [
-                    if (!widget.isEditing)
-                      IconButton.filledTonal(
-                        tooltip: l10n.communityAddMedia,
-                        icon: const Icon(Icons.add_photo_alternate_outlined),
-                        onPressed: isBusy ? null : _showMediaPickerSheet,
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: theme.colorScheme.outlineVariant
+                            .withValues(alpha: 0.3),
                       ),
-                    if (!widget.isEditing) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => setState(() => _isAnonymous = !_isAnonymous),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _isAnonymous
-                                ? theme.colorScheme.primaryContainer
-                                : theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            border: Border.all(
-                              color: _isAnonymous
-                                  ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                                  : Colors.transparent,
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!widget.isEditing) ...[
+                            Row(
+                              children: [
+                                IconButton.filledTonal(
+                                  tooltip: l10n.communityAddMedia,
+                                  icon: const Icon(
+                                      Icons.add_photo_alternate_outlined),
+                                  onPressed:
+                                      isBusy ? null : _showMediaPickerSheet,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: GestureDetector(
+                                    onTap: () => setState(
+                                        () => _isAnonymous = !_isAnonymous),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _isAnonymous
+                                            ? theme.colorScheme.primaryContainer
+                                            : theme.colorScheme
+                                                .surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.pill),
+                                        border: Border.all(
+                                          color: _isAnonymous
+                                              ? theme.colorScheme.primary
+                                                  .withValues(alpha: 0.3)
+                                              : Colors.transparent,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _isAnonymous
+                                                ? Icons.visibility_off_rounded
+                                                : Icons.person_outline_rounded,
+                                            size: 16,
+                                            color: _isAnonymous
+                                                ? theme.colorScheme
+                                                    .onPrimaryContainer
+                                                : theme.colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              l10n.communityPostAnonymously,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                color: _isAnonymous
+                                                    ? theme.colorScheme
+                                                        .onPrimaryContainer
+                                                    : theme.colorScheme
+                                                        .onSurfaceVariant,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            const SizedBox(height: 10),
+                          ],
+                          Row(
                             children: [
                               Icon(
-                                _isAnonymous
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.person_outline_rounded,
-                                size: 16,
-                                color: _isAnonymous
-                                    ? theme.colorScheme.onPrimaryContainer
-                                    : theme.colorScheme.onSurfaceVariant,
+                                Icons.shield_outlined,
+                                size: 14,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                l10n.communityPostAnonymously,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: _isAnonymous
-                                      ? theme.colorScheme.onPrimaryContainer
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
+                              Expanded(
+                                child: Text(
+                                  l10n.communityTextOnlyNote,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    Icon(
-                      Icons.shield_outlined,
-                      size: 14,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        l10n.communityTextOnlyNote,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

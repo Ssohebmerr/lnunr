@@ -39,7 +39,7 @@ void main() {
   });
 
   group('CommunityComment.isVisibleTo', () {
-    CommunityComment _comment({
+    CommunityComment makeComment({
       bool hidden = false,
       String moderationStatus = 'approved',
       String authorUid = 'u1',
@@ -55,24 +55,24 @@ void main() {
         );
 
     test('approved comment is visible to everyone', () {
-      final c = _comment();
+      final c = makeComment();
       expect(c.isVisibleTo('other'), isTrue);
       expect(c.isVisibleTo(null), isTrue);
     });
 
     test('hidden comment is not visible', () {
-      final c = _comment(hidden: true);
+      final c = makeComment(hidden: true);
       expect(c.isVisibleTo('u1'), isFalse);
       expect(c.isVisibleTo(null), isFalse);
     });
 
     test('rejected comment is not visible', () {
-      final c = _comment(moderationStatus: 'rejected');
+      final c = makeComment(moderationStatus: 'rejected');
       expect(c.isVisibleTo('u1'), isFalse);
     });
 
     test('pending_review comment is only visible to author', () {
-      final c = _comment(moderationStatus: 'pending_review', authorUid: 'u1');
+      final c = makeComment(moderationStatus: 'pending_review', authorUid: 'u1');
       expect(c.isVisibleTo('u1'), isTrue);
       expect(c.isVisibleTo('other'), isFalse);
       expect(c.isVisibleTo(null), isFalse);

@@ -12,7 +12,7 @@ A private menstrual cycle tracker with an AI assistant — built on top of the `
 - **Community** — anonymous communities, posts, comments, and likes on Firestore with AI moderation
 - **Self-care** — phase-based tips, breathing exercises, affirmations, and a journal
 - **Cloud sync** — encrypted, consent-gated backups to Firestore + local export/import
-- **Premium** — PayPal checkout via Firebase Cloud Functions
+- **Premium** — Google Play Billing subscription (`premium_monthly`) verified server-side
 - **Privacy first** — consent manager, privacy center, full data deletion; works fully offline without an account
 - **Home screen widget** and **smartwatch connectivity**
 - **Bilingual UI** — Arabic (default) and English; the cycle widget itself supports 19 languages
@@ -30,7 +30,7 @@ menstrual_cycle_widget-master/   # workspace root
 │   │   ├── menstrudel/          # vendored Menstrudel module (own SQLite DB)
 │   │   ├── menstrudel_integration/  # glue layer (init, providers, wellness hub)
 │   │   └── l10n/                # app ARB files (en, ar)
-│   ├── firebase/functions/      # Cloud Functions: chat, moderate, analyze, PayPal
+│   ├── firebase/functions/      # Cloud Functions: AI, Play Billing verify + RTDN
 │   ├── firestore.rules
 │   └── docs/                    # Google Play data-safety notes
 └── menstrual_cycle_widget-master/   # local package dependency (cycle UI + encrypted DB)
@@ -81,7 +81,7 @@ firebase deploy --only hosting
 
 To grant admin access, create an empty document at `admins/{uid}` in Firestore (from the Firebase console) for each admin account. The dashboard shows the UID of any signed-in non-admin to make this easy.
 
-Hosting also serves the PayPal return pages (`/premium/success`, `/premium/cancel`) and a public landing page.
+Hosting also serves legal pages and a public landing page. Premium is purchased in-app via Google Play only.
 
 ## Release builds
 

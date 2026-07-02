@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/src/factory_impl.dart' show databaseFactorySqflitePlugin;
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 void main() {

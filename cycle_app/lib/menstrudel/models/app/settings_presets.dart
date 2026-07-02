@@ -34,4 +34,16 @@ final Map<UserGoalTypes, GoalPreset> kGoalPresets = {
     sexNav: false,
     sanitaryNav: true,
   ),
+  UserGoalTypes.menopause: const GoalPreset(
+    sexNav: false,
+    sanitaryNav: true,
+  ),
+  UserGoalTypes.pcos: const GoalPreset(
+    sexNav: true,
+    sanitaryNav: true,
+  ),
+  UserGoalTypes.postpartum: const GoalPreset(
+    sexNav: false,
+    sanitaryNav: true,
+  ),
 };

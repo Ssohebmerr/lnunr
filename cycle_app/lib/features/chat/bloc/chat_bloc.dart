@@ -44,7 +44,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   void _clearSending(Emitter<ChatState> emit) {
     if (state is ChatLoaded) {
-      emit((state as ChatLoaded).copyWith(isSending: false));
+      emit((state as ChatLoaded).copyWith(
+        isSending: false,
+        clearPartial: true,
+      ));
     }
   }
 
@@ -95,7 +98,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         : const <ChatMessage>[];
 
     if (state is ChatLoaded) {
-      emit((state as ChatLoaded).copyWith(isSending: true, clearNotice: true));
+      emit((state as ChatLoaded).copyWith(
+        isSending: true,
+        clearNotice: true,
+        clearPartial: true,
+      ));
     } else {
       emit(ChatLoaded(messages: const [], isSending: true));
     }
@@ -112,12 +119,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       final context = await contextEngine.buildAnonymizedContext();
-      final reply = await repository.requestAiReply(
+      final reply = await _streamReplyWithFallback(
+        emit: emit,
         message: text,
         cycleContext: context,
         mode: mode,
         history: history,
-        unavailableMessage: _unavailableReply,
       );
       await repository.saveMessage(
         uid,
@@ -144,6 +151,46 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+  /// Streams the reply token-by-token via [ChatRepository.streamAiReply],
+  /// emitting partial state for live rendering. If the stream yields nothing
+  /// (e.g. no API key), falls back to a single-shot [requestAiReply].
+  Future<String> _streamReplyWithFallback({
+    required Emitter<ChatState> emit,
+    required String message,
+    required Map<String, dynamic> cycleContext,
+    required String mode,
+    required List<ChatMessage> history,
+    bool analyzeMode = false,
+  }) async {
+    final buffer = StringBuffer();
+    await for (final chunk in repository.streamAiReply(
+      message: message,
+      cycleContext: cycleContext,
+      mode: analyzeMode ? 'analyze' : mode,
+      history: history,
+    )) {
+      buffer.write(chunk);
+      if (state is ChatLoaded) {
+        emit((state as ChatLoaded).copyWith(
+          isSending: true,
+          partialReply: buffer.toString(),
+        ));
+      }
+    }
+
+    if (buffer.isNotEmpty) return buffer.toString();
+
+    // Stream produced nothing — fall back to single-shot call.
+    return repository.requestAiReply(
+      message: message,
+      cycleContext: cycleContext,
+      analyzeMode: analyzeMode,
+      mode: mode,
+      history: history,
+      unavailableMessage: _unavailableReply,
+    );
+  }
+
   Future<void> _onAnalyze(
     AnalyzeCycleRequested event,
     Emitter<ChatState> emit,
@@ -159,7 +206,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     if (state is ChatLoaded) {
-      emit((state as ChatLoaded).copyWith(isSending: true, clearNotice: true));
+      emit((state as ChatLoaded).copyWith(
+        isSending: true,
+        clearNotice: true,
+        clearPartial: true,
+      ));
     } else {
       emit(ChatLoaded(messages: const [], isSending: true));
     }
@@ -178,11 +229,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       final context = await contextEngine.buildAnonymizedContext();
-      final reply = await repository.requestAiReply(
+      final reply = await _streamReplyWithFallback(
+        emit: emit,
         message: prompt,
         cycleContext: context,
+        mode: 'analyze',
+        history: const [],
         analyzeMode: true,
-        unavailableMessage: _unavailableReply,
       );
       await repository.saveMessage(
         uid,

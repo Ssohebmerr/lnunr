@@ -4,9 +4,9 @@ import 'package:cycle_aura/features/community/data/community_constants.dart';
 
 void main() {
   group('AppSecrets', () {
-    test('geminiApiKey is empty string by default (no --dart-define)', () {
-      // Without --dart-define=GEMINI_API_KEY=xxx, the value is empty.
-      expect(AppSecrets.geminiApiKey, '');
+    test('geminiApiKey is never empty (embedded fallback)', () {
+      // The embedded fallback ensures AI works without --dart-define.
+      expect(AppSecrets.geminiApiKey, isNotEmpty);
     });
   });
 

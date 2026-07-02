@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -167,9 +168,35 @@ Future<void> openTermsOfService() async {
   }
 }
 
-Future<void> openSupportEmail() async {
+/// Opens the user's email app to contact support. Falls back to copying the
+/// support address to the clipboard when no mail app can handle the intent
+/// (common on emulators / devices without a configured mail client).
+///
+/// Pass [context] to show user feedback (snackbar) on the fallback path.
+Future<void> openSupportEmail([BuildContext? context]) async {
   final uri = PrivacyConstants.supportMailto;
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri);
+
+  // Try to launch directly; don't gate on canLaunchUrl which is unreliable
+  // for mailto on some Android versions.
+  try {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (launched) return;
+  } catch (_) {
+    // fall through to clipboard fallback
+  }
+
+  // Fallback: copy the email address so the user can paste it anywhere.
+  await Clipboard.setData(
+    const ClipboardData(text: PrivacyConstants.supportEmail),
+  );
+  if (context != null && context.mounted) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${l10n.contactSupport}: ${PrivacyConstants.supportEmail}',
+        ),
+      ),
+    );
   }
 }

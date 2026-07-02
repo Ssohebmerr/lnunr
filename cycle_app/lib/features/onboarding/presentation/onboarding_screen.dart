@@ -6,11 +6,13 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/age/age_gate.dart';
-import '../../../core/locale/locale_cubit.dart';
+import '../../../core/locale/locale_controller.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/notifications/notification_rationale_dialog.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../../core/security/cycle_encryption_keys.dart';
+import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
@@ -126,19 +128,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _lastPeriod = picked);
+    if (picked != null) {
+      setState(() => _lastPeriod = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
+  Future<void> _ensureCycleWidgetReady() async {
+    if (MenstrualCycleWidget.instance != null) return;
+    final keys = await CycleEncryptionKeys.loadOrCreate();
+    MenstrualCycleWidget.init(
+      secretKey: keys['secretKey'],
+      ivKey: keys['ivKey'],
+    );
   }
 
   Future<void> _finish() async {
     if (!_privacyAccepted || _saving) return;
     setState(() => _saving = true);
 
-    final lang = context.read<LocaleCubit>().locale.languageCode;
+    final lang = context.read<LocaleController>().locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
 
+    var enteredHome = false;
     try {
       await LocalProfile.saveAvatarIndex(_avatarIndex);
+      await _ensureCycleWidgetReady();
       await _sync.completeOnboarding(
         cycleLength: _cycleLength,
         periodDuration: _periodDuration,
@@ -148,14 +164,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         displayName: _nameController.text.trim(),
         goal: _goal,
       );
+      if (!mounted) return;
       await showNotificationRationale(context);
-      await NotificationService.scheduleFromPrefs();
-      if (mounted) context.go('/home');
+      try {
+        await NotificationService.scheduleFromPrefs();
+      } catch (e) {
+        debugPrint('Onboarding notification schedule skipped: $e');
+      }
+      if (mounted) {
+        router.go('/home');
+        enteredHome = true;
+      }
     } catch (e, st) {
       debugPrint('Onboarding finish failed: $e\n$st');
-      if (mounted) {
+      final done = await UserPrefs.isOnboardingDone();
+      if (mounted && done && !enteredHome) {
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.onboardingPartialSave)),
+        );
+        router.go('/home');
+      } else if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
     } finally {
@@ -170,6 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: AppTheme.gradientBackground(context),
         child: SafeArea(
@@ -249,13 +280,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: AppGradientButton(
-                  label: _step == 3 ? l10n.getStarted : l10n.continueBtn,
-                  loading: _saving,
-                  onPressed: _canContinue() ? _next : null,
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_step == _totalSteps - 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    l10n.onboardingReadyHint,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
+              AppGradientButton(
+                label: _step == _totalSteps - 1
+                    ? l10n.getStarted
+                    : l10n.continueBtn,
+                loading: _saving,
+                onPressed: _canContinue() ? _next : null,
               ),
             ],
           ),
@@ -343,6 +394,9 @@ class _GoalStep extends StatelessWidget {
     UserGoalTypes.pregnant,
     UserGoalTypes.conceive,
     UserGoalTypes.avoid,
+    UserGoalTypes.menopause,
+    UserGoalTypes.pcos,
+    UserGoalTypes.postpartum,
   ];
 
   final UserGoalTypes selected;
@@ -438,20 +492,33 @@ class _CycleStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPregnant = goal.isPregnancyMode;
+    final isCycleMode = goal.isCycleGoalMode;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         Text(
-          isPregnant ? l10n.onboardingPregnancyDataTitle : l10n.onboardingCycleTitle,
+          isPregnant
+              ? l10n.onboardingPregnancyDataTitle
+              : (isCycleMode
+                  ? l10n.onboardingCycleTitle
+                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
+                      ? 'تفاصيل سريعة'
+                      : 'A few quick details')),
           style: theme.textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
         Text(
-          isPregnant ? l10n.onboardingPregnancyDataSubtitle : l10n.onboardingCycleSubtitle,
+          isPregnant
+              ? l10n.onboardingPregnancyDataSubtitle
+              : (isCycleMode
+                  ? l10n.onboardingCycleSubtitle
+                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
+                      ? 'سنسأل فقط عن آخر دورة لتبدأ التتبّع.'
+                      : 'We only ask for the basics so we can start tracking.')),
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 20),
-        if (!isPregnant) ...[
+        if (isCycleMode) ...[
           _StepperCard(label: l10n.cycleLength, value: cycleLength, onChanged: onCycleLength),
           const SizedBox(height: 12),
           _StepperCard(label: l10n.periodDuration, value: periodDuration, onChanged: onPeriodDuration),

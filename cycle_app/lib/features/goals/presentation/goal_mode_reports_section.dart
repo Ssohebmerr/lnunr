@@ -136,6 +136,132 @@ class GoalModeReportsSection extends StatelessWidget {
       );
     }
 
+    if (goal.isPregnancyMode) {
+      return ReportsMetricGrid(
+        children: [
+          ReportsMetricTile(
+            icon: Icons.pregnant_woman_rounded,
+            label: l10n.pregnancyWeekLabel(data.pregnancyWeek.clamp(1, 42)),
+            value: l10n.pregnancyWeekShort,
+            accent: const Color(0xFFEC407A),
+          ),
+          ReportsMetricTile(
+            icon: Icons.event_outlined,
+            label: l10n.pregnancyDueDate(
+              data.expectedDueDate.isEmpty ? '—' : data.expectedDueDate,
+            ),
+            value: data.expectedDueDate,
+            accent: theme.colorScheme.primary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.calendar_today,
+            label: l10n.reportCycleDay,
+            value: '${data.cycleDay}',
+            accent: theme.colorScheme.secondary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.timeline_rounded,
+            label: l10n.homeRegularity,
+            value: '${data.cycleRegularity.round()}%',
+            accent: AuraColors.peachGold,
+          ),
+        ],
+      );
+    }
+
+    if (goal == UserGoalTypes.menopause) {
+      return ReportsMetricGrid(
+        children: [
+          ReportsMetricTile(
+            icon: Icons.timeline_rounded,
+            label: l10n.homeRegularity,
+            value: '${data.cycleRegularity.round()}%',
+            accent: const Color(0xFF8D6E63),
+          ),
+          ReportsMetricTile(
+            icon: Icons.loop_rounded,
+            label: l10n.reportAvgCycle,
+            value: '${data.avgCycleLength} ${l10n.homeDayShort}',
+            accent: theme.colorScheme.secondary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.event_outlined,
+            label: l10n.nextPeriod,
+            value: data.nextPeriod,
+            accent: theme.colorScheme.primary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.calendar_view_month_rounded,
+            label: l10n.reportTotalCycles,
+            value: '${data.totalCycles}',
+            accent: AuraColors.peachGold,
+          ),
+        ],
+      );
+    }
+
+    if (goal == UserGoalTypes.pcos) {
+      return ReportsMetricGrid(
+        children: [
+          ReportsMetricTile(
+            icon: Icons.timeline_rounded,
+            label: l10n.homeRegularity,
+            value: '${data.cycleRegularity.round()}%',
+            accent: const Color(0xFF26A69A),
+          ),
+          ReportsMetricTile(
+            icon: Icons.loop_rounded,
+            label: l10n.reportAvgCycle,
+            value: '${data.avgCycleLength} ${l10n.homeDayShort}',
+            accent: theme.colorScheme.secondary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.water_drop_outlined,
+            label: l10n.reportAvgPeriod,
+            value: '${data.avgPeriodDuration} ${l10n.homeDayShort}',
+            accent: theme.colorScheme.primary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.calendar_view_month_rounded,
+            label: l10n.reportTotalCycles,
+            value: '${data.totalCycles}',
+            accent: AuraColors.peachGold,
+          ),
+        ],
+      );
+    }
+
+    if (goal == UserGoalTypes.postpartum) {
+      return ReportsMetricGrid(
+        children: [
+          ReportsMetricTile(
+            icon: Icons.healing_outlined,
+            label: l10n.homeCycleDay(data.cycleDay),
+            value: '${data.cycleDay}',
+            accent: const Color(0xFFEC407A),
+          ),
+          ReportsMetricTile(
+            icon: Icons.event_outlined,
+            label: l10n.nextPeriod,
+            value: data.nextPeriod,
+            accent: theme.colorScheme.primary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.bedtime_outlined,
+            label: l10n.homeDayShort,
+            value: '7.5h',
+            accent: theme.colorScheme.secondary,
+          ),
+          ReportsMetricTile(
+            icon: Icons.favorite_outline,
+            label: l10n.homeDayShort,
+            value: '6',
+            accent: AuraColors.peachGold,
+          ),
+        ],
+      );
+    }
+
     return ReportsMetricGrid(
       children: [
         ReportsMetricTile(
@@ -180,6 +306,18 @@ class GoalModeReportsSection extends StatelessWidget {
     return switch (goal) {
       UserGoalTypes.conceive => l10n.goalModeConceiveReportStats,
       UserGoalTypes.avoid => l10n.goalModeAvoidReportStats,
+      UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
+          ? 'نظرة على الحمل'
+          : 'Pregnancy overview',
+      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
+          ? 'نظرة على سنّ الأمل'
+          : 'Menopause overview',
+      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
+          ? 'نظرة على إدارة PCOS'
+          : 'PCOS overview',
+      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
+          ? 'نظرة على الاستشفاء'
+          : 'Recovery overview',
       _ => l10n.goalModeGeneralReportStats,
     };
   }

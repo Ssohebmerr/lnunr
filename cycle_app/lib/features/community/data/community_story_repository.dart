@@ -148,8 +148,8 @@ class CommunityStoryRepository {
         DateTime.now().add(const Duration(hours: 24)),
       ),
       'authorAvatarIndex': authorAvatarIndex,
-      if (textOverlay != null) 'textOverlay': textOverlay,
-      if (backgroundColor != null) 'backgroundColor': backgroundColor,
+      'textOverlay': ?textOverlay,
+      'backgroundColor': ?backgroundColor,
       'viewCount': 0,
     });
   }

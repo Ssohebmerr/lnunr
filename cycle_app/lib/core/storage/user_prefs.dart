@@ -88,4 +88,12 @@ class UserPrefs {
     final p = await SharedPreferences.getInstance();
     await p.setString(_stealthPinKey, pin);
   }
+
+  static bool _sessionUnlocked = false;
+
+  static bool isSessionUnlocked() => _sessionUnlocked;
+
+  static void setSessionUnlocked(bool value) {
+    _sessionUnlocked = value;
+  }
 }

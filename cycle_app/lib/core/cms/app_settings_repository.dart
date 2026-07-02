@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'app_settings.dart';
@@ -15,7 +17,10 @@ class AppSettingsRepository {
   Future<AppSettings> fetch() async {
     if (_cache != null) return _cache!;
     try {
-      final snap = await _firestore.doc(docPath).get();
+      final snap = await _firestore
+          .doc(docPath)
+          .get()
+          .timeout(const Duration(seconds: 5));
       _cache = AppSettings.fromMap(snap.data());
       return _cache!;
     } catch (_) {

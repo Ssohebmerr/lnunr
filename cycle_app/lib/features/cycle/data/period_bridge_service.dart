@@ -44,6 +44,10 @@ class PeriodBridgeService {
 
       final db = MenstrualCycleDbHelper.instance;
       final current = await _widgetPeriodDays(db);
+      if (target.isEmpty && current.isNotEmpty) {
+        // Menstrudel has no bleeding logs yet — keep widget onboarding dates.
+        return false;
+      }
       if (setEquals(current, target)) return false;
 
       await db.clearPeriodLog(api.getCustomerId());

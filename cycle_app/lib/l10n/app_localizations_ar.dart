@@ -199,30 +199,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get premiumFeature3 => 'دعم أولوية';
 
   @override
-  String get subscribePayPal => 'الاشتراك عبر PayPal';
-
-  @override
   String get subscribePlayStore => 'الاشتراك عبر Google Play';
 
   @override
-  String get premiumPayPalHint =>
-      'ستدفعين بأمان عبر PayPal، ثم ارجعي للتطبيق لتفعيل Premium.';
-
-  @override
-  String get premiumPayPalReturn => 'أكملي الدفع في PayPal ثم ارجعي للتطبيق.';
-
-  @override
-  String get premiumPayPalActivating => 'جاري تفعيل اشتراك Premium…';
-
-  @override
-  String get premiumPayPalActivated => 'تم تفعيل Premium. شكراً لك!';
-
-  @override
-  String get premiumPayPalUnavailable =>
-      'الدفع عبر PayPal غير متاح حالياً. حاولي لاحقاً أو تواصلي مع الدعم.';
-
-  @override
-  String get premiumActivatePayPal => 'أكملت الدفع في PayPal';
+  String get premiumPlayHint =>
+      'الدفع يتم بأمان عبر Google Play. يمكنكِ إدارة الاشتراك أو إلغاؤه من إعدادات متجر Play في أي وقت.';
 
   @override
   String get premiumPlayOnly => 'الاشتراك متاح على أندرويد عبر Google Play.';
@@ -319,6 +300,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncFailed => 'فشلت المزامنة. حاولي مرة أخرى.';
+
+  @override
+  String get syncNeedsPremium => 'النسخ الاحتياطي السحابي ميزة بريميوم.';
+
+  @override
+  String get syncNeedsConsent => 'فعّلي موافقة النسخ السحابي أولاً.';
+
+  @override
+  String get syncNotSignedIn =>
+      'سجّلي الدخول لاستخدام النسخ الاحتياطي السحابي.';
+
+  @override
+  String get syncCycleUnavailable =>
+      'بيانات الدورة غير جاهزة بعد. افتحي الرئيسية ثم حاولي مرة أخرى.';
+
+  @override
+  String get syncNoBackupFound => 'لا توجد نسخة احتياطية سحابية بعد.';
+
+  @override
+  String get localBackupExportSuccess => 'النسخة المحلية جاهزة للمشاركة.';
+
+  @override
+  String get localBackupExportFailed => 'تعذر تصدير النسخة الاحتياطية المحلية.';
+
+  @override
+  String get localBackupImportFailed => 'تعذر استيراد ملف النسخة الاحتياطية.';
 
   @override
   String get logSaved => 'تم حفظ السجل!';
@@ -421,6 +428,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get communityBrowse => 'تصفّح المجموعات';
+
+  @override
+  String get communityRecommendedTitle => 'موصى لك';
+
+  @override
+  String get communityJoinedBadge => 'منضمة';
 
   @override
   String get communitySetupTitle => 'اختاري اسمًا مستعارًا';
@@ -896,10 +909,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get doctorReportFailed =>
-      'لا توجد بيانات كافية. سجّلي دورتكِ أولاً ثم حاولي مجدداً.';
+      'بيانات الدورة غير جاهزة بعد. افتحي الشاشة الرئيسية ثم حاولي مجدداً.';
 
   @override
   String get doctorReportRetry => 'إعادة المحاولة';
+
+  @override
+  String get doctorReportLimitedData =>
+      'هذا التقرير مبني على بيانات محدودة. بعد حوالي شهر من التسجيل اليومي، تصبح التوقعات والأنماط أدق بكثير.';
+
+  @override
+  String get doctorReportAiTitle => 'ملاحظات المساعد الذكي';
+
+  @override
+  String get doctorReportAiSubtitle =>
+      'سياق مفيد لزيارة الطبيب — وليس تشخيصاً.';
+
+  @override
+  String get doctorReportAiLoading => 'الذكاء الاصطناعي يراجع بياناتك…';
+
+  @override
+  String get doctorReportAiFailed =>
+      'تعذر توليد ملاحظات الذكاء الاصطناعي الآن. بيانات الدورة أعلاه ما زالت متاحة.';
+
+  @override
+  String get doctorReportAiNeedsConsent =>
+      'فعّلي الذكاء الاصطناعي من إعدادات الخصوصية للحصول على ملاحظات مساعدة للتقرير.';
+
+  @override
+  String get doctorReportAiEnable => 'تفعيل المساعد الذكي';
 
   @override
   String get doctorReportCopy => 'نسخ';
@@ -960,6 +998,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthReportTitle => 'تقرير الصحة';
+
+  @override
+  String get healthReportClinicalSummary => 'الملخص السريري';
+
+  @override
+  String get healthReportObservedPatterns => 'الأنماط الملاحظة';
+
+  @override
+  String get healthReportDiscussionPoints => 'نقاط للمناقشة';
+
+  @override
+  String get doctorReportRefining => 'جاري إعداد الملخص السريري…';
 
   @override
   String get healthReportCreatedBy => 'صنع بواسطة Lune';
@@ -1198,6 +1248,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportCycleHealth => 'صحة الدورة';
 
   @override
+  String get hormoneIndicatorsTitle => 'مؤشرات الهرمونات';
+
+  @override
+  String get hormoneIndicatorsSubtitle => 'الإستروجين والبروجستيرون خلال دورتك';
+
+  @override
+  String get hormoneIndicatorsCaption =>
+      'مستويات هرمونية تقديرية بناءً على يوم الدورة وطولها.';
+
+  @override
   String get reportFertility => 'الخصوبة والحمل';
 
   @override
@@ -1286,9 +1346,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountGeminiKeySave => 'حفظ مفتاح Gemini';
 
   @override
-  String get widgetLanguageLabel => 'لغة الودجت (19 لغة)';
-
-  @override
   String get reportPatternFallback => 'نمط';
 
   @override
@@ -1307,6 +1364,203 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get postTypeVent => 'تفريغ';
+
+  @override
+  String get postTypeMilestone => 'إنجاز';
+
+  @override
+  String get postTypePoll => 'تصويت';
+
+  @override
+  String get weeklyRecapTitle => 'أسبوعك مع Lune';
+
+  @override
+  String get weeklyRecapPrompt =>
+      'لخّصي لي آخر 7 أيام بناءً على البيانات — ما الجميل وما الذي أركّز عليه الأسبوع المقبل.';
+
+  @override
+  String get weeklyRecapLoading => 'أحضّر ملخّصك الأسبوعي…';
+
+  @override
+  String get weeklyRecapRefresh => 'تحديث';
+
+  @override
+  String get dayLabelToday => 'اليوم';
+
+  @override
+  String get dayLabelYesterday => 'أمس';
+
+  @override
+  String aiActionLogged(String label) {
+    return 'تم التسجيل: $label';
+  }
+
+  @override
+  String aiActionLogMood(String mood) {
+    return 'سجّلي المزاج: $mood';
+  }
+
+  @override
+  String aiActionLogSymptom(String symptom) {
+    return 'سجّلي: $symptom';
+  }
+
+  @override
+  String aiActionLogWater(String count) {
+    return 'أضيفي $count ماء';
+  }
+
+  @override
+  String aiActionLogPain(String level) {
+    return 'سجّلي ألم $level/10';
+  }
+
+  @override
+  String get aiActionOpenLog => 'افتحي السجل';
+
+  @override
+  String get aiActionOpenInsights => 'عرض الإحصاءات';
+
+  @override
+  String get aiActionLogFailed => 'تعذّر الحفظ — افتحي السجل لإضافته';
+
+  @override
+  String get aiSuggestHowsMyDay => 'كيف يومي؟';
+
+  @override
+  String get aiSuggestMoodCheck => 'ساعديني أراجع مزاجي';
+
+  @override
+  String get aiSuggestFoodIdeas => 'أفكار طعام لليوم';
+
+  @override
+  String get aiSuggestExplainPhase => 'اشرحي لي المرحلة الحالية';
+
+  @override
+  String get aiSuggestSymptomCheck => 'هل هذه الأعراض طبيعية؟';
+
+  @override
+  String get aiSuggestPrep => 'حضّريني لزيارة الطبيب';
+
+  @override
+  String get aiSuggestEnergyBoost => 'بسرعة شدّي حيلي!';
+
+  @override
+  String get aiSuggestMoveToday => 'خطة حركة لليوم';
+
+  @override
+  String get aiSuggestSetGoal => 'حدّدي لي هدفاً صغيراً';
+
+  @override
+  String get adminTabUsers => 'المستخدمون';
+
+  @override
+  String get adminTabQA => 'أسئلة وأجوبة';
+
+  @override
+  String get adminTabBroadcast => 'إشعار جماعي';
+
+  @override
+  String get adminFilterPending => 'قيد الانتظار';
+
+  @override
+  String get adminFilterAnswered => 'تمت الإجابة';
+
+  @override
+  String get adminFilterAll => 'الكل';
+
+  @override
+  String adminQuestionsEmpty(String filter) {
+    return 'لا توجد أسئلة $filter بعد.';
+  }
+
+  @override
+  String get adminQAExpertAnswer => 'إجابة الخبير';
+
+  @override
+  String get adminPostsToday => 'منشورات اليوم';
+
+  @override
+  String get adminAiToday => 'طلبات AI اليوم';
+
+  @override
+  String get adminQuickActions => 'إجراءات سريعة';
+
+  @override
+  String get adminQuickViewReports => 'مراجعة البلاغات';
+
+  @override
+  String get adminQuickSendBroadcast => 'إرسال إشعار';
+
+  @override
+  String get adminQuickEditSettings => 'إعدادات التطبيق';
+
+  @override
+  String get adminConfirmBan => 'حظر هذا المستخدم؟';
+
+  @override
+  String get adminConfirmBanMsg =>
+      'سيفقد فوراً صلاحية المشاركة في المجتمعات. يمكنك إلغاء الحظر لاحقاً.';
+
+  @override
+  String get adminConfirmBroadcast => 'إرسال للجميع؟';
+
+  @override
+  String get adminConfirmBroadcastMsg =>
+      'سيُسلَّم هذا الإشعار لكل مستخدم مسجَّل. تأكد من العنوان والمحتوى قبل الإرسال.';
+
+  @override
+  String adminBroadcastSent(String sent, String failed) {
+    return 'تم الإرسال · $sent تم تسليمه، $failed فشل';
+  }
+
+  @override
+  String get adminConfirm => 'تأكيد';
+
+  @override
+  String get adminCancel => 'إلغاء';
+
+  @override
+  String get adminGroupFeatures => 'الميزات';
+
+  @override
+  String get adminGroupAnnouncement => 'إعلان';
+
+  @override
+  String get adminGroupLinks => 'الروابط';
+
+  @override
+  String get adminSending => 'جاري الإرسال…';
+
+  @override
+  String get adminSendBroadcast => 'إرسال إشعار';
+
+  @override
+  String get adminNotifPreview => 'معاينة';
+
+  @override
+  String get adminNoEmail => 'بدون بريد';
+
+  @override
+  String get adminBannedBadge => 'محظور';
+
+  @override
+  String get adminTimeNow => 'الآن';
+
+  @override
+  String adminTimeMinutes(int n) {
+    return '$n د';
+  }
+
+  @override
+  String adminTimeHours(int n) {
+    return '$n س';
+  }
+
+  @override
+  String adminTimeDays(int n) {
+    return '$n ي';
+  }
 
   @override
   String get onboardingPrivacyAgree =>
@@ -1393,6 +1647,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get contactSupportSubtitle => 'استفسارات، إبلاغات، أو مساعدة الحساب';
+
+  @override
+  String get accountMenuFeedback => 'الدعم والملاحظات';
+
+  @override
+  String get accountMenuFeedbackSubtitle =>
+      'أرسلي ملاحظة أو استخدمي كوداً ترويجياً';
+
+  @override
+  String get accountMenuAiDiagnostic => 'تشخيص الذكاء الاصطناعي';
+
+  @override
+  String get accountMenuAiDiagnosticSubtitle =>
+      'اختبري الاتصال أو حدّثي مفتاح Gemini';
 
   @override
   String get consentManageTitle => 'موافقاتك';
@@ -1554,6 +1822,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingFeaturesSubtitle => 'هذه شاشات التطبيق الرئيسية:';
+
+  @override
+  String get onboardingReadyHint =>
+      'اضغطي «ابدئي الآن» بالأسفل للدخول إلى التطبيق';
 
   @override
   String get onboardingFeatureHome => 'الرئيسية';
@@ -2349,6 +2621,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'تذكيرات الحبوب والمنتجات الصحية واللولب في العناية تتبع المفتاح الرئيسي أعلاه.';
 
   @override
+  String get smartPhaseReminder => 'تذكيرات ذكية حسب المرحلة';
+
+  @override
+  String get smartPhaseReminderSubtitle =>
+      'نصيحة يومية داعمة تتكيف مع مرحلتك في الدورة أو أسبوع الحمل.';
+
+  @override
   String get graphExportShared => 'الرسم جاهز للمشاركة.';
 
   @override
@@ -2659,7 +2938,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyP5Body =>
-      'نستخدم خدمات الطرف الثالث التالية:\n\n• Google Firebase (المصادقة، Firestore، الدوال السحابية، الاستضافة): لحسابات المستخدمين وتخزين البيانات ومعالجة الواجهة الخلفية.\n• Google Gemini AI: لتشغيل مساعد المحادثة الذكي. يتم إرسال رسائلكِ إلى Google للمعالجة ولا تُستخدم لتدريب نماذج الذكاء الاصطناعي.\n• Google Play Billing: لمعالجة الاشتراكات داخل التطبيق.\n• PayPal: لمعالجة الدفع البديل.\n\nلكل منها سياسة خصوصية خاصة بها. نشجعكِ على مراجعتها.';
+      'نستخدم خدمات الطرف الثالث التالية:\n\n• Google Firebase (المصادقة، Firestore، الدوال السحابية، الاستضافة): لحسابات المستخدمين وتخزين البيانات ومعالجة الواجهة الخلفية.\n• Google Gemini AI: لتشغيل مساعد المحادثة الذكي. يتم إرسال رسائلكِ إلى Google للمعالجة ولا تُستخدم لتدريب نماذج الذكاء الاصطناعي.\n• Google Play Billing: لمعالجة الاشتراكات داخل التطبيق.\n\nلكل منها سياسة خصوصية خاصة بها. نشجعكِ على مراجعتها.';
 
   @override
   String get privacyP6Title => '٦. حقوقك في البيانات';
@@ -2753,7 +3032,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get termsP6Body =>
-      'يقدم Lune ميزات مميزة من خلال الاشتراكات داخل التطبيق المعالجة عبر Google Play Billing أو PayPal. تتجدد الاشتراكات تلقائياً ما لم يتم إلغاؤها قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنكِ إدارة الاشتراكات من خلال إعدادات حساب Google Play. تتم معالجة الاستردادات وفقاً لسياسة استرداد Google Play. تبقى الميزات المجانية متاحة بدون اشتراك.';
+      'يقدم Lune ميزات مميزة من خلال الاشتراكات داخل التطبيق المعالجة عبر Google Play Billing. تتجدد الاشتراكات تلقائياً ما لم يتم إلغاؤها قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنكِ إدارة الاشتراكات من خلال إعدادات حساب Google Play. تتم معالجة الاستردادات وفقاً لسياسة استرداد Google Play. تبقى الميزات المجانية متاحة بدون اشتراك.';
 
   @override
   String get termsP7Title => '٧. الملكية الفكرية';
@@ -2947,7 +3226,94 @@ class AppLocalizationsAr extends AppLocalizations {
   String get geminiKeyHint => 'الصقي مفتاح API هنا';
 
   @override
+  String get stealthTitle => 'وضع التخفي';
+
+  @override
+  String get stealthDescription =>
+      'إخفاء التطبيق على شكل آلة حاسبة. أدخلي PIN السري ثم اضغطي = لفتح التطبيق.';
+
+  @override
+  String get stealthUnlockHint =>
+      'للفتح: افتحي الآلة الحاسبة، اكتبي PIN، ثم اضغطي =';
+
+  @override
+  String get stealthHideNow => 'إخفاء التطبيق الآن';
+
+  @override
+  String get stealthHideNowHint => 'تحوّلي فوراً إلى واجهة الآلة الحاسبة.';
+
+  @override
   String get anonymousQaTooltip => 'أسئلة مجهولة';
+
+  @override
+  String get anonymousQaTitle => 'أسئلة صحية مجهولة';
+
+  @override
+  String get anonymousQaIntro =>
+      'اسألي سؤالك الصحي بشكل مجهول تماماً. سيجيب عليه مختصّ معتمد وسيُنشر الجواب في قسم التعليم والإرشاد.';
+
+  @override
+  String get anonymousQaPurposeTitle => 'ليش هالصفحة؟';
+
+  @override
+  String get anonymousQaStep1 => 'اكتبي سؤالك الصحي — اسمك ما بيظهر أبداً';
+
+  @override
+  String get anonymousQaStep2 => 'فريق Lune بيراجع السؤال وبيجهّز الجواب';
+
+  @override
+  String get anonymousQaStep3 =>
+      'الجواب بينشر في التعليم والإرشاد لمساعدة الجميع';
+
+  @override
+  String get anonymousQaDisclaimer =>
+      'المحتوى للإرشاد والتعليم فقط — مو تشخيص أو علاج طبي. للحالات العاجلة راجعي طبيبك أو الطوارئ.';
+
+  @override
+  String get anonymousQaCategoryLabel => 'التصنيف';
+
+  @override
+  String get anonymousQaQuestionLabel => 'سؤالك';
+
+  @override
+  String get anonymousQaPrivacyNote =>
+      'هويتك مجهولة 100%. لا يتم حفظ أي اسم أو بريد إلكتروني أو معرّف.';
+
+  @override
+  String get anonymousQaSubmit => 'إرسال السؤال';
+
+  @override
+  String get anonymousQaSubmitting => 'جارٍ الإرسال...';
+
+  @override
+  String get anonymousQaSubmitted => 'تم إرسال سؤالك. شكراً لكِ!';
+
+  @override
+  String get anonymousQaTooShort => 'الرجاء كتابة 10 أحرف على الأقل.';
+
+  @override
+  String get anonymousQaError => 'تعذّر إرسال سؤالك. حاولي مرة أخرى.';
+
+  @override
+  String get qaCatGeneral => 'عام';
+
+  @override
+  String get qaCatCycle => 'الدورة والطمث';
+
+  @override
+  String get qaCatPregnancy => 'الحمل';
+
+  @override
+  String get qaCatPcos => 'تكيّس المبايض';
+
+  @override
+  String get qaCatContraception => 'منع الحمل';
+
+  @override
+  String get qaCatMental => 'الصحة النفسية';
+
+  @override
+  String get qaCatNutrition => 'التغذية';
 
   @override
   String get dailyBriefingPrompt => 'أعطيني ملخص اليوم';

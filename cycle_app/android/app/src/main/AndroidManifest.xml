@@ -1,8 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
@@ -56,6 +54,19 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Receives "log period" requests from the Wear OS app -->
+        <service
+            android:name=".WearLogRequestListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/lune/log-request" />
+            </intent-filter>
+        </service>
+
         <!-- Wear OS Companion: auto-install watch app on paired watch -->
         <meta-data
             android:name="com.google.android.wearable.versionCode"
@@ -68,6 +79,16 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Allows resolving mailto: links (contact support) on Android 11+ -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <!-- Allows opening https links (privacy policy / terms) on Android 11+ -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

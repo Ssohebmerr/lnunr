@@ -130,6 +130,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     setState(() {
       isLoading = true;
     });
+    try {
     //printMenstrualCycleLogs("init");
     if (date == null) {
       //printMenstrualCycleLogs("Date NUll");
@@ -170,74 +171,88 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     symptomsList.clear();
     existingSymptomsList.addAll(userSymptomsLogs.symptomData!);
 
-    if (userSymptomsLogs.waterValue != null) {
-      logReportList[4].mainValue = int.parse(userSymptomsLogs.waterValue!);
-      logReportList[4].finalValue = userSymptomsLogs.waterValue!;
-      logReportList[4].mainIndex = int.parse(userSymptomsLogs.waterValue!);
+    if (userSymptomsLogs.waterValue != null && userSymptomsLogs.waterValue!.isNotEmpty) {
+      try {
+        logReportList[4].mainValue = int.parse(userSymptomsLogs.waterValue!);
+        logReportList[4].finalValue = userSymptomsLogs.waterValue!;
+        logReportList[4].mainIndex = int.parse(userSymptomsLogs.waterValue!);
+      } catch (_) {}
     }
 
-    if (userSymptomsLogs.meditationTime != null) {
-      int totalMinutes = int.parse(userSymptomsLogs.meditationTime!);
-      int hours = totalMinutes ~/ 60; // Integer division to get hours
-      int minutes = totalMinutes % 60; // Modulus to get remaining minutes
-      logReportList[3].mainValue = hours;
-      logReportList[3].mainIndex = hours;
-      logReportList[3].subValue = minutes;
-      logReportList[3].subIndex = minutes;
-      logReportList[3].totalMin = totalMinutes;
-      logReportList[3].finalValue = "$hours h : $minutes m";
+    if (userSymptomsLogs.meditationTime != null && userSymptomsLogs.meditationTime!.isNotEmpty) {
+      try {
+        int totalMinutes = int.parse(userSymptomsLogs.meditationTime!);
+        int hours = totalMinutes ~/ 60; // Integer division to get hours
+        int minutes = totalMinutes % 60; // Modulus to get remaining minutes
+        logReportList[3].mainValue = hours;
+        logReportList[3].mainIndex = hours;
+        logReportList[3].subValue = minutes;
+        logReportList[3].subIndex = minutes;
+        logReportList[3].totalMin = totalMinutes;
+        logReportList[3].finalValue = "$hours h : $minutes m";
+      } catch (_) {}
     }
 
-    if (userSymptomsLogs.sleepTime != null) {
-      List<String> startEndTime = userSymptomsLogs.sleepTime!.split("T");
-      logReportList[2].mainValue = int.parse(startEndTime[0].split(":")[0]);
-      logReportList[2].mainIndex = int.parse(startEndTime[0].split(":")[0]);
-      logReportList[2].subValue = int.parse(startEndTime[0].split(":")[1]);
-      logReportList[2].subIndex = int.parse(startEndTime[0].split(":")[1]);
-      logReportList[2].finalValue =
-          "${logReportList[2].mainValue} h : ${logReportList[2].subValue} m";
+    if (userSymptomsLogs.sleepTime != null && userSymptomsLogs.sleepTime!.isNotEmpty && userSymptomsLogs.sleepTime!.contains("T")) {
+      try {
+        List<String> startEndTime = userSymptomsLogs.sleepTime!.split("T");
+        if (startEndTime.length == 2) {
+          List<String> start = startEndTime[0].split(":");
+          List<String> end = startEndTime[1].split(":");
+          if (start.length == 2 && end.length == 2) {
+            logReportList[2].mainValue = int.parse(start[0]);
+            logReportList[2].mainIndex = int.parse(start[0]);
+            logReportList[2].subValue = int.parse(start[1]);
+            logReportList[2].subIndex = int.parse(start[1]);
+            logReportList[2].finalValue =
+                "${logReportList[2].mainValue} h : ${logReportList[2].subValue} m";
 
-      logReportList[5].mainValue = int.parse(startEndTime[1].split(":")[0]);
-      logReportList[5].mainIndex = int.parse(startEndTime[1].split(":")[0]);
-      logReportList[5].subValue = int.parse(startEndTime[1].split(":")[1]);
-      logReportList[5].subIndex = int.parse(startEndTime[1].split(":")[1]);
-      logReportList[5].finalValue =
-          "${logReportList[5].mainValue} h : ${logReportList[5].subValue} m";
+            logReportList[5].mainValue = int.parse(end[0]);
+            logReportList[5].mainIndex = int.parse(end[0]);
+            logReportList[5].subValue = int.parse(end[1]);
+            logReportList[5].subIndex = int.parse(end[1]);
+            logReportList[5].finalValue =
+                "${logReportList[5].mainValue} h : ${logReportList[5].subValue} m";
+          }
+        }
+      } catch (_) {}
     }
 
-    if (userSymptomsLogs.bodyTemperature != null) {
-      List<String> temp = userSymptomsLogs.bodyTemperature!.split(".");
-      //printMenstrualCycleLogs("temp log ${temp.toString()}");
-      logReportList[1].mainValue = int.parse(temp[0]);
-      logReportList[1].mainIndex = int.parse(temp[0]) - 35;
-      if (temp.length > 1) {
-        logReportList[1].subValue = int.parse(temp[1]);
-        logReportList[1].subIndex = int.parse(temp[1]) - 1;
-        if (logReportList[1].subIndex! < 0) {
+    if (userSymptomsLogs.bodyTemperature != null && userSymptomsLogs.bodyTemperature!.isNotEmpty && userSymptomsLogs.bodyTemperature != "0") {
+      try {
+        List<String> temp = userSymptomsLogs.bodyTemperature!.split(".");
+        logReportList[1].mainValue = int.parse(temp[0]);
+        logReportList[1].mainIndex = int.parse(temp[0]) - 35;
+        if (temp.length > 1) {
+          logReportList[1].subValue = int.parse(temp[1]);
+          logReportList[1].subIndex = int.parse(temp[1]) - 1;
+          if (logReportList[1].subIndex! < 0) {
+            logReportList[1].subIndex = 0;
+          }
+        } else {
+          logReportList[1].subValue = 0;
           logReportList[1].subIndex = 0;
         }
-      } else {
-        logReportList[1].subValue = 0;
-        logReportList[1].subIndex = 0;
-      }
-      logReportList[1].finalValue = userSymptomsLogs.bodyTemperature!;
+        logReportList[1].finalValue = userSymptomsLogs.bodyTemperature!;
+      } catch (_) {}
     }
 
-    if (userSymptomsLogs.weight != null) {
-      List<String> weight = userSymptomsLogs.weight!.split(".");
-      logReportList[0].mainValue = int.parse(weight[0]);
-      logReportList[0].mainIndex = int.parse(weight[0]) - 20;
-      if (weight.length > 1 && weight[1].isNotEmpty) {
-        double decimalValue = double.parse("0.${weight[1]}");
-        int sub = (decimalValue * 10).round();
-        logReportList[0].subValue = sub;
-        logReportList[0].subIndex = sub;
-      } else {
-        logReportList[0].subValue = 0;
-        logReportList[0].subIndex = 0;
-      }
-
-      logReportList[0].finalValue = userSymptomsLogs.weight!;
+    if (userSymptomsLogs.weight != null && userSymptomsLogs.weight!.isNotEmpty && userSymptomsLogs.weight != "0") {
+      try {
+        List<String> weight = userSymptomsLogs.weight!.split(".");
+        logReportList[0].mainValue = int.parse(weight[0]);
+        logReportList[0].mainIndex = int.parse(weight[0]) - 20;
+        if (weight.length > 1 && weight[1].isNotEmpty) {
+          double decimalValue = double.parse("0.${weight[1]}");
+          int sub = (decimalValue * 10).round();
+          logReportList[0].subValue = sub;
+          logReportList[0].subIndex = sub;
+        } else {
+          logReportList[0].subValue = 0;
+          logReportList[0].subIndex = 0;
+        }
+        logReportList[0].finalValue = userSymptomsLogs.weight!;
+      } catch (_) {}
     }
 
     // Set existing data - end
@@ -276,9 +291,18 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
         }
       }
     }
-    setState(() {
-      isLoading = false;
-    });
+    } catch (e) {
+      // Never leave the screen stuck on the loading spinner if any data source
+      // throws (e.g. a corrupt date or decrypt failure) — fall back to an
+      // editable empty form so the user can still log their day.
+      debugPrint('MenstrualLogPeriodView.init failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   bool isVisibleSymptoms(String symptomName) {
@@ -1327,17 +1351,22 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                                     label: Text(
                                                       "${chip.symptomName}",
                                                       style: TextStyle(
+                                                          color: chip.isSelected ? Colors.white : null,
+                                                          fontWeight: chip.isSelected ? FontWeight.bold : null,
                                                           fontFamily:
                                                               getFontFamily()),
                                                     ),
                                                     padding:
-                                                        const EdgeInsets.all(1),
+                                                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                                     backgroundColor:
                                                         chip.isSelected
-                                                            ? Colors.white
+                                                            ? Color(
+                                                                int.parse(
+                                                                    "0xff${symptomsList[index].categoryColor!.replaceAll("#", "")}"),
+                                                              )
                                                             : Color(
                                                                 int.parse(
-                                                                    "0x0D${symptomsList[index].categoryColor!.replaceAll("#", "")}"),
+                                                                    "0x15${symptomsList[index].categoryColor!.replaceAll("#", "")}"),
                                                               ),
                                                     onSelected: (bool value) {
                                                       setState(() {
@@ -1347,13 +1376,9 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                                     },
                                                   ),
                                                   (chip.isSelected)
-                                                      ? Icon(
-                                                          Icons
-                                                              .check_circle_rounded,
-                                                          color: Color(
-                                                            int.parse(
-                                                                "0xff${symptomsList[index].categoryColor!.replaceAll("#", "")}"),
-                                                          ),
+                                                      ? const Icon(
+                                                          Icons.check_circle_rounded,
+                                                          color: Colors.white,
                                                           size: 16)
                                                       : const SizedBox(),
                                                 ],

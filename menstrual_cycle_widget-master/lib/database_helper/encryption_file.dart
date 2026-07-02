@@ -27,8 +27,13 @@ class Encryption {
   }
 
   /// decrypt data
-  String decrypt(String base64value) {
-    final encrypted = Encrypted.fromBase64(base64value);
-    return _encryption.decrypt(encrypted, iv: _iv);
+  String decrypt(String? base64value) {
+    if (base64value == null || base64value.isEmpty) return "";
+    try {
+      final encrypted = Encrypted.fromBase64(base64value);
+      return _encryption.decrypt(encrypted, iv: _iv);
+    } catch (_) {
+      return "";
+    }
   }
 }

@@ -141,17 +141,17 @@ class MenstrualCycleWidget {
 
     // Generate periods days based on last selected period date
     if (lastPeriodDate != null) {
-      bool isFoundDate = await dbHelper.isPeriodDateFound(lastPeriodDate);
-      if (!isFoundDate) {
-        List<DateTime> selectedPeriodsDate = [];
-        DateTime lastPeriodDateTime = lastPeriodDate;
-        selectedPeriodsDate.add(lastPeriodDateTime);
-        for (int i = 1; i < periodDuration; i++) {
-          lastPeriodDateTime = lastPeriodDateTime.add(const Duration(days: 1));
-          selectedPeriodsDate.add(lastPeriodDateTime);
-        }
-        await dbHelper.insertPeriodLog(selectedPeriodsDate);
-      }
+      final start = DateTime(
+        lastPeriodDate.year,
+        lastPeriodDate.month,
+        lastPeriodDate.day,
+      );
+      await dbHelper.clearPeriodLog(getCustomerId());
+      final selectedPeriodsDate = <DateTime>[
+        for (int i = 0; i < periodDuration!; i++)
+          start.add(Duration(days: i)),
+      ];
+      await dbHelper.insertPeriodLog(selectedPeriodsDate);
     }
     await calculateLastPeriodDate();
   }
