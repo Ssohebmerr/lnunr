@@ -75,6 +75,20 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
   @override
   void initState() {
     super.initState();
+    // Initialize logDate synchronously to prevent null pointer and allow immediate render
+    final date = widget.symptomsLogDate;
+    if (date == null) {
+      logDate = defaultDateFormat.format(DateTime.now());
+    } else {
+      try {
+        logDate = defaultDateFormat.format(date);
+      } catch (_) {
+        logDate = defaultDateFormat.format(DateTime.now());
+      }
+    }
+    // Populate the default categories and symptoms list immediately so the UI paints on frame 1
+    regenerateData();
+    // Trigger async load for existing logs from SQLite database
     init(widget.symptomsLogDate);
   }
 
@@ -130,6 +144,19 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     setState(() {
       isLoading = true;
     });
+    // Clear selection state synchronously so we don't display the previous day's selections while loading
+    existingSymptomsList.clear();
+    symptomsList.clear();
+    regenerateData();
+
+    // Reset default picker values in logReportList synchronously
+    logReportList[0] = LogReport(type: "weight", mainValue: 20, subValue: 0, finalValue: "", mainIndex: 0, subIndex: 0);
+    logReportList[1] = LogReport(type: "bodyTemp", mainValue: 35, subValue: 1, finalValue: "", mainIndex: 0, subIndex: 0);
+    logReportList[2] = LogReport(type: "sleepBedTime", mainValue: 0, subValue: 0, finalValue: "", mainIndex: 0, subIndex: 0);
+    logReportList[3] = LogReport(type: "meditation", mainValue: 0, subValue: 0, finalValue: "", mainIndex: 0, subIndex: 0, totalMin: 0);
+    logReportList[4] = LogReport(type: "water", mainValue: 0, subValue: 0, finalValue: "", mainIndex: 0, subIndex: 0);
+    logReportList[5] = LogReport(type: "sleepWakeUpTime", mainValue: 0, subValue: 0, finalValue: "", mainIndex: 0, subIndex: 0);
+
     try {
     //printMenstrualCycleLogs("init");
     if (date == null) {
@@ -363,6 +390,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
       logReportList[1].finalValue = "${logReportList[1].mainValue}.0";
     }
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   /// save meditation data
@@ -383,6 +411,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     logReportList[3].totalMin =
         (logReportList[3].mainValue! * 60) + logReportList[3].subValue!;
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   /// save sleep data
@@ -404,6 +433,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     logReportList[index].totalMin =
         (logReportList[index].mainValue! * 60) + logReportList[index].subValue!;
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   saveSleepWackUpLog() {
@@ -424,6 +454,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     logReportList[index].totalMin =
         (logReportList[index].mainValue! * 60) + logReportList[index].subValue!;
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   /// save drink water data
@@ -434,6 +465,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
       logReportList[4].finalValue = "0${logReportList[4].mainValue}";
     }
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   /// save weight data
@@ -441,6 +473,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     logReportList[0].finalValue =
         "${logReportList[0].mainValue}.${logReportList[0].subValue}";
     setState(() {});
+    saveTodayLogsSilently();
   }
 
   /// save today logs to database
@@ -461,8 +494,19 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
           onError: widget.onError,
           cycleDay: intCycleDay,
           symptomsLogDate: DateTime.parse(logDate),
-          onSuccess: (id) {
-            widget.onSuccess?.call(id);
+          onSuccess: (id) async {
+            if (_canGoForward) {
+              if (mounted) {
+                await init(DateTime.parse(logDate));
+                _shiftLogDate(1);
+              }
+            } else {
+              widget.onSuccess?.call(id);
+              if (mounted) {
+                await init(DateTime.parse(logDate));
+                _maybePopRoute();
+              }
+            }
           },
           waterValue: (logReportList[4].finalValue!.isNotEmpty)
               ? logReportList[4].finalValue.toString()
@@ -480,10 +524,49 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
           sleepWakeUpTime: TimeOfDay(
               hour: logReportList[5].mainValue!.toInt(),
               minute: logReportList[5].subValue!.toInt()));
-      if (mounted) await init(DateTime.parse(logDate));
-      _maybePopRoute();
     } catch (e) {
       widget.onError?.call();
+    }
+  }
+
+  Future<void> saveTodayLogsSilently() async {
+    List<SymptomsData> userLogData = [];
+    for (int index = 0; index < symptomsList.length; index++) {
+      for (int j = 0; j < symptomsList[index].symptomsData!.length; j++) {
+        SymptomsData symptomsData = symptomsList[index].symptomsData![j];
+        if (symptomsData.isSelected) {
+          userLogData.add(symptomsData);
+        }
+      }
+    }
+
+    try {
+      await mInstance.saveSymptomsLogs(
+          userSymptomsData: userLogData,
+          onError: null,
+          cycleDay: intCycleDay,
+          symptomsLogDate: DateTime.parse(logDate),
+          onSuccess: (id) {
+            // Silently saved to SQLite, no pop and no toast feedback
+          },
+          waterValue: (logReportList[4].finalValue!.isNotEmpty)
+              ? logReportList[4].finalValue.toString()
+              : "0",
+          bodyTemperature: (logReportList[1].finalValue!.isNotEmpty)
+              ? logReportList[1].finalValue.toString()
+              : "0",
+          weight: (logReportList[0].finalValue!.isNotEmpty)
+              ? logReportList[0].finalValue.toString()
+              : "0",
+          meditationTime: logReportList[3].totalMin!.toString(),
+          sleepBedTime: TimeOfDay(
+              hour: logReportList[2].mainValue!.toInt(),
+              minute: logReportList[2].subValue!.toInt()),
+          sleepWakeUpTime: TimeOfDay(
+              hour: logReportList[5].mainValue!.toInt(),
+              minute: logReportList[5].subValue!.toInt()));
+    } catch (e) {
+      debugPrint('Silent save failed: $e');
     }
   }
 
@@ -538,24 +621,23 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
   }
 
   Color _cardFillColor(BuildContext context) {
+    final theme = Theme.of(context);
     if (widget.embeddedInTab) {
-      return Theme.of(context).colorScheme.surfaceContainerHighest;
+      return theme.brightness == Brightness.dark
+          ? theme.colorScheme.surfaceContainerHigh
+          : theme.colorScheme.surfaceContainerHighest;
     }
-    return Colors.white;
+    return theme.brightness == Brightness.dark
+        ? theme.colorScheme.surfaceContainerHigh
+        : Colors.white;
   }
 
   Color _onSurfaceColor(BuildContext context) {
-    if (widget.embeddedInTab) {
-      return Theme.of(context).colorScheme.onSurface;
-    }
-    return Colors.black;
+    return Theme.of(context).colorScheme.onSurface;
   }
 
   Color _mutedTextColor(BuildContext context) {
-    if (widget.embeddedInTab) {
-      return Theme.of(context).colorScheme.onSurfaceVariant;
-    }
-    return Colors.grey;
+    return Theme.of(context).colorScheme.onSurfaceVariant;
   }
 
   /// open bottom sheet view for perform operation
@@ -568,9 +650,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: widget.embeddedInTab
-          ? Theme.of(context).colorScheme.surface
-          : Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -821,20 +901,22 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
         itemExtent: 32.0,
         onSelectedItemChanged: onSelectedItemChanged,
         children: List.generate(maxValue - minValue + 1, (index) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final textColor = isDark ? Colors.white : Colors.black;
           return Center(
             child: (isForWeight)
                 ? Text(
                     (minValue + index).toString(),
-                    style: textStyle24Bold(),
+                    style: textStyle24Bold().copyWith(color: textColor),
                   )
                 : ((minValue + index) > 9)
                     ? Text(
                         (minValue + index).toString(),
-                        style: textStyle24Bold(),
+                        style: textStyle24Bold().copyWith(color: textColor),
                       )
                     : Text(
                         "0${(minValue + index)}",
-                        style: textStyle24Bold(),
+                        style: textStyle24Bold().copyWith(color: textColor),
                       ),
           );
         }),
@@ -853,141 +935,10 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     required Function onRemoveClick,
     required String typeString,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8),
-      child: Card(
-        color: Colors.white,
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        image,
-                        package: flutterPackageName,
-                        width: 20,
-                      ),
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: getFontFamily(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  Row(
-                    children: [
-                      ClipOval(
-                        child: Material(
-                          color: const Color(0xFFD6D6D6), // Button color
-                          child: InkWell(
-                            splashColor: Colors.black26, // Splash color
-                            onTap: () {
-                              onRemoveClick.call();
-                            },
-                            child: SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: removeIcon,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    WidgetBaseLanguage.logPeriodBedtime,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
-                      fontFamily: getFontFamily(),
-                    ),
-                  ),
-                  SizedBox(),
-                  Text(
-                    WidgetBaseLanguage.logPeriodWakeUpTime,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
-                      fontFamily: getFontFamily(),
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      onStartTimeClick.call();
-                    },
-                    child: Text(
-                      startTimeHintText,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.grey,
-                        fontFamily: getFontFamily(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(),
-                  GestureDetector(
-                    onTap: () {
-                      onEndTimeClick.call();
-                    },
-                    child: Text(
-                      endTimeHintText,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.grey,
-                        fontFamily: getFontFamily(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+    final onSurface = _onSurfaceColor(context);
+    final muted = _mutedTextColor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  /// Design log view for water, body temperature, weight etc
-  Widget logView({
-    required String image,
-    required String title,
-    required String hintText,
-    required Widget addIcon,
-    required Widget removeIcon,
-    required Function onAddClick,
-    required Function onRemoveClick,
-    required String typeString,
-  }) {
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8),
       child: Card(
@@ -1018,6 +969,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: onSurface,
                           fontFamily: getFontFamily(),
                         ),
                       ),
@@ -1030,7 +982,151 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                     children: [
                       ClipOval(
                         child: Material(
-                          color: const Color(0xFFEDEDED), // Button color
+                          color: isDark ? Colors.white.withValues(alpha: 0.15) : const Color(0xFFD6D6D6), // Button color
+                          child: InkWell(
+                            splashColor: Colors.black26, // Splash color
+                            onTap: () {
+                              onRemoveClick.call();
+                            },
+                            child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: removeIcon,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    WidgetBaseLanguage.logPeriodBedtime,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: muted,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: getFontFamily(),
+                    ),
+                  ),
+                  SizedBox(),
+                  Text(
+                    WidgetBaseLanguage.logPeriodWakeUpTime,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: muted,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: getFontFamily(),
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      onStartTimeClick.call();
+                    },
+                    child: Text(
+                      startTimeHintText,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
+                        fontFamily: getFontFamily(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(),
+                  GestureDetector(
+                    onTap: () {
+                      onEndTimeClick.call();
+                    },
+                    child: Text(
+                      endTimeHintText,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
+                        fontFamily: getFontFamily(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Design log view for water, body temperature, weight etc
+  Widget logView({
+    required String image,
+    required String title,
+    required String hintText,
+    required Widget addIcon,
+    required Widget removeIcon,
+    required Function onAddClick,
+    required Function onRemoveClick,
+    required String typeString,
+  }) {
+    final onSurface = _onSurfaceColor(context);
+    final muted = _mutedTextColor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8),
+      child: Card(
+        color: _cardFillColor(context),
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Image.asset(
+                        image,
+                        package: flutterPackageName,
+                        width: 20,
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: onSurface,
+                          fontFamily: getFontFamily(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Row(
+                    children: [
+                      ClipOval(
+                        child: Material(
+                          color: isDark ? Colors.white.withValues(alpha: 0.15) : const Color(0xFFEDEDED), // Button color
                           child: InkWell(
                             splashColor: Colors.black26, // Splash color
                             onTap: () {
@@ -1049,7 +1145,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                       ),
                       ClipOval(
                         child: Material(
-                          color: const Color(0xFFFEECF3), // Button color
+                          color: isDark ? widget.themeColor.withValues(alpha: 0.25) : const Color(0xFFFEECF3), // Button color
                           child: InkWell(
                             splashColor: Colors.black26, // Splash color
                             onTap: () {
@@ -1078,19 +1174,21 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                     child: Text(
                       hintText,
                       style: TextStyle(
-                        fontSize: 30,
-                        color: Colors.grey,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
                         fontFamily: getFontFamily(),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 5),
                     child: Text(
                       typeString,
                       style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.black,
+                        fontSize: 12,
+                        color: muted,
                         fontFamily: getFontFamily(),
                       ),
                     ),
@@ -1289,12 +1387,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                         top: 0, left: 8, right: 8, bottom: 20),
                     child: Column(
                       children: [
-                        (isLoading)
-                            ? Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
-                              )
-                            : ListView.builder(
+                        ListView.builder(
                                 padding: const EdgeInsets.all(8),
                                 shrinkWrap: true,
                                 physics: const ClampingScrollPhysics(),
@@ -1373,6 +1466,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                                         chip.isSelected =
                                                             !chip.isSelected;
                                                       });
+                                                      saveTodayLogsSilently();
                                                     },
                                                   ),
                                                   (chip.isSelected)
@@ -1416,6 +1510,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                   setState(() {
                                     logReportList[0].finalValue = "";
                                   });
+                                  saveTodayLogsSilently();
                                 },
                                 removeIcon: const Icon(
                                   Icons.delete,
@@ -1450,6 +1545,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                   setState(() {
                                     logReportList[1].finalValue = "";
                                   });
+                                  saveTodayLogsSilently();
                                 },
                                 removeIcon: const Icon(
                                   Icons.delete,
@@ -1499,6 +1595,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                     logReportList[5].mainValue = 0;
                                     logReportList[5].subValue = 0;
                                   });
+                                  saveTodayLogsSilently();
                                 },
                                 removeIcon: const Icon(
                                   Icons.delete,
@@ -1534,6 +1631,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                     logReportList[3].finalValue = "";
                                     logReportList[3].totalMin = 0;
                                   });
+                                  saveTodayLogsSilently();
                                 },
                                 removeIcon: const Icon(
                                   Icons.delete,
@@ -1568,6 +1666,7 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                   setState(() {
                                     logReportList[4].finalValue = "";
                                   });
+                                  saveTodayLogsSilently();
                                 },
                                 removeIcon: const Icon(
                                   Icons.delete,

@@ -15,13 +15,21 @@
 //   - empty snapshot → "welcome" + no crash
 // ============================================================================
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cycle_aura/core/ai/models/health_snapshot.dart';
 import 'package:cycle_aura/features/insight/data/insight_generator.dart';
+import 'package:cycle_aura/l10n/app_localizations.dart';
 
 void main() {
   final gen = InsightGenerator();
+  late AppLocalizations enL10n;
+
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    enL10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
 
   HealthSnapshot snap({
     String? phase,
@@ -42,44 +50,44 @@ void main() {
   group('InsightGenerator.forSnapshot — cycle phases', () {
     test('menstruation phase (period active) wins over phase label', () {
       final i = gen.forSnapshot(
-        snap(phase: 'luteal', periodActive: true, day: 22));
+        snap(phase: 'luteal', periodActive: true, day: 22), enL10n);
       expect(i.mood, 'phase:menstruation');
       expect(i.headline.toLowerCase(), contains('period'));
     });
 
     test('follicular phase', () {
-      final i = gen.forSnapshot(snap(phase: 'follicular', day: 8));
+      final i = gen.forSnapshot(snap(phase: 'follicular', day: 8), enL10n);
       expect(i.mood, 'phase:follicular');
       expect(i.headline.toLowerCase(), contains('follicular'));
     });
 
     test('ovulation phase', () {
-      final i = gen.forSnapshot(snap(phase: 'ovulation', day: 14));
+      final i = gen.forSnapshot(snap(phase: 'ovulation', day: 14), enL10n);
       expect(i.mood, 'phase:ovulation');
       expect(i.headline.toLowerCase(), contains('ovulation'));
     });
 
     test('luteal phase — early (day < 25)', () {
-      final i = gen.forSnapshot(snap(phase: 'luteal', day: 20));
+      final i = gen.forSnapshot(snap(phase: 'luteal', day: 20), enL10n);
       expect(i.mood, 'phase:luteal');
       expect(i.headline.toLowerCase(), contains('luteal'));
     });
 
     test('luteal phase — late (day >= 25) has a different body but same headline',
         () {
-      final i = gen.forSnapshot(snap(phase: 'luteal', day: 26));
+      final i = gen.forSnapshot(snap(phase: 'luteal', day: 26), enL10n);
       expect(i.mood, 'phase:luteal');
       expect(i.headline.toLowerCase(), contains('luteal'));
     });
 
     test('late period label', () {
-      final i = gen.forSnapshot(snap(phase: 'latePeriod', day: 32));
+      final i = gen.forSnapshot(snap(phase: 'latePeriod', day: 32), enL10n);
       expect(i.mood, 'phase:late');
       expect(i.headline.toLowerCase(), contains('running late'));
     });
 
     test('empty snapshot → welcome / unknown mood', () {
-      final i = gen.forSnapshot(snap());
+      final i = gen.forSnapshot(snap(), enL10n);
       expect(i.mood, 'phase:unknown');
       expect(i.headline.toLowerCase(), contains('welcome'));
     });
@@ -88,28 +96,31 @@ void main() {
   group('InsightGenerator.forSnapshot — pregnancy overrides cycle', () {
     test('pregnant + t1 (week 8)', () {
       final i = gen.forSnapshot(
-          snap(phase: 'luteal', goal: 'pregnant', pregnancyWeek: 8, day: 22));
+          snap(phase: 'luteal', goal: 'pregnant', pregnancyWeek: 8, day: 22),
+          enL10n);
       expect(i.mood, 'pregnancy:t1');
       expect(i.headline.toLowerCase(), contains('first trimester'));
     });
 
     test('pregnant + t2 (week 18)', () {
       final i = gen.forSnapshot(
-          snap(phase: 'follicular', goal: 'pregnant', pregnancyWeek: 18));
+          snap(phase: 'follicular', goal: 'pregnant', pregnancyWeek: 18),
+          enL10n);
       expect(i.mood, 'pregnancy:t2');
       expect(i.headline.toLowerCase(), contains('second trimester'));
     });
 
     test('pregnant + t3 (week 32)', () {
       final i = gen.forSnapshot(
-          snap(phase: 'luteal', goal: 'pregnant', pregnancyWeek: 32));
+          snap(phase: 'luteal', goal: 'pregnant', pregnancyWeek: 32), enL10n);
       expect(i.mood, 'pregnancy:t3');
       expect(i.headline.toLowerCase(), contains('third trimester'));
     });
 
     test('pregnant but no week known falls back to cycle logic', () {
       final i = gen.forSnapshot(
-          snap(phase: 'follicular', goal: 'pregnant', pregnancyWeek: null));
+          snap(phase: 'follicular', goal: 'pregnant', pregnancyWeek: null),
+          enL10n);
       // Without pregnancyWeek the pregnancy branch is skipped.
       expect(i.mood, 'phase:follicular');
     });
@@ -127,7 +138,7 @@ void main() {
         snap(goal: 'pregnant', pregnancyWeek: 20),
       ];
       for (final s in cases) {
-        final i = gen.forSnapshot(s);
+        final i = gen.forSnapshot(s, enL10n);
         expect(i.headline, isNotEmpty, reason: 'empty headline for $s');
         expect(i.body, isNotEmpty, reason: 'empty body for $s');
         expect(i.mood, isNotEmpty, reason: 'empty mood for $s');
@@ -145,7 +156,7 @@ void main() {
         snap(goal: 'pregnant', pregnancyWeek: 32),
       ];
       for (final s in cases) {
-        final i = gen.forSnapshot(s);
+        final i = gen.forSnapshot(s, enL10n);
         // Generous bound — the actual TextOverflow.ellipsis at maxLines:2
         // can absorb a bit more, but 200 is the hard upper limit we'll ever
         // want here.

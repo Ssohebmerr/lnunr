@@ -86,8 +86,10 @@ exports.onReportCreated = moderationTriggers.onReportCreated;
 // ---------------------------------------------------------------------------
 const cleanupStories = require('./scheduled/cleanupStories');
 const analytics = require('./scheduled/analytics');
+const resetDailyChatCount = require('./scheduled/resetDailyChatCount');
 
 exports.cleanupExpiredStories = cleanupStories.cleanupExpiredStories;
 exports.processScheduledBroadcasts = analytics.processScheduledBroadcasts;
 exports.dailyAnalyticsSnapshot = analytics.dailyAnalyticsSnapshot;
 exports.processScheduledContent = analytics.processScheduledContent;
+exports.resetDailyChatCounts = resetDailyChatCount.resetDailyChatCounts;

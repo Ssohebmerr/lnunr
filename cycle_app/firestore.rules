@@ -40,11 +40,11 @@ service cloud.firestore {
 
     // Billing / premium fields — Cloud Functions & admin only.
 
-    function protectedUserFields() {
+    function premiumBillingFields() {
 
       return [
 
-        'isPremium', 'premiumSince', 'premiumPending',
+        'premiumSince', 'premiumPending',
 
         'premiumExpiry', 'premiumSource', 'lastPromoCode',
 
@@ -53,6 +53,30 @@ service cloud.firestore {
         'communityBanned', 'communityBannedAt', 'communityBannedReason',
 
       ];
+
+    }
+
+
+
+    function protectedUserFields() {
+
+      return ['isPremium', 'daily_chat_count', 'dailyChatResetAt', 'lastChatAt']
+
+        .concat(premiumBillingFields());
+
+    }
+
+
+
+    function guestCreateSafe() {
+
+      return (!('isPremium' in request.resource.data)
+
+              || request.resource.data.isPremium == false)
+
+        && (!('daily_chat_count' in request.resource.data)
+
+              || request.resource.data.daily_chat_count == 0);
 
     }
 
@@ -246,7 +270,9 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
 
-        && !request.resource.data.keys().hasAny(protectedUserFields())
+        && guestCreateSafe()
+
+        && !request.resource.data.keys().hasAny(premiumBillingFields())
 
         && birthYearValid(request.resource.data);
 

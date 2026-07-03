@@ -4,9 +4,9 @@ import 'package:cycle_aura/features/community/data/community_constants.dart';
 
 void main() {
   group('AppSecrets', () {
-    test('geminiApiKey is never empty (embedded fallback)', () {
-      // The embedded fallback ensures AI works without --dart-define.
-      expect(AppSecrets.geminiApiKey, isNotEmpty);
+    test('cloudFunctionsUrl is configured', () {
+      expect(AppSecrets.cloudFunctionsUrl, isNotEmpty);
+      expect(AppSecrets.cloudFunctionsUrl, startsWith('https://'));
     });
   });
 

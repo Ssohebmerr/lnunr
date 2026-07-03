@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/navigation/home_shell_actions.dart';
-import '../../../core/premium/premium_gate.dart';
+import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -16,22 +16,32 @@ class HomeAiEntryCard extends StatefulWidget {
 
 class _HomeAiEntryCardState extends State<HomeAiEntryCard> {
   bool _premium = false;
-  int _freeRemaining = 5;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
     _load();
   }
 
+  @override
+  void dispose() {
+    PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
+    super.dispose();
+  }
+
+  void _onPremiumChanged() {
+    if (!mounted) return;
+    setState(() => _premium = PremiumStatusNotifier.instance.isPremium);
+  }
+
   Future<void> _load() async {
-    final premium = await PremiumGate.hasPremium();
-    final remaining = await PremiumGate.remainingFreeAiMessages();
+    await PremiumStatusNotifier.instance.loadFromPrefs();
+    final premium = PremiumStatusNotifier.instance.isPremium;
     if (mounted) {
       setState(() {
         _premium = premium;
-        _freeRemaining = remaining;
         _loading = false;
       });
     }
@@ -105,7 +115,7 @@ class _HomeAiEntryCardState extends State<HomeAiEntryCard> {
                       ? l10n.homeAiCardTap
                       : _premium
                           ? l10n.homeAiCardSubtitlePremium
-                          : l10n.homeAiCardSubtitleFree(_freeRemaining),
+                          : l10n.homeAiCardSubtitlePremiumOnly,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.35,

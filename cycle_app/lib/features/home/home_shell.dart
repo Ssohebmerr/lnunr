@@ -46,7 +46,7 @@ class _HomeShellState extends State<HomeShell> {
   StreamSubscription<User?>? _authSub;
   bool _communityEnabled = true;
 
-  final Set<int> _visitedTabs = {0, 1};
+  final Set<int> _visitedTabs = {0};
 
   // 0:Home  1:Community  2:SelfCare  3:Account
   // Reports lives as a Home header shortcut (not a bottom tab) so the + log
@@ -190,13 +190,17 @@ class _HomeShellState extends State<HomeShell> {
   Widget _tabChild(int i) {
     if (i == 1 && !_communityEnabled) return const SizedBox.shrink();
     if (!_visitedTabs.contains(i)) return const SizedBox.shrink();
-    return switch (i) {
+    final child = switch (i) {
       0 => const HomeTab(key: ValueKey('tab-home')),
       1 => CommunityTab(key: ValueKey('tab-community')),
       2 => const SelfCareTab(key: ValueKey('tab-selfcare')),
       3 => const AccountTab(key: ValueKey('tab-account')),
       _ => const SizedBox.shrink(),
     };
+    if (i != _index) {
+      return TickerMode(enabled: false, child: child);
+    }
+    return child;
   }
 
   @override
@@ -219,6 +223,8 @@ class _HomeShellState extends State<HomeShell> {
 
     return PremiumSyncListener(
       child: CommunityNotificationListener(
+      child: Container(
+      decoration: AppTheme.gradientBackground(context),
       child: Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -353,7 +359,12 @@ class _HomeShellState extends State<HomeShell> {
       ),
 
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          16 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Container(
           height: 68,
           clipBehavior: Clip.none,
@@ -381,6 +392,7 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
       ),
+    ),
     ),
     ),
     );
@@ -444,13 +456,16 @@ class _BottomBarLogSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 72,
-      child: OverflowBox(
+      height: 68,
+      child: Stack(
         alignment: Alignment.topCenter,
-        maxHeight: 120,
-        child: Transform.translate(
-          offset: const Offset(0, -20),
-          child: _LogFabButton(onPressed: onPressed),
-        ),
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: -20,
+            child: _LogFabButton(onPressed: onPressed),
+          ),
+        ],
       ),
     );
   }

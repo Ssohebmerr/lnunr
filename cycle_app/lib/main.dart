@@ -37,9 +37,9 @@ import 'core/ai/ai_gateway.dart';
 import 'core/ai/ai_insights_service.dart';
 import 'core/ai/direct_gemini_service.dart';
 import 'core/ai/firebase_ai_service.dart';
-import 'core/config/app_secrets.dart';
 import 'core/config/feature_flags.dart';
 import 'core/firebase/app_bootstrap.dart';
+import 'features/user/data/guest_user_service.dart';
 import 'core/ai/lune_personality.dart';
 import 'core/locale/locale_controller.dart';
 import 'core/navigation/home_shell_actions.dart';
@@ -87,25 +87,11 @@ void main() async {
     debugPrint('[Main] AppBootstrap initialize failed: $e\n$st');
   }
 
-  // Load Gemini API key from build-time --dart-define, but never overwrite a
-  // user-supplied key already stored in SecureStorage. This prevents a stale
-  // or invalid embedded default from wiping a working key entered via the
-  // AI Diagnostic screen.
   try {
-    if (AppSecrets.geminiApiKey.isNotEmpty) {
-      final geminiService = DirectGeminiService();
-      final alreadyHasKey = await geminiService.hasKey();
-      if (!alreadyHasKey) {
-        await geminiService.setKey(AppSecrets.geminiApiKey);
-        if (kDebugMode) {
-          debugPrint('[Main] Gemini API key seeded from --dart-define');
-        }
-      } else if (kDebugMode) {
-        debugPrint('[Main] Gemini API key already present — keeping stored value');
-      }
-    }
-  } catch (e) {
-    debugPrint('[Main] Gemini key seeding failed: $e');
+    await GuestUserService().ensureSession();
+    unawaited(GuestUserService().syncLocalProfileIfNeeded());
+  } catch (e, st) {
+    debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
   }
 
   tz_data.initializeTimeZones();
@@ -337,9 +323,7 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
           RepositoryProvider(create: (_) => FirebaseAiService()),
           RepositoryProvider(create: (_) => DirectGeminiService()),
           RepositoryProvider(
-            create: (c) => AiGateway(
-              directGemini: c.read<DirectGeminiService>(),
-            ),
+            create: (_) => AiGateway(),
           ),
           RepositoryProvider(create: (_) => AiContextEngine()),
           RepositoryProvider(

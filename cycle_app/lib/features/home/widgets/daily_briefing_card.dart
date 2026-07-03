@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
 import '../../../core/ai/ai_response_cache.dart';
@@ -56,7 +57,7 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
       if (cached != null && cached.isNotEmpty && !_looksLikeError(cached)) {
         if (mounted) {
           setState(() {
-            _briefing = cached;
+            _briefing = AiActionParser.sanitizeForDisplay(cached);
             _loading = false;
           });
         }

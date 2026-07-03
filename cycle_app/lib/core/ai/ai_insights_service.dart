@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'doctor_report_builder.dart';
+import 'ai_action_parser.dart';
 import 'ai_prompt_style.dart';
 import '../privacy/consent_manager.dart';
 import '../premium/premium_gate.dart';
@@ -45,8 +46,14 @@ class AiInsightsService {
       final cached = prefs.getString(cacheKey);
       if (cached != null) {
         try {
-          return AiInsight.fromJson(
+          final insight = AiInsight.fromJson(
             jsonDecode(cached) as Map<String, dynamic>,
+            fromCache: true,
+          );
+          return AiInsight(
+            type: insight.type,
+            text: AiActionParser.sanitizeForDisplay(insight.text),
+            generatedAt: insight.generatedAt,
             fromCache: true,
           );
         } catch (_) {}

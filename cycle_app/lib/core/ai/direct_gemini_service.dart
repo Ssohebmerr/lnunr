@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/community/data/moderation_result.dart';
-import '../config/app_secrets.dart';
 import '../security/secure_storage_service.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
@@ -32,58 +31,23 @@ class DirectGeminiService {
     'gemini-2.5-flash-lite',
   ];
   static const _secureKey = 'gemini_api_key';
-  static const _legacyPrefKey = 'gemini_api_key'; // Old SharedPreferences key
-  // Tracks the AppSecrets key that was last auto-provisioned, so a NEW
-  // build-time key always overrides a stale key cached on the device.
-  static const _provisionedMarker = 'gemini_provisioned_appsecrets_key';
+  static const _legacyPrefKey = 'gemini_api_key';
 
   final SecureStorageService _secure;
   String? _cachedKey;
 
   Future<String?> _getKey() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // 0. If the app shipped a build-time key that differs from whatever was
-    //    last provisioned, it wins. This fixes the case where an old/broken
-    //    key stayed cached in secure storage and shadowed the new one, so the
-    //    user had to fully uninstall to pick up a key change.
-    final buildKey = AppSecrets.geminiApiKey;
-    if (buildKey.isNotEmpty &&
-        prefs.getString(_provisionedMarker) != buildKey) {
-      _cachedKey = buildKey;
-      await _secure.write(_secureKey, buildKey);
-      await prefs.setString(_provisionedMarker, buildKey);
-      await prefs.remove(_legacyPrefKey);
-      if (kDebugMode) {
-        debugPrint('[DirectGemini] Provisioned new build-time key');
-      }
-      return _cachedKey;
-    }
-
     if (_cachedKey != null && _cachedKey!.isNotEmpty) return _cachedKey;
 
-    // 1. Try secure storage (covers user-set keys).
     _cachedKey = await _secure.read(_secureKey);
     if (_cachedKey != null && _cachedKey!.isNotEmpty) return _cachedKey;
 
-    // 2. Migrate from SharedPreferences if found (one-time)
+    final prefs = await SharedPreferences.getInstance();
     final legacyKey = prefs.getString(_legacyPrefKey);
     if (legacyKey != null && legacyKey.isNotEmpty) {
       await _secure.write(_secureKey, legacyKey);
-      await prefs.remove(_legacyPrefKey); // Clean up legacy
+      await prefs.remove(_legacyPrefKey);
       _cachedKey = legacyKey;
-      if (kDebugMode) {
-        debugPrint('[DirectGemini] Migrated key from SharedPreferences');
-      }
-      return _cachedKey;
-    }
-
-    // 3. Build-time key fallback.
-    if (buildKey.isNotEmpty) {
-      _cachedKey = buildKey;
-      await _secure.write(_secureKey, buildKey);
-      await prefs.setString(_provisionedMarker, buildKey);
-      if (kDebugMode) debugPrint('[DirectGemini] Using key from AppSecrets');
       return _cachedKey;
     }
 
@@ -93,10 +57,6 @@ class DirectGeminiService {
   Future<void> setKey(String key) async {
     _cachedKey = key.trim();
     await _secure.write(_secureKey, _cachedKey!);
-    // Mark this as the provisioned key so it isn't immediately overwritten by
-    // the build-time default on the next launch.
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_provisionedMarker, _cachedKey!);
   }
 
   /// Clears any cached/stored key so the next call re-reads from AppSecrets.
@@ -238,10 +198,12 @@ class DirectGeminiService {
         if (text == null || text.isEmpty) continue;
 
         final finish = candidate?['finishReason'] as String?;
-        if (finish == 'MAX_TOKENS') {
-          text = '$text\n\n... [response truncated]';
-        } else if (finish != null && finish != 'STOP') {
-          text = '$text\n\n[response stopped: $finish]';
+        if (finish == 'MAX_TOKENS' &&
+            !text.endsWith('.') &&
+            !text.endsWith('!') &&
+            !text.endsWith('?') &&
+            !text.endsWith('…')) {
+          text = '$text…';
         }
 
         return text;

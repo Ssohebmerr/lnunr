@@ -140,6 +140,7 @@ class _SelfCareTabState extends State<SelfCareTab> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
+        primary: false,
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
         ),

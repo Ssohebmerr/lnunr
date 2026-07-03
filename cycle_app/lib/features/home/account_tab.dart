@@ -32,6 +32,7 @@ import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_event.dart';
 import '../auth/presentation/auth_navigation.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
+import '../user/data/guest_user_service.dart';
 import '../education/presentation/education_hub_page.dart';
 import '../partner/presentation/partner_page.dart';
 import '../settings/presentation/about_screen.dart';
@@ -123,13 +124,16 @@ class _AccountTabState extends State<AccountTab> {
   }
 
   Future<void> _subscribe() async {
-    final user = FirebaseAuth.instance.currentUser;
     final l10n = AppLocalizations.of(context)!;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.loginRequiredPremium)),
-      );
-      await openLoginScreen(context);
+
+    try {
+      await GuestUserService().ensureSession();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
+        );
+      }
       return;
     }
 
@@ -309,6 +313,10 @@ class _AccountTabState extends State<AccountTab> {
     final user = FirebaseAuth.instance.currentUser;
 
     return ListView(
+      primary: false,
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       children: [
         _ProfileCard(
@@ -389,7 +397,9 @@ class _AccountTabState extends State<AccountTab> {
             AccountMenuTile(
               femIcon: FeminineIcon.watch,
               title: l10n.smartWatch,
-              subtitle: Platform.isIOS ? 'Apple Watch support' : 'Wear OS support',
+              subtitle: Platform.isIOS
+                  ? l10n.accountWatchAppleSubtitle
+                  : l10n.accountWatchWearSubtitle,
               showDivider: false,
               onTap: () => _showWatchInfo(context),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/ai/models/health_snapshot.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Generates a short, *offline* wellness line for the home header.
 ///
@@ -10,7 +11,7 @@ import '../../../core/ai/models/health_snapshot.dart';
 /// path is layered on top in a future iteration.
 ///
 /// The output is a [Insight] tuple of:
-///   - [headline]:  one short sentence (max ~8 words), localizable later.
+///   - [headline]:  one short sentence (max ~8 words), localized.
 ///   - [body]:      one actionable tip or observation (≤140 chars).
 ///   - [accent]:    phase color used to tint the card.
 ///   - [icon]:      small leading icon.
@@ -18,7 +19,7 @@ import '../../../core/ai/models/health_snapshot.dart';
 class InsightGenerator {
   const InsightGenerator();
 
-  Insight forSnapshot(HealthSnapshot snap) {
+  Insight forSnapshot(HealthSnapshot snap, AppLocalizations l10n) {
     final phase = (snap.currentPhase ?? '').toLowerCase();
     final day = snap.currentCycleDay ?? 0;
     final periodActive = snap.isPeriodActive == true;
@@ -29,8 +30,8 @@ class InsightGenerator {
       final w = snap.pregnancyWeek!;
       if (w <= 12) {
         return Insight(
-          headline: 'First trimester',
-          body: 'Gentle movement, hydration, and rest are your best friends this week.',
+          headline: l10n.insightHeadlineFirstTrimester,
+          body: l10n.insightBodyFirstTrimester,
           mood: 'pregnancy:t1',
           accent: const Color(0xFFE8A0BF),
           icon: Icons.eco_outlined,
@@ -38,16 +39,16 @@ class InsightGenerator {
       }
       if (w <= 27) {
         return Insight(
-          headline: 'Second trimester',
-          body: 'Energy usually picks up here — great time for light walks and stretching.',
+          headline: l10n.insightHeadlineSecondTrimester,
+          body: l10n.insightBodySecondTrimester,
           mood: 'pregnancy:t2',
           accent: const Color(0xFFB1C97A),
           icon: Icons.directions_walk_outlined,
         );
       }
       return Insight(
-        headline: 'Third trimester',
-        body: 'Rest often, hydrate, and reach out to your provider with any concerns.',
+        headline: l10n.insightHeadlineThirdTrimester,
+        body: l10n.insightBodyThirdTrimester,
         mood: 'pregnancy:t3',
         accent: const Color(0xFFE49393),
         icon: Icons.nightlight_outlined,
@@ -56,8 +57,8 @@ class InsightGenerator {
 
     if (periodActive) {
       return Insight(
-        headline: 'Period day',
-        body: 'Warm drinks + magnesium-rich foods can ease cramps. Be gentle with yourself today.',
+        headline: l10n.insightHeadlinePeriodDay,
+        body: l10n.insightBodyPeriodDay,
         mood: 'phase:menstruation',
         accent: const Color(0xFFE06C75),
         icon: Icons.water_drop_outlined,
@@ -67,26 +68,26 @@ class InsightGenerator {
     switch (phase) {
       case 'follicular':
         return Insight(
-          headline: 'Follicular phase',
-          body: 'Energy tends to climb — try a new workout or tackle a tough task today.',
+          headline: l10n.insightHeadlineFollicular,
+          body: l10n.insightBodyFollicular,
           mood: 'phase:follicular',
           accent: const Color(0xFF7FB069),
           icon: Icons.bolt_outlined,
         );
       case 'ovulation':
         return Insight(
-          headline: 'Ovulation',
-          body: 'Peak energy + confidence. Good day for a hard workout or a social plan.',
+          headline: l10n.insightHeadlineOvulation,
+          body: l10n.insightBodyOvulation,
           mood: 'phase:ovulation',
           accent: const Color(0xFFE8B647),
           icon: Icons.favorite_outline,
         );
       case 'luteal':
         final tip = (day >= 25)
-            ? 'Luteal week — complex carbs + earlier bedtime can really help mood right now.'
-            : 'Luteal phase — crave calm: less caffeine, more rest, gentle movement.';
+            ? l10n.insightBodyLutealLate
+            : l10n.insightBodyLutealEarly;
         return Insight(
-          headline: 'Luteal phase',
+          headline: l10n.insightHeadlineLuteal,
           body: tip,
           mood: 'phase:luteal',
           accent: const Color(0xFFA685E2),
@@ -94,8 +95,8 @@ class InsightGenerator {
         );
       case 'lateperiod':
         return Insight(
-          headline: 'Cycle is running late',
-          body: 'Stress or sleep changes can shift things. Give it 2-3 days — log any symptoms.',
+          headline: l10n.insightHeadlineLatePeriod,
+          body: l10n.insightBodyLatePeriod,
           mood: 'phase:late',
           accent: const Color(0xFFD17A22),
           icon: Icons.hourglass_bottom_outlined,
@@ -103,8 +104,8 @@ class InsightGenerator {
       default:
         // No data yet (no last period set).
         return Insight(
-          headline: 'Welcome 🌸',
-          body: 'Set your last period date to unlock personalised daily insights.',
+          headline: l10n.insightHeadlineWelcome,
+          body: l10n.insightBodyWelcome,
           mood: 'phase:unknown',
           accent: const Color(0xFFB388C7),
           icon: Icons.spa_outlined,

@@ -72,7 +72,9 @@ void main() {
       final homeTab = File('lib/features/home/home_tab.dart').readAsStringSync();
       expect(homeTab, contains('home_explore_rail.dart'));
       expect(homeTab, contains('home_updates_panel.dart'));
-      expect(homeTab, contains('HomeAiEntryCard'));
+      expect(homeTab, contains('home_community_card.dart'));
+      expect(homeTab, contains('HomeTodayLogCard'));
+      expect(homeTab, contains('DailyBriefingCard'));
       expect(homeTab, contains('HomeShellActions'));
     });
   });

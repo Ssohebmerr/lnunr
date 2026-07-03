@@ -6,6 +6,11 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../core/auth/apple_auth_helper.dart';
 
 class AuthRepository {
+  /// Web client ID from Firebase (client_type 3 in google-services.json).
+  /// Required for Google Sign-In + Firebase Auth on Android.
+  static const googleWebClientId =
+      '113050193026-p30nbqodq492163nhghoofo7ea514qh4.apps.googleusercontent.com';
+
   final FirebaseAuth _auth;
   final GoogleSignIn? _injectedGoogleSignIn;
   GoogleSignIn? _googleSignInInstance;
@@ -17,7 +22,9 @@ class AuthRepository {
   GoogleSignIn? get _googleSignIn {
     if (_injectedGoogleSignIn != null) return _injectedGoogleSignIn;
     if (kIsWeb) return null;
-    return _googleSignInInstance ??= GoogleSignIn();
+    return _googleSignInInstance ??= GoogleSignIn(
+      serverClientId: googleWebClientId,
+    );
   }
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -44,6 +51,19 @@ class AuthRepository {
       accessToken: auth.accessToken,
       idToken: auth.idToken,
     );
+
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      try {
+        await current.linkWithCredential(credential);
+        return;
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'credential-already-in-use' &&
+            e.code != 'email-already-in-use') {
+          rethrow;
+        }
+      }
+    }
     await _auth.signInWithCredential(credential);
   }
 

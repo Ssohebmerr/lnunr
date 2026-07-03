@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
 import '../../../core/ai/ai_response_cache.dart';
@@ -64,7 +65,7 @@ class _WeeklyRecapCardState extends State<WeeklyRecapCard> {
         if (cached != null && cached.isNotEmpty) {
           if (mounted) {
             setState(() {
-              _text = cached;
+              _text = AiActionParser.sanitizeForDisplay(cached);
               _loading = false;
             });
           }

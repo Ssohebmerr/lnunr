@@ -25,7 +25,6 @@ import 'home_pcos_section.dart';
 import 'home_postpartum_section.dart';
 import 'sub_feature_page.dart';
 import 'widgets/daily_briefing_card.dart';
-import 'widgets/home_ai_entry_card.dart';
 import 'widgets/home_community_card.dart';
 import 'widgets/home_explore_rail.dart';
 import 'widgets/home_today_log_card.dart';
@@ -41,6 +40,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   final _bridge = CycleBridgeService();
   final _sync = CycleSyncService();
+  final _scrollController = ScrollController();
   CycleDashboardData? _data;
   List<PredictedSymptom> _symptomsToday = [];
   List<PredictedSymptom> _symptomsTomorrow = [];
@@ -60,6 +60,7 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     HomeRefreshScope.notifier.removeListener(_onExternalRefresh);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -68,7 +69,8 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> _load() async {
     if (_loadInFlight) return;
     _loadInFlight = true;
-    if (mounted) setState(() => _loading = true);
+    final showLoadingSpinner = _data == null;
+    if (mounted && showLoadingSpinner) setState(() => _loading = true);
     try {
       final goal = await _sync.getUserGoal();
       final settings = await AppSettingsRepository().fetch();
@@ -120,110 +122,162 @@ class _HomeTabState extends State<HomeTab> {
     final l10n = AppLocalizations.of(context)!;
     final d = _data;
     final theme = Theme.of(context);
+    final sections = _sectionBuilders(context, l10n, d, theme);
 
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        children: [
-          _HeroHeader(
-            l10n: l10n,
-            loading: _loading,
-            failed: _failed,
-            data: d,
-            isPregnancyMode: _goal.isPregnancyMode,
-            goal: _goal,
-            onRetry: _load,
-          ),
-          const SizedBox(height: 12),
-          // P2 features: today's insight + daily streak. Both honour
-          // feature flags so we can A/B them without a code change.
-          if (FeatureFlags.isEnabledSync(FeatureFlags.todaysInsight))
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: InsightCard(),
+      child: ListView.builder(
+        controller: _scrollController,
+        primary: false,
+        cacheExtent: 400,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          MediaQuery.paddingOf(context).bottom + 120,
+        ),
+        itemCount: sections.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index < sections.length - 1 ? 12 : 0,
             ),
-          if (FeatureFlags.isEnabledSync(FeatureFlags.dailyStreak))
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: StreakBadge(),
-            ),
-          const SizedBox(height: 12),
-          const DailyBriefingCard(),
-          const SizedBox(height: 12),
-          const HomeTodayLogCard(),
-          const SizedBox(height: 12),
-          const HomeAiEntryCard(),
-          if (_settings.communityEnabled) ...[
-            const SizedBox(height: 12),
-            const HomeCommunityCard(),
-          ],
-          const SizedBox(height: 12),
-          HomeExploreRail(settings: _settings),
-          const SizedBox(height: 12),
-          HomeUpdatesPanel(settings: _settings),
-          if (_symptomsToday.isNotEmpty || _symptomsTomorrow.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            PredictedSymptomsCard(
-              today: _symptomsToday,
-              tomorrow: _symptomsTomorrow,
-            ),
-          ],
-          if (d != null) ...[
-            const SizedBox(height: 12),
-            if (_goal.isPregnancyMode)
-              HomePregnancySection(
-                data: d,
-                onOpenCalendar: () => _openFullCalendar(context),
-              )
-            else if (_goal.isMenopauseMode)
-              HomeMenopauseSection(
-                data: d,
-                onOpenCalendar: () => _openFullCalendar(context),
-              )
-            else if (_goal.isPcosMode)
-              HomePcosSection(
-                data: d,
-                onOpenCalendar: () => _openFullCalendar(context),
-              )
-            else if (_goal.isPostpartumMode)
-              HomePostpartumSection(
-                data: d,
-                onOpenCalendar: () => _openFullCalendar(context),
-              )
-            else
-              GoalModeHomeSection(
-                data: d,
-                goal: _goal == UserGoalTypes.sexual
-                    ? UserGoalTypes.general
-                    : _goal,
-                showRing: true,
-                showWeekCalendar: false,
-                onOpenCalendar: () => _openFullCalendar(context),
-              ),
-          ],
-          if (_loading && d == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 24),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          if (_failed && d == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.cloud_off_rounded, size: 48, color: theme.colorScheme.outline),
-                    const SizedBox(height: 8),
-                    Text(l10n.homeStatsError, style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-            ),
-          if (d == null && !_loading && !_failed)
-            _EmptyStateHeader(goal: _goal, l10n: l10n, theme: theme),
-        ],
+            child: sections[index](),
+          );
+        },
       ),
+    );
+  }
+
+  List<Widget Function()> _sectionBuilders(
+    BuildContext context,
+    AppLocalizations l10n,
+    CycleDashboardData? d,
+    ThemeData theme,
+  ) {
+    final builders = <Widget Function()>[
+      () => _HeroHeader(
+        l10n: l10n,
+        loading: _loading,
+        failed: _failed,
+        data: d,
+        isPregnancyMode: _goal.isPregnancyMode,
+        goal: _goal,
+        onRetry: _load,
+      ),
+    ];
+
+    // ── Personal daily data first (what happened today / what to expect) ──
+    builders.add(() => const HomeTodayLogCard());
+
+    if (_symptomsToday.isNotEmpty || _symptomsTomorrow.isNotEmpty) {
+      builders.add(
+        () => PredictedSymptomsCard(
+          today: _symptomsToday,
+          tomorrow: _symptomsTomorrow,
+        ),
+      );
+    }
+
+    // ── Daily insights & engagement ──
+    if (FeatureFlags.isEnabledSync(FeatureFlags.todaysInsight)) {
+      builders.add(() => const InsightCard());
+    }
+    if (FeatureFlags.isEnabledSync(FeatureFlags.dailyStreak)) {
+      builders.add(() => const StreakBadge());
+    }
+
+    builders.add(() => const DailyBriefingCard());
+
+    // ── Goal / cycle section ──
+    if (d != null) {
+      builders.add(() => _goalSection(context, d));
+    }
+
+    // ── Social & discovery (secondary) ──
+    if (_settings.communityEnabled) {
+      builders.add(() => const HomeCommunityCard());
+    }
+
+    builders.addAll([
+      () => HomeExploreRail(settings: _settings),
+      () => HomeUpdatesPanel(settings: _settings),
+    ]);
+
+    // ── State indicators (loading / error / empty) ──
+    if (_loading && d == null) {
+      builders.add(
+        () => const Padding(
+          padding: EdgeInsets.only(top: 24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (_failed && d == null) {
+      builders.add(
+        () => Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 48,
+                  color: theme.colorScheme.outline,
+                ),
+                const SizedBox(height: 8),
+                Text(l10n.homeStatsError, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (d == null && !_loading && !_failed) {
+      builders.add(
+        () => _EmptyStateHeader(goal: _goal, l10n: l10n, theme: theme),
+      );
+    }
+
+    return builders;
+  }
+
+  Widget _goalSection(BuildContext context, CycleDashboardData d) {
+    if (_goal.isPregnancyMode) {
+      return HomePregnancySection(
+        data: d,
+        onOpenCalendar: () => _openFullCalendar(context),
+      );
+    }
+    if (_goal.isMenopauseMode) {
+      return HomeMenopauseSection(
+        data: d,
+        onOpenCalendar: () => _openFullCalendar(context),
+      );
+    }
+    if (_goal.isPcosMode) {
+      return HomePcosSection(
+        data: d,
+        onOpenCalendar: () => _openFullCalendar(context),
+      );
+    }
+    if (_goal.isPostpartumMode) {
+      return HomePostpartumSection(
+        data: d,
+        onOpenCalendar: () => _openFullCalendar(context),
+      );
+    }
+    return GoalModeHomeSection(
+      data: d,
+      goal: _goal == UserGoalTypes.sexual ? UserGoalTypes.general : _goal,
+      showRing: true,
+      showWeekCalendar: false,
+      onOpenCalendar: () => _openFullCalendar(context),
     );
   }
 }
@@ -569,10 +623,11 @@ class _CycleProgressRingState extends State<_CycleProgressRing>
     return SizedBox(
       width: _CycleProgressRing.size,
       height: _CycleProgressRing.size,
-      child: AnimatedBuilder(
-        animation: _anim,
-        builder: (_, _) {
-          return CustomPaint(
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _anim,
+          builder: (_, _) {
+            return CustomPaint(
             painter: _RingPainter(
               progress: _anim.value,
               track: theme.colorScheme.primary.withValues(alpha: 0.12),
@@ -616,6 +671,7 @@ class _CycleProgressRingState extends State<_CycleProgressRing>
             ),
           );
         },
+        ),
       ),
     );
   }

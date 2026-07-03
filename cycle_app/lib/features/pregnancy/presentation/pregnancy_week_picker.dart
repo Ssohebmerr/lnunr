@@ -40,6 +40,7 @@ class PregnancyWeekPicker extends StatelessWidget {
         SizedBox(
           height: 44,
           child: ListView.separated(
+            primary: false,
             scrollDirection: Axis.horizontal,
             itemCount: 37,
             separatorBuilder: (_, _) => const SizedBox(width: 6),
@@ -152,7 +153,9 @@ class PregnancyBabyHeroCard extends StatelessWidget {
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 320),
-              child: PregnancyBabyHero3DCard(week: week, size: 240),
+              child: RepaintBoundary(
+                child: PregnancyBabyHero3DCard(week: week, size: 240),
+              ),
             ),
           ),
           const SizedBox(height: 14),

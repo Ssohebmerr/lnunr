@@ -1,0 +1,92 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../../core/storage/user_prefs.dart';
+import 'guest_user_repository.dart';
+
+/// Ensures a stable device id + Firebase anonymous session and syncs profile.
+class GuestUserService {
+  GuestUserService({
+    FirebaseAuth? auth,
+    GuestUserRepository? repository,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _repository = repository ?? GuestUserRepository();
+
+  final FirebaseAuth _auth;
+  final GuestUserRepository _repository;
+
+  /// Returns Firebase Auth uid (anonymous when no email account).
+  Future<String> ensureSession() async {
+    await UserPrefs.getOrCreateDeviceId();
+    var user = _auth.currentUser;
+    if (user == null) {
+      try {
+        final cred = await _auth.signInAnonymously();
+        user = cred.user;
+      } catch (e, st) {
+        debugPrint('GuestUserService signInAnonymously failed: $e\n$st');
+        rethrow;
+      }
+    }
+    if (user == null) {
+      throw StateError('Anonymous sign-in returned no user');
+    }
+    await UserPrefs.saveUid(user.uid);
+    return user.uid;
+  }
+
+  Future<String> getDeviceId() => UserPrefs.getOrCreateDeviceId();
+
+  /// Creates or updates Firestore `users/{uid}` after onboarding.
+  Future<void> registerProfile({
+    required String name,
+    required DateTime birthDate,
+  }) async {
+    final uid = await ensureSession();
+    final deviceId = await getDeviceId();
+    final trimmed = name.trim().isEmpty ? 'User' : name.trim();
+
+    await UserPrefs.setProfileBirthDate(birthDate);
+
+    final existing = await _repository.fetch(uid);
+    if (existing == null) {
+      await _repository.createProfile(
+        uid: uid,
+        name: trimmed,
+        birthDate: birthDate,
+        deviceId: deviceId,
+      );
+    } else {
+      await _repository.updateProfile(
+        uid: uid,
+        name: trimmed,
+        birthDate: birthDate,
+        deviceId: deviceId,
+      );
+    }
+  }
+
+  /// Best-effort sync for returning users who already finished onboarding.
+  Future<void> syncLocalProfileIfNeeded() async {
+    if (!await UserPrefs.isOnboardingDone()) return;
+
+    final name = await UserPrefs.getProfileName();
+    final birthDate = await UserPrefs.getProfileBirthDate();
+    if (name == null || name.trim().isEmpty || birthDate == null) return;
+
+    try {
+      await registerProfile(name: name, birthDate: birthDate);
+    } catch (e, st) {
+      debugPrint('GuestUserService syncLocalProfileIfNeeded: $e\n$st');
+    }
+  }
+
+  static String generateDeviceId() {
+    final r = Random.secure();
+    final bytes = List<int>.generate(16, (_) => r.nextInt(256));
+    return base64Url.encode(bytes).replaceAll('=', '').substring(0, 22);
+  }
+}

@@ -230,6 +230,7 @@ class GoalCycleSharedBody extends StatelessWidget {
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
+              maintainState: false,
               tilePadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

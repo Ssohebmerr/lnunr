@@ -117,6 +117,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorCancelled => 'Sign-in was cancelled.';
 
   @override
+  String get authErrorGoogleConfig =>
+      'Google Sign-In is not configured on this build. Reinstall the latest app version.';
+
+  @override
   String get consentDataPurged => 'Cloud data for this feature was removed.';
 
   @override
@@ -380,6 +384,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeAiCardSubtitlePremium =>
       'Your smart assistant — unlimited daily chat';
+
+  @override
+  String get homeAiCardSubtitlePremiumOnly =>
+      'Premium only — tap to view plans';
+
+  @override
+  String get onboardingBirthDateLabel => 'Date of birth';
+
+  @override
+  String get onboardingBirthDateHint => 'Select your date of birth';
+
+  @override
+  String get onboardingBirthDateRequired => 'Please select your date of birth';
+
+  @override
+  String get subscriptionPlansTitle => 'Lune Premium';
+
+  @override
+  String get subscriptionPlansHeadline => 'Lune AI is for Premium members';
+
+  @override
+  String get subscriptionPlansSubtitle =>
+      'Unlock unlimited chat, cycle analysis, encrypted cloud backup, and priority support.';
+
+  @override
+  String get subscriptionPlansCta => 'Subscribe with Google Play';
+
+  @override
+  String get subscriptionPlansAccountHint => 'Manage subscription in Account';
 
   @override
   String get logTabTitle => 'Daily log';
@@ -1691,6 +1724,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get premiumAiLimitReached =>
       'You\'ve used today\'s free AI messages. Upgrade to Premium for unlimited chat.';
+
+  @override
+  String get aiDailyLimitReached =>
+      'You\'ve used your 10 daily Lune AI messages. Your limit resets automatically tomorrow.';
 
   @override
   String premiumAiFreeRemaining(int count) {
@@ -3217,6 +3254,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gotIt => 'Got it';
+
+  @override
+  String get accountWatchAppleSubtitle => 'Apple Watch support';
+
+  @override
+  String get accountWatchWearSubtitle => 'Wear OS support';
+
+  @override
+  String get insightHeadlineFirstTrimester => 'First trimester';
+
+  @override
+  String get insightBodyFirstTrimester =>
+      'Gentle movement, hydration, and rest are your best friends this week.';
+
+  @override
+  String get insightHeadlineSecondTrimester => 'Second trimester';
+
+  @override
+  String get insightBodySecondTrimester =>
+      'Energy usually picks up here — great time for light walks and stretching.';
+
+  @override
+  String get insightHeadlineThirdTrimester => 'Third trimester';
+
+  @override
+  String get insightBodyThirdTrimester =>
+      'Rest often, hydrate, and reach out to your provider with any concerns.';
+
+  @override
+  String get insightHeadlinePeriodDay => 'Period day';
+
+  @override
+  String get insightBodyPeriodDay =>
+      'Warm drinks + magnesium-rich foods can ease cramps. Be gentle with yourself today.';
+
+  @override
+  String get insightHeadlineFollicular => 'Follicular phase';
+
+  @override
+  String get insightBodyFollicular =>
+      'Energy tends to climb — try a new workout or tackle a tough task today.';
+
+  @override
+  String get insightHeadlineOvulation => 'Ovulation';
+
+  @override
+  String get insightBodyOvulation =>
+      'Peak energy + confidence. Good day for a hard workout or a social plan.';
+
+  @override
+  String get insightHeadlineLuteal => 'Luteal phase';
+
+  @override
+  String get insightBodyLutealEarly =>
+      'Luteal phase — crave calm: less caffeine, more rest, gentle movement.';
+
+  @override
+  String get insightBodyLutealLate =>
+      'Luteal week — complex carbs + earlier bedtime can really help mood right now.';
+
+  @override
+  String get insightHeadlineLatePeriod => 'Cycle is running late';
+
+  @override
+  String get insightBodyLatePeriod =>
+      'Stress or sleep changes can shift things. Give it 2-3 days — log any symptoms.';
+
+  @override
+  String get insightHeadlineWelcome => 'Welcome 🌸';
+
+  @override
+  String get insightBodyWelcome =>
+      'Set your last period date to unlock personalised daily insights.';
 
   @override
   String get smartWatch => 'Smart Watch';

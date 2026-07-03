@@ -8,6 +8,7 @@ import '../../../core/app_home_refresh.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../user/data/guest_user_service.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../menstrudel_integration/menstrudel_init.dart';
@@ -103,6 +104,17 @@ class CycleSyncService {
       await onCycleDataChanged().timeout(_syncTimeout);
     } catch (e, st) {
       debugPrint('Post-onboarding sync failed (non-fatal): $e\n$st');
+    }
+
+    if (birthDate != null) {
+      try {
+        await GuestUserService().registerProfile(
+          name: name,
+          birthDate: birthDate,
+        );
+      } catch (e, st) {
+        debugPrint('Guest user Firestore sync failed (non-fatal): $e\n$st');
+      }
     }
   }
 

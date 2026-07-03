@@ -41,6 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _cycleLength = 28;
   int _periodDuration = 5;
   DateTime _lastPeriod = DateTime.now().subtract(const Duration(days: 14));
+  DateTime? _birthDate;
   DateFormats _dateFormat = DateFormats.dmy;
   bool _privacyAccepted = false;
   bool _saving = false;
@@ -121,6 +122,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<void> _pickBirthDate() async {
+    final initial = _birthDate ?? DateTime(2000, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+      helpText: AppLocalizations.of(context)!.onboardingBirthDateLabel,
+    );
+    if (picked != null) {
+      setState(() => _birthDate = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -162,6 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         languageCode: lang,
         dateFormat: _dateFormat,
         displayName: _nameController.text.trim(),
+        birthDate: _birthDate,
         goal: _goal,
       );
       if (!mounted) return;
@@ -251,6 +267,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       l10n: l10n,
                       nameController: _nameController,
                       avatarIndex: _avatarIndex,
+                      birthDate: _birthDate,
+                      onPickBirthDate: _pickBirthDate,
                       onAvatarChanged: (i) => setState(() => _avatarIndex = i),
                     ),
                     _GoalStep(
@@ -316,6 +334,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   bool _canContinue() {
+    if (_step == 1) {
+      return _nameController.text.trim().isNotEmpty &&
+          _birthDate != null &&
+          !_saving;
+    }
     if (_step == 4) return _privacyAccepted && !_saving;
     return !_saving;
   }
@@ -326,12 +349,16 @@ class _ProfileStep extends StatelessWidget {
     required this.l10n,
     required this.nameController,
     required this.avatarIndex,
+    required this.birthDate,
+    required this.onPickBirthDate,
     required this.onAvatarChanged,
   });
 
   final AppLocalizations l10n;
   final TextEditingController nameController;
   final int avatarIndex;
+  final DateTime? birthDate;
+  final VoidCallback onPickBirthDate;
   final ValueChanged<int> onAvatarChanged;
 
   @override
@@ -374,6 +401,30 @@ class _ProfileStep extends StatelessWidget {
               prefixIcon: const Icon(Icons.badge_outlined),
             ),
           ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onPickBirthDate,
+            icon: const Icon(Icons.cake_outlined),
+            label: Text(
+              birthDate == null
+                  ? l10n.onboardingBirthDateHint
+                  : MaterialLocalizations.of(context).formatMediumDate(birthDate!),
+            ),
+            style: OutlinedButton.styleFrom(
+              alignment: AlignmentDirectional.centerStart,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+          if (birthDate == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 4),
+              child: Text(
+                l10n.onboardingBirthDateRequired,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
         ],
         ),
       ),

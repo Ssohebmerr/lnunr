@@ -1,13 +1,6 @@
 // ============================================================================
-// endpoints/analyze.js — POST /analyze  (cycle / pregnancy analysis).
-// ----------------------------------------------------------------------------
-// Identical authentication and CORS plumbing to `chat.js` (kept inline so
-// each endpoint stays self-contained and easy to reason about).
-//
-// The `doctor` flag in the body swaps the system prompt to the structured
-// doctor-visit format and bumps the output budget. We also still log the
-// request into `ai_usage/{uid}/messages` so admin analytics cover all
-// AI surfaces.
+// endpoints/analyze.js — POST /analyze  (cycle analysis for premium users).
+// Same quota + AI routing as chat.js.
 // ============================================================================
 
 'use strict';
@@ -16,9 +9,16 @@ const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
-const { callGemini } = require('../lib/gemini');
+const { callAiWithFallback } = require('../lib/ai_router');
+const {
+  DAILY_PREMIUM_CHAT_LIMIT,
+  QuotaError,
+  assertPremiumChatQuota,
+  incrementDailyChatCount,
+} = require('../lib/chat_quota');
 const { getSystemPromptForMode, getMaxTokensForMode } = require('../lib/prompts');
 
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
 function handleCors(req, res) {
@@ -45,10 +45,6 @@ function authError(req, res) {
   return authHeader.split('Bearer ')[1];
 }
 
-/**
- * Render the cycle / pregnancy context exactly the same way the on-device
- * chat prompt builder does, so the two surfaces stay aligned.
- */
 function buildAnalyzeContext(cycleContext) {
   const goal = cycleContext.userGoal || 'unknown';
   const lines = [];
@@ -95,7 +91,11 @@ function buildAnalyzeContext(cycleContext) {
 }
 
 exports.analyze = onRequest(
-  { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 60 },
+  {
+    cors: true,
+    secrets: [DEEPSEEK_API_KEY, GEMINI_API_KEY],
+    timeoutSeconds: 90,
+  },
   async (req, res) => {
     if (handleCors(req, res)) return;
 
@@ -115,13 +115,14 @@ exports.analyze = onRequest(
         return;
       }
 
+      const userRef = await assertPremiumChatQuota(uid);
+
       await admin.firestore().collection('ai_usage').doc(uid).collection('messages').add({
         message: message.substring(0, 500),
         mode: isDoctorReport ? 'doctor' : 'analyze',
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Prefer the client-built prompt (single source of truth in Dart).
       const clientSystemPrompt = (req.body?.systemPrompt || '').trim();
       const clientUserPrompt = (req.body?.userPrompt || '').trim();
       const clientMaxTokens = Number(req.body?.maxTokens) || 0;
@@ -137,18 +138,37 @@ exports.analyze = onRequest(
       const userPrompt = clientUserPrompt || fallbackUserPrompt;
       const maxTokens = clientMaxTokens || (isDoctorReport ? 1200 : getMaxTokensForMode('analyze'));
 
-      const reply = await callGemini(GEMINI_API_KEY.value(), systemPrompt, userPrompt, maxTokens, clientTemperature);
+      const { reply, provider } = await callAiWithFallback({
+        deepseekKey: DEEPSEEK_API_KEY.value(),
+        geminiKey: GEMINI_API_KEY.value(),
+        systemPrompt,
+        userPrompt,
+        maxTokens,
+        temperature: clientTemperature,
+      });
+
+      await incrementDailyChatCount(userRef);
+
+      const snap = await userRef.get();
+      const used = Number(snap.data()?.daily_chat_count) || 0;
+      const remaining = Math.max(0, DAILY_PREMIUM_CHAT_LIMIT - used);
 
       setCors(res);
-      res.json({ reply });
+      res.json({ reply, provider, dailyRemaining: remaining });
     } catch (error) {
       console.error('Analyze error:', error);
       setCors(res);
+      if (error instanceof QuotaError) {
+        res.status(error.status).json({
+          error: error.code,
+          message: error.message,
+        });
+        return;
+      }
       if (error.code === 'auth/id-token-expired') {
         res.status(401).json({ error: 'Token expired.' });
         return;
       }
-      setCors(res);
       res.status(500).json({ reply: 'عذراً، حدث خطأ أثناء التحليل. حاولي مرة أخرى.' });
     }
   },

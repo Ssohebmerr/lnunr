@@ -21,6 +21,7 @@ Thumbs.db
 
 # Node
 node_modules/
+.tools/
 
 # Env
 *.env

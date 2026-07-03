@@ -308,6 +308,12 @@ abstract class AppLocalizations {
   /// **'Sign-in was cancelled.'**
   String get authErrorCancelled;
 
+  /// No description provided for @authErrorGoogleConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In is not configured on this build. Reinstall the latest app version.'**
+  String get authErrorGoogleConfig;
+
   /// No description provided for @consentDataPurged.
   ///
   /// In en, this message translates to:
@@ -799,6 +805,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your smart assistant — unlimited daily chat'**
   String get homeAiCardSubtitlePremium;
+
+  /// No description provided for @homeAiCardSubtitlePremiumOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium only — tap to view plans'**
+  String get homeAiCardSubtitlePremiumOnly;
+
+  /// No description provided for @onboardingBirthDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get onboardingBirthDateLabel;
+
+  /// No description provided for @onboardingBirthDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your date of birth'**
+  String get onboardingBirthDateHint;
+
+  /// No description provided for @onboardingBirthDateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your date of birth'**
+  String get onboardingBirthDateRequired;
+
+  /// No description provided for @subscriptionPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune Premium'**
+  String get subscriptionPlansTitle;
+
+  /// No description provided for @subscriptionPlansHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI is for Premium members'**
+  String get subscriptionPlansHeadline;
+
+  /// No description provided for @subscriptionPlansSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited chat, cycle analysis, encrypted cloud backup, and priority support.'**
+  String get subscriptionPlansSubtitle;
+
+  /// No description provided for @subscriptionPlansCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe with Google Play'**
+  String get subscriptionPlansCta;
+
+  /// No description provided for @subscriptionPlansAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription in Account'**
+  String get subscriptionPlansAccountHint;
 
   /// No description provided for @logTabTitle.
   ///
@@ -3229,6 +3289,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ve used today\'s free AI messages. Upgrade to Premium for unlimited chat.'**
   String get premiumAiLimitReached;
+
+  /// No description provided for @aiDailyLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used your 10 daily Lune AI messages. Your limit resets automatically tomorrow.'**
+  String get aiDailyLimitReached;
 
   /// No description provided for @premiumAiFreeRemaining.
   ///
@@ -5989,6 +6055,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get gotIt;
+
+  /// No description provided for @accountWatchAppleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch support'**
+  String get accountWatchAppleSubtitle;
+
+  /// No description provided for @accountWatchWearSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wear OS support'**
+  String get accountWatchWearSubtitle;
+
+  /// No description provided for @insightHeadlineFirstTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'First trimester'**
+  String get insightHeadlineFirstTrimester;
+
+  /// No description provided for @insightBodyFirstTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle movement, hydration, and rest are your best friends this week.'**
+  String get insightBodyFirstTrimester;
+
+  /// No description provided for @insightHeadlineSecondTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Second trimester'**
+  String get insightHeadlineSecondTrimester;
+
+  /// No description provided for @insightBodySecondTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy usually picks up here — great time for light walks and stretching.'**
+  String get insightBodySecondTrimester;
+
+  /// No description provided for @insightHeadlineThirdTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Third trimester'**
+  String get insightHeadlineThirdTrimester;
+
+  /// No description provided for @insightBodyThirdTrimester.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest often, hydrate, and reach out to your provider with any concerns.'**
+  String get insightBodyThirdTrimester;
+
+  /// No description provided for @insightHeadlinePeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Period day'**
+  String get insightHeadlinePeriodDay;
+
+  /// No description provided for @insightBodyPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm drinks + magnesium-rich foods can ease cramps. Be gentle with yourself today.'**
+  String get insightBodyPeriodDay;
+
+  /// No description provided for @insightHeadlineFollicular.
+  ///
+  /// In en, this message translates to:
+  /// **'Follicular phase'**
+  String get insightHeadlineFollicular;
+
+  /// No description provided for @insightBodyFollicular.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy tends to climb — try a new workout or tackle a tough task today.'**
+  String get insightBodyFollicular;
+
+  /// No description provided for @insightHeadlineOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation'**
+  String get insightHeadlineOvulation;
+
+  /// No description provided for @insightBodyOvulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak energy + confidence. Good day for a hard workout or a social plan.'**
+  String get insightBodyOvulation;
+
+  /// No description provided for @insightHeadlineLuteal.
+  ///
+  /// In en, this message translates to:
+  /// **'Luteal phase'**
+  String get insightHeadlineLuteal;
+
+  /// No description provided for @insightBodyLutealEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'Luteal phase — crave calm: less caffeine, more rest, gentle movement.'**
+  String get insightBodyLutealEarly;
+
+  /// No description provided for @insightBodyLutealLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Luteal week — complex carbs + earlier bedtime can really help mood right now.'**
+  String get insightBodyLutealLate;
+
+  /// No description provided for @insightHeadlineLatePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle is running late'**
+  String get insightHeadlineLatePeriod;
+
+  /// No description provided for @insightBodyLatePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress or sleep changes can shift things. Give it 2-3 days — log any symptoms.'**
+  String get insightBodyLatePeriod;
+
+  /// No description provided for @insightHeadlineWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome 🌸'**
+  String get insightHeadlineWelcome;
+
+  /// No description provided for @insightBodyWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your last period date to unlock personalised daily insights.'**
+  String get insightBodyWelcome;
 
   /// No description provided for @smartWatch.
   ///

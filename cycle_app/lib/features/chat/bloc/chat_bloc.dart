@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
+import '../../../core/ai/ai_gateway_exception.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../data/chat_message.dart';
 import '../data/chat_repository.dart';
@@ -80,6 +82,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSend(SendChatMessage event, Emitter<ChatState> emit) async {
     final access = await PremiumGate.checkAiChat();
+    if (access == PremiumAiAccess.needsPremium) {
+      _emitNotice(emit, ChatNoticeType.premiumRequired);
+      return;
+    }
     if (access == PremiumAiAccess.needsConsent) {
       _emitNotice(emit, ChatNoticeType.consent);
       return;
@@ -135,7 +141,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           timestamp: DateTime.now(),
         ),
       );
-      await PremiumGate.recordAiMessage();
+    } on AiGatewayException catch (e) {
+      if (e.isDailyLimit) {
+        _emitNotice(emit, ChatNoticeType.dailyLimit);
+      } else if (e.isPremiumRequired) {
+        _emitNotice(emit, ChatNoticeType.premiumRequired);
+      } else {
+        await repository.saveMessage(
+          uid,
+          ChatMessage(
+            id: '',
+            text: _unavailableReply,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
     } catch (_) {
       await repository.saveMessage(
         uid,
@@ -163,24 +184,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     bool analyzeMode = false,
   }) async {
     final buffer = StringBuffer();
-    await for (final chunk in repository.streamAiReply(
-      message: message,
-      cycleContext: cycleContext,
-      mode: analyzeMode ? 'analyze' : mode,
-      history: history,
-    )) {
-      buffer.write(chunk);
-      if (state is ChatLoaded) {
-        emit((state as ChatLoaded).copyWith(
-          isSending: true,
-          partialReply: buffer.toString(),
-        ));
+    try {
+      await for (final chunk in repository.streamAiReply(
+        message: message,
+        cycleContext: cycleContext,
+        mode: analyzeMode ? 'analyze' : mode,
+        history: history,
+      )) {
+        buffer.write(chunk);
+        if (state is ChatLoaded) {
+          emit((state as ChatLoaded).copyWith(
+            isSending: true,
+            partialReply: AiActionParser.sanitizeForDisplay(buffer.toString()),
+          ));
+        }
       }
+    } on AiGatewayException {
+      rethrow;
     }
 
-    if (buffer.isNotEmpty) return buffer.toString();
+    if (buffer.isNotEmpty) {
+      return AiActionParser.sanitizeForDisplay(buffer.toString());
+    }
 
-    // Stream produced nothing — fall back to single-shot call.
     return repository.requestAiReply(
       message: message,
       cycleContext: cycleContext,
@@ -196,6 +222,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     final access = await PremiumGate.checkAiChat();
+    if (access == PremiumAiAccess.needsPremium) {
+      _emitNotice(emit, ChatNoticeType.premiumRequired);
+      return;
+    }
     if (access == PremiumAiAccess.needsConsent) {
       _emitNotice(emit, ChatNoticeType.consent);
       return;
@@ -246,7 +276,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           timestamp: DateTime.now(),
         ),
       );
-      await PremiumGate.recordAiMessage();
+    } on AiGatewayException catch (e) {
+      if (e.isDailyLimit) {
+        _emitNotice(emit, ChatNoticeType.dailyLimit);
+      } else if (e.isPremiumRequired) {
+        _emitNotice(emit, ChatNoticeType.premiumRequired);
+      } else {
+        await repository.saveMessage(
+          uid,
+          ChatMessage(
+            id: '',
+            text: _unavailableReply,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ),
+        );
+      }
     } catch (_) {
       await repository.saveMessage(
         uid,

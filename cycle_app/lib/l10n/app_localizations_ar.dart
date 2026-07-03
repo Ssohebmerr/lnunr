@@ -117,6 +117,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authErrorCancelled => 'تم إلغاء تسجيل الدخول.';
 
   @override
+  String get authErrorGoogleConfig =>
+      'تسجيل الدخول عبر Google غير مضبوط في هذه النسخة. ثبّتي آخر إصدار من التطبيق.';
+
+  @override
   String get consentDataPurged => 'تم حذف البيانات السحابية لهذه الميزة.';
 
   @override
@@ -379,6 +383,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeAiCardSubtitlePremium => 'مساعدتكِ الذكية — اسألي بلا حد يومي';
+
+  @override
+  String get homeAiCardSubtitlePremiumOnly =>
+      'للمشتركات في Premium — اضغطي لعرض الخطط';
+
+  @override
+  String get onboardingBirthDateLabel => 'تاريخ الميلاد';
+
+  @override
+  String get onboardingBirthDateHint => 'اختاري تاريخ ميلادك';
+
+  @override
+  String get onboardingBirthDateRequired => 'يرجى اختيار تاريخ الميلاد';
+
+  @override
+  String get subscriptionPlansTitle => 'Lune Premium';
+
+  @override
+  String get subscriptionPlansHeadline => 'Lune AI مخصصة لحسابات Premium';
+
+  @override
+  String get subscriptionPlansSubtitle =>
+      'افتحي المحادثة بلا حدود، تحليل الدورة، النسخ السحابي المشفّر، والدعم ذو الأولوية.';
+
+  @override
+  String get subscriptionPlansCta => 'اشتركي عبر Google Play';
+
+  @override
+  String get subscriptionPlansAccountHint => 'إدارة الاشتراك من الحساب';
 
   @override
   String get logTabTitle => 'التسجيل اليومي';
@@ -1680,6 +1713,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get premiumAiLimitReached =>
       'استنفدتِ رسائل AI المجانية اليوم. Premium يمنحك محادثة غير محدودة.';
+
+  @override
+  String get aiDailyLimitReached =>
+      'استنفدتِ 10 رسائل Lune AI اليومية. يتجدد رصيدك تلقائياً غداً.';
 
   @override
   String premiumAiFreeRemaining(int count) {
@@ -3194,6 +3231,79 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gotIt => 'فهمت';
+
+  @override
+  String get accountWatchAppleSubtitle => 'دعم Apple Watch';
+
+  @override
+  String get accountWatchWearSubtitle => 'دعم Wear OS';
+
+  @override
+  String get insightHeadlineFirstTrimester => 'الثلث الأول';
+
+  @override
+  String get insightBodyFirstTrimester =>
+      'الحركة الخفيفة والترطيب والراحة أفضل رفقاءك هذا الأسبوع.';
+
+  @override
+  String get insightHeadlineSecondTrimester => 'الثلث الثاني';
+
+  @override
+  String get insightBodySecondTrimester =>
+      'الطاقة عادةً ترتفع هنا — وقت مثالي للمشي الخفيف والتمدد.';
+
+  @override
+  String get insightHeadlineThirdTrimester => 'الثلث الثالث';
+
+  @override
+  String get insightBodyThirdTrimester =>
+      'استريحي كثيراً، رطّبي جسمك، وتواصلي مع طبيبك عند أي قلق.';
+
+  @override
+  String get insightHeadlinePeriodDay => 'يوم الدورة';
+
+  @override
+  String get insightBodyPeriodDay =>
+      'المشروبات الدافئة والأطعمة الغنية بالمغنيسيوم تخفف التشنجات. كوني لطيفة مع نفسك اليوم.';
+
+  @override
+  String get insightHeadlineFollicular => 'مرحلة الجُريبي';
+
+  @override
+  String get insightBodyFollicular =>
+      'الطاقة تميل للارتفاع — جربي تمريناً جديداً أو أنجزي مهمة صعبة اليوم.';
+
+  @override
+  String get insightHeadlineOvulation => 'التبويض';
+
+  @override
+  String get insightBodyOvulation =>
+      'ذروة الطاقة والثقة. يوم مناسب لتمرين قوي أو خطة اجتماعية.';
+
+  @override
+  String get insightHeadlineLuteal => 'المرحلة الأصفرية';
+
+  @override
+  String get insightBodyLutealEarly =>
+      'المرحلة الأصفرية — احتاجي الهدوء: قللي القهوة، زيدي الراحة، وحركة لطيفة.';
+
+  @override
+  String get insightBodyLutealLate =>
+      'أسبوع المرحلة الأصفرية — الكربوهيدرات المعقدة والنوم المبكر يدعمان مزاجك الآن.';
+
+  @override
+  String get insightHeadlineLatePeriod => 'الدورة متأخرة';
+
+  @override
+  String get insightBodyLatePeriod =>
+      'التوتر أو تغير النوم قد يؤخر الدورة. انتظري 2-3 أيام — وسجّلي أي أعراض.';
+
+  @override
+  String get insightHeadlineWelcome => 'أهلاً بكِ 🌸';
+
+  @override
+  String get insightBodyWelcome =>
+      'حددي تاريخ آخر دورة لفتح رؤى يومية مخصصة لك.';
 
   @override
   String get smartWatch => 'الساعة الذكية';

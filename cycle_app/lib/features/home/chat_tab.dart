@@ -14,6 +14,7 @@ import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
 import '../../../core/privacy/consent_dialogs.dart';
+import '../premium/presentation/subscription_plans_screen.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../chat/bloc/chat_bloc.dart';
@@ -33,7 +34,6 @@ class _ChatTabState extends State<ChatTab> {
   final _focusNode = FocusNode();
   bool _checkingConsent = true;
   bool _isPremium = false;
-  int _freeRemaining = 5;
   LunePersonality _personality = LunePersonalityPrefs.current;
   final FlutterTts _tts = FlutterTts();
   String? _speakingMessageId;
@@ -44,6 +44,14 @@ class _ChatTabState extends State<ChatTab> {
     PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
     _checkConsent();
     _controller.addListener(_onTextChanged);
+
+    // ── TTS quality settings ──────────────────────────────────────────────
+    // Rate: 0.45 = comfortable listening pace (0.0 slowest, 1.0 fastest)
+    // Pitch: 1.05 = slightly warmer than robotic 1.0
+    // Volume: 1.0 = full volume
+    _tts.setSpeechRate(0.45);
+    _tts.setPitch(1.05);
+    _tts.setVolume(1.0);
 
     _tts.setCompletionHandler(() {
       if (mounted) setState(() => _speakingMessageId = null);
@@ -133,11 +141,9 @@ class _ChatTabState extends State<ChatTab> {
 
   Future<void> _checkConsent() async {
     final premium = await PremiumGate.hasPremium();
-    final remaining = await PremiumGate.remainingFreeAiMessages();
     if (mounted) {
       setState(() {
         _isPremium = premium;
-        _freeRemaining = remaining;
         _checkingConsent = false;
       });
     }
@@ -154,18 +160,54 @@ class _ChatTabState extends State<ChatTab> {
     super.dispose();
   }
 
+  /// Cleans markdown and symbols so TTS reads naturally.
+  /// Picks the best on-device TTS locale (no paid APIs — uses flutter_tts).
+  Future<void> _setTtsLocale(bool arabic) async {
+    final codes = arabic
+        ? const ['ar-SA', 'ar-EG', 'ar']
+        : const ['en-US', 'en-GB', 'en'];
+    for (final code in codes) {
+      try {
+        final result = await _tts.setLanguage(code);
+        if (result == 1) return;
+      } catch (_) {
+        // Try next fallback locale.
+      }
+    }
+  }
+
+  String _cleanForSpeech(String text) {
+    return text
+        .replaceAll(RegExp(r'\*{1,3}'), '')      // bold/italic asterisks
+        .replaceAll(RegExp(r'_+'), '')             // underscores
+        .replaceAll(RegExp(r'^#+\s*', multiLine: true), '') // headings
+        .replaceAll(RegExp(r'^[-*•]\s+', multiLine: true), '') // bullets
+        .replaceAll(RegExp(r'\[([^\]]+)\]\([^)]+\)'), r'$1') // links → label
+        .replaceAll(RegExp(r'`{1,3}[^`]*`{1,3}'), '') // code blocks
+        .replaceAll(RegExp(r'\n{2,}'), '. ')       // double newlines → pause
+        .replaceAll('\n', ', ')                    // single newlines → comma
+        .trim();
+  }
+
   Future<void> _toggleTts(ChatMessage message, String cleanText) async {
+    HapticFeedback.lightImpact();
     if (_speakingMessageId == message.id) {
       await _tts.stop();
       setState(() => _speakingMessageId = null);
     } else {
       await _tts.stop();
-      final textToSpeak = cleanText.isNotEmpty ? cleanText : message.text;
-      
+      final rawText = cleanText.isNotEmpty ? cleanText : message.text;
+      final sanitized = AiActionParser.sanitizeForDisplay(rawText);
+      final textToSpeak = _cleanForSpeech(sanitized);
+      if (textToSpeak.isEmpty) return;
+
       // Automatic Arabic vs English character detection
       final isAr = RegExp(r'[\u0600-\u06FF]').hasMatch(textToSpeak);
-      await _tts.setLanguage(isAr ? 'ar' : 'en-US');
-      
+      await _setTtsLocale(isAr);
+      // Arabic needs slightly slower rate for clarity; pitch stays warm.
+      await _tts.setSpeechRate(isAr ? 0.40 : 0.45);
+      await _tts.setPitch(1.05);
+
       setState(() => _speakingMessageId = message.id);
       await _tts.speak(textToSpeak);
     }
@@ -182,12 +224,8 @@ class _ChatTabState extends State<ChatTab> {
       final ok = await showAiConsentDialog(context);
       if (!ok || !mounted) return;
     }
-    if (access == PremiumAiAccess.limitReached) {
-      await showPremiumUpsellDialog(
-        context,
-        feature: PremiumUpsellFeature.aiChat,
-      );
-      if (mounted) await _checkConsent();
+    if (access == PremiumAiAccess.needsPremium ||
+        access == PremiumAiAccess.limitReached) {
       return;
     }
 
@@ -198,6 +236,7 @@ class _ChatTabState extends State<ChatTab> {
 
   void _handleNotice(ChatNoticeType notice) {
     final bloc = context.read<ChatBloc>();
+    final l10n = AppLocalizations.of(context)!;
     switch (notice) {
       case ChatNoticeType.consent:
         showAiConsentDialog(context);
@@ -208,11 +247,15 @@ class _ChatTabState extends State<ChatTab> {
         ).then((_) {
           if (mounted) _checkConsent();
         });
-      case ChatNoticeType.premiumRequired:
-        showPremiumUpsellDialog(
-          context,
-          feature: PremiumUpsellFeature.aiAdvanced,
+      case ChatNoticeType.dailyLimit:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.aiDailyLimitReached),
+            duration: const Duration(seconds: 5),
+          ),
         );
+      case ChatNoticeType.premiumRequired:
+        break;
     }
     bloc.add(ClearChatNotice());
   }
@@ -236,6 +279,13 @@ class _ChatTabState extends State<ChatTab> {
 
     if (_checkingConsent) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!_isPremium) {
+      return SubscriptionPlansScreen(
+        embedded: true,
+        onSubscribed: _checkConsent,
+      );
     }
 
     return Column(
@@ -277,8 +327,6 @@ class _ChatTabState extends State<ChatTab> {
                 return _WelcomeState(
                   l10n: l10n,
                   theme: theme,
-                  isPremium: _isPremium,
-                  freeRemaining: _freeRemaining,
                   personality: _personality,
                   onModeAction: (prompt, mode) => _send(prompt, mode),
                   onAnalyze: () =>
@@ -349,9 +397,7 @@ class _ChatTabState extends State<ChatTab> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           child: Text(
-            _isPremium
-                ? l10n.homeAiCardSubtitlePremium
-                : l10n.premiumAiFreeRemaining(_freeRemaining),
+            l10n.homeAiCardSubtitlePremium,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.outline,
               fontSize: 10,
@@ -662,8 +708,6 @@ class _WelcomeState extends StatelessWidget {
   const _WelcomeState({
     required this.l10n,
     required this.theme,
-    required this.isPremium,
-    required this.freeRemaining,
     required this.personality,
     required this.onModeAction,
     required this.onAnalyze,
@@ -671,8 +715,6 @@ class _WelcomeState extends StatelessWidget {
 
   final AppLocalizations l10n;
   final ThemeData theme;
-  final bool isPremium;
-  final int freeRemaining;
   final LunePersonality personality;
   final void Function(String prompt, String mode) onModeAction;
   final VoidCallback onAnalyze;
@@ -718,17 +760,6 @@ class _WelcomeState extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        if (!isPremium) ...[
-          const SizedBox(height: 6),
-          Text(
-            l10n.premiumAiFreeRemaining(freeRemaining),
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
         const SizedBox(height: 20),
         // Feature cards — 2-column grid
         Text(
@@ -1343,13 +1374,14 @@ class _ChatMessageRow extends StatelessWidget {
                       onTap: onActionTap,
                     ),
                   ),
+                // ── Bottom action row: time + TTS pill + report ────────────
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (showTime)
                       Padding(
                         padding:
-                            const EdgeInsetsDirectional.only(top: 4, start: 6),
+                            const EdgeInsetsDirectional.only(top: 6, start: 4),
                         child: Text(
                           timeText,
                           style: theme.textTheme.labelSmall?.copyWith(
@@ -1359,33 +1391,79 @@ class _ChatMessageRow extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(width: 8),
+                    // ── TTS pill button — prominent & animated ────────────
                     GestureDetector(
                       onTap: () => onTtsTap(message, cleanText),
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Icon(
-                          isSpeaking
-                              ? Icons.stop_circle_rounded
-                              : Icons.volume_up_outlined,
-                          size: 16,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
                           color: isSpeaking
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.outline
-                                  .withValues(alpha: 0.6),
+                              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                              : theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: isDark ? 0.35 : 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSpeaking
+                                ? theme.colorScheme.primary
+                                    .withValues(alpha: 0.55)
+                                : theme.colorScheme.outline
+                                    .withValues(alpha: 0.18),
+                            width: 1,
+                          ),
+                          boxShadow: isSpeaking
+                              ? [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary
+                                        .withValues(alpha: 0.25),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isSpeaking
+                                  ? Icons.stop_rounded
+                                  : Icons.volume_up_rounded,
+                              size: 14,
+                              color: isSpeaking
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isSpeaking ? 'إيقاف' : 'استمع',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSpeaking
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    // ── Report button ─────────────────────────────────────
                     GestureDetector(
                       onTap: () => _showAiReportDialog(context,
                           cleanText.isNotEmpty ? cleanText : message.text),
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 5),
                         child: Icon(
                           Icons.flag_outlined,
-                          size: 16,
+                          size: 15,
                           color: theme.colorScheme.outline
-                              .withValues(alpha: 0.6),
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                     ),
