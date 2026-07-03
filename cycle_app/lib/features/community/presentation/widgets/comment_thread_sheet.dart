@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/premium/premium_badge.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -279,6 +280,7 @@ class _ThreadCommentTile extends StatelessWidget {
                                 radius: isRoot ? 17 : 13,
                                 avatarIndex: comment.authorAvatarIndex,
                                 uidSeed: comment.authorUid,
+                                isPremium: comment.authorIsPremium,
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -298,6 +300,8 @@ class _ThreadCommentTile extends StatelessWidget {
                                           ),
                                         ),
                                       ),
+                                      if (comment.authorIsPremium)
+                                        const PremiumNameBadge(),
                                       if (isBest)
                                         Container(
                                           padding: const EdgeInsets.symmetric(

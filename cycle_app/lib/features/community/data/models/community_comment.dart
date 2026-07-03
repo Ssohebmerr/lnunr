@@ -24,6 +24,7 @@ class CommunityComment {
 
     this.moderationStatus = 'approved',
     this.hidden = false,
+    this.authorIsPremium = false,
   });
 
 
@@ -46,6 +47,7 @@ class CommunityComment {
 
   final String moderationStatus;
   final bool hidden;
+  final bool authorIsPremium;
 
   bool get isPendingReview => moderationStatus == 'pending_review';
 
@@ -88,6 +90,7 @@ class CommunityComment {
 
       moderationStatus: data['moderationStatus'] as String? ?? 'approved',
       hidden: data['hidden'] as bool? ?? false,
+      authorIsPremium: data['authorIsPremium'] as bool? ?? false,
     );
 
   }
@@ -117,6 +120,7 @@ class CommunityComment {
         'createdAt': FieldValue.serverTimestamp(),
 
         'authorAvatarIndex': authorAvatarIndex,
+        'authorIsPremium': authorIsPremium,
 
         if (parentCommentId != null) 'parentCommentId': parentCommentId,
 

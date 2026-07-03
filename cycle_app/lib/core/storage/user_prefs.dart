@@ -6,6 +6,8 @@ class UserPrefs {
   static const _premiumKey = 'is_premium';
   static const _profileNameKey = 'profile_name';
   static const _profileGoalKey = 'profile_goal';
+  static const _profileBirthDateKey = 'profile_birth_date';
+  static const _deviceUserIdKey = 'device_user_id';
   static const avatarIndexKey = 'profile_avatar_index';
   static const _stealthEnabledKey = 'stealth_mode_enabled';
   static const _stealthPinKey = 'stealth_mode_pin';
@@ -69,6 +71,34 @@ class UserPrefs {
     return p.getString(_profileGoalKey);
   }
 
+  static Future<void> setProfileBirthDate(DateTime date) async {
+    final p = await SharedPreferences.getInstance();
+    final d = DateTime(date.year, date.month, date.day);
+    await p.setString(_profileBirthDateKey, d.toIso8601String());
+  }
+
+  static Future<DateTime?> getProfileBirthDate() async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_profileBirthDateKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  static Future<String> getOrCreateDeviceId() async {
+    final p = await SharedPreferences.getInstance();
+    final existing = p.getString(_deviceUserIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final id = _generateDeviceId();
+    await p.setString(_deviceUserIdKey, id);
+    return id;
+  }
+
+  static String _generateDeviceId() {
+    final ms = DateTime.now().microsecondsSinceEpoch;
+    final rand = ms.hashCode ^ Object().hashCode;
+    return 'lune_${ms.toRadixString(36)}_${rand.toRadixString(36)}';
+  }
+
   static Future<bool> isStealthModeEnabled() async {
     final p = await SharedPreferences.getInstance();
     return p.getBool(_stealthEnabledKey) ?? false;
@@ -87,5 +117,13 @@ class UserPrefs {
   static Future<void> setStealthModePin(String pin) async {
     final p = await SharedPreferences.getInstance();
     await p.setString(_stealthPinKey, pin);
+  }
+
+  static bool _sessionUnlocked = false;
+
+  static bool isSessionUnlocked() => _sessionUnlocked;
+
+  static void setSessionUnlocked(bool value) {
+    _sessionUnlocked = value;
   }
 }

@@ -94,6 +94,11 @@ class AiContextEngine {
       todayLog = {
         'symptoms': today.symptoms,
         'waterCups': today.waterCups,
+        if (today.weight != null) 'weight': today.weight,
+        if (today.bodyTemperature != null) 'bodyTemperature': today.bodyTemperature,
+        if (today.sleepTime != null) 'sleepTime': today.sleepTime,
+        if (today.meditationTime != null) 'meditationTime': today.meditationTime,
+        if (today.notes != null) 'notes': today.notes,
       };
     }
 

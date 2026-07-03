@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:cycle_aura/menstrudel/models/app/settings_presets.dart';
+import 'package:cycle_aura/core/widgets/feminine_icons_custom.dart';
 
 /// Enum representing different types of user app goals.
 enum UserGoalTypes {
@@ -13,7 +14,14 @@ enum UserGoalTypes {
   /// For users trying to avoid pregnancy.
   avoid('avoid'),
   /// For users currently pregnant — pregnancy tracking mode.
-  pregnant('pregnant');
+  /// For users currently pregnant — pregnancy tracking mode.
+  pregnant('pregnant'),
+  /// For users transitioning or in menopause.
+  menopause('menopause'),
+  /// For users managing PCOS symptoms.
+  pcos('pcos'),
+  /// For users in postpartum recovery.
+  postpartum('postpartum');
 
   /// The string identifier used for database storage.
   final String dbName;
@@ -38,6 +46,15 @@ enum UserGoalTypes {
       UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
           ? 'أنا حامل'
           : "I'm pregnant",
+      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
+          ? 'تتبع سن الأمل / انقطاع الطمث'
+          : 'Menopause Tracking',
+      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
+          ? 'إدارة تكيس المبايض'
+          : 'PCOS Management',
+      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
+          ? 'الاستشفاء بعد الولادة'
+          : 'Postpartum Recovery',
     };
   }
   IconData get icon {
@@ -47,6 +64,27 @@ enum UserGoalTypes {
       UserGoalTypes.conceive => Icons.child_friendly,
       UserGoalTypes.avoid => Icons.shield,
       UserGoalTypes.pregnant => Icons.pregnant_woman_rounded,
+      UserGoalTypes.menopause => Icons.hourglass_empty_rounded,
+      UserGoalTypes.pcos => Icons.medical_services_outlined,
+      UserGoalTypes.postpartum => Icons.baby_changing_station_rounded,
+    };
+  }
+}
+
+/// Custom hand-drawn feminine icons per goal. Drop these into
+/// `FeminineIconView` for the prettier UI; fall back to the
+/// Material [icon] getter above when no custom art exists.
+extension UserGoalFeminineIcon on UserGoalTypes {
+  FeminineIcon get femIcon {
+    return switch (this) {
+      UserGoalTypes.general => FeminineIcon.cycle,
+      UserGoalTypes.sexual => FeminineIcon.heartPulse,
+      UserGoalTypes.conceive => FeminineIcon.conceive,
+      UserGoalTypes.avoid => FeminineIcon.avoid,
+      UserGoalTypes.pregnant => FeminineIcon.pregnant,
+      UserGoalTypes.menopause => FeminineIcon.menopause,
+      UserGoalTypes.pcos => FeminineIcon.pcos,
+      UserGoalTypes.postpartum => FeminineIcon.postpartum,
     };
   }
 }
@@ -62,5 +100,21 @@ extension UserGoalExtension on UserGoalTypes {
 
   bool get isGeneralMode => this == UserGoalTypes.general;
 
-  bool get isCycleGoalMode => isGeneralMode || isConceiveMode || isAvoidMode;
+  bool get isMenopauseMode => this == UserGoalTypes.menopause;
+
+  bool get isPcosMode => this == UserGoalTypes.pcos;
+
+  bool get isPostpartumMode => this == UserGoalTypes.postpartum;
+
+  bool get isCycleGoalMode =>
+      isGeneralMode || isConceiveMode || isAvoidMode;
+
+  /// True for any goal that wants a custom home body section
+  /// (pregnancy, menopause, pcos, postpartum). The general cycle
+  /// modes (general, conceive, avoid) share `GoalCycleSharedBody`.
+  bool get hasCustomHomeBody =>
+      isPregnancyMode ||
+      isMenopauseMode ||
+      isPcosMode ||
+      isPostpartumMode;
 }

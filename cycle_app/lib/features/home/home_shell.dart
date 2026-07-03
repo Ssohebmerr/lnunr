@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/app_home_refresh.dart';
 import '../../../core/cms/app_settings_repository.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/profile/local_profile.dart';
+import '../../../core/storage/user_prefs.dart';
+import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/feminine_icon.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -37,26 +41,21 @@ class _HomeShellState extends State<HomeShell> {
   String? _photoPath;
   String? _photoUrl;
   String _authKey = 'guest';
+  bool _isPremium = false;
+  bool _stealthEnabled = false;
   StreamSubscription<User?>? _authSub;
   bool _communityEnabled = true;
 
-  final Set<int> _visitedTabs = {0, 1};
+  final Set<int> _visitedTabs = {0};
 
-  // 0:Home  1:Community  2:SelfCare  3:Reports  4:Account
+  // 0:Home  1:Community  2:SelfCare  3:Account
+  // Reports lives as a Home header shortcut (not a bottom tab) so the + log
+  // button sits perfectly centred between two balanced pairs of tabs.
   static const _navIcons = [
-    Icons.home_outlined,
-    Icons.groups_outlined,
-    Icons.spa_outlined,
-    Icons.summarize_outlined,
-    Icons.person_outline,
-  ];
-
-  static const _navIconsSelected = [
-    Icons.home_rounded,
-    Icons.groups_rounded,
-    Icons.spa_rounded,
-    Icons.summarize_rounded,
-    Icons.person_rounded,
+    FeminineIcon.home,
+    FeminineIcon.community,
+    FeminineIcon.selfCare,
+    FeminineIcon.account,
   ];
 
   @override
@@ -65,6 +64,7 @@ class _HomeShellState extends State<HomeShell> {
     HomeShellActions.switchTab = _onTabSelected;
     HomeShellActions.openLog = _openLog;
     HomeShellActions.openAiChat = _openAiChat;
+    HomeShellActions.openReports = _openReports;
     _authKey = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       final next = user?.uid ?? 'guest';
@@ -74,8 +74,19 @@ class _HomeShellState extends State<HomeShell> {
     });
     _loadProfile();
     _loadAppSettings();
+    _loadStealth();
+    PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
+    PremiumStatusNotifier.instance.loadFromPrefs().then((_) {
+      if (mounted) {
+        setState(() => _isPremium = PremiumStatusNotifier.instance.isPremium);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationService.ensureInitialPermission();
+      if (mounted) {
+        NotificationService.ensureInitialPermission(context);
+      } else {
+        NotificationService.ensureInitialPermission();
+      }
     });
   }
 
@@ -90,8 +101,17 @@ class _HomeShellState extends State<HomeShell> {
     if (HomeShellActions.openAiChat == _openAiChat) {
       HomeShellActions.openAiChat = null;
     }
+    if (HomeShellActions.openReports == _openReports) {
+      HomeShellActions.openReports = null;
+    }
     _authSub?.cancel();
+    PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
     super.dispose();
+  }
+
+  void _onPremiumChanged() {
+    if (!mounted) return;
+    setState(() => _isPremium = PremiumStatusNotifier.instance.isPremium);
   }
 
   Future<void> _loadAppSettings() async {
@@ -101,6 +121,11 @@ class _HomeShellState extends State<HomeShell> {
       _communityEnabled = settings.communityEnabled;
       if (!_communityEnabled && _index == 1) _index = 0;
     });
+  }
+
+  Future<void> _loadStealth() async {
+    final enabled = await UserPrefs.isStealthModeEnabled();
+    if (mounted) setState(() => _stealthEnabled = enabled);
   }
 
   Future<void> _loadProfile() async {
@@ -123,10 +148,8 @@ class _HomeShellState extends State<HomeShell> {
     if (i == 0 && _index != 0) {
       HomeRefreshScope.refresh();
     }
-    if (i == 3 && _index != 3) {
-      HomeRefreshScope.refresh();
-    }
-    if (i == 4) _loadProfile();
+    if (i == 3) _loadProfile();
+    if (i == 0) _loadStealth();
     setState(() {
       _visitedTabs.add(i);
       _index = i;
@@ -152,17 +175,32 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
+  void _openReports() {
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SubFeaturePage(
+          title: l10n.navReports,
+          child: const ReportsTab(),
+        ),
+      ),
+    );
+  }
+
   Widget _tabChild(int i) {
     if (i == 1 && !_communityEnabled) return const SizedBox.shrink();
     if (!_visitedTabs.contains(i)) return const SizedBox.shrink();
-    return switch (i) {
+    final child = switch (i) {
       0 => const HomeTab(key: ValueKey('tab-home')),
       1 => CommunityTab(key: ValueKey('tab-community')),
       2 => const SelfCareTab(key: ValueKey('tab-selfcare')),
-      3 => const ReportsTab(key: ValueKey('tab-reports')),
-      4 => const AccountTab(key: ValueKey('tab-account')),
+      3 => const AccountTab(key: ValueKey('tab-account')),
       _ => const SizedBox.shrink(),
     };
+    if (i != _index) {
+      return TickerMode(enabled: false, child: child);
+    }
+    return child;
   }
 
   @override
@@ -170,13 +208,12 @@ class _HomeShellState extends State<HomeShell> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isAccount = _index == 4;
+    final isAccount = _index == 3;
 
     final labels = [
       l10n.navHome,
       l10n.navCommunity,
       l10n.navSelfCare,
-      l10n.navReports,
       l10n.navAccount,
     ];
 
@@ -186,6 +223,8 @@ class _HomeShellState extends State<HomeShell> {
 
     return PremiumSyncListener(
       child: CommunityNotificationListener(
+      child: Container(
+      decoration: AppTheme.gradientBackground(context),
       child: Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -232,11 +271,22 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                   child: Row(
                     children: [
-                      AppAvatar(
-                        radius: 22,
-                        avatarIndex: _avatarIndex,
-                        photoPath: _photoPath,
-                        networkUrl: _photoUrl,
+                      GestureDetector(
+                        onDoubleTap: () async {
+                          if (_stealthEnabled) {
+                            UserPrefs.setSessionUnlocked(false);
+                            if (mounted) {
+                              context.go('/stealth');
+                            }
+                          }
+                        },
+                        child: AppAvatar(
+                          radius: 22,
+                          avatarIndex: _avatarIndex,
+                          photoPath: _photoPath,
+                          networkUrl: _photoUrl,
+                          isPremium: _isPremium,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -267,6 +317,25 @@ class _HomeShellState extends State<HomeShell> {
                       ),
                       if (_index == 0)
                         IconButton(
+                          tooltip: l10n.navReports,
+                          onPressed: _openReports,
+                          icon: FeminineIconView(
+                            FeminineIcon.reports,
+                            color: theme.colorScheme.primary,
+                            size: 22,
+                          ),
+                        ),
+                      if (_stealthEnabled)
+                        IconButton(
+                          tooltip: l10n.stealthHideNow,
+                          onPressed: () => context.push('/stealth'),
+                          icon: Icon(
+                            Icons.visibility_off_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      if (_index == 0)
+                        IconButton(
                           tooltip: l10n.retry,
                           onPressed: HomeRefreshScope.refresh,
                           icon: Icon(
@@ -281,7 +350,7 @@ class _HomeShellState extends State<HomeShell> {
                 child: IndexedStack(
                   index: _index,
                   sizing: StackFit.expand,
-                  children: List.generate(5, _tabChild),
+                  children: List.generate(4, _tabChild),
                 ),
               ),
             ],
@@ -290,7 +359,12 @@ class _HomeShellState extends State<HomeShell> {
       ),
 
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          16 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Container(
           height: 68,
           clipBehavior: Clip.none,
@@ -320,12 +394,13 @@ class _HomeShellState extends State<HomeShell> {
       ),
     ),
     ),
+    ),
     );
   }
 
-  /// Five tabs with the log (+) in the center:
-  /// LTR: Home · Community | + | SelfCare · Reports · Account
-  /// RTL: Account · Reports · SelfCare | + | Community · Home
+  /// Four tabs with the log (+) perfectly centered between two pairs:
+  /// LTR: Home · Community | + | SelfCare · Account
+  /// RTL: Account · SelfCare | + | Community · Home
   List<Widget> _bottomNavItems({
     required BuildContext context,
     required List<String> labels,
@@ -337,18 +412,16 @@ class _HomeShellState extends State<HomeShell> {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     Widget nav(int index) => _NavItem(
-          icon: selectedIndex == index
-              ? _navIconsSelected[index]
-              : _navIcons[index],
+          icon: _navIcons[index],
           label: labels[index],
           selected: selectedIndex == index,
           onTap: () => onSelect(index),
         );
 
     if (!communityEnabled) {
-      // Home | + | SelfCare · Reports · Account
+      // Home | + | SelfCare · Account
       final beforeLog = [nav(0)];
-      final afterLog = [nav(2), nav(3), nav(4)];
+      final afterLog = [nav(2), nav(3)];
       final leading = isRtl ? afterLog.reversed.toList() : beforeLog;
       final trailing = isRtl ? beforeLog : afterLog;
       return [
@@ -358,9 +431,9 @@ class _HomeShellState extends State<HomeShell> {
       ];
     }
 
-    // LTR: Home · Community | + | SelfCare · Reports · Account
+    // LTR: Home · Community | + | SelfCare · Account
     final beforeLog = [nav(0), nav(1)];
-    final afterLog = [nav(2), nav(3), nav(4)];
+    final afterLog = [nav(2), nav(3)];
 
     final leading = isRtl ? afterLog.reversed.toList() : beforeLog;
     final trailing = isRtl ? beforeLog.reversed.toList() : afterLog;
@@ -383,13 +456,16 @@ class _BottomBarLogSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 72,
-      child: OverflowBox(
+      height: 68,
+      child: Stack(
         alignment: Alignment.topCenter,
-        maxHeight: 120,
-        child: Transform.translate(
-          offset: const Offset(0, -20),
-          child: _LogFabButton(onPressed: onPressed),
-        ),
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: -20,
+            child: _LogFabButton(onPressed: onPressed),
+          ),
+        ],
       ),
     );
   }
@@ -484,7 +560,7 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final FeminineIcon icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -504,12 +580,26 @@ class _NavItem extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: FeminineIconView(
+                    icon,
+                    size: 23,
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(

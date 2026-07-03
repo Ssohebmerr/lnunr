@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Screen for users to anonymously submit health questions to experts.
@@ -34,10 +36,12 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
   }
 
   Future<void> _submitQuestion() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
     final text = _controller.text.trim();
-    if (text.isEmpty || text.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorGeneric)),
+    if (text.length < 10) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.anonymousQaTooShort)),
       );
       return;
     }
@@ -58,11 +62,9 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
 
       _controller.clear();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.storyPublished ?? 'Question submitted!',
-            ),
+            content: Text(l10n.anonymousQaSubmitted),
             backgroundColor: Colors.green,
           ),
         );
@@ -70,8 +72,8 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.errorGeneric)),
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.anonymousQaError)),
         );
       }
     } finally {
@@ -85,161 +87,309 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(l10n.storyCreate), // Reuse existing string
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: AppGlassCard(
+            radius: AppRadius.pill,
+            padding: const EdgeInsets.all(8),
+            onTap: () => context.pop(),
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+        title: Text(
+          l10n.anonymousQa,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.question_answer_rounded,
-                    size: 48,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Anonymous Health Q&A',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ask your health question anonymously. A certified expert will answer it and the answer will be published in the Education section.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Category selector
-            Text(
-              'Category',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _categoryItems.map((cat) {
-                final isSelected = cat == _selectedCategory;
-                return ChoiceChip(
-                  label: Text(_categoryLabel(cat)),
-                  selected: isSelected,
-                  onSelected: (_) => setState(() => _selectedCategory = cat),
-                  selectedColor: theme.colorScheme.primary,
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            // Question input
-            Text(
-              'Your Question',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
-              child: TextField(
-                controller: _controller,
-                maxLines: 6,
-                maxLength: 500,
-                decoration: InputDecoration(
-                  hintText: l10n.healthQuestionHint,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                  counterStyle: theme.textTheme.labelSmall,
-                ),
-                style: theme.textTheme.bodyLarge,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Privacy notice
-            Row(
+      body: Container(
+        decoration: AppTheme.gradientBackground(context),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.lock_outline_rounded,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant,
+                // Header
+                AppGlassCard(
+                  radius: AppRadius.lg,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          gradient: AuraDecorations.primaryGradient,
+                          shape: BoxShape.circle,
+                          boxShadow: AppShadows.softRose(opacity: 0.3),
+                        ),
+                        child: const Icon(
+                          Icons.question_answer_rounded,
+                          size: 32,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        l10n.anonymousQaTitle,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.anonymousQaIntro,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Your identity is 100% anonymous. No name, email, or ID is stored.',
-                    style: theme.textTheme.bodySmall?.copyWith(
+                const SizedBox(height: 16),
+
+                // Simple purpose explanation (user clarity + Play Store)
+                AppGlassCard(
+                  radius: AppRadius.lg,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.anonymousQaPurposeTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _QaStepRow(
+                        number: '1',
+                        text: l10n.anonymousQaStep1,
+                        theme: theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _QaStepRow(
+                        number: '2',
+                        text: l10n.anonymousQaStep2,
+                        theme: theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _QaStepRow(
+                        number: '3',
+                        text: l10n.anonymousQaStep3,
+                        theme: theme,
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer
+                              .withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.medical_information_outlined,
+                              size: 18,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.anonymousQaDisclaimer,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.45,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Category selector
+                Text(
+                  l10n.anonymousQaCategoryLabel,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _categoryItems.map((cat) {
+                    final isSelected = cat == _selectedCategory;
+                    return ChoiceChip(
+                      label: Text(_categoryLabel(l10n, cat)),
+                      selected: isSelected,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategory = cat),
+                      selectedColor: theme.colorScheme.primary,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 24),
+
+                // Question input
+                Text(
+                  l10n.anonymousQaQuestionLabel,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                AppGlassCard(
+                  radius: AppRadius.lg,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: _controller,
+                    maxLines: 6,
+                    maxLength: 500,
+                    decoration: InputDecoration(
+                      hintText: l10n.healthQuestionHint,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                      counterStyle: theme.textTheme.labelSmall,
+                    ),
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Privacy notice
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 16,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.anonymousQaPrivacyNote,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+
+                // Submit button
+                AppGradientButton(
+                  label: _submitting
+                      ? l10n.anonymousQaSubmitting
+                      : l10n.anonymousQaSubmit,
+                  icon: Icons.send_rounded,
+                  loading: _submitting,
+                  onPressed: _submitting ? null : _submitQuestion,
                 ),
               ],
             ),
-            const SizedBox(height: 32),
-
-            // Submit button
-            FilledButton.icon(
-              onPressed: _submitting ? null : _submitQuestion,
-              icon: _submitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.send_rounded),
-              label: Text(_submitting ? 'Submitting...' : 'Submit Question'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  String _categoryLabel(String cat) {
+  String _categoryLabel(AppLocalizations l10n, String cat) {
     return switch (cat) {
-      'general' => 'General',
-      'cycle' => 'Cycle & Period',
-      'pregnancy' => 'Pregnancy',
-      'pcos' => 'PCOS',
-      'contraception' => 'Contraception',
-      'mental' => 'Mental Health',
-      'nutrition' => 'Nutrition',
+      'general' => l10n.qaCatGeneral,
+      'cycle' => l10n.qaCatCycle,
+      'pregnancy' => l10n.qaCatPregnancy,
+      'pcos' => l10n.qaCatPcos,
+      'contraception' => l10n.qaCatContraception,
+      'mental' => l10n.qaCatMental,
+      'nutrition' => l10n.qaCatNutrition,
       _ => cat,
     };
+  }
+}
+
+class _QaStepRow extends StatelessWidget {
+  const _QaStepRow({
+    required this.number,
+    required this.text,
+    required this.theme,
+  });
+
+  final String number;
+  final String text;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            number,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

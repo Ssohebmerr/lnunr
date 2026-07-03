@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/locale/locale_cubit.dart';
+import '../../../core/locale/locale_controller.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/cycle_sync_service.dart';
 
@@ -50,7 +50,9 @@ class _CycleSettingsSheetState extends State<CycleSettingsSheet> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _lastPeriod = picked);
+    if (picked != null) {
+      setState(() => _lastPeriod = DateTime(picked.year, picked.month, picked.day));
+    }
   }
 
   Future<void> _save() async {
@@ -59,14 +61,21 @@ class _CycleSettingsSheetState extends State<CycleSettingsSheet> {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final lang = context.read<LocaleCubit>().locale.languageCode;
-      await _sync.updateCycleConfig(
+      final lang = context.read<LocaleController>().locale.languageCode;
+      final ok = await _sync.updateCycleConfig(
         cycleLength: _cycleLength,
         periodDuration: _periodDuration,
         lastPeriodDate: _lastPeriod,
         languageCode: lang,
       );
-      if (mounted) Navigator.pop(context, true);
+      if (!mounted) return;
+      if (ok) {
+        Navigator.pop(context, true);
+      } else {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
+        );
+      }
     } catch (e) {
       debugPrint('Cycle settings save failed: $e');
       if (mounted) {

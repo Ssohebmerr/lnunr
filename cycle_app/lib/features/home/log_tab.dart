@@ -11,7 +11,7 @@ import '../cycle/data/cycle_sync_service.dart';
 import 'widgets/daily_log_feedback.dart';
 
 /// Daily symptom / period logging — opened from the + FAB or embedded in a tab.
-class LogTab extends StatelessWidget {
+class LogTab extends StatefulWidget {
   const LogTab({
     super.key,
     this.popOnSave = false,
@@ -24,7 +24,33 @@ class LogTab extends StatelessWidget {
   /// Parent [ScaffoldMessenger] so the save toast survives [Navigator.pop].
   final ScaffoldMessengerState? homeMessenger;
 
+  @override
+  State<LogTab> createState() => _LogTabState();
+}
+
+class _LogTabState extends State<LogTab> {
+  Key _refreshKey = UniqueKey();
   static const _navBarClearance = 88.0;
+
+  @override
+  void initState() {
+    super.initState();
+    HomeRefreshScope.notifier.addListener(_onRefresh);
+  }
+
+  @override
+  void dispose() {
+    HomeRefreshScope.notifier.removeListener(_onRefresh);
+    super.dispose();
+  }
+
+  void _onRefresh() {
+    if (mounted) {
+      setState(() {
+        _refreshKey = UniqueKey();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +90,7 @@ class LogTab extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: MenstrualLogPeriodView(
+            key: _refreshKey,
             embeddedInTab: true,
             themeColor: theme.colorScheme.primary,
             displaySymptomsData: DisplaySymptomsData(),
@@ -78,8 +105,8 @@ class LogTab extends StatelessWidget {
               HomeRefreshScope.refresh();
               if (!context.mounted) return;
 
-              final messenger = homeMessenger ?? ScaffoldMessenger.of(context);
-              if (popOnSave && Navigator.of(context).canPop()) {
+              final messenger = widget.homeMessenger ?? ScaffoldMessenger.of(context);
+              if (widget.popOnSave && Navigator.of(context).canPop()) {
                 DailyLogFeedback.showSavedOn(messenger, context, l10n);
                 Navigator.of(context).pop();
               } else {

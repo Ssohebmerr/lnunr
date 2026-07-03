@@ -197,10 +197,12 @@ class HomeWeeklyCalendarCard extends StatelessWidget {
             child: loading
                 ? const Center(child: CircularProgressIndicator())
                 : RepaintBoundary(
-                    child: MenstrualCycleCalenderView(
-                      themeColor: AuraColors.roseDeep,
-                      daySelectedColor: AuraColors.lavenderSoft,
-                      hideInfoView: true,
+                    child: IgnorePointer(
+                      child: MenstrualCycleCalenderView(
+                        themeColor: AuraColors.roseDeep,
+                        daySelectedColor: AuraColors.lavenderSoft,
+                        hideInfoView: true,
+                      ),
                     ),
                   ),
           ),
@@ -226,9 +228,9 @@ class HomeTipsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(title: l10n.homeTipsSection),
-        const AiInsightCard(type: AiInsightType.dailyTip),
+        const AiInsightCard(type: AiInsightType.dailyTip, blur: false),
         const SizedBox(height: 10),
-        const AiInsightCard(type: AiInsightType.moodInsight),
+        const AiInsightCard(type: AiInsightType.moodInsight, blur: false),
         const SizedBox(height: 10),
         AppGlassCard(
           blur: false,
@@ -269,7 +271,7 @@ class HomeTipsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        const AiInsightCard(type: AiInsightType.cycleHealth),
+        const AiInsightCard(type: AiInsightType.cycleHealth, blur: false),
       ],
     );
   }
@@ -347,6 +349,7 @@ class _HomeLearnWatchRailState extends State<HomeLearnWatchRail> {
               if (items.isEmpty) return const SizedBox.shrink();
 
               return ListView.separated(
+                primary: false,
                 scrollDirection: Axis.horizontal,
                 itemCount: items.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),

@@ -9,22 +9,24 @@ import 'cycle_bridge_service.dart';
 
 class LocalBackupService {
   LocalBackupService({CycleBridgeService? bridge})
-      : _bridge = bridge ?? CycleBridgeService();
+    : _bridge = bridge ?? CycleBridgeService();
 
   final CycleBridgeService _bridge;
 
-  Future<void> exportAndShare() async {
-    final backup = await _bridge.exportEncryptedBackup();
-    final json = jsonEncode(backup);
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/cycle_aura_backup.json');
-    await file.writeAsString(json);
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        subject: 'Lune Backup',
-      ),
-    );
+  Future<bool> exportAndShare() async {
+    try {
+      final backup = await _bridge.exportEncryptedBackup();
+      final json = jsonEncode(backup);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/cycle_aura_backup.json');
+      await file.writeAsString(json);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'Lune Backup'),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> importFromFile() async {
@@ -34,8 +36,13 @@ class LocalBackupService {
     );
     if (result == null || result.files.single.path == null) return false;
 
-    final content = await File(result.files.single.path!).readAsString();
-    final data = jsonDecode(content) as Map<String, dynamic>;
-    return _bridge.importEncryptedBackup(data);
+    try {
+      final content = await File(result.files.single.path!).readAsString();
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return false;
+      return _bridge.importEncryptedBackup(decoded);
+    } catch (_) {
+      return false;
+    }
   }
 }

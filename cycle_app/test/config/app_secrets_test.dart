@@ -4,9 +4,9 @@ import 'package:cycle_aura/features/community/data/community_constants.dart';
 
 void main() {
   group('AppSecrets', () {
-    test('geminiApiKey is empty string by default (no --dart-define)', () {
-      // Without --dart-define=GEMINI_API_KEY=xxx, the value is empty.
-      expect(AppSecrets.geminiApiKey, '');
+    test('cloudFunctionsUrl is configured', () {
+      expect(AppSecrets.cloudFunctionsUrl, isNotEmpty);
+      expect(AppSecrets.cloudFunctionsUrl, startsWith('https://'));
     });
   });
 

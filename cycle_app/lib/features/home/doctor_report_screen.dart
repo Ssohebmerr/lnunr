@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
-import '../../../core/ai/doctor_report_builder.dart';
+import '../../../core/ai/ai_insights_service.dart';
+import '../../../core/ai/models/doctor_report_enrichment.dart';
 import '../../../core/ai/models/health_snapshot.dart';
+import '../../../core/privacy/privacy_constants.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_bridge_service.dart';
@@ -30,9 +32,12 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
   CycleReportData? _report;
   CycleDashboardData? _dashboard;
   HealthSnapshot? _snapshot;
+  DoctorReportEnrichment? _enrichment;
   String? _plainText;
   bool _loading = true;
   bool _failed = false;
+  bool _limitedData = false;
+  bool _refining = false;
   late DateTime _exportedAt;
 
   @override
@@ -60,7 +65,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     _exportedAt = DateTime.now();
     final engine = context.read<AiContextEngine>();
     final dashboard = await _bridge.tryLoadDashboard();
-    final report = await _bridge.tryLoadStructuredReport();
+    final loadedReport = await _bridge.tryLoadStructuredReport();
     HealthSnapshot snapshot = const HealthSnapshot();
     try {
       snapshot = await engine.buildSnapshot();
@@ -68,43 +73,94 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
 
     if (!mounted) return;
 
+    final report = loadedReport ??
+        const CycleReportData(
+          keyMatrix: {},
+          predictionMatrix: {},
+          cycles: [],
+          symptomPatterns: [],
+        );
+
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
     final dateFmt = DateFormat.yMMMMd(locale.toString());
-    final hasData = report != null &&
-        (report.cycles.isNotEmpty ||
-            report.keyMatrix.isNotEmpty ||
-            dashboard != null);
+    final exportedLabel = dateFmt.format(_exportedAt);
 
-    final plain = hasData
-        ? CycleReportExporter.toPlainText(
-            l10n: l10n,
-            report: report,
-            dashboard: dashboard,
-            exportedDate: dateFmt.format(_exportedAt),
-          )
-        : null;
+    final isLimited = (report.cycles.isEmpty &&
+            report.keyMatrix.isEmpty &&
+            report.symptomPatterns.isEmpty &&
+            dashboard == null) ||
+        report.cycles.length < 2 ||
+        (dashboard?.totalCycles ?? 0) < 2;
+
+    final plain = CycleReportExporter.toPlainText(
+      l10n: l10n,
+      report: report,
+      dashboard: dashboard,
+      exportedDate: exportedLabel,
+      limitedDataNote: isLimited ? l10n.doctorReportLimitedData : null,
+    );
 
     setState(() {
       _dashboard = dashboard;
       _report = report;
       _snapshot = snapshot.isEmpty ? null : snapshot;
+      _enrichment = null;
       _plainText = plain;
       _loading = false;
-      _failed = !hasData;
+      _failed = false;
+      _limitedData = isLimited;
+      _refining = true;
+    });
+
+    await _enrichReport(
+      limitedData: isLimited,
+      languageCode: locale.languageCode,
+      exportedLabel: exportedLabel,
+      report: report,
+      dashboard: dashboard,
+    );
+  }
+
+  Future<void> _enrichReport({
+    required bool limitedData,
+    required String languageCode,
+    required String exportedLabel,
+    required CycleReportData report,
+    required CycleDashboardData? dashboard,
+  }) async {
+    final service = context.read<AiInsightsService>();
+    final enrichment = await service.enrichDoctorReport(
+      languageCode: languageCode,
+      limitedData: limitedData,
+    );
+
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final plain = CycleReportExporter.toPlainText(
+      l10n: l10n,
+      report: report,
+      dashboard: dashboard,
+      exportedDate: exportedLabel,
+      enrichment: enrichment,
+      limitedDataNote:
+          limitedData && (enrichment?.dataQualityNote == null)
+              ? l10n.doctorReportLimitedData
+              : null,
+    );
+
+    setState(() {
+      _enrichment = enrichment;
+      _plainText = plain;
+      _refining = false;
     });
   }
 
   String _qrPayload() {
-    final snap = _snapshot;
-    final text = _plainText ?? '';
-    if (snap != null && !snap.isEmpty) {
-      return DoctorReportBuilder.qrPayload(snap, text);
-    }
-    if (text.isNotEmpty) {
-      return text.length > 800 ? text.substring(0, 800) : text;
-    }
-    return 'Lune|cycle_report';
+    // QR opens the Lune web/app landing page for the physician.
+    return PrivacyConstants.privacyPolicyUrl
+        .replaceAll('/privacy-policy.html', '');
   }
 
   Future<void> _exportReport() async {
@@ -132,6 +188,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
         snapshot: _snapshot,
         exportedDateLabel: dateFmt.format(_exportedAt),
         rtl: locale.languageCode == 'ar',
+        plainText: _plainText,
       );
 
       if (!mounted) return;
@@ -167,7 +224,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
         elevation: 0,
         title: Text(l10n.doctorReportTitle),
         actions: [
-          if (_plainText != null) ...[
+          if (_plainText != null && !_refining) ...[
             IconButton(
               tooltip: l10n.doctorReportDownload,
               icon: const Icon(Icons.download_outlined),
@@ -218,6 +275,10 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
                       dashboard: _dashboard,
                       qrPayload: _qrPayload(),
                       exportedAt: _exportedAt,
+                      enrichment: _enrichment,
+                      refining: _refining,
+                      limitedData: _limitedData,
+                      limitedDataNote: l10n.doctorReportLimitedData,
                     ),
                   ],
                 ),

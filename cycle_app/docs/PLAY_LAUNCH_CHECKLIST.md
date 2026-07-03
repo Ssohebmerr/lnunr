@@ -41,6 +41,16 @@ firebase functions:secrets:set GOOGLE_PLAY_SERVICE_ACCOUNT
 1. Firebase Console → enable **Crashlytics** for project `lune-7d956`
 2. Build a release APK/AAB once — first crash report initializes the dashboard
 
+### Syncfusion (cycle charts — Community License)
+
+Charts in `menstrual_cycle_widget` use **Syncfusion v32**. Google Play does **not** require a license key in the APK.
+
+- [ ] Claim free **Community License**: [syncfusion.com/products/communitylicense](https://www.syncfusion.com/products/communitylicense)
+- Eligibility: annual revenue &lt; $1M, ≤5 developers, ≤10 employees
+- Flutter v32+: **no license key required in app code** ([Syncfusion docs](https://help.syncfusion.com/flutter/licensing/overview))
+- [ ] Keep Syncfusion approval email for your records (not uploaded to Play Console)
+- Details: **`docs/SYNCFUSION_COMMUNITY_LICENSE.md`**
+
 ---
 
 ## 2. Google Play Console
@@ -54,12 +64,25 @@ flutter build appbundle --release
 
 Upload `build/app/outputs/bundle/release/app-release.aab` to **Internal testing** first.
 
-### Subscription product
+### Subscription product & Real-Time Developer Notifications (RTDN)
 
 1. **Monetize → Products → Subscriptions**
 2. Create subscription ID: `premium_monthly` (must match `play_billing_service.dart`)
 3. Set price, billing period (monthly), free trial if desired
 4. Activate after app is in a test track
+
+#### RTDN (renewals, cancellations, refunds)
+
+Google Play must notify your backend when subscriptions change:
+
+1. Google Cloud Console → **Pub/Sub** → create topic e.g. `play-rtdn`
+2. Play Console → **Monetize setup** → Real-time developer notifications → topic `projects/YOUR_PROJECT/topics/play-rtdn`
+3. Pub/Sub → **Create subscription** → type **Push** → endpoint:
+   `https://REGION-PROJECT.cloudfunctions.net/googlePlayWebhook`
+4. Deploy functions (includes `googlePlayWebhook` + nightly `syncExpiredPlayPremium`)
+5. Send **Test notification** from Play Console and confirm Cloud Functions logs show `Play RTDN test notification received`
+
+Service account JSON (`GOOGLE_PLAY_SERVICE_ACCOUNT` secret) must have **View financial data** in Play Console → Users and permissions.
 
 ### Store listing
 

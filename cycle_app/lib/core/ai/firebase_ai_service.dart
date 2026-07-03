@@ -4,16 +4,12 @@ import 'package:flutter/foundation.dart';
 import '../../features/community/data/moderation_result.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
+import 'models/ai_turn.dart';
 
 /// Firebase AI Logic service — primary AI provider for the app.
 ///
 /// Uses Firebase AI Logic SDK to access Gemini models directly from the
 /// client with built-in security (App Check) and no backend required.
-///
-/// Resolution order in AiGateway:
-/// 1. Firebase AI Logic (this service) — direct, secure, no server
-/// 2. Cloud Function (Firebase) — requires signed-in user
-/// 3. Direct Gemini API (legacy fallback)
 class FirebaseAiService {
   static const _modelNames = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
@@ -22,88 +18,50 @@ class FirebaseAiService {
   GenerativeModel _getModel({
     required String modelName,
     required String systemPrompt,
-    int? maxTokens,
-    double? temperature,
+    required int maxTokens,
+    required double temperature,
   }) {
     return FirebaseAI.googleAI().generativeModel(
       model: modelName,
       systemInstruction: Content.system(systemPrompt),
       generationConfig: GenerationConfig(
-        maxOutputTokens: maxTokens ?? 2000,
-        temperature: temperature ?? 0.78,
+        maxOutputTokens: maxTokens,
+        temperature: temperature,
       ),
       safetySettings: [
-        SafetySetting(
-          HarmCategory.harassment,
-          HarmBlockThreshold.medium,
-          null,
-        ),
-        SafetySetting(
-          HarmCategory.hateSpeech,
-          HarmBlockThreshold.medium,
-          null,
-        ),
-        SafetySetting(
-          HarmCategory.sexuallyExplicit,
-          HarmBlockThreshold.high,
-          null,
-        ),
-        SafetySetting(
-          HarmCategory.dangerousContent,
-          HarmBlockThreshold.medium,
-          null,
-        ),
+        SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium, null),
+        SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium, null),
+        SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.high, null),
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium, null),
       ],
     );
   }
 
   /// Generate a response using Firebase AI Logic.
-  ///
-  /// Returns null if the request fails — callers should fall back to
-  /// Cloud Functions or direct Gemini API.
   Future<String?> generate({
     required String message,
     required Map<String, dynamic> cycleContext,
     String mode = 'chat',
+    List<AiTurn> history = const [],
   }) async {
     try {
-      final effectiveMode = mode;
       final isPregnant = cycleContext['userGoal'] == 'pregnant';
-      final systemPrompt = AiPromptStyle.forMode(
-        effectiveMode,
-        isPregnant: isPregnant,
-      );
-
-      final maxTokens = switch (effectiveMode) {
-        'doctor' => 1200,
-        'analyze' => 900,
-        'briefing' => 300,
-        'emergency' => 400,
-        'patterns' => 600,
-        'nutrition' => 500,
-        'partner' => 300,
-        'mood' => 400,
-        'fertility' => 500,
-        'weight' => 500,
-        'intimacy' => 400,
-        _ => 2000,
-      };
-
-      final temperature = effectiveMode == 'emergency' ? 0.6 : 0.78;
-
-      final userPrompt = AiPromptBuilder.buildUserPrompt(message, cycleContext, effectiveMode);
+      final systemPrompt = AiPromptStyle.forMode(mode, isPregnant: isPregnant);
+      final cfg = AiPromptStyle.configForMode(mode);
+      final userPrompt =
+          AiPromptBuilder.buildUserPrompt(message, cycleContext, mode);
+      final contents = _buildContents(history: history, userPrompt: userPrompt);
 
       for (final modelName in _modelNames) {
         try {
           final model = _getModel(
             modelName: modelName,
             systemPrompt: systemPrompt,
-            maxTokens: maxTokens,
-            temperature: temperature,
+            maxTokens: cfg.maxTokens,
+            temperature: cfg.temperature,
           );
 
-          final response = await model.generateContent([Content.text(userPrompt)]);
-
+          final response = await model.generateContent(contents);
           var text = response.text?.trim();
           if (text == null || text.isEmpty) continue;
 
@@ -131,18 +89,68 @@ class FirebaseAiService {
     }
   }
 
+  /// Streaming generation using Firebase AI Logic.
+  Stream<String> generateStream({
+    required String message,
+    required Map<String, dynamic> cycleContext,
+    String mode = 'chat',
+    List<AiTurn> history = const [],
+  }) async* {
+    final isPregnant = cycleContext['userGoal'] == 'pregnant';
+    final systemPrompt = AiPromptStyle.forMode(mode, isPregnant: isPregnant);
+    final cfg = AiPromptStyle.configForMode(mode);
+    final userPrompt =
+        AiPromptBuilder.buildUserPrompt(message, cycleContext, mode);
+    final contents = _buildContents(history: history, userPrompt: userPrompt);
+
+    for (final modelName in _modelNames) {
+      try {
+        final model = _getModel(
+          modelName: modelName,
+          systemPrompt: systemPrompt,
+          maxTokens: cfg.maxTokens,
+          temperature: cfg.temperature,
+        );
+
+        var yieldedSomething = false;
+        await for (final chunk in model.generateContentStream(contents)) {
+          final text = chunk.text;
+          if (text != null && text.isNotEmpty) {
+            yieldedSomething = true;
+            yield text;
+          }
+        }
+        if (yieldedSomething) return;
+      } catch (e) {
+        debugPrint('[FirebaseAiService.stream] $modelName failed: $e');
+      }
+    }
+  }
+
+  List<Content> _buildContents({
+    required List<AiTurn> history,
+    required String userPrompt,
+  }) {
+    final trimmed = history.length > 12
+        ? history.sublist(history.length - 12)
+        : history;
+
+    final messages = <Content>[];
+    for (final turn in trimmed) {
+      messages.add(turn.role == AiTurnRole.user
+          ? Content.text(turn.text)
+          : Content('model', [TextPart(turn.text)]));
+    }
+    messages.add(Content.text(userPrompt));
+    return messages;
+  }
+
   /// Moderate community content using Firebase AI Logic.
   Future<ModerationResult?> moderateContent({required String text}) async {
     try {
       _moderationModel ??= FirebaseAI.googleAI().generativeModel(
         model: _modelNames.first,
-        systemInstruction: Content.system(
-          'You are a content moderator for a women\'s health community app. '
-          'Review the post/comment. Reject if it contains: medical prescriptions, '
-          'dangerous advice, harassment, hate speech, spam, links, or self-harm. '
-          'Allow supportive peer discussion. Reply ONLY with JSON: '
-          '{"approved":true} or {"approved":false,"reason":"short reason"}.',
-        ),
+        systemInstruction: Content.system(AiPromptStyle.moderationSystem),
       );
 
       final response = await _moderationModel!.generateContent([

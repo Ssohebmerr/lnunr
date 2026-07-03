@@ -15,15 +15,17 @@ class CycleBridgeService {
     return api;
   }
 
-  /// Link Firebase UID to widget customerId for encrypted local storage.
+  /// Re-apply the widget customerId on startup / auth changes.
+  ///
+  /// The local encrypted cycle store always uses a single stable partition id
+  /// ([CycleEncryptionKeys.localCustomerId]) regardless of sign-in state, so
+  /// period dates entered during onboarding are never orphaned when the user
+  /// signs in or the app is relaunched.
   Future<void> linkAuthenticatedUser(User? user) async {
-    final customerId = user != null
-        ? CycleEncryptionKeys.customerIdFromUid(user.uid)
-        : 'local_user';
     await _api.updateConfiguration(
       cycleLength: _api.getCycleLength(),
       periodDuration: _api.getPeriodDuration(),
-      customerId: customerId,
+      customerId: CycleEncryptionKeys.localCustomerId,
     );
   }
 
@@ -45,7 +47,7 @@ class CycleBridgeService {
       cycleLength: cycleLength,
       periodDuration: periodDuration,
       lastPeriodDate: lastPeriodDate,
-      customerId: customerId ?? 'local_user',
+      customerId: customerId ?? CycleEncryptionKeys.localCustomerId,
       defaultLanguage: _mapLanguage(languageCode),
       dateFormat: dateFormat,
       fontFamily: 'Default',
@@ -102,27 +104,41 @@ class CycleBridgeService {
     }
   }
 
+  /// Runs a single dashboard field query, returning [fallback] if it throws so
+  /// one failing metric never blanks the whole analytics screen.
+  Future<T> _safeField<T>(Future<T> Function() fn, T fallback) async {
+    try {
+      return await fn();
+    } catch (e) {
+      debugPrint('CycleBridgeService dashboard field failed: $e');
+      return fallback;
+    }
+  }
+
   Future<CycleDashboardData> loadDashboard() async {
     return CycleDashboardData(
-      phase: await _api.getCurrentPhaseName(),
-      nextPeriod: await _api.getNextPredictedPeriodDate(),
-      ovulation: await _api.getNextOvulationDate(),
-      cycleDay: await _api.getCurrentCycleDay(),
-      periodDay: await _api.getCurrentPeriodDay(),
-      cycleRegularity: await _api.getCycleRegularityScore(),
-      cycleRegularityStatus: await _api.getCycleRegularityScoreStatus(),
-      periodRegularity: await _api.getPeriodRegularityScore(),
-      periodRegularityStatus: await _api.getPeriodRegularityScoreStatus(),
-      avgCycleLength: await _api.getAvgCycleLength(),
-      avgPeriodDuration: await _api.getAvgPeriodDuration(),
-      totalCycles: await _api.getTotalNumberOfCycle(),
-      pregnancyChances: await _api.getPregnancyChances(),
-      expectedDueDate: await _api.getExpectedDueDate(),
-      pregnancyWeek: await _api.getCurrentPregnancyWeek(),
-      trimester: await _api.getCurrentTrimester(),
-      isPeriodStarted: await _api.isPeriodStarted(),
-      isOvulationDay: await _api.isOvulationDay(),
-      expectedPregnancyTestDate: await _api.getExpectedPregnancyTestDate(),
+      phase: await _safeField(_api.getCurrentPhaseName, ''),
+      nextPeriod: await _safeField(_api.getNextPredictedPeriodDate, ''),
+      ovulation: await _safeField(_api.getNextOvulationDate, ''),
+      cycleDay: await _safeField(_api.getCurrentCycleDay, 0),
+      periodDay: await _safeField(_api.getCurrentPeriodDay, 0),
+      cycleRegularity: await _safeField(_api.getCycleRegularityScore, 0.0),
+      cycleRegularityStatus:
+          await _safeField(_api.getCycleRegularityScoreStatus, ''),
+      periodRegularity: await _safeField(_api.getPeriodRegularityScore, 0.0),
+      periodRegularityStatus:
+          await _safeField(_api.getPeriodRegularityScoreStatus, ''),
+      avgCycleLength: await _safeField(_api.getAvgCycleLength, 0),
+      avgPeriodDuration: await _safeField(_api.getAvgPeriodDuration, 0),
+      totalCycles: await _safeField(_api.getTotalNumberOfCycle, 0),
+      pregnancyChances: await _safeField(_api.getPregnancyChances, ''),
+      expectedDueDate: await _safeField(_api.getExpectedDueDate, ''),
+      pregnancyWeek: await _safeField(_api.getCurrentPregnancyWeek, 0),
+      trimester: await _safeField(_api.getCurrentTrimester, 0),
+      isPeriodStarted: await _safeField(_api.isPeriodStarted, false),
+      isOvulationDay: await _safeField(_api.isOvulationDay, false),
+      expectedPregnancyTestDate:
+          await _safeField(_api.getExpectedPregnancyTestDate, ''),
     );
   }
 
@@ -153,14 +169,14 @@ class CycleBridgeService {
 
   Future<GraphAvailability> loadGraphAvailability() async {
     final results = await Future.wait([
-      _api.hasCycleTrendsGraphData(),
-      _api.hasPeriodGraphData(),
-      _api.hasCycleHistoryGraphData(),
-      _api.hasBodyTemperatureGraphData(),
-      _api.hasWeightGraphData(),
-      _api.hasSleepGraphData(),
-      _api.hasWaterGraphData(),
-      _api.hasMeditationGraphData(),
+      _safeField(_api.hasCycleTrendsGraphData, false),
+      _safeField(_api.hasPeriodGraphData, false),
+      _safeField(_api.hasCycleHistoryGraphData, false),
+      _safeField(_api.hasBodyTemperatureGraphData, false),
+      _safeField(_api.hasWeightGraphData, false),
+      _safeField(_api.hasSleepGraphData, false),
+      _safeField(_api.hasWaterGraphData, false),
+      _safeField(_api.hasMeditationGraphData, false),
     ]);
     return GraphAvailability(
       trends: results[0],

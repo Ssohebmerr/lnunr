@@ -1,7 +1,16 @@
+import 'dart:async';
+
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart'
     as menstrudel_l10n;
 import 'package:cycle_aura/menstrudel_integration/menstrudel_init.dart';
 import 'package:cycle_aura/menstrudel_integration/menstrudel_providers.dart';
+import 'package:cycle_aura/menstrudel/database/repositories/logs_repository.dart';
+import 'package:cycle_aura/menstrudel/database/repositories/user_repository.dart';
+import 'package:cycle_aura/menstrudel/services/settings_service.dart';
+import 'package:cycle_aura/menstrudel/services/symptom_service.dart';
+import 'package:cycle_aura/menstrudel/services/user_service.dart';
+import 'package:cycle_aura/menstrudel/services/wear_sync_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -19,6 +28,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'core/analytics/active_ping_service.dart';
+import 'core/premium/play_billing_coordinator.dart';
 import 'core/notifications/app_notifications.dart';
 
 import 'core/ai/ai_context_engine.dart';
@@ -26,9 +37,12 @@ import 'core/ai/ai_gateway.dart';
 import 'core/ai/ai_insights_service.dart';
 import 'core/ai/direct_gemini_service.dart';
 import 'core/ai/firebase_ai_service.dart';
-import 'core/config/app_secrets.dart';
+import 'core/config/feature_flags.dart';
 import 'core/firebase/app_bootstrap.dart';
-import 'core/locale/locale_cubit.dart';
+import 'features/user/data/guest_user_service.dart';
+import 'core/ai/lune_personality.dart';
+import 'core/locale/locale_controller.dart';
+import 'core/navigation/home_shell_actions.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/privacy/consent_manager.dart';
 import 'core/privacy/privacy_constants.dart';
@@ -37,7 +51,7 @@ import 'core/storage/user_prefs.dart';
 import 'core/theme/app_design_tokens.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/aura_scaffold.dart';
-import 'core/theme/theme_cubit.dart';
+import 'core/theme/theme_controller.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
 import 'features/auth/data/auth_repository.dart';
@@ -67,14 +81,17 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  await AppBootstrap.initialize();
+  try {
+    await AppBootstrap.initialize();
+  } catch (e, st) {
+    debugPrint('[Main] AppBootstrap initialize failed: $e\n$st');
+  }
 
-  // Load Gemini API key from build-time --dart-define only.
-  // Does NOT overwrite any key the user has saved in Settings > Gemini key.
-  if (AppSecrets.geminiApiKey.isNotEmpty) {
-    final geminiService = DirectGeminiService();
-    await geminiService.setKey(AppSecrets.geminiApiKey);
-    if (kDebugMode) debugPrint('[Main] Gemini API key set from --dart-define');
+  try {
+    await GuestUserService().ensureSession();
+    unawaited(GuestUserService().syncLocalProfileIfNeeded());
+  } catch (e, st) {
+    debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
   }
 
   tz_data.initializeTimeZones();
@@ -85,22 +102,19 @@ void main() async {
     tz.setLocalLocation(tz.getLocation('UTC'));
   }
 
-  await NotificationService.initialize();
+  try {
+    await NotificationService.initialize();
+    // Wire the root navigator so notification taps can deep-link to a tab.
+    AppNotifications.globalNavigatorKey = _rootNavigatorKey;
+  } catch (e) {
+    debugPrint('[Main] NotificationService initialize failed: $e');
+  }
 
-  // Register FCM token on every app start (not just login)
-  // Handles existing users who logged in before token registration was added.
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser != null) {
-    try {
-      final fcmToken = await FirebaseMessaging.instance.getToken();
-      if (fcmToken != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid)
-            .set({'fcmToken': fcmToken, 'fcmTokenUpdatedAt': FieldValue.serverTimestamp()},
-                SetOptions(merge: true));
-      }
-    } catch (_) {}
+  // FCM token sync must not block startup when offline.
+  try {
+    unawaited(_registerFcmTokenIfSignedIn());
+  } catch (e) {
+    debugPrint('[Main] FCM registration trigger failed: $e');
   }
 
   // FCM foreground listener — show local notification when app is open
@@ -124,77 +138,184 @@ void main() async {
     }
   });
 
-  await MenstrudelInit.initialize();
+  void handleFcmLaunch(RemoteMessage message) {
+    if (message.data.isEmpty) return;
+    NotificationRouter.navigateFromMap(message.data);
+  }
 
-  final keys = await CycleEncryptionKeys.loadOrCreate();
-  MenstrualCycleWidget.init(
-    secretKey: keys['secretKey'],
-    ivKey: keys['ivKey'],
-  );
+  FirebaseMessaging.onMessageOpenedApp.listen(handleFcmLaunch);
+  final initialFcm = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialFcm != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      handleFcmLaunch(initialFcm);
+    });
+  }
 
-  final localeCubit = LocaleCubit();
-  await localeCubit.load();
+  try {
+    await MenstrudelInit.initialize();
+  } catch (e, st) {
+    debugPrint('[Main] MenstrudelInit failed: $e\n$st');
+  }
 
-  final themeCubit = ThemeCubit();
-  await themeCubit.load();
+  try {
+    final keys = await CycleEncryptionKeys.loadOrCreate();
+    MenstrualCycleWidget.init(
+      secretKey: keys['secretKey'],
+      ivKey: keys['ivKey'],
+    );
+  } catch (e, st) {
+    debugPrint('[Main] MenstrualCycleWidget init failed: $e\n$st');
+  }
 
-  await NotificationService.scheduleFromPrefs();
+  final localeController = LocaleController();
+  await localeController.load();
+
+  final themeController = ThemeController();
+  await themeController.load();
+
+  // Warm up the feature-flag cache so the first frame can read flags
+  // synchronously (see FeatureFlags.isEnabledSync).
+  await FeatureFlags.refresh();
+
+  try {
+    await LunePersonalityPrefs.load();
+  } catch (e) {
+    debugPrint('[Main] LunePersonalityPrefs load failed: $e');
+  }
+
+  try {
+    await NotificationService.scheduleFromPrefs();
+  } catch (e, st) {
+    debugPrint('[Main] Notification schedule skipped: $e\n$st');
+  }
+
+  // DAU heartbeat — best-effort, non-blocking
+  unawaited(ActivePingService.pingIfNeeded());
+
+  // Google Play Billing listener (Android) — must run app-wide for checkout.
+  unawaited(PlayBillingCoordinator.instance.initialize());
 
   final bridge = CycleBridgeService();
-  await bridge.applyLocale(localeCubit.locale.languageCode);
-  await bridge.linkAuthenticatedUser(FirebaseAuth.instance.currentUser);
-  await CycleSyncService().onCycleDataChanged();
+  try {
+    await bridge.applyLocale(localeController.locale.languageCode);
+    await bridge.linkAuthenticatedUser(FirebaseAuth.instance.currentUser);
+    await CycleSyncService()
+        .onCycleDataChanged()
+        .timeout(const Duration(seconds: 10));
+  } catch (e, st) {
+    debugPrint('Initial cycle sync skipped (non-fatal): $e\n$st');
+  }
+
+  final prefs = MenstrudelInit.prefs ?? await SharedPreferences.getInstance();
+  MenstrudelInit.prefs ??= prefs;
+  MenstrudelInit.settingsService ??= SettingsService(prefs);
+  MenstrudelInit.userService ??= UserService(UserRepository());
+  MenstrudelInit.symptomService ??= SymptomService(prefs);
+  MenstrudelInit.logsRepository ??= LogsRepository();
+  MenstrudelInit.watchService ??= WatchSyncService();
 
   runApp(MenstrudelProviders(
-    sharedPreferences: MenstrudelInit.prefs!,
+    sharedPreferences: prefs,
     settingsService: MenstrudelInit.settingsService!,
     userService: MenstrudelInit.userService!,
     symptomService: MenstrudelInit.symptomService!,
     watchService: MenstrudelInit.watchService!,
     logsRepository: MenstrudelInit.logsRepository!,
     child: LuneApp(
-      localeCubit: localeCubit,
-      themeCubit: themeCubit,
+      localeController: localeController,
+      themeController: themeController,
     ),
   ));
+}
+
+/// Registers FCM token in background — never blocks app launch.
+Future<void> _registerFcmTokenIfSignedIn() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  try {
+    final fcmToken = await FirebaseMessaging.instance
+        .getToken()
+        .timeout(const Duration(seconds: 8));
+    if (fcmToken == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .set(
+          {
+            'fcmToken': fcmToken,
+            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        )
+        .timeout(const Duration(seconds: 8));
+  } catch (e) {
+    if (kDebugMode) debugPrint('[Main] FCM token sync skipped: $e');
+  }
 }
 
 class LuneApp extends StatefulWidget {
   const LuneApp({
     super.key,
-    required this.localeCubit,
-    required this.themeCubit,
+    required this.localeController,
+    required this.themeController,
   });
 
-  final LocaleCubit localeCubit;
-  final ThemeCubit themeCubit;
+  final LocaleController localeController;
+  final ThemeController themeController;
 
   @override
   State<LuneApp> createState() => _LuneAppState();
 }
 
-class _LuneAppState extends State<LuneApp> {
+class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
     HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
   }
 
-  void _handleWidgetLaunch(Uri? uri) {
-    if (uri != null && mounted) {
-      _router.go('/home');
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Pick up any "log period" request the watch sent while we were away.
+      MenstrudelInit.watchService?.processPendingWatchLog().then((_) {
+        CycleSyncService().onCycleDataChanged();
+      });
     }
+  }
+
+  void _handleWidgetLaunch(Uri? uri) {
+    if (!mounted) return;
+    _router.go('/home');
+    if (uri == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final path = uri.path.toLowerCase();
+      if (path.contains('log')) {
+        HomeShellActions.openLog?.call();
+      } else if (path.contains('ai') || path.contains('chat')) {
+        HomeShellActions.openAiChat?.call();
+      } else if (path.contains('report')) {
+        HomeShellActions.openReports?.call();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final localeCubit = widget.localeCubit;
-    final themeCubit = widget.themeCubit;
+    final localeController = widget.localeController;
+    final themeController = widget.themeController;
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: localeCubit),
-        ChangeNotifierProvider.value(value: themeCubit),
+        ChangeNotifierProvider.value(value: localeController),
+        ChangeNotifierProvider.value(value: themeController),
       ],
       child: MultiRepositoryProvider(
         providers: [
@@ -202,9 +323,7 @@ class _LuneAppState extends State<LuneApp> {
           RepositoryProvider(create: (_) => FirebaseAiService()),
           RepositoryProvider(create: (_) => DirectGeminiService()),
           RepositoryProvider(
-            create: (c) => AiGateway(
-              directGemini: c.read<DirectGeminiService>(),
-            ),
+            create: (_) => AiGateway(),
           ),
           RepositoryProvider(create: (_) => AiContextEngine()),
           RepositoryProvider(
@@ -230,9 +349,9 @@ class _LuneAppState extends State<LuneApp> {
             ),
           ],
           child: ListenableBuilder(
-            listenable: Listenable.merge([localeCubit, themeCubit]),
+            listenable: Listenable.merge([localeController, themeController]),
             builder: (context, _) {
-              final locale = localeCubit.locale;
+              final locale = localeController.locale;
               syncWidgetLanguage(locale);
 
               return MaterialApp.router(
@@ -249,7 +368,7 @@ class _LuneAppState extends State<LuneApp> {
                 }.toList(),
                 theme: AppTheme.light(locale),
                 darkTheme: AppTheme.dark(locale),
-                themeMode: themeCubit.themeMode,
+                themeMode: themeController.themeMode,
                 routerConfig: _router,
               );
             },
@@ -264,18 +383,28 @@ void syncWidgetLanguage(Locale locale) {
   CycleBridgeService().applyLocale(locale.languageCode);
 }
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final _router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) async {
     final done = await UserPrefs.isOnboardingDone();
     final path = state.matchedLocation;
     final stealthEnabled = await UserPrefs.isStealthModeEnabled();
+    final isUnlocked = UserPrefs.isSessionUnlocked();
 
-    // Stealth mode: show calculator as the first screen.
-    // The calculator internally navigates to /home when PIN is entered.
-    if (stealthEnabled && done && path == '/') return '/stealth';
+    // Stealth mode: redirect to calculator screen if enabled and session is locked.
+    if (stealthEnabled && done && !isUnlocked) {
+      if (path != '/stealth' &&
+          path != '/login' &&
+          path != '/register' &&
+          path != '/forgot-password') {
+        return '/stealth';
+      }
+    }
 
-    // Auth screens are optional — never block them.
+    // Auth screens and stealth screen are optional — never block them.
     if (path == '/login' ||
         path == '/register' ||
         path == '/forgot-password' ||

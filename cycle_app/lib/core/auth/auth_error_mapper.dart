@@ -28,6 +28,11 @@ class AuthErrorMapper {
     if (text.contains('cancelled') || text.contains('canceled')) {
       return l10n.authErrorCancelled;
     }
+    if (text.contains('apiexception: 10') ||
+        text.contains('developer_error') ||
+        text.contains('sign_in_failed')) {
+      return l10n.authErrorGoogleConfig;
+    }
     return l10n.errorGeneric;
   }
 }

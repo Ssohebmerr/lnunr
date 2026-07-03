@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/aura_scaffold.dart';
+import '../../../core/widgets/feminine_icon.dart';
 
 /// Single row in the account hub menu (icon · title · chevron or trailing).
 class AccountMenuTile extends StatelessWidget {
   const AccountMenuTile({
     super.key,
-    required this.icon,
+    this.icon,
+    this.femIcon,
     required this.title,
     this.subtitle,
     this.trailing,
     this.onTap,
     this.showDivider = true,
-  });
+  }) : assert(icon != null || femIcon != null,
+            'Provide either icon or femIcon');
 
-  final IconData icon;
+  final IconData? icon;
+  final FeminineIcon? femIcon;
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -43,7 +47,14 @@ class AccountMenuTile extends StatelessWidget {
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+                    child: femIcon != null
+                        ? FeminineIconView(
+                            femIcon!,
+                            size: 22,
+                            color: theme.colorScheme.primary,
+                          )
+                        : Icon(icon,
+                            size: 22, color: theme.colorScheme.primary),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

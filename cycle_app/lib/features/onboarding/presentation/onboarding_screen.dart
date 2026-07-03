@@ -6,11 +6,13 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/age/age_gate.dart';
-import '../../../core/locale/locale_cubit.dart';
+import '../../../core/locale/locale_controller.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/notifications/notification_rationale_dialog.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../../core/security/cycle_encryption_keys.dart';
+import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
@@ -39,6 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _cycleLength = 28;
   int _periodDuration = 5;
   DateTime _lastPeriod = DateTime.now().subtract(const Duration(days: 14));
+  DateTime? _birthDate;
   DateFormats _dateFormat = DateFormats.dmy;
   bool _privacyAccepted = false;
   bool _saving = false;
@@ -119,6 +122,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<void> _pickBirthDate() async {
+    final initial = _birthDate ?? DateTime(2000, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+      helpText: AppLocalizations.of(context)!.onboardingBirthDateLabel,
+    );
+    if (picked != null) {
+      setState(() => _birthDate = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -126,19 +143,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
     );
-    if (picked != null) setState(() => _lastPeriod = picked);
+    if (picked != null) {
+      setState(() => _lastPeriod = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
+  Future<void> _ensureCycleWidgetReady() async {
+    if (MenstrualCycleWidget.instance != null) return;
+    final keys = await CycleEncryptionKeys.loadOrCreate();
+    MenstrualCycleWidget.init(
+      secretKey: keys['secretKey'],
+      ivKey: keys['ivKey'],
+    );
   }
 
   Future<void> _finish() async {
     if (!_privacyAccepted || _saving) return;
     setState(() => _saving = true);
 
-    final lang = context.read<LocaleCubit>().locale.languageCode;
+    final lang = context.read<LocaleController>().locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
 
+    var enteredHome = false;
     try {
       await LocalProfile.saveAvatarIndex(_avatarIndex);
+      await _ensureCycleWidgetReady();
       await _sync.completeOnboarding(
         cycleLength: _cycleLength,
         periodDuration: _periodDuration,
@@ -146,16 +177,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         languageCode: lang,
         dateFormat: _dateFormat,
         displayName: _nameController.text.trim(),
+        birthDate: _birthDate,
         goal: _goal,
       );
+      if (!mounted) return;
       await showNotificationRationale(context);
-      await NotificationService.scheduleFromPrefs();
-      if (mounted) context.go('/home');
+      try {
+        await NotificationService.scheduleFromPrefs();
+      } catch (e) {
+        debugPrint('Onboarding notification schedule skipped: $e');
+      }
+      if (mounted) {
+        router.go('/home');
+        enteredHome = true;
+      }
     } catch (e, st) {
       debugPrint('Onboarding finish failed: $e\n$st');
-      if (mounted) {
+      final done = await UserPrefs.isOnboardingDone();
+      if (mounted && done && !enteredHome) {
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.onboardingPartialSave)),
+        );
+        router.go('/home');
+      } else if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
     } finally {
@@ -170,6 +216,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: AppTheme.gradientBackground(context),
         child: SafeArea(
@@ -220,6 +267,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       l10n: l10n,
                       nameController: _nameController,
                       avatarIndex: _avatarIndex,
+                      birthDate: _birthDate,
+                      onPickBirthDate: _pickBirthDate,
                       onAvatarChanged: (i) => setState(() => _avatarIndex = i),
                     ),
                     _GoalStep(
@@ -249,13 +298,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: AppGradientButton(
-                  label: _step == 3 ? l10n.getStarted : l10n.continueBtn,
-                  loading: _saving,
-                  onPressed: _canContinue() ? _next : null,
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_step == _totalSteps - 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    l10n.onboardingReadyHint,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
+              AppGradientButton(
+                label: _step == _totalSteps - 1
+                    ? l10n.getStarted
+                    : l10n.continueBtn,
+                loading: _saving,
+                onPressed: _canContinue() ? _next : null,
               ),
             ],
           ),
@@ -265,6 +334,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   bool _canContinue() {
+    if (_step == 1) {
+      return _nameController.text.trim().isNotEmpty &&
+          _birthDate != null &&
+          !_saving;
+    }
     if (_step == 4) return _privacyAccepted && !_saving;
     return !_saving;
   }
@@ -275,12 +349,16 @@ class _ProfileStep extends StatelessWidget {
     required this.l10n,
     required this.nameController,
     required this.avatarIndex,
+    required this.birthDate,
+    required this.onPickBirthDate,
     required this.onAvatarChanged,
   });
 
   final AppLocalizations l10n;
   final TextEditingController nameController;
   final int avatarIndex;
+  final DateTime? birthDate;
+  final VoidCallback onPickBirthDate;
   final ValueChanged<int> onAvatarChanged;
 
   @override
@@ -323,6 +401,30 @@ class _ProfileStep extends StatelessWidget {
               prefixIcon: const Icon(Icons.badge_outlined),
             ),
           ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onPickBirthDate,
+            icon: const Icon(Icons.cake_outlined),
+            label: Text(
+              birthDate == null
+                  ? l10n.onboardingBirthDateHint
+                  : MaterialLocalizations.of(context).formatMediumDate(birthDate!),
+            ),
+            style: OutlinedButton.styleFrom(
+              alignment: AlignmentDirectional.centerStart,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+          if (birthDate == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 4),
+              child: Text(
+                l10n.onboardingBirthDateRequired,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
         ],
         ),
       ),
@@ -343,6 +445,9 @@ class _GoalStep extends StatelessWidget {
     UserGoalTypes.pregnant,
     UserGoalTypes.conceive,
     UserGoalTypes.avoid,
+    UserGoalTypes.menopause,
+    UserGoalTypes.pcos,
+    UserGoalTypes.postpartum,
   ];
 
   final UserGoalTypes selected;
@@ -438,20 +543,33 @@ class _CycleStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPregnant = goal.isPregnancyMode;
+    final isCycleMode = goal.isCycleGoalMode;
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         Text(
-          isPregnant ? l10n.onboardingPregnancyDataTitle : l10n.onboardingCycleTitle,
+          isPregnant
+              ? l10n.onboardingPregnancyDataTitle
+              : (isCycleMode
+                  ? l10n.onboardingCycleTitle
+                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
+                      ? 'تفاصيل سريعة'
+                      : 'A few quick details')),
           style: theme.textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
         Text(
-          isPregnant ? l10n.onboardingPregnancyDataSubtitle : l10n.onboardingCycleSubtitle,
+          isPregnant
+              ? l10n.onboardingPregnancyDataSubtitle
+              : (isCycleMode
+                  ? l10n.onboardingCycleSubtitle
+                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
+                      ? 'سنسأل فقط عن آخر دورة لتبدأ التتبّع.'
+                      : 'We only ask for the basics so we can start tracking.')),
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 20),
-        if (!isPregnant) ...[
+        if (isCycleMode) ...[
           _StepperCard(label: l10n.cycleLength, value: cycleLength, onChanged: onCycleLength),
           const SizedBox(height: 12),
           _StepperCard(label: l10n.periodDuration, value: periodDuration, onChanged: onPeriodDuration),

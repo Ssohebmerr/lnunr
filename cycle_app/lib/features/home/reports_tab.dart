@@ -8,10 +8,12 @@ import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_bridge_service.dart';
+import '../cycle/presentation/widgets/hormone_indicators_section.dart';
 import '../cycle/presentation/widgets/conditional_graph_card.dart';
 import '../cycle/presentation/widgets/cycle_history_table.dart';
 import '../cycle/presentation/widgets/cycle_score_section.dart';
 import '../cycle/data/cycle_sync_service.dart';
+import '../analytics/analytics_page.dart';
 import '../goals/presentation/goal_mode_reports_section.dart';
 import '../pregnancy/presentation/pregnancy_reports_section.dart';
 import 'doctor_report_screen.dart';
@@ -116,6 +118,12 @@ class _ReportsTabState extends State<ReportsTab> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         children: [
+          _OpenAnalyticsCard(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AnalyticsPage()),
+            ),
+          ),
+          const SizedBox(height: 10),
           ReportsDoctorExportCard(
             title: l10n.doctorReportButton,
             subtitle: l10n.doctorReportDisclaimer,
@@ -162,9 +170,21 @@ class _ReportsTabState extends State<ReportsTab> {
                   : _goal,
               data: d,
             ),
+          ] else if (hasStats && _goal.hasCustomHomeBody && !_goal.isPregnancyMode) ...[
+            const SizedBox(height: 4),
+            GoalModeReportsSection(
+              goal: _goal == UserGoalTypes.sexual
+                  ? UserGoalTypes.general
+                  : _goal,
+              data: d,
+            ),
           ] else if (hasStats) ...[
             const SizedBox(height: 4),
             CycleScoreSection(data: d),
+          ],
+          if (hasStats && !_goal.isPregnancyMode) ...[
+            const SizedBox(height: 14),
+            const HormoneIndicatorsSection(),
           ],
           if (hasStats &&
               (hasCycles || hasPatterns || !_goal.isPregnancyMode)) ...[
@@ -400,6 +420,76 @@ class _ReportsMessage extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Open full analytics" banner — quick entry into the dedicated
+/// AnalyticsPage with all goal-aware metrics.
+class _OpenAnalyticsCard extends StatelessWidget {
+  const _OpenAnalyticsCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    return AppGlassCard(
+      blur: false,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          gradient: LinearGradient(
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.18),
+              theme.colorScheme.secondary.withValues(alpha: 0.10),
+            ],
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: const Icon(
+                Icons.insights_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lang.startsWith('ar')
+                        ? 'صفحة التحليلات الكاملة'
+                        : 'Full Analytics',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    lang.startsWith('ar')
+                        ? 'كل المؤشرات، الرسوم، والنتائج حسب هدفكِ.'
+                        : 'All metrics, charts, and insights for your goal.',
+                    style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
           ],
         ),
       ),

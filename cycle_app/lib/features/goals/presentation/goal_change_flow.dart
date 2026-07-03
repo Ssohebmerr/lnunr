@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_sync_service.dart';
+import 'goal_mode_intro_sheet.dart';
 import 'goal_picker_sheet.dart';
 import 'pregnancy_lmp_sheet.dart';
 
@@ -31,6 +32,16 @@ class GoalChangeFlow {
     }
 
     await cycleSync.setUserGoal(picked);
+
+    // Lifecycle goals get a friendly intro sheet so the user sees what
+    // we'll focus on (without re-running onboarding).
+    if (!context.mounted) return null;
+    if (picked.isMenopauseMode ||
+        picked.isPcosMode ||
+        picked.isPostpartumMode) {
+      await GoalModeIntroSheet.show(context, picked);
+    }
+
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.goalChangedSnackbar)),

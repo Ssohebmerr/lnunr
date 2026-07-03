@@ -426,7 +426,7 @@ class AdminRepository {
         body: jsonEncode({
           'title': title,
           'body': body,
-          if (audience != null) 'audience': audience,
+          'audience': ?audience,
         }),
       );
       final data = jsonDecode(response.body) as Map<String, dynamic>;

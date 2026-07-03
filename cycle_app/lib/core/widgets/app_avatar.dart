@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../theme/app_design_tokens.dart';
 import '../profile/avatar_catalog.dart';
+import '../premium/premium_badge.dart';
 
 /// App-wide avatar: stylized character, custom photo, or network image.
 class AppAvatar extends StatelessWidget {
@@ -15,6 +17,7 @@ class AppAvatar extends StatelessWidget {
     this.uidSeed,
     this.radius = 20,
     this.onTap,
+    this.isPremium = false,
   });
 
   final int? avatarIndex;
@@ -23,6 +26,7 @@ class AppAvatar extends StatelessWidget {
   final String? uidSeed;
   final double radius;
   final VoidCallback? onTap;
+  final bool isPremium;
 
   @override
   Widget build(BuildContext context) {
@@ -72,12 +76,24 @@ class AppAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-          width: 1.5,
+          color: isPremium
+              ? AuraColors.peachGold.withValues(alpha: 0.85)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          width: isPremium ? 2 : 1.5,
         ),
       ),
       child: child,
     );
+
+    if (isPremium) {
+      child = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          PremiumBadge.avatarOverlay(size: radius * 0.55 + 8),
+        ],
+      );
+    }
 
     if (onTap != null) {
       child = GestureDetector(onTap: onTap, child: child);

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Pick a primary goal — app home, reports, self-care, and AI adapt instantly.
@@ -20,6 +21,9 @@ class GoalPickerSheet extends StatelessWidget {
     UserGoalTypes.pregnant,
     UserGoalTypes.conceive,
     UserGoalTypes.avoid,
+    UserGoalTypes.menopause,
+    UserGoalTypes.pcos,
+    UserGoalTypes.postpartum,
   ];
 
   static Future<UserGoalTypes?> show(
@@ -41,27 +45,28 @@ class GoalPickerSheet extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.accountChangeGoal,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.accountChangeGoal,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.accountChangeGoalHint,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.4,
+              const SizedBox(height: 6),
+              Text(
+                l10n.accountChangeGoalHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -89,10 +94,27 @@ class GoalPickerSheet extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          goal.icon,
-                          color: theme.colorScheme.primary,
-                          size: 32,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary
+                                    .withValues(alpha: 0.18),
+                                theme.colorScheme.secondary
+                                    .withValues(alpha: 0.10),
+                              ],
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: FeminineIconView(
+                            goal.femIcon,
+                            size: 30,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -113,6 +135,7 @@ class GoalPickerSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

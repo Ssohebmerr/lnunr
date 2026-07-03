@@ -20,6 +20,10 @@ class WatchSyncService {
   StreamSubscription? _subscription;
   static const _processedTimestampsKey = 'processed_watch_timestamps';
 
+  /// Written by the native [WearLogRequestListenerService] (Android) when the
+  /// watch asks to log a period while the Flutter engine is not running.
+  static const _pendingWatchLogKey = 'pending_watch_log_timestamp';
+
   void Function()? onPeriodLogRequested;
 
   /// Current cycle data cached for Wear OS Data Layer sync
@@ -32,6 +36,9 @@ class WatchSyncService {
     onPeriodLogRequested = onPeriodLog;
 
     if (kDebugMode) debugPrint('[WatchSync] Initializing...');
+
+    // Process any log request the watch sent while the app was closed.
+    await processPendingWatchLog();
 
     try {
       if (!await _watch.isSupported) {
@@ -84,6 +91,36 @@ class WatchSyncService {
       processedIds.removeRange(0, processedIds.length - 50);
     }
     await prefs.setStringList(_processedTimestampsKey, processedIds);
+  }
+
+  /// Reads a pending "log period" request stored by the native Wear OS
+  /// listener (Android Data Layer path `/lune/log-request`) and triggers the
+  /// log once, de-duplicated by timestamp. Safe to call repeatedly (on every
+  /// app resume).
+  Future<void> processPendingWatchLog() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pending = prefs.getString(_pendingWatchLogKey);
+      if (pending == null || pending.isEmpty) return;
+
+      final processedIds = prefs.getStringList(_processedTimestampsKey) ?? [];
+      if (!processedIds.contains(pending)) {
+        if (kDebugMode) {
+          debugPrint('[WatchSync] Processing pending watch log: $pending');
+        }
+        onPeriodLogRequested?.call();
+
+        processedIds.add(pending);
+        if (processedIds.length > 50) {
+          processedIds.removeRange(0, processedIds.length - 50);
+        }
+        await prefs.setStringList(_processedTimestampsKey, processedIds);
+      }
+
+      await prefs.remove(_pendingWatchLogKey);
+    } catch (e) {
+      if (kDebugMode) debugPrint('[WatchSync] processPendingWatchLog failed: $e');
+    }
   }
 
   /// Send cycle data to the watch.

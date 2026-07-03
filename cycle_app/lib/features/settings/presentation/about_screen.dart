@@ -102,7 +102,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     leading: const Icon(Icons.mail_outline),
                     title: Text(l10n.contactSupport),
                     subtitle: Text(PrivacyConstants.supportEmail),
-                    onTap: openSupportEmail,
+                    onTap: () => openSupportEmail(context),
                   ),
                 ],
               ),

@@ -1,6 +1,6 @@
 {
   "name": "cycle-aura-functions",
-  "description": "Cloud Functions for Cycle Aura — Gemini AI + PayPal",
+  "description": "Cloud Functions for Cycle Aura — Gemini AI + Google Play",
   "engines": {
     "node": "20"
   },

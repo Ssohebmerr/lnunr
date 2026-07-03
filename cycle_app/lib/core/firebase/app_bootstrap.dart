@@ -10,11 +10,20 @@ import 'firebase_options.dart';
 class AppBootstrap {
   AppBootstrap._();
 
-  /// Set `false` for Play Store release. `true` lets sideload/test APKs use Firestore.
-  static const _useDebugAppCheck = bool.fromEnvironment(
+  /// Debug builds use the App Check debug provider so emulators and sideloaded
+  /// test APKs can still reach Firestore. RELEASE builds now default to the real
+  /// attestation providers (Play Integrity / App Attest) — App Check is no
+  /// longer effectively disabled in production.
+  ///
+  /// Pass `--dart-define=APP_CHECK_DEBUG=true` to force the debug provider in a
+  /// release build (e.g. a QA/sideload build that isn't registered with Play
+  /// Integrity yet).
+  static const _forceDebugAppCheck = bool.fromEnvironment(
     'APP_CHECK_DEBUG',
-    defaultValue: true,
+    defaultValue: false,
   );
+
+  static final bool _useDebugAppCheck = kDebugMode || _forceDebugAppCheck;
 
   static Future<void> initialize() async {
     await Firebase.initializeApp(
@@ -27,14 +36,20 @@ class AppBootstrap {
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
 
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: _useDebugAppCheck
-          ? AndroidProvider.debug
-          : AndroidProvider.playIntegrity,
-      appleProvider: _useDebugAppCheck
-          ? AppleProvider.debug
-          : AppleProvider.appAttest,
-    );
+    try {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: _useDebugAppCheck
+            ? AndroidProvider.debug
+            : AndroidProvider.playIntegrity,
+        appleProvider: _useDebugAppCheck
+            ? AppleProvider.debug
+            : AppleProvider.appAttest,
+      );
+    } catch (e, st) {
+      // App Check can fail on sideloaded release APKs (no Play Integrity).
+      // The app must still launch; Firebase calls may be limited until fixed.
+      debugPrint('[AppBootstrap] App Check activate skipped: $e\n$st');
+    }
 
     if (!kDebugMode) {
       FlutterError.onError =

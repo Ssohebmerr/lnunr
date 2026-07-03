@@ -15,6 +15,20 @@
 # home_widget receivers
 -keep class es.antonborri.home_widget.** { *; }
 
+# Firebase / Google Play services
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# Wear OS data layer listener
+-keep class com.lune.app.WearLogRequestListenerService { *; }
+-keep class com.google.android.gms.wearable.** { *; }
+
+# Kotlin metadata for reflection-based plugins
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature
+-keep class kotlin.** { *; }
+-keep class kotlin.Metadata { *; }
+
 # Keep generic type info used by Gson TypeToken
 -keep class * extends com.google.gson.reflect.TypeToken
 -keep,allowobfuscation class * extends com.google.gson.reflect.TypeToken

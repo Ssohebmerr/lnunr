@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../../core/ai/firebase_ai_service.dart';
 import '../../../core/ai/direct_gemini_service.dart';
 import '../../../core/config/app_secrets.dart';
@@ -13,8 +14,10 @@ import '../../../core/storage/user_prefs.dart';
 import 'community_catalog_repository.dart';
 import 'community_icon_registry.dart';
 import 'community_seed.dart';
+import 'community_sort.dart';
 import 'models/community.dart';
 import 'models/community_comment.dart';
+import 'models/community_membership.dart';
 import 'models/community_post.dart';
 import 'models/community_profile.dart';
 import 'models/post_type.dart';
@@ -78,7 +81,12 @@ class CommunityRepository {
     );
   }
 
-  Future<List<Community>> _resolvedCommunities() async {
+  Future<List<Community>> _resolvedCommunities({
+    String languageCode = 'en',
+    UserGoalTypes? goal,
+    List<String> joinedIds = const [],
+    CommunitySortMode mode = CommunitySortMode.defaultOrder,
+  }) async {
     final catalog = await _catalog.fetchAll();
     final results = <Community>[];
     for (final seed in CommunitySeed.defaults) {
@@ -86,8 +94,18 @@ class CommunityRepository {
       if (entry != null && !entry.enabled) continue;
       results.add(_mergeSeed(seed, entry));
     }
-    return results;
+    return sortCommunities(
+      communities: results,
+      catalog: catalog,
+      languageCode: languageCode,
+      goal: goal,
+      joinedIds: joinedIds,
+      mode: mode,
+    );
   }
+
+  Future<Map<String, CommunityCatalogEntry>> fetchCommunityCatalog() =>
+      _catalog.fetchAll();
 
   Future<Community?> resolveCommunity(String id) async {
     final catalog = await _catalog.fetchAll();
@@ -205,9 +223,16 @@ class CommunityRepository {
   /// Firestore calls that used to time out the whole tab (cloud-off screen).
   Future<List<Community>> fetchCommunitiesWithCounts({
     bool fetchCounts = true,
+    String languageCode = 'en',
+    UserGoalTypes? goal,
+    List<String> joinedIds = const [],
   }) async {
     try {
-      final communities = await _resolvedCommunities();
+      final communities = await _resolvedCommunities(
+        languageCode: languageCode,
+        goal: goal,
+        joinedIds: joinedIds,
+      );
       if (!fetchCounts) return communities;
 
       return Future.wait(
@@ -231,7 +256,7 @@ class CommunityRepository {
         'CommunityRepository.fetchCommunitiesWithCounts failed: $e\n$st',
       );
       try {
-        return await _resolvedCommunities();
+        return await _resolvedCommunities(languageCode: languageCode, goal: goal);
       } catch (_) {
         return CommunitySeed.defaults;
       }
@@ -243,12 +268,48 @@ class CommunityRepository {
     return doc.exists;
   }
 
-  Stream<List<String>> watchJoinedCommunityIds(String uid) => _firestore
-      .collection('users')
-      .doc(uid)
-      .collection('communityMemberships')
-      .snapshots()
-      .map((s) => s.docs.map((d) => d.id).toList());
+  Future<int> fetchMemberCount(String communityId) async {
+    try {
+      final countSnap = await _membersRef(communityId)
+          .count()
+          .get()
+          .timeout(const Duration(seconds: 5));
+      return countSnap.count ?? 0;
+    } catch (e) {
+      debugPrint('fetchMemberCount failed for $communityId: $e');
+      return 0;
+    }
+  }
+
+  Stream<List<CommunityMembership>> watchJoinedMemberships(String uid) =>
+      _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('communityMemberships')
+          .snapshots()
+          .map((snapshot) {
+        final memberships = snapshot.docs.map((doc) {
+          final joinedAt = doc.data()['joinedAt'];
+          DateTime? date;
+          if (joinedAt is Timestamp) {
+            date = joinedAt.toDate();
+          }
+          return CommunityMembership(
+            communityId: doc.id,
+            joinedAt: date,
+          );
+        }).toList();
+        memberships.sort((a, b) {
+          final aTime = a.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime = b.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
+        return memberships;
+      });
+
+  Stream<List<String>> watchJoinedCommunityIds(String uid) =>
+      watchJoinedMemberships(uid)
+          .map((m) => m.map((e) => e.communityId).toList());
 
   Future<void> joinCommunity({
     required String uid,
@@ -293,7 +354,7 @@ class CommunityRepository {
 
   /// Merged feed from all joined communities.
   /// Maximum number of communities to subscribe to simultaneously.
-  static const _maxConcurrentCommunities = 10;
+  static const _maxConcurrentCommunities = 12;
 
   Stream<List<CommunityPost>> watchJoinedFeed(List<String> joinedIds) {
     if (joinedIds.isEmpty) return Stream.value(const []);
@@ -683,17 +744,27 @@ class CommunityRepository {
       }
     }
 
-    // Phone numbers: 7+ digits in a row (allowing separators).
-    final digitsOnly = text.replaceAll(RegExp(r'[\s\-().]'), '');
-    if (RegExp(r'[+\d]\d{6,}').hasMatch(digitsOnly)) {
+    // Phone numbers — match real phone shapes only. The old "7+ consecutive
+    // digits" rule caught innocent year lists like "2024 و 2025 و 2026"
+    // (concatenated to 12 digits), so we now require a phone-like prefix:
+    //   • +<10+ digits>   — international
+    //   • 0[5-7]\d{8}     — local mobile (GCC-style)
+    //   • \d{3}-\d{3}-\d{4} — US-style dashed
+    final phonePattern = RegExp(
+      r'\+\d{10,}'
+      r'|(?<!\d)0[5-7]\d{8}'
+      r'|\b\d{3}[- ]\d{3}[- ]\d{4}\b',
+    );
+    if (phonePattern.hasMatch(text)) {
       return const ModerationResult(
         approved: false,
         reason: 'Sharing phone numbers is not allowed.',
       );
     }
 
-    // Email addresses.
-    if (RegExp(r'[\w.+-]+@[\w-]+\.\w{2,}').hasMatch(text)) {
+    // Email addresses — require a TLD with at least 2 chars so we don't
+    // false-positive on stray "@" in conversational text.
+    if (RegExp(r'[\w.+-]+@[\w-]+\.[A-Za-z]{2,}').hasMatch(text)) {
       return const ModerationResult(
         approved: false,
         reason: 'Sharing email addresses is not allowed.',
@@ -762,18 +833,24 @@ class CommunityRepository {
       'postId': post.id,
       'savedAt': FieldValue.serverTimestamp(),
       if (post.communityName != null) 'communityName': post.communityName,
+      // For anonymous posts we deliberately drop the real `authorUid` from
+      // the saved doc — otherwise the saved-posts collection would quietly
+      // re-identify the author, defeating the anonymity promise to the user.
       'authorAlias': post.authorAlias,
       'textPreview': post.text.length > 120
           ? '${post.text.substring(0, 120)}…'
           : post.text,
       'postType': post.postType.value,
       'authorAvatarIndex': post.authorAvatarIndex,
-      'authorUid': post.authorUid,
+      if (!post.isAnonymous) 'authorUid': post.authorUid,
     });
     return true;
   }
 
-  Stream<List<CommunityPost>> watchSavedPosts(String uid) =>
+  Stream<List<CommunityPost>> watchSavedPosts(
+    String uid, {
+    Set<String> blockedUids = const {},
+  }) =>
       _savedPostsRef(uid)
           .orderBy('savedAt', descending: true)
           .limit(50)
@@ -791,10 +868,14 @@ class CommunityRepository {
             final postDoc = await _postsRef(communityId).doc(postId).get();
             if (!postDoc.exists) return null;
             final postData = postDoc.data();
-            if (postData == null || !(CommunityPost.fromMap(postId, postData).isVisibleTo(uid))) {
+            if (postData == null) return null;
+            // Use the full viewer-aware check so posts from authors the user
+            // has blocked don't resurface through the saved tab.
+            final post = CommunityPost.fromMap(postId, postData);
+            if (!post.isVisibleToViewer(uid, blockedUids: blockedUids)) {
               return null;
             }
-            return CommunityPost.fromMap(postId, postData);
+            return post;
           } catch (e, st) {
             debugPrint('CommunityRepository.watchSavedPosts item failed: $e\n$st');
             return null;
@@ -909,6 +990,8 @@ class CommunityRepository {
     // Function (or admin) promotes to approved after AI review.
     final displayAlias = isAnonymous ? 'Anonymous' : alias;
     final contentHash = _hashContent(text);
+    final authorIsPremium =
+        !isAnonymous && await UserPrefs.isPremium();
 
     await _postsRef(communityId).add({
       ...CommunityPost(
@@ -924,6 +1007,7 @@ class CommunityRepository {
         mediaUrl: mediaUrl,
         mediaType: mediaType,
         isAnonymous: isAnonymous,
+        authorIsPremium: authorIsPremium,
       ).toMap(),
       'moderationStatus': 'pending_review',
       'contentHash': contentHash,
@@ -1017,6 +1101,7 @@ class CommunityRepository {
     }
 
     final postRef = _postsRef(communityId).doc(postId);
+    final authorIsPremium = await UserPrefs.isPremium();
     await _firestore.runTransaction((tx) async {
       tx.set(_commentsRef(communityId, postId).doc(), {
         'authorUid': uid,
@@ -1024,6 +1109,7 @@ class CommunityRepository {
         'text': text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
         'authorAvatarIndex': authorAvatarIndex,
+        'authorIsPremium': authorIsPremium,
         'parentCommentId': parentCommentId,
         'moderationStatus': 'pending_review',
       });

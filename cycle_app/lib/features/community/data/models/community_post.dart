@@ -21,6 +21,7 @@ class CommunityPost {
     this.editedAt,
     this.isAnonymous = false,
     this.moderationStatus = 'approved',
+    this.authorIsPremium = false,
   });
 
   final String id;
@@ -43,6 +44,7 @@ class CommunityPost {
 
   /// `approved` | `pending_review`
   final String moderationStatus;
+  final bool authorIsPremium;
 
   bool get isPendingReview => moderationStatus == 'pending_review';
 
@@ -51,6 +53,18 @@ class CommunityPost {
     if (moderationStatus == 'rejected') return false;
     if (!isPendingReview) return true;
     return viewerUid != null && viewerUid == authorUid;
+  }
+
+  /// Like [isVisibleTo] but also hides posts from authors the [viewerUid] has
+  /// blocked. Use this in feed-style views that must respect the block list.
+  bool isVisibleToViewer(
+    String? viewerUid, {
+    Set<String> blockedUids = const {},
+  }) {
+    if (!isVisibleTo(viewerUid)) return false;
+    if (viewerUid == null) return true;
+    if (authorUid.isEmpty) return true;
+    return !blockedUids.contains(authorUid);
   }
 
   bool get hasImage =>
@@ -85,6 +99,7 @@ class CommunityPost {
       editedAt: _parseTs(data['editedAt']),
       isAnonymous: data['isAnonymous'] as bool? ?? false,
       moderationStatus: data['moderationStatus'] as String? ?? 'approved',
+      authorIsPremium: data['authorIsPremium'] as bool? ?? false,
     );
   }
 
@@ -114,5 +129,6 @@ class CommunityPost {
         if (mediaUrl != null) 'mediaUrl': mediaUrl,
         if (mediaType != null) 'mediaType': mediaType,
         'isAnonymous': isAnonymous,
+        'authorIsPremium': authorIsPremium,
       };
 }

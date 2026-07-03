@@ -136,6 +136,27 @@ class GoalModeBannerCard extends StatelessWidget {
             colors: [Color(0xFF5C6BC0), Color(0xFF7E57C2)],
           ),
         ),
+      UserGoalTypes.pcos => (
+          Icons.medical_services_outlined,
+          l10n.localeName.startsWith('ar') ? 'إدارة تكيس المبايض' : 'PCOS Management',
+          const LinearGradient(
+            colors: [Color(0xFF26A69A), Color(0xFF00897B)],
+          ),
+        ),
+      UserGoalTypes.menopause => (
+          Icons.hourglass_empty_rounded,
+          l10n.localeName.startsWith('ar') ? 'تتبع سن الأمل' : 'Menopause Tracking',
+          const LinearGradient(
+            colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
+          ),
+        ),
+      UserGoalTypes.postpartum => (
+          Icons.baby_changing_station_rounded,
+          l10n.localeName.startsWith('ar') ? 'الاستشفاء بعد الولادة' : 'Postpartum Recovery',
+          const LinearGradient(
+            colors: [Color(0xFFEC407A), Color(0xFFC2185B)],
+          ),
+        ),
       _ => (
           Icons.health_and_safety_outlined,
           l10n.goalModeGeneralTitle,
@@ -209,6 +230,7 @@ class GoalCycleSharedBody extends StatelessWidget {
           child: Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
+              maintainState: false,
               tilePadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -293,6 +315,18 @@ class GoalCycleSharedBody extends StatelessWidget {
     return switch (goal) {
       UserGoalTypes.conceive => l10n.homeGoalMoreConceive,
       UserGoalTypes.avoid => l10n.homeGoalMoreAvoid,
+      UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
+          ? 'متابعة أسبوعية، نصائح طبية، ودعم للحمل الصحي.'
+          : 'Weekly tracking, medical tips, and support for a healthy pregnancy.',
+      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
+          ? 'الهبّات الساخنة، النوم، والمزاج — أنماط تساعدكِ على الراحة.'
+          : 'Hot flashes, sleep, and mood — patterns help you find relief.',
+      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
+          ? 'الانتظام، الأعراض الهرمونية، ونمط الحياة — كلها مرتبطة.'
+          : 'Regularity, hormonal symptoms, and lifestyle — all linked.',
+      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
+          ? 'الشفاء، النوم، والمزاج — شفاؤكِ رحلة يومية.'
+          : 'Healing, sleep, and mood — your recovery is a daily journey.',
       _ => l10n.homeGoalMoreGeneral,
     };
   }

@@ -5,21 +5,19 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/ai/direct_gemini_service.dart';
-import '../../../core/locale/locale_cubit.dart';
+import '../../../core/locale/locale_controller.dart';
 import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/storage/user_prefs.dart';
-import '../../../core/theme/theme_cubit.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../community/presentation/blocked_users_screen.dart';
 import '../../cycle/data/cycle_sync_service.dart';
 import '../../cycle/data/local_backup_service.dart';
 import '../../cycle/presentation/cycle_settings_sheet.dart';
-import '../../cycle/presentation/widget_language_picker.dart';
 import '../../goals/presentation/goal_change_flow.dart';
 import '../../home/widgets/account_menu_tile.dart';
 import '../../privacy/presentation/privacy_center_screen.dart';
@@ -41,8 +39,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   final _sync = CycleSyncService();
   final _syncService = CloudSyncService();
   final _localBackup = LocalBackupService();
-  final _geminiController = TextEditingController();
-  bool _geminiSaved = false;
 
   @override
   void initState() {
@@ -57,7 +53,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final syncConsent = await ConsentManager.hasCloudSyncConsent();
     final communityNotif = await NotificationPrefs.communityEnabled();
     final goal = await _sync.getUserGoal();
-    final gemini = await DirectGeminiService().hasKey();
     if (mounted) {
       setState(() {
         _premium = p;
@@ -68,48 +63,66 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _geminiController.dispose();
-    super.dispose();
-  }
-
   String _goalLabel(AppLocalizations l10n) =>
       GoalChangeFlow.labelFor(context, _goal);
 
   Future<void> _changeGoal() async {
-    final picked = await GoalChangeFlow.run(context, current: _goal, sync: _sync);
+    final picked = await GoalChangeFlow.run(
+      context,
+      current: _goal,
+      sync: _sync,
+    );
     if (picked == null || !mounted) return;
     setState(() => _goal = picked);
   }
 
+  String _cloudBackupMessage(AppLocalizations l10n, CloudBackupResult result) =>
+      switch (result) {
+        CloudBackupResult.success => l10n.syncSuccess,
+        CloudBackupResult.needsPremium => l10n.syncNeedsPremium,
+        CloudBackupResult.needsConsent => l10n.syncNeedsConsent,
+        CloudBackupResult.notSignedIn => l10n.syncNotSignedIn,
+        CloudBackupResult.cycleStoreUnavailable => l10n.syncCycleUnavailable,
+        CloudBackupResult.noBackupFound => l10n.syncNoBackupFound,
+        CloudBackupResult.failed => l10n.syncFailed,
+      };
+
   Future<void> _restoreCloud() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_premium) {
-      await showPremiumUpsellDialog(context, feature: PremiumUpsellFeature.cloud);
+      await showPremiumUpsellDialog(
+        context,
+        feature: PremiumUpsellFeature.cloud,
+      );
       return;
     }
-    final ok = await _syncService.restoreLatest();
-    if (ok) await CycleSyncService().onCycleDataChanged();
+    final result = await _syncService.restoreLatest();
+    if (result == CloudBackupResult.success) {
+      await CycleSyncService().onCycleDataChanged();
+    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? l10n.syncSuccess : l10n.syncFailed)),
+        SnackBar(content: Text(_cloudBackupMessage(l10n, result))),
       );
     }
   }
 
-  Future<void> _syncNow() async {
+  Future<CloudBackupResult> _syncNow() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_premium) {
-      await showPremiumUpsellDialog(context, feature: PremiumUpsellFeature.cloud);
-      return;
+      await showPremiumUpsellDialog(
+        context,
+        feature: PremiumUpsellFeature.cloud,
+      );
+      return CloudBackupResult.needsPremium;
     }
-    final ok = await _syncService.syncBackup();
+    final result = await _syncService.syncBackup();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? l10n.syncSuccess : l10n.syncFailed)),
+        SnackBar(content: Text(_cloudBackupMessage(l10n, result))),
       );
     }
+    return result;
   }
 
   @override
@@ -117,7 +130,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    final themeCubit = context.watch<ThemeCubit>();
+    final themeController = context.watch<ThemeController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -136,28 +149,26 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     icon: Icons.language_rounded,
                     title: l10n.language,
                     trailing: Text(
-                      context.watch<LocaleCubit>().isArabic ? 'AR' : 'EN',
+                      context.watch<LocaleController>().isArabic ? 'AR' : 'EN',
                       style: theme.textTheme.labelLarge,
                     ),
-                    onTap: () => context.read<LocaleCubit>().toggle(),
+                    onTap: () => context.read<LocaleController>().toggle(),
                   ),
                   AccountMenuTile(
                     icon: Icons.palette_outlined,
                     title: l10n.theme,
-                    trailing: Text(
-                      switch (themeCubit.mode) {
-                        AppThemeMode.light => l10n.themeLight,
-                        AppThemeMode.dark => l10n.themeDark,
-                        AppThemeMode.system => l10n.themeSystem,
-                      },
-                      style: theme.textTheme.labelLarge,
-                    ),
-                    onTap: () => context.read<ThemeCubit>().cycle(),
+                    trailing: Text(switch (themeController.mode) {
+                      AppThemeMode.light => l10n.themeLight,
+                      AppThemeMode.dark => l10n.themeDark,
+                      AppThemeMode.system => l10n.themeSystem,
+                    }, style: theme.textTheme.labelLarge),
+                    onTap: () => context.read<ThemeController>().cycle(),
                   ),
                   AccountMenuTile(
                     icon: Icons.tune_rounded,
                     title: l10n.cycleSettingsTitle,
                     subtitle: l10n.cycleSettingsSubtitle,
+                    showDivider: false,
                     onTap: () async {
                       final messenger = ScaffoldMessenger.of(context);
                       final updated = await showModalBottomSheet<bool>(
@@ -173,19 +184,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       }
                     },
                   ),
-                  AccountMenuTile(
-                    icon: Icons.widgets_outlined,
-                    title: l10n.widgetLanguageLabel,
-                    showDivider: false,
-                    onTap: () => showModalBottomSheet<void>(
-                      context: context,
-                      showDragHandle: true,
-                      builder: (_) => const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
-                        child: WidgetLanguagePicker(),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -194,7 +192,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   AccountMenuTile(
                     icon: Icons.upload_file_rounded,
                     title: l10n.accountExportBackup,
-                    onTap: () => _localBackup.exportAndShare(),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final ok = await _localBackup.exportAndShare();
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? l10n.localBackupExportSuccess
+                                : l10n.localBackupExportFailed,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   AccountMenuTile(
                     icon: Icons.download_rounded,
@@ -207,7 +218,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text(
-                              ok ? l10n.syncSuccess : l10n.syncFailed,
+                              ok
+                                  ? l10n.syncSuccess
+                                  : l10n.localBackupImportFailed,
                             ),
                           ),
                         );
@@ -237,8 +250,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   );
                                   return;
                                 }
-                                final ok =
-                                    await showCloudSyncConsentDialog(context);
+                                final ok = await showCloudSyncConsentDialog(
+                                  context,
+                                );
                                 if (!ok) return;
                               } else {
                                 await ConsentManager.setCloudSyncConsent(false);
@@ -247,7 +261,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               final prefs =
                                   await SharedPreferences.getInstance();
                               await prefs.setBool('cloud_sync_enabled', v);
-                              if (v) await _syncNow();
+                              if (v) {
+                                final result = await _syncNow();
+                                if (result != CloudBackupResult.success) {
+                                  await prefs.setBool(
+                                    'cloud_sync_enabled',
+                                    false,
+                                  );
+                                  await ConsentManager.setCloudSyncConsent(
+                                    false,
+                                  );
+                                  if (mounted) {
+                                    setState(() => _cloudSync = false);
+                                  }
+                                }
+                              }
                             },
                     ),
                     showDivider: user != null,
@@ -257,7 +285,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       icon: Icons.sync_rounded,
                       title: l10n.syncNow,
                       showDivider: false,
-                      onTap: _syncNow,
+                      onTap: () async {
+                        await _syncNow();
+                      },
                     ),
                 ],
               ),
@@ -285,7 +315,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         onChanged: (v) async {
                           setState(() => _communityNotif = v);
                           final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool(NotificationPrefs.communityKey, v);
+                          await prefs.setBool(
+                            NotificationPrefs.communityKey,
+                            v,
+                          );
                         },
                       ),
                     ),
@@ -306,6 +339,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     subtitle: l10n.accountRerunSetupSubtitle,
                     showDivider: false,
                     onTap: () async {
+                      final router = GoRouter.of(context);
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
@@ -325,14 +359,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       );
                       if (confirmed == true) {
                         await UserPrefs.clearOnboardingDone();
-                        if (context.mounted) context.go('/onboarding');
+                        if (context.mounted) router.go('/onboarding');
                       }
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              _GeminiKeyCard(),
               const SizedBox(height: 12),
               AccountMenuCard(
                 children: [
@@ -353,105 +385,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _GeminiKeyCard extends StatefulWidget {
-  @override
-  State<_GeminiKeyCard> createState() => _GeminiKeyCardState();
-}
-
-class _GeminiKeyCardState extends State<_GeminiKeyCard> {
-  final _controller = TextEditingController();
-  final _gemini = DirectGeminiService();
-  bool _hasKey = false;
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final has = await _gemini.hasKey();
-    if (mounted) setState(() => _hasKey = has);
-  }
-
-  Future<void> _save() async {
-    final key = _controller.text.trim();
-    if (key.isEmpty) return;
-    setState(() => _saving = true);
-    await _gemini.setKey(key);
-    final l10n = AppLocalizations.of(context)!;
-    if (mounted) {
-      setState(() { _hasKey = true; _saving = false; });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.accountGeminiKeySaved)),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return AccountMenuCard(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.accountGeminiKeyLabel,
-                  style: theme.textTheme.titleSmall),
-              const SizedBox(height: 4),
-              Text(l10n.accountGeminiKeyHelp,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: l10n.geminiKeyHint,
-                        isDense: true,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: _hasKey
-                            ? const Icon(Icons.check_circle,
-                                color: Colors.green, size: 20)
-                            : null,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.tonalIcon(
-                    onPressed: _saving ? null : _save,
-                    icon: _saving
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.save_outlined, size: 18),
-                    label: Text(l10n.accountGeminiKeySave),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

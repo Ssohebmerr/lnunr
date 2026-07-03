@@ -1,3 +1,4 @@
+import '../../../core/ai/models/doctor_report_enrichment.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 
@@ -10,16 +11,26 @@ class CycleReportExporter {
     required CycleReportData report,
     CycleDashboardData? dashboard,
     required String exportedDate,
+    DoctorReportEnrichment? enrichment,
+    String? limitedDataNote,
   }) {
     final buf = StringBuffer();
     final km = report.keyMatrix;
     final pm = report.predictionMatrix;
     final dash = dashboard;
+    final enrich = enrichment;
 
     buf.writeln(l10n.healthReportTitle);
     buf.writeln(l10n.healthReportCreatedBy);
     buf.writeln(l10n.healthReportExportedOn(exportedDate));
     buf.writeln();
+
+    if (enrich?.clinicalSummary != null &&
+        enrich!.clinicalSummary!.trim().isNotEmpty) {
+      buf.writeln(l10n.healthReportClinicalSummary);
+      buf.writeln(enrich.clinicalSummary!.trim());
+      buf.writeln();
+    }
 
     buf.writeln(l10n.healthReportCyclePeriodLength);
     _line(buf, l10n.reportAvgCycle, _days(km['avg_cycle_length'] ?? dash?.avgCycleLength));
@@ -62,6 +73,30 @@ class CycleReportExporter {
         if (name == null || name.isEmpty) continue;
         buf.writeln('• $name — ${l10n.reportPercentOfCycles(p.percentageOfCycles ?? 0)}');
       }
+      buf.writeln();
+    }
+
+    if (enrich != null && enrich.patterns.isNotEmpty) {
+      buf.writeln(l10n.healthReportObservedPatterns);
+      for (final item in enrich.patterns) {
+        buf.writeln('• $item');
+      }
+      buf.writeln();
+    }
+
+    if (enrich != null && enrich.discussionPoints.isNotEmpty) {
+      buf.writeln(l10n.healthReportDiscussionPoints);
+      for (final item in enrich.discussionPoints) {
+        buf.writeln('• $item');
+      }
+      buf.writeln();
+    }
+
+    final note = enrich?.dataQualityNote?.trim();
+    if (note != null && note.isNotEmpty) {
+      buf.writeln(note);
+    } else if (limitedDataNote != null && limitedDataNote.trim().isNotEmpty) {
+      buf.writeln(limitedDataNote.trim());
     }
 
     return buf.toString().trim();

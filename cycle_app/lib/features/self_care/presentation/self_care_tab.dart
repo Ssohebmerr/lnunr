@@ -5,7 +5,8 @@ import '../../../core/app_home_refresh.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../menstrudel_integration/wellness_hub_page.dart';
+import '../../../menstrudel_integration/menstrudel_bootstrap.dart';
+import '../../../menstrudel_integration/wellness_hub_launcher.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_sync_service.dart';
@@ -47,6 +48,11 @@ class _SelfCareTabState extends State<SelfCareTab> {
     super.initState();
     _load();
     HomeRefreshScope.notifier.addListener(_onExternalRefresh);
+    // Ensure the Menstrudel care-center services (default user, localization)
+    // are ready so the Wellness Hub tools open instantly from this tab.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) MenstrudelBootstrap.prepare(context);
+    });
   }
 
   @override
@@ -80,6 +86,11 @@ class _SelfCareTabState extends State<SelfCareTab> {
           _rituals['rest'] = prefs.getBool('ritual_rest') ?? false;
           _rituals['stretch'] = prefs.getBool('ritual_stretch') ?? false;
           _rituals['mindful'] = prefs.getBool('ritual_mindful') ?? false;
+          // Goal-specific rituals are keyed by position; restore their state
+          // so the checkmarks survive a refresh/restart.
+          for (var i = 0; i < 6; i++) {
+            _rituals['goal_$i'] = prefs.getBool('ritual_goal_$i') ?? false;
+          }
         });
       }
     } catch (_) {}
@@ -129,6 +140,7 @@ class _SelfCareTabState extends State<SelfCareTab> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
+        primary: false,
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
         ),
@@ -194,151 +206,198 @@ class _SelfCareTabState extends State<SelfCareTab> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-            AppSectionHeader(title: l10n.selfCareActivities),
-            Row(
-              children: [
-                Expanded(
-                  child: AppQuickTile(
-                    icon: Icons.air,
-                    label: l10n.selfCareBreathe,
-                    color: theme.colorScheme.primary,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BreathingScreen()),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AppQuickTile(
-                    icon: Icons.favorite_border,
-                    label: l10n.selfCareAffirmations,
-                    color: theme.colorScheme.secondary,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AffirmationsScreen()),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: AppQuickTile(
-                    icon: Icons.menu_book_outlined,
-                    label: l10n.selfCareJournal,
-                    color: AppColors.accent,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const JournalScreen()),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AppQuickTile(
-                    icon: Icons.self_improvement_outlined,
-                    label: l10n.selfCareStretch,
-                    color: const Color(0xFF26A69A),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.selfCareStretchTip)),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            AppGlassCard(
-              blur: false,
-              padding: EdgeInsets.zero,
-              child: Theme(
-                data: theme.copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  leading: Icon(
-                    Icons.spa_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: Text(
-                    l10n.selfCareMoreTitle,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  subtitle: Text(
-                    l10n.selfCareMoreSubtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  children: [
-                    AppGlassCard(
-                      blur: false,
-                      onTap: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ChallengesPage()),
-                        );
-                        _load();
-                      },
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.local_fire_department,
-                              color: Colors.deepOrange),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              l10n.challengesTitle,
-                              style: theme.textTheme.titleSmall,
-                            ),
-                          ),
-                          if (_streak > 0)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8, right: 8),
-                              child: Text(
-                                l10n.challengeStreakValue(_streak),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: Colors.deepOrange,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          const Icon(Icons.chevron_right),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(l10n.selfCareRituals, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    ...rituals.asMap().entries.map(
-                          (e) => _RitualTile(
-                            title: e.value.forLocale(lang),
-                            value: _rituals['goal_${e.key}'] ?? false,
-                            onChanged: (v) => _toggleRitual('goal_${e.key}', v),
-                          ),
-                        ),
-                    const SizedBox(height: 12),
-                    AppHubCard(
-                      blur: false,
-                      icon: Icons.health_and_safety_outlined,
-                      title: l10n.wellnessHubTitle,
-                      subtitle: l10n.selfCareHealthToolsDesc,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const WellnessHubPage()),
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(height: 20),
+
+          // ── Wellness Hub: the powerful health-tracking centre, surfaced
+          // up front instead of buried in a collapsed "more" menu. ──────────
+          AppSectionHeader(title: l10n.wellnessHubTitle),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              l10n.wellnessHubSubtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ],
+          ),
+          AppHubCard(
+            blur: false,
+            icon: Icons.edit_calendar_outlined,
+            title: l10n.wellnessDailyLog,
+            subtitle: l10n.wellnessDailyLogDesc,
+            color: theme.colorScheme.primary,
+            onTap: () => WellnessHubLauncher.openDailyLog(context),
+          ),
+          AppHubCard(
+            blur: false,
+            icon: Icons.medication_outlined,
+            title: l10n.wellnessPills,
+            subtitle: l10n.wellnessPillsDesc,
+            color: theme.colorScheme.secondary,
+            onTap: () => WellnessHubLauncher.openPills(context),
+          ),
+          AppHubCard(
+            blur: false,
+            icon: Icons.sanitizer_outlined,
+            title: l10n.wellnessSanitary,
+            subtitle: l10n.wellnessSanitaryDesc,
+            color: AppColors.accent,
+            onTap: () => WellnessHubLauncher.openSanitary(context),
+          ),
+          AppHubCard(
+            blur: false,
+            icon: Icons.favorite_outline,
+            title: l10n.wellnessSex,
+            subtitle: l10n.wellnessSexDesc,
+            color: const Color(0xFFE57373),
+            onTap: () => WellnessHubLauncher.openSex(context),
+          ),
+          AppHubCard(
+            blur: false,
+            icon: Icons.shield_outlined,
+            title: l10n.wellnessLarc,
+            subtitle: l10n.wellnessLarcDesc,
+            color: const Color(0xFF26A69A),
+            onTap: () => WellnessHubLauncher.openLarc(context),
+          ),
+          const SizedBox(height: 8),
+
+          // ── Quick self-care activities ───────────────────────────────────
+          AppSectionHeader(title: l10n.selfCareActivities),
+          Row(
+            children: [
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.air,
+                  label: l10n.selfCareBreathe,
+                  color: theme.colorScheme.primary,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BreathingScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.favorite_border,
+                  label: l10n.selfCareAffirmations,
+                  color: theme.colorScheme.secondary,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AffirmationsScreen()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.menu_book_outlined,
+                  label: l10n.selfCareJournal,
+                  color: AppColors.accent,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const JournalScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.self_improvement_outlined,
+                  label: l10n.selfCareStretch,
+                  color: const Color(0xFF26A69A),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.selfCareStretchTip)),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // ── Challenges — surfaced directly, no longer hidden away ─────────
+          AppSectionHeader(title: l10n.challengesTitle),
+          AppGlassCard(
+            blur: false,
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ChallengesPage()),
+              );
+              _load();
+            },
+            child: Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.deepOrange.withValues(alpha: 0.3),
+                        Colors.deepOrange.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.local_fire_department,
+                      color: Colors.deepOrange),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.challengesTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.challengesToday,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_streak > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      l10n.challengeStreakValue(_streak),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: Colors.deepOrange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                Icon(Icons.chevron_right_rounded,
+                    color: theme.colorScheme.outline),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Daily rituals ─────────────────────────────────────────────────
+          AppSectionHeader(title: l10n.selfCareRituals),
+          ...rituals.asMap().entries.map(
+                (e) => _RitualTile(
+                  title: e.value.forLocale(lang),
+                  value: _rituals['goal_${e.key}'] ?? false,
+                  onChanged: (v) => _toggleRitual('goal_${e.key}', v),
+                ),
+              ),
+        ],
         ),
       );
   }

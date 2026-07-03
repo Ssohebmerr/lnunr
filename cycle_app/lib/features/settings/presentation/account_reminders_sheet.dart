@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -17,6 +18,7 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
   bool _periodReminder = true;
   bool _dailyReminder = true;
   bool _ovulationReminder = true;
+  bool _smartPhaseReminder = true;
   bool _loading = true;
 
   @override
@@ -33,6 +35,8 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
         _periodReminder = prefs.getBool('period_reminder_enabled') ?? true;
         _dailyReminder = prefs.getBool('daily_log_reminder_enabled') ?? true;
         _ovulationReminder = prefs.getBool('ovulation_reminder_enabled') ?? true;
+        _smartPhaseReminder =
+            prefs.getBool(NotificationPrefs.smartPhaseKey) ?? true;
         _loading = false;
       });
     }
@@ -105,6 +109,23 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
                   ? (v) async {
                       setState(() => _ovulationReminder = v);
                       await _savePref('ovulation_reminder_enabled', v);
+                    }
+                  : null,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.smartPhaseReminder),
+              subtitle: Text(
+                l10n.smartPhaseReminderSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              value: _smartPhaseReminder,
+              onChanged: _notifications
+                  ? (v) async {
+                      setState(() => _smartPhaseReminder = v);
+                      await _savePref(NotificationPrefs.smartPhaseKey, v);
                     }
                   : null,
             ),

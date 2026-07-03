@@ -4,9 +4,12 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/premium/premium_badge.dart';
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
@@ -51,15 +54,25 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
   late final TabController _tabs;
   bool _joined = false;
   bool _busy = false;
+  int _memberCount = 0;
 
   @override
   void initState() {
     super.initState();
     _tabs = TabController(length: 2, vsync: this);
     _joined = widget.isJoined;
+    _memberCount = widget.community.memberCount;
+    _refreshMemberCount();
     if (widget.initialPostId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _openPostById(widget.initialPostId!));
     }
+  }
+
+  Future<void> _refreshMemberCount() async {
+    final count = await context
+        .read<CommunityRepository>()
+        .fetchMemberCount(widget.community.id);
+    if (mounted) setState(() => _memberCount = count);
   }
 
   @override
@@ -111,7 +124,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
       if (_joined) {
         await repo.leaveCommunity(user.uid, widget.community.id);
         if (mounted) {
+          HapticFeedback.lightImpact();
           setState(() => _joined = false);
+          unawaited(_refreshMemberCount());
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communityLeft)));
         }
       } else {
@@ -134,7 +149,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           alias: widget.alias,
         );
         if (mounted) {
+          HapticFeedback.mediumImpact();
           setState(() => _joined = true);
+          unawaited(_refreshMemberCount());
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communityJoined)));
         }
       }
@@ -205,14 +222,32 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
     final lang = Localizations.localeOf(context).languageCode;
     final name = widget.community.nameForLocale(lang);
     final theme = Theme.of(context);
+    final headerColors = CommunityTopicPalette.gradient(widget.community.topic);
 
     return Scaffold(
-      body: NestedScrollView(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: AppTheme.gradientBackground(context),
+        child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
-            expandedHeight: 210,
+            expandedHeight: 220,
             pinned: true,
             stretch: true,
+            backgroundColor: headerColors.first,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: innerBoxIsScrolled
+                ? Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                      letterSpacing: -0.3,
+                    ),
+                  )
+                : null,
             actions: [
               if (!_joined)
                 Padding(
@@ -263,15 +298,6 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                 ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 14),
-              title: Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  letterSpacing: -0.3,
-                ),
-              ),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -281,7 +307,31 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: CommunityTopicPalette.gradient(widget.community.topic),
+                        colors: headerColors,
+                      ),
+                    ),
+                  ),
+                  // Community name — fixed at top so it never overlaps chips/tabs
+                  Positioned(
+                    left: 16,
+                    right: 88,
+                    top: kToolbarHeight + 12,
+                    child: Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                        letterSpacing: -0.4,
+                        shadows: const [
+                          Shadow(
+                            color: Color(0x33000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -320,7 +370,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                   // Info chips overlay
                   Positioned(
                     left: 16,
-                    bottom: 52,
+                    bottom: 14,
                     right: 16,
                     child: Row(
                       children: [
@@ -347,7 +397,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                                       size: 14, color: Colors.white),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '${widget.community.memberCount}/${widget.community.maxMembers}',
+                                    '$_memberCount/${widget.community.maxMembers}',
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w700,
@@ -413,19 +463,28 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                 ],
               ),
             ),
-            bottom: TabBar(
-              controller: _tabs,
-              indicatorWeight: 3,
-              tabs: [
-                Tab(
-                  icon: const Icon(Icons.article_outlined, size: 20),
-                  text: l10n.communityPostsTab,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: ColoredBox(
+                color: headerColors.last.withValues(alpha: 0.92),
+                child: TabBar(
+                  controller: _tabs,
+                  indicatorWeight: 3,
+                  indicatorColor: Colors.white,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
+                  tabs: [
+                    Tab(
+                      icon: const Icon(Icons.article_outlined, size: 20),
+                      text: l10n.communityPostsTab,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.info_outline_rounded, size: 20),
+                      text: l10n.communityAboutTab,
+                    ),
+                  ],
                 ),
-                Tab(
-                  icon: const Icon(Icons.info_outline_rounded, size: 20),
-                  text: l10n.communityAboutTab,
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -449,9 +508,10 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           ],
         ),
       ),
+      ),
       floatingActionButton: _joined
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 16),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: AuraDecorations.primaryGradient,
@@ -658,7 +718,14 @@ class _PostsListState extends State<_PostsList> {
                 onRefresh: _refresh,
                 child: ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
+                  // Extra bottom space so the centered "New post" pill never
+                  // overlaps the last post.
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    widget.joined ? 132 : 16,
+                  ),
                   itemCount: posts.length + (_hasMore ? 1 : 0),
                   itemBuilder: (_, i) {
                     if (i >= posts.length) {
@@ -710,7 +777,7 @@ class _AboutTab extends StatelessWidget {
         : (lang.startsWith('ar') ? CommunitySeed.defaultRulesAr : CommunitySeed.defaultRulesEn);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, joined ? 132 : 16),
       children: [
         AppGlassCard(
           blur: false,
@@ -1166,10 +1233,12 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
             radius: 16,
             avatarIndex: c.authorAvatarIndex,
             uidSeed: c.authorUid,
+            isPremium: c.authorIsPremium,
           ),
           title: Row(
             children: [
               Expanded(child: Text(c.authorAlias)),
+              if (c.authorIsPremium) const PremiumNameBadge(),
               if (isBest)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(start: 8),
@@ -1287,15 +1356,17 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       builder: (context, postSnap) {
         if (postSnap.connectionState == ConnectionState.waiting &&
             !postSnap.hasData) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.communityPostDetail)),
+          return _themedScaffold(
+            context,
+            title: l10n.communityPostDetail,
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
         if (postSnap.hasData && postSnap.data == null) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.communityPostDetail)),
+          return _themedScaffold(
+            context,
+            title: l10n.communityPostDetail,
             body: Center(child: Text(l10n.communityPostNotFound)),
           );
         }
@@ -1303,48 +1374,62 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         final livePost = postSnap.data ?? widget.post;
         final isAuthor = user?.uid == livePost.authorUid;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.communityPostDetail),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share_outlined),
-                onPressed: () => shareCommunityPost(
-                  post: livePost,
-                  communityName: widget.community.nameForLocale(lang),
-                  shareLabel: l10n.communityShareVia,
-                ),
+        return _themedScaffold(
+          context,
+          title: l10n.communityPostDetail,
+          actions: [
+            _GlassAppBarButton(
+              icon: Icons.share_outlined,
+              tooltip: l10n.communityShareVia,
+              onTap: () => shareCommunityPost(
+                post: livePost,
+                communityName: widget.community.nameForLocale(lang),
+                shareLabel: l10n.communityShareVia,
               ),
-              IconButton(
-                icon: const Icon(Icons.copy_outlined),
-                onPressed: () => copyCommunityText(context, livePost.text),
-              ),
-              if (isAuthor) ...[
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => _editPost(livePost),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _deletePost(livePost),
-                ),
-              ] else
-                IconButton(
-                  icon: const Icon(Icons.flag_outlined),
-                  onPressed: () => _report(livePost),
-                ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            _PostActionsMenu(
+              isAuthor: isAuthor,
+              onCopy: () => copyCommunityText(context, livePost.text),
+              onEdit: () => _editPost(livePost),
+              onDelete: () => _deletePost(livePost),
+              onReport: () => _report(livePost),
+            ),
+            const SizedBox(width: 8),
+          ],
           body: Column(
             children: [
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   children: [
                     PostCard(post: livePost, onTap: () {}),
-                    const Divider(height: 32),
-                    Text(l10n.communityComments, style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 18,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.communityComments,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Divider(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     StreamBuilder<Set<String>>(
                       stream: user != null
                           ? repo.watchBlockedUids(user.uid)
@@ -1359,8 +1444,20 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                                 .toList();
                             if (comments.isEmpty) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                child: Text(l10n.communityNoComments),
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: Text(
+                                    l10n.communityNoComments,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                  ),
+                                ),
                               );
                             }
                             return Column(
@@ -1378,59 +1475,283 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   ],
                 ),
               ),
-              if (widget.canComment)
-                SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_replyToAlias != null)
-                        Material(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: ListTile(
-                            dense: true,
-                            title: Text(
-                              l10n.communityReplyingTo(_replyToAlias!),
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: _cancelReply,
-                            ),
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _commentController,
-                                decoration: InputDecoration(
-                                  hintText: l10n.communityCommentHint,
-                                ),
-                                maxLength: 300,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _sending ? null : _sendComment,
-                              icon: _sending
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.send),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              if (widget.canComment) _buildCommentComposer(context, l10n),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Transparent scaffold with the app's gradient background and a glass
+  /// back button — keeps the post detail consistent with the rest of the app.
+  Widget _themedScaffold(
+    BuildContext context, {
+    required String title,
+    required Widget body,
+    List<Widget> actions = const [],
+  }) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: AppGlassCard(
+            radius: AppRadius.pill,
+            padding: const EdgeInsets.all(8),
+            onTap: () => Navigator.of(context).pop(),
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        actions: actions,
+      ),
+      body: Container(
+        decoration: AppTheme.gradientBackground(context),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
+          ),
+          child: SafeArea(top: false, child: body),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentComposer(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_replyToAlias != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.reply_rounded,
+                        size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.communityReplyingTo(_replyToAlias!),
+                        style: theme.textTheme.labelMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: _cancelReply,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      child: const Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(Icons.close, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AuraColors.darkCard.withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.04),
+                ),
+                boxShadow: AppShadows.navFloat(isDark),
+              ),
+              padding: const EdgeInsets.only(left: 18, right: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: l10n.communityCommentHint,
+                        border: InputBorder.none,
+                        counterText: '',
+                        isCollapsed: true,
+                      ),
+                      maxLength: 300,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: AuraDecorations.primaryGradient,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: _sending ? null : _sendComment,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: _sending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded,
+                                  size: 18, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Glass circular icon button used in the post detail app bar.
+class _GlassAppBarButton extends StatelessWidget {
+  const _GlassAppBarButton({
+    required this.icon,
+    required this.onTap,
+    this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final button = AppGlassCard(
+      radius: AppRadius.pill,
+      padding: const EdgeInsets.all(8),
+      onTap: onTap,
+      child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+    );
+    if (tooltip == null) return button;
+    return Tooltip(message: tooltip!, child: button);
+  }
+}
+
+/// Overflow menu grouping the secondary post actions (copy / edit / delete /
+/// report) so the app bar stays clean.
+class _PostActionsMenu extends StatelessWidget {
+  const _PostActionsMenu({
+    required this.isAuthor,
+    required this.onCopy,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onReport,
+  });
+
+  final bool isAuthor;
+  final VoidCallback onCopy;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onReport;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return PopupMenuButton<String>(
+      tooltip: '',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case 'copy':
+            onCopy();
+          case 'edit':
+            onEdit();
+          case 'delete':
+            onDelete();
+          case 'report':
+            onReport();
+        }
+      },
+      itemBuilder: (ctx) => [
+        PopupMenuItem(
+          value: 'copy',
+          child: _menuRow(theme, Icons.copy_rounded, l10n.communityCopy),
+        ),
+        if (isAuthor) ...[
+          PopupMenuItem(
+            value: 'edit',
+            child: _menuRow(theme, Icons.edit_outlined, l10n.communityEditPost),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: _menuRow(
+              theme,
+              Icons.delete_outline_rounded,
+              l10n.communityDeletePost,
+              danger: true,
+            ),
+          ),
+        ] else
+          PopupMenuItem(
+            value: 'report',
+            child:
+                _menuRow(theme, Icons.flag_outlined, l10n.communityReportPost),
+          ),
+      ],
+      child: AppGlassCard(
+        radius: AppRadius.pill,
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          Icons.more_horiz_rounded,
+          size: 20,
+          color: theme.colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+
+  Widget _menuRow(ThemeData theme, IconData icon, String label,
+      {bool danger = false}) {
+    final color = danger ? theme.colorScheme.error : theme.colorScheme.onSurface;
+    return Row(
+      children: [
+        Icon(icon, size: 19, color: color),
+        const SizedBox(width: 12),
+        Text(label, style: TextStyle(color: color)),
+      ],
     );
   }
 }

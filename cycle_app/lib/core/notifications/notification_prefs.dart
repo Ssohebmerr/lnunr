@@ -11,6 +11,10 @@ class NotificationPrefs {
   static const communityKey = 'community_notifications_enabled';
   static const permissionPromptedKey = 'notification_permission_prompted';
 
+  /// Smart phase-based daily reminder — body is picked from the user's
+  /// current cycle phase / pregnancy trimester at schedule-time.
+  static const smartPhaseKey = 'smart_phase_reminder_enabled';
+
   static Future<bool> hasPromptedForPermission() async {
     final p = await SharedPreferences.getInstance();
     return p.getBool(permissionPromptedKey) ?? false;
@@ -42,6 +46,14 @@ class NotificationPrefs {
     if (!await masterEnabled()) return false;
     final p = await SharedPreferences.getInstance();
     return p.getBool(ovulationKey) ?? true;
+  }
+
+  /// Smart-phase reminder — follows the master toggle. ON by default so the
+  /// user gets the new value immediately after opt-in.
+  static Future<bool> smartPhaseEnabled() async {
+    if (!await masterEnabled()) return false;
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(smartPhaseKey) ?? true;
   }
 
   /// Pills, sanitary, LARC — follow master toggle only.

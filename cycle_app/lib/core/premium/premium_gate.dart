@@ -9,9 +9,7 @@ enum PremiumAiAccess { allowed, needsConsent, needsPremium, limitReached }
 class PremiumGate {
   PremiumGate._();
 
-  static const freeAiMessagesPerDay = 5;
   static const freeReportsTotal = 1;
-  static const _aiCountPrefix = 'ai_msg_count_';
 
   static Future<bool> hasPremium() => UserPrefs.isPremium();
 
@@ -22,28 +20,21 @@ class PremiumGate {
       await hasPremium() && await ConsentManager.hasAiConsent();
 
   static Future<PremiumAiAccess> checkAiChat() async {
+    if (!await hasPremium()) {
+      return PremiumAiAccess.needsPremium;
+    }
     if (!await ConsentManager.hasAiConsent()) {
       return PremiumAiAccess.needsConsent;
-    }
-    if (await hasPremium()) return PremiumAiAccess.allowed;
-    final count = await _todayAiCount();
-    if (count >= freeAiMessagesPerDay) {
-      return PremiumAiAccess.limitReached;
     }
     return PremiumAiAccess.allowed;
   }
 
   static Future<void> recordAiMessage() async {
-    if (await hasPremium()) return;
-    final prefs = await SharedPreferences.getInstance();
-    final key = _aiCountKey();
-    await prefs.setInt(key, (prefs.getInt(key) ?? 0) + 1);
+    // Premium-only AI — daily count tracked in Firestore (see GuestUserRepository).
   }
 
   static Future<int> remainingFreeAiMessages() async {
-    if (await hasPremium()) return -1;
-    final used = await _todayAiCount();
-    return (freeAiMessagesPerDay - used).clamp(0, freeAiMessagesPerDay);
+    return 0;
   }
 
   /// Check if user can generate a doctor report (1 free per month, then premium).
@@ -76,16 +67,5 @@ class PremiumGate {
   static String _reportCountKey() {
     final today = DateTime.now();
     return 'doctor_report_count_${today.year}_${today.month}';
-  }
-
-  static Future<int> _todayAiCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_aiCountKey()) ?? 0;
-  }
-
-  static String _aiCountKey() {
-    final today = DateTime.now();
-    final d = '${today.year}-${today.month}-${today.day}';
-    return '$_aiCountPrefix$d';
   }
 }

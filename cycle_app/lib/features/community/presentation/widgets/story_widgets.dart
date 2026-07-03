@@ -352,7 +352,7 @@ class _StoryViewerState extends State<StoryViewer>
                         padding: const EdgeInsets.symmetric(horizontal: 2),
                         child: AnimatedBuilder(
                           animation: _progressController!,
-                          builder: (_, __) {
+                          builder: (context, _) {
                             double value;
                             if (i < _storyIndex) {
                               value = 1.0;
@@ -436,9 +436,10 @@ class _StoryViewerState extends State<StoryViewer>
                       icon: const Icon(Icons.delete_outline,
                           color: Colors.white70, size: 22),
                       onPressed: () async {
+                        final navigator = Navigator.of(context);
                         await widget.onDelete(
                             story.communityId, story.id);
-                        if (mounted) Navigator.of(context).pop();
+                        navigator.pop();
                       },
                     ),
                   IconButton(

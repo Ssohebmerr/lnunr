@@ -94,6 +94,7 @@ class _StealthCalculatorScreenState extends State<StealthCalculatorScreen> {
   }
 
   void _unlockApp() {
+    UserPrefs.setSessionUnlocked(true);
     if (!mounted) return;
     context.go('/home');
   }

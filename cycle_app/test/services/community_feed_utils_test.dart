@@ -5,7 +5,7 @@ import 'package:cycle_aura/features/community/presentation/community_feed_utils.
 
 void main() {
   // Helper to create a post quickly
-  CommunityPost _post({
+  CommunityPost makePost({
     required String id,
     String text = 'Hello',
     String authorUid = 'u1',
@@ -30,13 +30,13 @@ void main() {
 
     setUp(() {
       posts = [
-        _post(id: '1', text: 'First post', createdAt: DateTime(2025, 1, 1)),
-        _post(id: '2', text: 'Second post', commentCount: 5,
+        makePost(id: '1', text: 'First post', createdAt: DateTime(2025, 1, 1)),
+        makePost(id: '2', text: 'Second post', commentCount: 5,
             createdAt: DateTime(2025, 1, 2)),
-        _post(id: '3', text: 'Third post about health', commentCount: 10,
+        makePost(id: '3', text: 'Third post about health', commentCount: 10,
             authorUid: 'u2', authorAlias: 'Sara',
             createdAt: DateTime(2025, 1, 3)),
-        _post(id: '4', text: 'Question?', commentCount: 3,
+        makePost(id: '4', text: 'Question?', commentCount: 3,
             communityName: 'Fertility',
             createdAt: DateTime(2025, 1, 4)),
       ];
@@ -144,7 +144,7 @@ void main() {
   });
 
   group('collectThreadReplies', () {
-    CommunityComment _comment({
+    CommunityComment makeComment({
       required String id,
       String? parentCommentId,
     }) =>
@@ -158,16 +158,16 @@ void main() {
         );
 
     test('returns empty for comment with no replies', () {
-      final comments = [_comment(id: 'c1')];
+      final comments = [makeComment(id: 'c1')];
       final replies = collectThreadReplies('c1', comments);
       expect(replies, isEmpty);
     });
 
     test('returns direct replies', () {
       final comments = [
-        _comment(id: 'c1'),
-        _comment(id: 'c2', parentCommentId: 'c1'),
-        _comment(id: 'c3', parentCommentId: 'c1'),
+        makeComment(id: 'c1'),
+        makeComment(id: 'c2', parentCommentId: 'c1'),
+        makeComment(id: 'c3', parentCommentId: 'c1'),
       ];
       final replies = collectThreadReplies('c1', comments);
       expect(replies.length, 2);
@@ -176,10 +176,10 @@ void main() {
 
     test('returns nested replies (grandchildren)', () {
       final comments = [
-        _comment(id: 'c1'),
-        _comment(id: 'c2', parentCommentId: 'c1'),
-        _comment(id: 'c3', parentCommentId: 'c2'),
-        _comment(id: 'c4', parentCommentId: 'c3'),
+        makeComment(id: 'c1'),
+        makeComment(id: 'c2', parentCommentId: 'c1'),
+        makeComment(id: 'c3', parentCommentId: 'c2'),
+        makeComment(id: 'c4', parentCommentId: 'c3'),
       ];
       final replies = collectThreadReplies('c1', comments);
       expect(replies.length, 3);
@@ -188,10 +188,10 @@ void main() {
 
     test('does not include unrelated comments', () {
       final comments = [
-        _comment(id: 'c1'),
-        _comment(id: 'c2', parentCommentId: 'c1'),
-        _comment(id: 'c3'), // unrelated
-        _comment(id: 'c4', parentCommentId: 'c3'), // unrelated
+        makeComment(id: 'c1'),
+        makeComment(id: 'c2', parentCommentId: 'c1'),
+        makeComment(id: 'c3'), // unrelated
+        makeComment(id: 'c4', parentCommentId: 'c3'), // unrelated
       ];
       final replies = collectThreadReplies('c1', comments);
       expect(replies.length, 1);
@@ -200,7 +200,7 @@ void main() {
   });
 
   group('threadReplyCount', () {
-    CommunityComment _comment({
+    CommunityComment makeComment({
       required String id,
       String? parentCommentId,
     }) =>
@@ -214,16 +214,16 @@ void main() {
         );
 
     test('returns 0 for no replies', () {
-      final comments = [_comment(id: 'c1')];
+      final comments = [makeComment(id: 'c1')];
       expect(threadReplyCount('c1', comments), 0);
     });
 
     test('counts nested replies correctly', () {
       final comments = [
-        _comment(id: 'c1'),
-        _comment(id: 'c2', parentCommentId: 'c1'),
-        _comment(id: 'c3', parentCommentId: 'c2'),
-        _comment(id: 'c4', parentCommentId: 'c1'),
+        makeComment(id: 'c1'),
+        makeComment(id: 'c2', parentCommentId: 'c1'),
+        makeComment(id: 'c3', parentCommentId: 'c2'),
+        makeComment(id: 'c4', parentCommentId: 'c1'),
       ];
       expect(threadReplyCount('c1', comments), 3);
     });

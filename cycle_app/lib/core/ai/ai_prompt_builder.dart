@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'ai_prompt_style.dart';
+
 /// Shared prompt-building logic used by all AI services.
 /// Extracted from DirectGeminiService and FirebaseAiService to avoid duplication.
 class AiPromptBuilder {
@@ -10,12 +12,9 @@ class AiPromptBuilder {
     Map<String, dynamic> ctx,
     String mode,
   ) {
-    final hub = ctx['wellnessHub'];
-    String hubText = 'none';
-    if (hub is Map && hub.isNotEmpty) {
-      final encoded = jsonEncode(hub);
-      hubText = encoded.substring(0, encoded.length.clamp(0, 2500));
-    }
+    // Lightweight modes (partner, intimacy, briefing) get only the basics —
+    // saves ~600 tokens per call and keeps the response focused.
+    final fullContext = AiPromptStyle.includesFullContext(mode);
 
     final locale = ctx['userLocale']?.toString() ?? 'ar';
     final contextLines = <String>[
@@ -24,26 +23,32 @@ class AiPromptBuilder {
       if (ctx['userGoal'] == 'pregnant') ...[
         'Pregnancy week: ${ctx['pregnancyWeek'] ?? 'unknown'}',
         'Trimester: ${ctx['trimester'] ?? 'unknown'}',
-        'Due date: ${ctx['expectedDueDate'] ?? 'unknown'}',
-        'Gestational day: ${ctx['gestationalDay'] ?? 'unknown'}',
-        'Fetal development: ${ctx['fetalDevelopmentSnippet'] ?? 'unknown'}',
-        'Maternal changes: ${ctx['maternalSnippet'] ?? 'unknown'}',
-        'Pregnancy tracking: ${ctx['pregnancyTracking'] ?? {}}',
+        if (fullContext) ...[
+          'Due date: ${ctx['expectedDueDate'] ?? 'unknown'}',
+          'Gestational day: ${ctx['gestationalDay'] ?? 'unknown'}',
+          'Fetal development: ${ctx['fetalDevelopmentSnippet'] ?? 'unknown'}',
+          'Maternal changes: ${ctx['maternalSnippet'] ?? 'unknown'}',
+          'Pregnancy tracking: ${ctx['pregnancyTracking'] ?? {}}',
+        ],
       ] else ...[
         'Cycle length: ${ctx['cycleLength'] ?? 'unknown'}',
         'Period duration: ${ctx['periodDuration'] ?? 'unknown'}',
         'Current phase: ${ctx['currentPhase'] ?? 'unknown'}',
         'Current cycle day: ${ctx['currentCycleDay'] ?? 'unknown'}',
-        'Next period: ${ctx['nextPeriodDate'] ?? 'unknown'}',
-        'Ovulation: ${ctx['ovulationDate'] ?? 'unknown'}',
+        if (fullContext) ...[
+          'Next period: ${ctx['nextPeriodDate'] ?? 'unknown'}',
+          'Ovulation: ${ctx['ovulationDate'] ?? 'unknown'}',
+        ],
       ],
-      'Today\'s log (home screen): ${ctx['todayLog'] ?? 'nothing yet'}',
-      'Recent symptoms (30d): ${ctx['recentSymptoms'] ?? {}}',
-      'Wellness logs: ${ctx['wellnessLogCount'] ?? 0}',
-      'Wellness hub (pills, sanitary, vitals — anonymized): $hubText',
-      'Summary: ${ctx['summary'] ?? {}}',
-      if (ctx['cycleHistory'] != null)
-        'Cycle history (last 6): ${ctx['cycleHistory']}',
+      if (fullContext) ...[
+        'Today\'s log (home screen): ${ctx['todayLog'] ?? 'nothing yet'}',
+        'Recent symptoms (30d): ${ctx['recentSymptoms'] ?? {}}',
+        'Wellness logs: ${ctx['wellnessLogCount'] ?? 0}',
+        'Wellness hub (pills, sanitary, vitals — anonymized): ${_hubSnippet(ctx)}',
+        'Summary: ${ctx['summary'] ?? {}}',
+        if (ctx['cycleHistory'] != null)
+          'Cycle history (last 6): ${ctx['cycleHistory']}',
+      ],
     ];
 
     final header = switch (mode) {
@@ -54,6 +59,10 @@ class AiPromptBuilder {
       'partner' => '=== PARTNER MESSAGE REQUEST ===',
       'mood' => '=== MOOD JOURNAL ENTRY ===',
       'doctor' => '=== DOCTOR REPORT REQUEST ===',
+      'recap' || 'weekly_recap' => '=== WEEKLY RECAP — last 7 days ===',
+      'fertility' => '=== FERTILITY INSIGHT REQUEST ===',
+      'weight' => '=== WEIGHT INSIGHT REQUEST ===',
+      'intimacy' => '=== INTIMACY GUIDANCE REQUEST ===',
       _ => '=== APP DATA (use to personalize — do not dump raw JSON) ===',
     };
 
@@ -68,5 +77,14 @@ class AiPromptBuilder {
       userHeader,
       message,
     ].join('\n');
+  }
+
+  static String _hubSnippet(Map<String, dynamic> ctx) {
+    final hub = ctx['wellnessHub'];
+    if (hub is Map && hub.isNotEmpty) {
+      final encoded = jsonEncode(hub);
+      return encoded.substring(0, encoded.length.clamp(0, 2500));
+    }
+    return 'none';
   }
 }

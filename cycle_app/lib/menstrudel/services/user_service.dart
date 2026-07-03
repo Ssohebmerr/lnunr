@@ -5,6 +5,8 @@ import 'package:age_calculator/age_calculator.dart';
 import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 
+import '../../../core/storage/user_prefs.dart';
+
 /// This app does not have users in the sense of logins and cloud. 
 /// In this case, a user is just the user of the app. 
 /// This serivce just lets the app get date of birth, name, age etc.
@@ -30,16 +32,36 @@ class UserService extends ChangeNotifier {
   Future<bool> ensureDefaultUser(SettingsService settingsService) async {
     if (_user != null) return true;
 
+    // loadUser() can fail while a profile row still exists — read DB first.
+    try {
+      final existing = await _userRepo.getUser();
+      if (existing != null) {
+        _user = existing;
+        if (existing.birthDate != null) {
+          _age = AgeCalculator.age(existing.birthDate!).years;
+        }
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('UserService: ensureDefaultUser DB read failed: $e');
+    }
+
     _isLoading = true;
     notifyListeners();
 
     try {
+      final cachedGoal = await UserPrefs.getProfileGoal();
+      final goal = (cachedGoal != null && cachedGoal.isNotEmpty)
+          ? UserGoalTypes.fromDbName(cachedGoal)
+          : UserGoalTypes.general;
+
       final user = UserEntry(
         name: 'User',
-        primaryGoal: UserGoalTypes.general,
+        primaryGoal: goal,
       );
       await _userRepo.createUser(user);
-      await settingsService.applySettingsForGoal(UserGoalTypes.general);
+      await settingsService.applySettingsForGoal(goal);
       _user = user;
       _age = null;
       return true;
@@ -61,16 +83,22 @@ class UserService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _user = await _userRepo.getUser();
+    try {
+      _user = await _userRepo.getUser();
 
-    if (_user != null && _user!.birthDate != null) {
-      _age  = AgeCalculator.age(_user!.birthDate!).years;
-    }else {
+      if (_user != null && _user!.birthDate != null) {
+        _age = AgeCalculator.age(_user!.birthDate!).years;
+      } else {
+        _age = null;
+      }
+    } catch (e, st) {
+      debugPrint('UserService: loadUser failed (non-fatal): $e\n$st');
+      _user = null;
       _age = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;    
-    notifyListeners();
   }
 
   /// Updates the complete user.

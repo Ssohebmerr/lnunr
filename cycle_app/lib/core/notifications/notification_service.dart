@@ -1,11 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../features/notifications/data/smart_phase_notifier.dart';
+import '../config/feature_flags.dart';
 import '../../menstrudel/services/notification_service.dart' as md;
 import 'app_notifications.dart';
 import 'notification_prefs.dart';
+import 'notification_rationale_dialog.dart';
 
 class NotificationService {
   static FlutterLocalNotificationsPlugin get _plugin => AppNotifications.plugin;
@@ -24,7 +28,10 @@ class NotificationService {
   static Future<bool> requestPermission() => AppNotifications.requestPermission();
 
   /// System permission prompt once after install (onboarding or first home open).
-  static Future<void> ensureInitialPermission() async {
+  /// When a [BuildContext] is supplied we show the friendly in-app rationale
+  /// first; otherwise we fall back to a direct OS prompt (e.g. from
+  /// background callbacks that don't have a UI context).
+  static Future<void> ensureInitialPermission([BuildContext? context]) async {
     if (await NotificationPrefs.hasPromptedForPermission()) return;
     await NotificationPrefs.markPermissionPrompted();
 
@@ -33,39 +40,54 @@ class NotificationService {
       await prefs.setBool(NotificationPrefs.masterKey, true);
     }
 
-    await requestPermission();
+    if (context != null && context.mounted) {
+      await showNotificationRationale(context);
+    } else {
+      await requestPermission();
+    }
     await scheduleFromPrefs();
   }
 
   static Future<void> scheduleFromPrefs() async {
-    if (!await NotificationPrefs.masterEnabled()) {
-      await cancelAll();
-      await _cancelMenstrudelReminders();
-      return;
-    }
+    try {
+      if (!await NotificationPrefs.masterEnabled()) {
+        await cancelAll();
+        await _cancelMenstrudelReminders();
+        return;
+      }
 
-    if (await NotificationPrefs.periodEnabled()) {
-      await _schedulePeriodReminder();
-      await _schedulePeriodStartToday();
-    } else {
-      await _plugin.cancel(_periodId);
-      await _plugin.cancel(_periodTodayId);
-      await md.NotificationService.cancelPeriodDueNotification();
-      await md.NotificationService.cancelPeriodOverdueNotification();
-    }
+      if (await NotificationPrefs.periodEnabled()) {
+        await _schedulePeriodReminder();
+        await _schedulePeriodStartToday();
+      } else {
+        await _plugin.cancel(_periodId);
+        await _plugin.cancel(_periodTodayId);
+        await md.NotificationService.cancelPeriodDueNotification();
+        await md.NotificationService.cancelPeriodOverdueNotification();
+      }
 
-    if (await NotificationPrefs.dailyLogEnabled()) {
-      await _scheduleDailyLogReminder();
-    } else {
-      await _plugin.cancel(_dailyId);
-    }
+      if (await NotificationPrefs.dailyLogEnabled()) {
+        await _scheduleDailyLogReminder();
+      } else {
+        await _plugin.cancel(_dailyId);
+      }
 
-    if (await NotificationPrefs.ovulationEnabled()) {
-      await _scheduleOvulationReminder();
-    } else {
-      await _plugin.cancel(_ovulationId);
-      await md.NotificationService.cancelFertileWindowNotification();
-      await md.NotificationService.cancelOvulationNotification();
+      if (await NotificationPrefs.ovulationEnabled()) {
+        await _scheduleOvulationReminder();
+      } else {
+        await _plugin.cancel(_ovulationId);
+        await md.NotificationService.cancelFertileWindowNotification();
+        await md.NotificationService.cancelOvulationNotification();
+      }
+
+      if (await NotificationPrefs.smartPhaseEnabled() &&
+          FeatureFlags.isEnabledSync(FeatureFlags.smartPhaseNotifications)) {
+        await SmartPhaseNotifier.schedule();
+      } else {
+        await SmartPhaseNotifier.cancel();
+      }
+    } catch (e, st) {
+      debugPrint('scheduleFromPrefs failed (non-fatal): $e\n$st');
     }
   }
 
@@ -101,8 +123,11 @@ class NotificationService {
         tz.TZDateTime.from(reminder, tz.local),
         _details(high: true),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: NotificationPayload.home(),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('_schedulePeriodReminder failed: $e\n$st');
+    }
   }
 
   static Future<void> _schedulePeriodStartToday() async {
@@ -128,8 +153,11 @@ class NotificationService {
         tz.TZDateTime.from(at, tz.local),
         _details(high: true),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: NotificationPayload.home(action: 'open_log'),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('_schedulePeriodStartToday failed: $e\n$st');
+    }
   }
 
   static Future<void> _scheduleOvulationReminder() async {
@@ -155,8 +183,11 @@ class NotificationService {
         tz.TZDateTime.from(reminder, tz.local),
         _details(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: NotificationPayload.home(),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('_scheduleOvulationReminder failed: $e\n$st');
+    }
   }
 
   static Future<void> _scheduleDailyLogReminder() async {
@@ -188,6 +219,7 @@ class NotificationService {
       _details(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+        payload: NotificationPayload.home(action: 'open_log'),
     );
   }
 
@@ -206,5 +238,6 @@ class NotificationService {
     await _plugin.cancel(_dailyId);
     await _plugin.cancel(_ovulationId);
     await _plugin.cancel(_periodTodayId);
+    await SmartPhaseNotifier.cancel();
   }
 }

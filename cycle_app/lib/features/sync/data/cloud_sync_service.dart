@@ -5,23 +5,43 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
 
+enum CloudBackupResult {
+  success,
+  needsPremium,
+  needsConsent,
+  notSignedIn,
+  cycleStoreUnavailable,
+  noBackupFound,
+  failed,
+}
+
 class CloudSyncService {
   CloudSyncService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  Future<bool> syncBackup() async {
-    if (!await PremiumGate.canUseCloudSync()) return false;
+  Future<CloudBackupResult> syncBackup() async {
+    if (!await PremiumGate.hasPremium()) {
+      return CloudBackupResult.needsPremium;
+    }
+    if (!await PremiumGate.canUseCloudSync()) {
+      return CloudBackupResult.needsConsent;
+    }
     final user = _auth.currentUser;
     final api = MenstrualCycleWidget.instance;
-    if (user == null || api == null) return false;
+    if (user == null) return CloudBackupResult.notSignedIn;
+    if (api == null) return CloudBackupResult.cycleStoreUnavailable;
 
     try {
-      final backup = await api.getBackupOfMenstrualCycleData();
-      await _firestore.collection('users').doc(user.uid).collection('backups').add({
+      final backup = await api.getBackupOfMenstrualCycleData(
+        isEncryptData: true,
+      );
+      final backups =
+          _firestore.collection('users').doc(user.uid).collection('backups');
+      await backups.add({
         'data': backup,
         'syncedAt': FieldValue.serverTimestamp(),
         'version': 1,
@@ -29,17 +49,42 @@ class CloudSyncService {
       await _firestore.collection('users').doc(user.uid).set({
         'lastSyncAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      return true;
+      // Keep only the most recent backups so the collection can't grow forever.
+      await _pruneOldBackups(backups);
+      return CloudBackupResult.success;
     } catch (_) {
-      return false;
+      return CloudBackupResult.failed;
     }
   }
 
-  Future<bool> restoreLatest() async {
-    if (!await PremiumGate.canUseCloudSync()) return false;
+  /// Deletes all but the most recent [keep] backups for a user. Best-effort:
+  /// failures here never fail the sync itself.
+  Future<void> _pruneOldBackups(
+    CollectionReference<Map<String, dynamic>> backups, {
+    int keep = 5,
+  }) async {
+    try {
+      final all = await backups.orderBy('syncedAt', descending: true).get();
+      if (all.docs.length <= keep) return;
+      for (final doc in all.docs.skip(keep)) {
+        await doc.reference.delete();
+      }
+    } catch (_) {
+      // Pruning is non-critical; ignore errors.
+    }
+  }
+
+  Future<CloudBackupResult> restoreLatest() async {
+    if (!await PremiumGate.hasPremium()) {
+      return CloudBackupResult.needsPremium;
+    }
+    if (!await PremiumGate.canUseCloudSync()) {
+      return CloudBackupResult.needsConsent;
+    }
     final user = _auth.currentUser;
     final api = MenstrualCycleWidget.instance;
-    if (user == null || api == null) return false;
+    if (user == null) return CloudBackupResult.notSignedIn;
+    if (api == null) return CloudBackupResult.cycleStoreUnavailable;
 
     try {
       final snap = await _firestore
@@ -50,16 +95,17 @@ class CloudSyncService {
           .limit(1)
           .get();
 
-      if (snap.docs.isEmpty) return false;
+      if (snap.docs.isEmpty) return CloudBackupResult.noBackupFound;
       final data = snap.docs.first.data()['data'];
-      if (data is! Map<String, dynamic>) return false;
+      if (data is! Map<String, dynamic>) return CloudBackupResult.failed;
 
-      return api.restoreBackupOfMenstrualCycleData(
+      final restored = await api.restoreBackupOfMenstrualCycleData(
         backupData: data,
-        customerId: CycleEncryptionKeys.customerIdFromUid(user.uid),
+        customerId: CycleEncryptionKeys.localCustomerId,
       );
+      return restored ? CloudBackupResult.success : CloudBackupResult.failed;
     } catch (_) {
-      return false;
+      return CloudBackupResult.failed;
     }
   }
 

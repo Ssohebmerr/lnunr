@@ -4,6 +4,7 @@ import 'package:menstrual_cycle_widget/ui/model/symptoms_patterns.dart';
 import 'package:menstrual_cycle_widget/utils/model/periods_date_range.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../core/ai/models/doctor_report_enrichment.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
@@ -16,12 +17,20 @@ class CycleHealthReportDocument extends StatelessWidget {
     required this.dashboard,
     required this.qrPayload,
     required this.exportedAt,
+    this.enrichment,
+    this.refining = false,
+    this.limitedData = false,
+    this.limitedDataNote,
   });
 
   final CycleReportData report;
   final CycleDashboardData? dashboard;
   final String qrPayload;
   final DateTime exportedAt;
+  final DoctorReportEnrichment? enrichment;
+  final bool refining;
+  final bool limitedData;
+  final String? limitedDataNote;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +43,7 @@ class CycleHealthReportDocument extends StatelessWidget {
     final km = report.keyMatrix;
     final pm = report.predictionMatrix;
     final dash = dashboard;
+    final enrich = enrichment;
 
     return Container(
       color: const Color(0xFFD4D4D4),
@@ -65,6 +75,29 @@ class CycleHealthReportDocument extends StatelessWidget {
                   ),
                   qrPayload: qrPayload,
                 ),
+                if (refining) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.doctorReportRefining,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+                if (enrich?.clinicalSummary != null &&
+                    enrich!.clinicalSummary!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _ReportSection(
+                    title: l10n.healthReportClinicalSummary,
+                    children: [
+                      Text(
+                        enrich.clinicalSummary!.trim(),
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 20),
                 _ReportSection(
                   title: l10n.healthReportCyclePeriodLength,
@@ -150,9 +183,51 @@ class CycleHealthReportDocument extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (enrich != null && enrich.patterns.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _ReportSection(
+                    title: l10n.healthReportObservedPatterns,
+                    children: [
+                      for (final item in enrich.patterns)
+                        _BulletRow(text: item),
+                    ],
+                  ),
+                ],
+                if (enrich != null && enrich.discussionPoints.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _ReportSection(
+                    title: l10n.healthReportDiscussionPoints,
+                    children: [
+                      for (final item in enrich.discussionPoints)
+                        _BulletRow(text: item),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 20),
                 Divider(color: theme.colorScheme.outline.withValues(alpha: 0.25)),
                 const SizedBox(height: 8),
+                if (enrich?.dataQualityNote != null &&
+                    enrich!.dataQualityNote!.trim().isNotEmpty) ...[
+                  Text(
+                    enrich.dataQualityNote!.trim(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                      fontStyle: FontStyle.italic,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ] else if (limitedData && limitedDataNote != null) ...[
+                  Text(
+                    limitedDataNote!,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                      fontStyle: FontStyle.italic,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 Text(
                   l10n.healthReportFooter,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -195,6 +270,28 @@ class CycleHealthReportDocument extends StatelessWidget {
     final st = status?.toString().trim();
     if (st == null || st.isEmpty) return s;
     return '$s ($st)';
+  }
+}
+
+class _BulletRow extends StatelessWidget {
+  const _BulletRow({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('• ', style: Theme.of(context).textTheme.bodySmall),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+          ),
+        ],
+      ),
+    );
   }
 }
 

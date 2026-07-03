@@ -8,6 +8,8 @@ import '../../../core/app_home_refresh.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../user/data/guest_user_service.dart';
+import '../../../core/security/cycle_encryption_keys.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../menstrudel_integration/menstrudel_init.dart';
 import '../../../menstrudel/models/app/user_entry.dart';
@@ -18,6 +20,23 @@ import 'cycle_bridge_service.dart';
 import 'period_bridge_service.dart';
 
 /// Central orchestrator — keeps cycle data, profile, wellness, AI, and UI in sync.
+///
+/// TWO-STORE ARCHITECTURE (intentional — not a bug):
+/// The app keeps two on-device stores that own DIFFERENT data domains:
+///   1. `menstrual_cycle_widget` (encrypted): the prediction engine + period &
+///      symptom logs (ovulation, fertile window, next-period math, cloud backup).
+///   2. `menstrudel` (sqflite): the Wellness Hub — pills, sanitary products, sex,
+///      LARC — plus its own period logs used by daily logs and the smartwatch.
+///
+/// They overlap ONLY on bleeding days. [PeriodBridgeService] is the SINGLE
+/// boundary where the two stores are reconciled. Never mirror period data
+/// between the stores anywhere else — always route through that bridge so the
+/// re-entrancy guard and equality checks keep the two sides from ping-ponging.
+///
+/// Direction wiring:
+///   • widget → menstrudel: [onCycleDataChanged] (this class).
+///   • menstrudel → widget: `DataRefreshCoordinator.onLogsSynced` (set up in
+///     `menstrudel_providers.dart`).
 class CycleSyncService {
   CycleSyncService({CycleBridgeService? bridge})
       : _bridge = bridge ?? CycleBridgeService();
@@ -25,6 +44,18 @@ class CycleSyncService {
   final CycleBridgeService _bridge;
 
   static const _syncTimeout = Duration(seconds: 15);
+
+  static DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  Future<void> _ensureCycleWidgetReady() async {
+    if (MenstrualCycleWidget.instance != null) return;
+    final keys = await CycleEncryptionKeys.loadOrCreate();
+    MenstrualCycleWidget.init(
+      secretKey: keys['secretKey'],
+      ivKey: keys['ivKey'],
+    );
+  }
 
   /// Full onboarding: widget cycle config + Menstrudel profile + notifications + home widget.
   Future<void> completeOnboarding({
@@ -37,18 +68,27 @@ class CycleSyncService {
     DateTime? birthDate,
     required UserGoalTypes goal,
   }) async {
-    await _bridge.configure(
-      cycleLength: cycleLength,
-      periodDuration: periodDuration,
-      lastPeriodDate: lastPeriodDate,
-      languageCode: languageCode,
-      dateFormat: dateFormat,
-    );
-
     final name = displayName.trim().isEmpty ? 'User' : displayName.trim();
+
+    // Persist consent + onboarding completion first so the user can always
+    // enter the app even if cycle DB sync fails on this device.
     await ConsentManager.acceptPrivacyPolicy();
     await UserPrefs.setProfile(name: name, goal: goal.dbName);
     await UserPrefs.setOnboardingDone();
+    await _applyGoalSettings(goal);
+
+    await _ensureCycleWidgetReady();
+    try {
+      await _bridge.configure(
+        cycleLength: cycleLength,
+        periodDuration: periodDuration,
+        lastPeriodDate: _dateOnly(lastPeriodDate),
+        languageCode: languageCode,
+        dateFormat: dateFormat,
+      );
+    } catch (e, st) {
+      debugPrint('Cycle bridge configure failed (non-fatal): $e\n$st');
+    }
 
     try {
       await _upsertMenstrudelProfile(
@@ -65,37 +105,74 @@ class CycleSyncService {
     } catch (e, st) {
       debugPrint('Post-onboarding sync failed (non-fatal): $e\n$st');
     }
+
+    if (birthDate != null) {
+      try {
+        await GuestUserService().registerProfile(
+          name: name,
+          birthDate: birthDate,
+        );
+      } catch (e, st) {
+        debugPrint('Guest user Firestore sync failed (non-fatal): $e\n$st');
+      }
+    }
   }
 
   /// Update cycle configuration from settings — propagates everywhere.
-  Future<void> updateCycleConfig({
+  /// Returns `true` when the cycle store accepted the new dates.
+  Future<bool> updateCycleConfig({
     required int cycleLength,
     required int periodDuration,
     required DateTime lastPeriodDate,
     required String languageCode,
     DateFormats dateFormat = DateFormats.dmy,
   }) async {
-    await _bridge.configure(
-      cycleLength: cycleLength,
-      periodDuration: periodDuration,
-      lastPeriodDate: lastPeriodDate,
-      languageCode: languageCode,
-      dateFormat: dateFormat,
-    );
-    await onCycleDataChanged().timeout(_syncTimeout);
+    await _ensureCycleWidgetReady();
+    try {
+      await _bridge.configure(
+        cycleLength: cycleLength,
+        periodDuration: periodDuration,
+        lastPeriodDate: _dateOnly(lastPeriodDate),
+        languageCode: languageCode,
+        dateFormat: dateFormat,
+      );
+    } catch (e, st) {
+      debugPrint('updateCycleConfig bridge configuration failed: $e\n$st');
+      return false;
+    }
+    try {
+      await onCycleDataChanged().timeout(_syncTimeout);
+    } catch (e, st) {
+      debugPrint('updateCycleConfig onCycleDataChanged failed: $e\n$st');
+    }
+    return true;
   }
 
   /// Call after any cycle log, backup import, or cloud restore.
   Future<void> onCycleDataChanged() async {
     // Mirror widget period days into the Menstrudel store.
-    final bridge = PeriodBridgeService.instance;
-    final menstrudelChanged = await bridge.syncWidgetToMenstrudel();
-    if (menstrudelChanged) {
-      await bridge.onMenstrudelDataChanged?.call();
+    try {
+      final bridge = PeriodBridgeService.instance;
+      final menstrudelChanged = await bridge.syncWidgetToMenstrudel();
+      if (menstrudelChanged) {
+        await bridge.onMenstrudelDataChanged?.call();
+      }
+    } catch (e, st) {
+      debugPrint('syncWidgetToMenstrudel failed (non-fatal): $e\n$st');
     }
 
-    await NotificationService.scheduleFromPrefs();
-    await syncHomeWidget();
+    try {
+      await NotificationService.scheduleFromPrefs();
+    } catch (e, st) {
+      debugPrint('scheduleFromPrefs failed (non-fatal): $e\n$st');
+    }
+
+    try {
+      await syncHomeWidget();
+    } catch (e, st) {
+      debugPrint('syncHomeWidget failed (non-fatal): $e\n$st');
+    }
+
     HomeRefreshScope.refresh();
   }
 
@@ -143,21 +220,70 @@ class CycleSyncService {
   }
 
   Future<UserGoalTypes> getUserGoal() async {
-    final userService = MenstrudelInit.userService;
-    if (userService?.user != null) {
-      return userService!.user!.primaryGoal;
-    }
     final cached = await UserPrefs.getProfileGoal();
-    if (cached != null) {
-      return UserGoalTypes.fromDbName(cached);
+    UserGoalTypes? prefsGoal;
+    if (cached != null && cached.isNotEmpty) {
+      prefsGoal = UserGoalTypes.fromDbName(cached);
     }
+
+    final userService = MenstrudelInit.userService;
+    final dbGoal = userService?.user?.primaryGoal;
+
+    // UserPrefs is written by onboarding + settings — treat it as source of truth.
+    if (prefsGoal != null) {
+      if (dbGoal != prefsGoal) {
+        unawaited(_reconcileGoalToMenstrudel(prefsGoal));
+      }
+      return prefsGoal;
+    }
+
+    if (dbGoal != null) return dbGoal;
     return UserGoalTypes.general;
+  }
+
+  Future<void> _applyGoalSettings(UserGoalTypes goal) async {
+    final settings = MenstrudelInit.settingsService;
+    if (settings != null) {
+      await settings.applySettingsForGoal(goal);
+    }
+    HomeRefreshScope.refresh();
+  }
+
+  Future<void> _reconcileGoalToMenstrudel(UserGoalTypes goal) async {
+    try {
+      final settings = MenstrudelInit.settingsService;
+      final userService = MenstrudelInit.userService;
+      if (settings == null) return;
+
+      if (userService?.user != null) {
+        if (userService!.user!.primaryGoal == goal) {
+          await settings.applySettingsForGoal(goal);
+          return;
+        }
+        await userService.setPrimaryGoal(goal, settings);
+        return;
+      }
+
+      final repo = UserRepository();
+      final existing = await repo.getUser();
+      if (existing != null) {
+        final updated = existing.copyWith(primaryGoal: goal);
+        await repo.updateUser(updated);
+        await settings.applySettingsForGoal(goal);
+        await userService?.loadUser();
+      } else {
+        await settings.applySettingsForGoal(goal);
+      }
+    } catch (e, st) {
+      debugPrint('Goal reconcile failed (non-fatal): $e\n$st');
+    }
   }
 
   /// Switch primary goal — home, reports, self-care, and AI refresh immediately.
   Future<void> setUserGoal(UserGoalTypes goal) async {
     final name = await getDisplayName();
     await UserPrefs.setProfile(name: name, goal: goal.dbName);
+    await _applyGoalSettings(goal);
 
     try {
       await _upsertMenstrudelProfile(name: name, goal: goal);
@@ -170,8 +296,6 @@ class CycleSyncService {
     if (settings != null) {
       if (userService != null && userService.user != null) {
         await userService.setPrimaryGoal(goal, settings);
-      } else {
-        await settings.applySettingsForGoal(goal);
       }
     }
 

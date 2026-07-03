@@ -1,0 +1,227 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch on new pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pin a Flutter version that matches the project's Dart SDK constraint
+  # (sdk: ^3.11.4 in cycle_app/pubspec.yaml). Update both together.
+  FLUTTER_VERSION: "3.35.7"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Static analysis + unit tests — fast feedback on every PR.
+  # ---------------------------------------------------------------------------
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17 (for Gradle / Android tasks)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter (${{ env.FLUTTER_VERSION }})
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          # Generate local.properties so any Android tooling that depends on
+          # sdk.dir can resolve the SDK we provide below.
+          flutter-pub-get: false
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            cycle_app/.dart_tool
+            cycle_app/.flutter-plugins
+            cycle_app/.flutter-plugins-dependencies
+            menstrual_cycle_widget-master/.dart_tool
+            menstrual_cycle_widget-master/.flutter-plugins
+            menstrual_cycle_widget-master/.flutter-plugins-dependencies
+          key: ${{ runner.os }}-pub-${{ hashFiles('cycle_app/pubspec.lock', 'menstrual_cycle_widget-master/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies (cycle_app)
+        working-directory: cycle_app
+        run: flutter pub get
+
+      - name: Install dependencies (menstrual_cycle_widget)
+        working-directory: menstrual_cycle_widget-master
+        run: flutter pub get
+
+      - name: Verify dependencies match (lockfile integrity)
+        working-directory: cycle_app
+        run: flutter pub get --enforce-lockfile
+
+      - name: Format check
+        working-directory: cycle_app
+        # Fails if any Dart file is not `dart format`-clean.
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Static analysis
+        working-directory: cycle_app
+        # Treat warnings as errors so CI fails on regressions.
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Run tests with coverage
+        working-directory: cycle_app
+        run: flutter test --coverage --reporter=expanded
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.run_id }}
+          path: cycle_app/coverage/lcov.info
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # 2. Cloud Functions lint + deploy dry-run.
+  # ---------------------------------------------------------------------------
+  functions:
+    name: Cloud Functions (Node 20)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cycle_app/firebase/functions
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: cycle_app/firebase/functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # We don't ship a linter config yet, so just run a syntax/load check by
+      # requiring every module. This catches missing imports + parse errors.
+      - name: Smoke-load every module
+        run: node -e "require('./index.js'); require('./play_billing.js'); console.log('OK')"
+
+      - name: Run unit tests (if any)
+        run: npm test --if-present
+
+  # ---------------------------------------------------------------------------
+  # 3. Android release build — only on main / tags to keep PR runs cheap.
+  # ---------------------------------------------------------------------------
+  build-android:
+    name: Build Android (AAB)
+    runs-on: ubuntu-latest
+    needs: [analyze-and-test, functions]
+    # Skip on PRs to save minutes; main + tags build the artifact.
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: cycle_app
+        run: flutter pub get
+
+      - name: Decode Android signing keystore
+        # Drop a base64-encoded keystore into BASE64_KEYSTORE as a repo
+        # secret. The matching keystore.properties should be a separate
+        # secret (ANDROID_KEY_PROPERTIES) containing the file contents.
+        env:
+          BASE64_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+        if: env.BASE64_KEYSTORE != '' && env.KEY_PROPERTIES != ''
+        run: |
+          mkdir -p cycle_app/android
+          echo "$BASE64_KEYSTORE" | base64 -d > cycle_app/android/upload-keystore.jks
+          echo "$KEY_PROPERTIES" > cycle_app/android/key.properties
+
+      - name: Build App Bundle (release)
+        working-directory: cycle_app
+        # The --dart-define below only provides NON-SECRET build-time
+        # configuration. NEVER pass real API keys as workflow secrets — the
+        # production Gemini key lives in Firebase Functions secrets and is
+        # injected server-side.
+        run: |
+          flutter build appbundle \
+            --release \
+            --dart-define=CLOUD_FUNCTIONS_URL=https://us-central1-lune-7d956.cloudfunctions.net
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lune-release-aab
+          path: cycle_app/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # 4. (Optional) Deploy Firestore rules + indexes when pushing to main.
+  # Requires FIREBASE_TOKEN secret with sufficient IAM permissions.
+  # ---------------------------------------------------------------------------
+  deploy-firebase:
+    name: Deploy Firestore rules + indexes
+    runs-on: ubuntu-latest
+    needs: [analyze-and-test, functions]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firestore rules + indexes
+        working-directory: cycle_app
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy \
+            --only firestore:rules,firestore:indexes \
+            --project lune-7d956 \
+            --token "$FIREBASE_TOKEN"

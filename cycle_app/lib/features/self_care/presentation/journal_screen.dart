@@ -62,7 +62,12 @@ class _JournalScreenState extends State<JournalScreen> {
       ),
       body: AppMeshBackground(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+            16,
+            16,
+          ),
           children: [
             AppGlassCard(
               child: ListTile(

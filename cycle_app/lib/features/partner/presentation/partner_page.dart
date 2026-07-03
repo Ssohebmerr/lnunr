@@ -402,6 +402,24 @@ class _PartnerStatusCard extends StatelessWidget {
 
   String _tipForPhase(String? phase) {
     final p = (phase ?? '').toLowerCase();
+    final isAr = l10n.localeName.startsWith('ar');
+
+    if (p.contains('menopause') || p.contains('انقطاع') || p.contains('أمل')) {
+      return isAr
+          ? 'قد تشعر بهبات ساخنة أو تقلبات مزاجية سريعة. يرجى توفير جو مريح وهادئ ودعم تفهمك الكامل لها.'
+          : 'She might experience hot flashes or sudden mood shifts. Provide a cool, comfortable environment and be understanding.';
+    }
+    if (p.contains('pcos') || p.contains('تكيس') || p.contains('مبايض')) {
+      return isAr
+          ? 'إدارة متلازمة تكيس المبايض تتطلب تشجيعاً على نمط حياة صحي. شاركها وجباتها الصحية وشجعها على الاسترخاء.'
+          : 'Managing PCOS symptoms benefits from lifestyle support. Share healthy meals and encourage stress reduction.';
+    }
+    if (p.contains('postpartum') || p.contains('ولادة') || p.contains('نفاس')) {
+      return isAr
+          ? 'مرحلة ما بعد الولادة تتطلب رعاية فائقة للأم والطفل. ساعدها في الواجبات المنزلية والاعتناء بالرضيع.'
+          : 'Postpartum recovery needs extra care. Help with chores and baby care to let her rest.';
+    }
+
     if (p.contains('menstr') || p.contains('حيض') || p.contains('دورة')) {
       return l10n.partnerTipMenstruation;
     }

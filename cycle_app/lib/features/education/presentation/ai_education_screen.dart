@@ -128,7 +128,12 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
     final lang = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(l10n.educationTitle),
         actions: [
           IconButton(
@@ -146,11 +151,17 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
           ),
         ],
       ),
-      body: _showAiChat
-          ? _buildAiChat(l10n, theme, lang)
-          : _buildArticleHub(l10n, theme, lang),
+      body: AppMeshBackground(
+        child: _showAiChat
+            ? _buildAiChat(l10n, theme, lang)
+            : _buildArticleHub(l10n, theme, lang),
+      ),
     );
   }
+
+  /// Top inset so content clears the transparent, body-behind app bar.
+  double get _topInset =>
+      MediaQuery.of(context).padding.top + kToolbarHeight + 8;
 
   // ---------------------------------------------------------------------------
   // Article hub — browse by category
@@ -158,7 +169,10 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
   Widget _buildArticleHub(
       AppLocalizations l10n, ThemeData theme, String lang) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Padding(
+        padding: EdgeInsets.only(top: _topInset),
+        child: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     final categories = <_CategoryItem>[
@@ -196,6 +210,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
 
     return Column(
       children: [
+        SizedBox(height: _topInset),
         // Category chips
         SizedBox(
           height: 48,
@@ -281,6 +296,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
       AppLocalizations l10n, ThemeData theme, String lang) {
     return Column(
       children: [
+        SizedBox(height: _topInset),
         // Quick topics (only when empty)
         if (_messages.isEmpty)
           Padding(
@@ -373,7 +389,9 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      fillColor: theme.brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.white.withValues(alpha: 0.78),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                     ),
@@ -588,6 +606,7 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
+    final isDark = theme.brightness == Brightness.dark;
     final maxW = MediaQuery.of(context).size.width * 0.8;
 
     return Align(
@@ -601,7 +620,16 @@ class _ChatBubble extends StatelessWidget {
           gradient: isUser ? AuraDecorations.primaryGradient : null,
           color: isUser
               ? null
-              : theme.colorScheme.surfaceContainerHighest,
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.white.withValues(alpha: 0.78)),
+          border: isUser
+              ? null
+              : Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.white.withValues(alpha: 0.65),
+                ),
           borderRadius: BorderRadiusDirectional.only(
             topStart: const Radius.circular(16),
             topEnd: const Radius.circular(16),
@@ -630,13 +658,21 @@ class _AiTypingBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = theme.brightness == Brightness.dark;
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.78),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.65),
+          ),
           borderRadius: const BorderRadiusDirectional.only(
             topStart: Radius.circular(16),
             topEnd: Radius.circular(16),
