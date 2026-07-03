@@ -10,6 +10,7 @@ import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/lune_personality.dart';
 import '../../../core/app_home_refresh.dart';
 import '../../../core/navigation/home_shell_actions.dart';
+import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
@@ -140,7 +141,11 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   Future<void> _checkConsent() async {
-    final premium = await PremiumGate.hasPremium();
+    var premium = await PremiumGate.hasPremium();
+    if (premium) {
+      final grant = await PremiumActivationService.grantTesterPremium();
+      premium = grant.ok || await PremiumGate.hasPremium();
+    }
     if (mounted) {
       setState(() {
         _isPremium = premium;
@@ -255,7 +260,12 @@ class _ChatTabState extends State<ChatTab> {
           ),
         );
       case ChatNoticeType.premiumRequired:
-        break;
+        showPremiumUpsellDialog(
+          context,
+          feature: PremiumUpsellFeature.aiChat,
+        ).then((_) {
+          if (mounted) _checkConsent();
+        });
     }
     bloc.add(ClearChatNotice());
   }
@@ -1522,30 +1532,57 @@ class _ChatMessageRow extends StatelessWidget {
     return ActionChip(
       label: Text(label, style: const TextStyle(fontSize: 12)),
       onPressed: () async {
-        Navigator.pop(dialogContext);
-
+        final messenger = ScaffoldMessenger.of(dialogContext);
         final isAr =
             Localizations.localeOf(dialogContext).languageCode == 'ar';
-        ScaffoldMessenger.of(dialogContext).showSnackBar(
-          SnackBar(
-            content: Text(
-              isAr
-                  ? 'شكرًا لإبلاغك. تم إرسال الرد للمطورين لتحسين سلامة الذكاء الاصطناعي.'
-                  : 'Thank you. The response has been reported to the developers to improve AI safety.',
+        Navigator.pop(dialogContext);
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                isAr
+                    ? 'سجّلي الدخول أولاً عشان يوصل البلاغ للوحة الإدارة.'
+                    : 'Sign in first so the report can reach the admin panel.',
+              ),
             ),
-          ),
-        );
+          );
+          return;
+        }
 
         try {
-          final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+          final clipped = text.length > 4000 ? text.substring(0, 4000) : text;
           await FirebaseFirestore.instance.collection('aiReports').add({
-            'uid': uid,
+            'uid': user.uid,
+            'email': user.email ?? '',
             'reason': label,
-            'response': text,
+            'response': clipped,
+            'source': 'ai_chat',
+            'status': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
             'timestamp': FieldValue.serverTimestamp(),
           });
-        } catch (_) {
-          // Fail silently if offline
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                isAr
+                    ? 'شكرًا لإبلاغك. وصل البلاغ للوحة الإدارة لمراجعة السلامة.'
+                    : 'Thank you. The report was sent to the admin panel for safety review.',
+              ),
+            ),
+          );
+        } catch (e) {
+          debugPrint('aiReports write failed: $e');
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                isAr
+                    ? 'ما قدرنا نرسل البلاغ. تأكدي من الإنترنت وحاولي مرة ثانية.'
+                    : 'Could not send the report. Check your connection and try again.',
+              ),
+            ),
+          );
         }
       },
     );

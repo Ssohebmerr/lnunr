@@ -121,8 +121,14 @@ class _AdminScreenState extends State<AdminScreen>
           child: StreamBuilder<List<AdminReport>>(
             stream: _repo.watchReports(),
             builder: (context, snap) {
-              final pending =
+              final communityPending =
                   (snap.data ?? []).where((r) => r.isPending).length;
+              return StreamBuilder<List<AdminAiReport>>(
+                stream: _repo.watchAiReports(),
+                builder: (context, aiSnap) {
+                  final aiPending =
+                      (aiSnap.data ?? []).where((r) => r.isPending).length;
+                  final pending = communityPending + aiPending;
               return TabBar(
                 controller: _tabs,
                 isScrollable: true,
@@ -155,6 +161,8 @@ class _AdminScreenState extends State<AdminScreen>
                       icon: Icons.campaign_rounded,
                       label: l10n.adminTabBroadcast),
                 ],
+              );
+                },
               );
             },
           ),
@@ -784,9 +792,22 @@ class _ReportsTabState extends State<_ReportsTab> {
                   );
                 }
                 final reports = snap.data ?? [];
+                return StreamBuilder<List<AdminAiReport>>(
+                  key: ValueKey('ai-reports-$_refreshTick'),
+                  stream: repo.watchAiReports(),
+                  builder: (context, aiSnap) {
+                    if (aiSnap.hasError) {
+                      return _ReportsError(
+                        message: aiSnap.error.toString(),
+                        onRetry: _refresh,
+                        l10n: l10n,
+                      );
+                    }
+                    final aiReports = aiSnap.data ?? [];
                 if (pendingPosts.isEmpty &&
                     pendingComments.isEmpty &&
-                    reports.isEmpty) {
+                    reports.isEmpty &&
+                    aiReports.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
@@ -808,6 +829,26 @@ class _ReportsTabState extends State<_ReportsTab> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      if (aiReports.isNotEmpty) ...[
+                        Text(
+                          'بلاغات الذكاء الاصطناعي',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...aiReports.map(
+                          (r) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _AiReportCard(
+                              report: r,
+                              repo: repo,
+                              theme: theme,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       if (pendingPosts.isNotEmpty) ...[
                         Text(
                           l10n.adminPendingModeration,
@@ -873,11 +914,94 @@ class _ReportsTabState extends State<_ReportsTab> {
                     ],
                   ),
                 );
+                  },
+                );
               },
             );
           },
         );
       },
+    );
+  }
+}
+
+class _AiReportCard extends StatelessWidget {
+  const _AiReportCard({
+    required this.report,
+    required this.repo,
+    required this.theme,
+  });
+
+  final AdminAiReport report;
+  final AdminRepository repo;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.auto_awesome, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    report.reason,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Text(
+                  report.isPending ? 'معلق' : report.status,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: report.isPending
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              report.email.isNotEmpty
+                  ? '${report.email} · ${report.uid}'
+                  : report.uid,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              report.response,
+              maxLines: 8,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            ),
+            if (report.isPending) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => repo.resolveAiReport(report.id),
+                    child: const Text('تم الحل'),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        repo.resolveAiReport(report.id, status: 'dismissed'),
+                    child: const Text('تجاهل'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

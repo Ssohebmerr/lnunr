@@ -16,7 +16,7 @@ const {
   assertPremiumChatQuota,
   incrementDailyChatCount,
 } = require('../lib/chat_quota');
-const { getSystemPromptForMode, getMaxTokensForMode } = require('../lib/prompts');
+const { getSystemPromptForMode, getMaxTokensForMode, getSecureSystemPrompt } = require('../lib/prompts');
 
 const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
@@ -124,18 +124,31 @@ exports.analyze = onRequest(
       });
 
       const clientSystemPrompt = (req.body?.systemPrompt || '').trim();
-      const clientUserPrompt = (req.body?.userPrompt || '').trim();
       const clientMaxTokens = Number(req.body?.maxTokens) || 0;
       const clientTemperature = Number(req.body?.temperature) || 0;
 
       const contextString = buildAnalyzeContext(cycleContext);
       const fallbackSystemPrompt = isDoctorReport
         ? getSystemPromptForMode('doctor', cycleContext)
-        : getSystemPromptForMode('analyze', cycleContext);
+        : getSecureSystemPrompt('analyze', cycleContext, 'friend');
       const fallbackUserPrompt = `=== CYCLE / PREGNANCY DATA ===\n${contextString}\n\n${isDoctorReport ? '=== DOCTOR REPORT REQUEST ===' : '=== USER QUESTION (answer THIS directly — show you read it) ==='}\n${message}`;
 
-      const systemPrompt = clientSystemPrompt || fallbackSystemPrompt;
-      const userPrompt = clientUserPrompt || fallbackUserPrompt;
+      // Resolve personality from request or parse from clientSystemPrompt for compatibility
+      let personality = req.body?.personality || 'friend';
+      if (!['friend', 'doctor', 'coach'].includes(personality)) {
+        if (clientSystemPrompt.includes('doctor') || clientSystemPrompt.includes('Wellness Expert')) {
+          personality = 'doctor';
+        } else if (clientSystemPrompt.includes('coach') || clientSystemPrompt.includes('Coach mode')) {
+          personality = 'coach';
+        } else {
+          personality = 'friend';
+        }
+      }
+
+      const systemPrompt = isDoctorReport
+        ? getSystemPromptForMode('doctor', cycleContext)
+        : getSecureSystemPrompt('analyze', cycleContext, personality);
+      const userPrompt = fallbackUserPrompt;
       const maxTokens = clientMaxTokens || (isDoctorReport ? 1200 : getMaxTokensForMode('analyze'));
 
       const { reply, provider } = await callAiWithFallback({
@@ -169,7 +182,10 @@ exports.analyze = onRequest(
         res.status(401).json({ error: 'Token expired.' });
         return;
       }
-      res.status(500).json({ reply: 'عذراً، حدث خطأ أثناء التحليل. حاولي مرة أخرى.' });
+      res.status(500).json({
+        error: 'server_error',
+        message: 'AI providers failed. Please try again.',
+      });
     }
   },
 );

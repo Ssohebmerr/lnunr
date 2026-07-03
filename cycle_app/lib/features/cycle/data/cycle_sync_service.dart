@@ -77,6 +77,17 @@ class CycleSyncService {
     await UserPrefs.setOnboardingDone();
     await _applyGoalSettings(goal);
 
+    // Firebase anonymous session + Firestore profile — only after registration.
+    try {
+      await GuestUserService().ensureSession();
+      await GuestUserService().registerProfile(
+        name: name,
+        birthDate: birthDate,
+      );
+    } catch (e, st) {
+      debugPrint('Guest user Firestore sync failed (non-fatal): $e\n$st');
+    }
+
     await _ensureCycleWidgetReady();
     try {
       await _bridge.configure(
@@ -104,17 +115,6 @@ class CycleSyncService {
       await onCycleDataChanged().timeout(_syncTimeout);
     } catch (e, st) {
       debugPrint('Post-onboarding sync failed (non-fatal): $e\n$st');
-    }
-
-    if (birthDate != null) {
-      try {
-        await GuestUserService().registerProfile(
-          name: name,
-          birthDate: birthDate,
-        );
-      } catch (e, st) {
-        debugPrint('Guest user Firestore sync failed (non-fatal): $e\n$st');
-      }
     }
   }
 

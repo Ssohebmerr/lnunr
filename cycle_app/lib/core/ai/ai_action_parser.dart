@@ -54,25 +54,25 @@ class AiActionParser {
   static final _bareTagRegex = RegExp(r'\[\[(open_log|open_insights)\]\]');
 
   static final _truncatedSuffix = RegExp(
-    r'(\n\s*)?(\.\.\.\s*)?\[response truncated\]\s*$',
+    r'(\n\s*)?(\.\.\.\s*)?\[response truncated\](\s*\.\.\.)?\s*$',
     multiLine: true,
     caseSensitive: false,
   );
 
   static final _stoppedSuffix = RegExp(
-    r'\n?\s*\[response stopped:[^\]]+\]\s*$',
+    r'\n?\s*\[response stopped:[^\]]+\](\s*\.\.\.)?\s*$',
     multiLine: true,
     caseSensitive: false,
   );
 
   /// Meta strings the model or gateway may leak anywhere in the reply.
   static final _truncatedAnywhere = RegExp(
-    r'\[response truncated\]',
+    r'(\.\.\.\s*)?\[response truncated\](\s*\.\.\.)?',
     caseSensitive: false,
   );
 
   static final _stoppedAnywhere = RegExp(
-    r'\[response stopped:[^\]]+\]',
+    r'(\.\.\.\s*)?\[response stopped:[^\]]+\](\s*\.\.\.)?',
     caseSensitive: false,
   );
 

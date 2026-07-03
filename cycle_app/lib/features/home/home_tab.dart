@@ -190,7 +190,9 @@ class _HomeTabState extends State<HomeTab> {
       builders.add(() => const StreakBadge());
     }
 
-    builders.add(() => const DailyBriefingCard());
+    if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) {
+      builders.add(() => const DailyBriefingCard());
+    }
 
     // ── Goal / cycle section ──
     if (d != null) {
@@ -488,13 +490,15 @@ class _EmptyStateHeader extends StatelessWidget {
                   theme: theme,
                   onTap: () => HomeShellActions.openLog?.call(),
                 ),
-                const SizedBox(height: 8),
-                _EmptyAction(
-                  icon: Icons.auto_awesome_rounded,
-                  text: l10n.homeQuickAi,
-                  theme: theme,
-                  onTap: () => HomeShellActions.openAiChat?.call(),
-                ),
+                if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) ...[
+                  const SizedBox(height: 8),
+                  _EmptyAction(
+                    icon: Icons.auto_awesome_rounded,
+                    text: l10n.homeQuickAi,
+                    theme: theme,
+                    onTap: () => HomeShellActions.openAiChat?.call(),
+                  ),
+                ],
               ],
             ),
         ],

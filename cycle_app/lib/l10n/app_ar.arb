@@ -10,6 +10,13 @@
   "navAccount": "الحساب",
   "welcomeTitle": "رفيقتك الخاصة لتتبع الدورة",
   "welcomeSubtitle": "بياناتك محلية. السحابة والذكاء الاصطناعي اختيارية ومشفّرة.",
+  "welcomeHubTitle": "أهلاً بكِ في Lune",
+  "welcomeHubSubtitle": "ابدئي بخصوصية باسمك فقط، أو سجّلي دخولك بإيميلك إن كان لديك حساب سابق.",
+  "welcomeNewUser": "مستخدمة جديدة — إعداد خاص",
+  "welcomeHaveAccount": "عندي حساب",
+  "welcomeCreateEmailAccount": "إنشاء حساب بإيميل",
+  "accountLinkEmail": "ربط الإيميل بالحساب",
+  "accountEmailNotLinked": "لم يُربط إيميل بعد",
   "getStarted": "ابدئي الآن",
   "cycleLength": "طول الدورة (أيام)",
   "periodDuration": "مدة الحيض (أيام)",
@@ -832,6 +839,22 @@
   "accountChangeGoal": "هدفك",
   "accountChangeGoalHint": "التطبيق يتكيّف فوراً — الرئيسية والتقارير والعناية والـ AI.",
   "goalChangedSnackbar": "تم تحديث الهدف — التطبيق صار مخصّصاً لكِ",
+  "accountUserId": "معرّف الحساب: {id}",
+  "@accountUserId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "accountDeviceId": "معرّف الجهاز: {id}",
+  "@accountDeviceId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "accountTapToCopyId": "اضغطي لنسخ معرّف الحساب",
+  "premiumActivationNeedsProfile": "أكملي التسجيل (الاسم + تاريخ الميلاد) قبل تفعيل Premium.",
+  "premiumActivationFailed": "تعذّر تفعيل Premium. تحققي من الاتصال وحاولي مرة أخرى.",
+
   "guestModeTitle": "وضع ضيف خاص",
   "guestModeLabel": "ملف محلي · بدون إيميل",
   "guestModeBody": "تستخدمين Lune بخصوصية. سجّلي الدخول فقط للمجتمعات أو Premium أو النسخ السحابي.",

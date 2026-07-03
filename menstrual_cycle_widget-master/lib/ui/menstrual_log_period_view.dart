@@ -28,6 +28,9 @@ class MenstrualLogPeriodView extends StatefulWidget {
   /// Called when the user discards unsaved edits in [embeddedInTab] mode.
   final VoidCallback? onDiscardChanges;
 
+  /// Called after every successful write (explicit Save or auto-save on chip/tap).
+  final VoidCallback? onAutoSaved;
+
   const MenstrualLogPeriodView(
       {super.key,
       this.symptomsLogDate,
@@ -43,7 +46,8 @@ class MenstrualLogPeriodView extends StatefulWidget {
       this.isRequiredSleepView = true,
       this.isRequiredWeightView = true,
       this.embeddedInTab = false,
-      this.onDiscardChanges});
+      this.onDiscardChanges,
+      this.onAutoSaved});
 
   @override
   State<MenstrualLogPeriodView> createState() => _MenstrualLogPeriodViewState();
@@ -192,8 +196,12 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
       }
       //  printMenstrualCycleLogs('cycleDay ${cycleDay} --- intCycleDay $intCycleDay');
     }
-    // Set existing data - start
-    UserSymptomsLogs userSymptomsLogs = await mInstance.getSymptomsData(date);
+    // Set existing data - start.
+    // Always pass a concrete date — null used to throw and wipe the form so
+    // previously saved mood/water/weight never reappeared after leaving the tab.
+    final loadDate = date ?? DateTime.tryParse(logDate) ?? DateTime.now();
+    UserSymptomsLogs userSymptomsLogs =
+        await mInstance.getSymptomsData(loadDate);
     existingSymptomsList.clear();
     symptomsList.clear();
     existingSymptomsList.addAll(userSymptomsLogs.symptomData!);
@@ -476,97 +484,128 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     saveTodayLogsSilently();
   }
 
-  /// save today logs to database
-  Future<void> saveTodayLogs() async {
-    List<SymptomsData> userLogData = [];
-    for (int index = 0; index < symptomsList.length; index++) {
-      for (int j = 0; j < symptomsList[index].symptomsData!.length; j++) {
-        SymptomsData symptomsData = symptomsList[index].symptomsData![j];
+  DateTime _resolvedLogDate() {
+    return DateTime.tryParse(logDate) ??
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  }
+
+  List<SymptomsData> _selectedSymptoms() {
+    final userLogData = <SymptomsData>[];
+    for (final category in symptomsList) {
+      for (final symptomsData in category.symptomsData ?? <SymptomsData>[]) {
         if (symptomsData.isSelected) {
-          userLogData.add(symptomsData);
+          userLogData.add(
+            SymptomsData(
+              symptomName: symptomsData.symptomName,
+              symptomId: symptomsData.symptomId,
+              isSelected: true,
+            ),
+          );
         }
       }
     }
+    return userLogData;
+  }
+
+  Map<String, dynamic> _logPayload() {
+    final water = (logReportList[4].finalValue ?? '').trim();
+    final bodyTemp = (logReportList[1].finalValue ?? '').trim();
+    final weight = (logReportList[0].finalValue ?? '').trim();
+    return {
+      'waterValue': water.isNotEmpty ? water : '0',
+      'bodyTemperature': bodyTemp.isNotEmpty ? bodyTemp : '0',
+      'weight': weight.isNotEmpty ? weight : '0',
+      'meditationTime': (logReportList[3].totalMin ?? 0).toString(),
+      'sleepBedTime': TimeOfDay(
+        hour: (logReportList[2].mainValue ?? 0).toInt(),
+        minute: (logReportList[2].subValue ?? 0).toInt(),
+      ),
+      'sleepWakeUpTime': TimeOfDay(
+        hour: (logReportList[5].mainValue ?? 0).toInt(),
+        minute: (logReportList[5].subValue ?? 0).toInt(),
+      ),
+    };
+  }
+
+  /// save today logs to database
+  Future<void> saveTodayLogs() async {
+    final userLogData = _selectedSymptoms();
+    final payload = _logPayload();
+    final day = _resolvedLogDate();
 
     try {
+      var saved = false;
       await mInstance.saveSymptomsLogs(
-          userSymptomsData: userLogData,
-          onError: widget.onError,
-          cycleDay: intCycleDay,
-          symptomsLogDate: DateTime.parse(logDate),
-          onSuccess: (id) async {
-            if (_canGoForward) {
-              if (mounted) {
-                await init(DateTime.parse(logDate));
-                _shiftLogDate(1);
-              }
-            } else {
-              widget.onSuccess?.call(id);
-              if (mounted) {
-                await init(DateTime.parse(logDate));
-                _maybePopRoute();
-              }
+        userSymptomsData: userLogData,
+        onError: () {
+          saved = false;
+          widget.onError?.call();
+        },
+        cycleDay: intCycleDay,
+        symptomsLogDate: day,
+        onSuccess: (id) async {
+          saved = true;
+          widget.onAutoSaved?.call();
+          if (_canGoForward) {
+            if (mounted) {
+              await init(day);
+              _shiftLogDate(1);
             }
-          },
-          waterValue: (logReportList[4].finalValue!.isNotEmpty)
-              ? logReportList[4].finalValue.toString()
-              : "0",
-          bodyTemperature: (logReportList[1].finalValue!.isNotEmpty)
-              ? logReportList[1].finalValue.toString()
-              : "0",
-          weight: (logReportList[0].finalValue!.isNotEmpty)
-              ? logReportList[0].finalValue.toString()
-              : "0",
-          meditationTime: logReportList[3].totalMin!.toString(),
-          sleepBedTime: TimeOfDay(
-              hour: logReportList[2].mainValue!.toInt(),
-              minute: logReportList[2].subValue!.toInt()),
-          sleepWakeUpTime: TimeOfDay(
-              hour: logReportList[5].mainValue!.toInt(),
-              minute: logReportList[5].subValue!.toInt()));
-    } catch (e) {
+          } else {
+            widget.onSuccess?.call(id);
+            if (mounted) {
+              await init(day);
+              _maybePopRoute();
+            }
+          }
+        },
+        waterValue: payload['waterValue'] as String,
+        bodyTemperature: payload['bodyTemperature'] as String,
+        weight: payload['weight'] as String,
+        meditationTime: payload['meditationTime'] as String,
+        sleepBedTime: payload['sleepBedTime'] as TimeOfDay,
+        sleepWakeUpTime: payload['sleepWakeUpTime'] as TimeOfDay,
+      );
+      if (!saved) {
+        debugPrint('saveTodayLogs: database returned failure for $day');
+      }
+    } catch (e, st) {
+      debugPrint('saveTodayLogs failed: $e\n$st');
       widget.onError?.call();
     }
   }
 
   Future<void> saveTodayLogsSilently() async {
-    List<SymptomsData> userLogData = [];
-    for (int index = 0; index < symptomsList.length; index++) {
-      for (int j = 0; j < symptomsList[index].symptomsData!.length; j++) {
-        SymptomsData symptomsData = symptomsList[index].symptomsData![j];
-        if (symptomsData.isSelected) {
-          userLogData.add(symptomsData);
-        }
-      }
-    }
+    final userLogData = _selectedSymptoms();
+    final payload = _logPayload();
+    final day = _resolvedLogDate();
 
     try {
+      var saved = false;
       await mInstance.saveSymptomsLogs(
-          userSymptomsData: userLogData,
-          onError: null,
-          cycleDay: intCycleDay,
-          symptomsLogDate: DateTime.parse(logDate),
-          onSuccess: (id) {
-            // Silently saved to SQLite, no pop and no toast feedback
-          },
-          waterValue: (logReportList[4].finalValue!.isNotEmpty)
-              ? logReportList[4].finalValue.toString()
-              : "0",
-          bodyTemperature: (logReportList[1].finalValue!.isNotEmpty)
-              ? logReportList[1].finalValue.toString()
-              : "0",
-          weight: (logReportList[0].finalValue!.isNotEmpty)
-              ? logReportList[0].finalValue.toString()
-              : "0",
-          meditationTime: logReportList[3].totalMin!.toString(),
-          sleepBedTime: TimeOfDay(
-              hour: logReportList[2].mainValue!.toInt(),
-              minute: logReportList[2].subValue!.toInt()),
-          sleepWakeUpTime: TimeOfDay(
-              hour: logReportList[5].mainValue!.toInt(),
-              minute: logReportList[5].subValue!.toInt()));
-    } catch (e) {
-      debugPrint('Silent save failed: $e');
+        userSymptomsData: userLogData,
+        onError: () {
+          saved = false;
+          debugPrint('Silent save reported failure for $day');
+        },
+        cycleDay: intCycleDay,
+        symptomsLogDate: day,
+        onSuccess: (id) {
+          saved = true;
+          widget.onAutoSaved?.call();
+        },
+        waterValue: payload['waterValue'] as String,
+        bodyTemperature: payload['bodyTemperature'] as String,
+        weight: payload['weight'] as String,
+        meditationTime: payload['meditationTime'] as String,
+        sleepBedTime: payload['sleepBedTime'] as TimeOfDay,
+        sleepWakeUpTime: payload['sleepWakeUpTime'] as TimeOfDay,
+      );
+      if (!saved) {
+        debugPrint('Silent save did not persist for $day');
+      }
+    } catch (e, st) {
+      debugPrint('Silent save failed: $e\n$st');
     }
   }
 

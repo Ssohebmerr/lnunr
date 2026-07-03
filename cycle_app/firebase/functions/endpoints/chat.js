@@ -17,7 +17,7 @@ const {
   assertPremiumChatQuota,
   incrementDailyChatCount,
 } = require('../lib/chat_quota');
-const { getSystemPromptForMode, getMaxTokensForMode } = require('../lib/prompts');
+const { getSystemPromptForMode, getMaxTokensForMode, getSecureSystemPrompt } = require('../lib/prompts');
 const { buildContextString } = require('../lib/moderation');
 
 const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
@@ -81,7 +81,6 @@ exports.chat = onRequest(
       });
 
       const clientSystemPrompt = (req.body?.systemPrompt || '').trim();
-      const clientUserPrompt = (req.body?.userPrompt || '').trim();
       const clientMaxTokens = Number(req.body?.maxTokens) || 0;
       const clientTemperature = Number(req.body?.temperature) || 0;
 
@@ -90,8 +89,20 @@ exports.chat = onRequest(
         ? `=== USER JOURNAL ENTRY (analyze emotions gently) ===\n${message}\n\nCycle context:\n${contextString}`
         : `=== APP DATA ===\n${contextString}\n\n=== USER MESSAGE ===\n${message}`;
 
-      const systemPrompt = clientSystemPrompt || getSystemPromptForMode(mode, cycleContext);
-      const userPrompt = clientUserPrompt || fallbackUserPrompt;
+      // Resolve personality from request or parse from clientSystemPrompt for compatibility
+      let personality = req.body?.personality || 'friend';
+      if (!['friend', 'doctor', 'coach'].includes(personality)) {
+        if (clientSystemPrompt.includes('doctor') || clientSystemPrompt.includes('Wellness Expert')) {
+          personality = 'doctor';
+        } else if (clientSystemPrompt.includes('coach') || clientSystemPrompt.includes('Coach mode')) {
+          personality = 'coach';
+        } else {
+          personality = 'friend';
+        }
+      }
+
+      const systemPrompt = getSecureSystemPrompt(mode, cycleContext, personality);
+      const userPrompt = fallbackUserPrompt;
       const maxTokens = clientMaxTokens || getMaxTokensForMode(mode);
 
       const { reply, provider } = await callAiWithFallback({
@@ -125,7 +136,10 @@ exports.chat = onRequest(
         res.status(401).json({ error: 'Token expired.' });
         return;
       }
-      res.status(500).json({ reply: 'عذراً، حدث خطأ. حاولي مرة أخرى لاحقاً.' });
+      res.status(500).json({
+        error: 'server_error',
+        message: 'AI providers failed. Please try again.',
+      });
     }
   },
 );

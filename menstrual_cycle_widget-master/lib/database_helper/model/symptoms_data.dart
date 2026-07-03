@@ -72,9 +72,11 @@ class SymptomsData {
 
   factory SymptomsData.fromMap(Map<String, dynamic> map) {
     return SymptomsData(
-      symptomName: map['symptomName'],
-      symptomId: map['symptomId'],
-      isSelected: map['isSelected'],
+      symptomName: map['symptomName']?.toString(),
+      symptomId: map['symptomId'] is int
+          ? map['symptomId'] as int
+          : int.tryParse('${map['symptomId']}') ?? 0,
+      isSelected: map['isSelected'] == true || map['isSelected'] == 1,
     );
   }
 

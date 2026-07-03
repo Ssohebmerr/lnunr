@@ -1,7 +1,9 @@
 'use strict';
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+/** Cheapest general chat model — avoid deepseek-reasoner (costlier). */
 const DEEPSEEK_MODEL = 'deepseek-chat';
+const DEEPSEEK_DEFAULT_TEMPERATURE = 0.88;
 
 /**
  * Call DeepSeek Chat Completions API.
@@ -40,7 +42,7 @@ async function callDeepSeek(
       max_tokens: maxTokens || 2000,
       temperature: typeof temperature === 'number' && temperature > 0
         ? temperature
-        : 0.7,
+        : DEEPSEEK_DEFAULT_TEMPERATURE,
       stream: false,
     }),
   });

@@ -6,8 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/push/push_registration_service.dart';
-
 import '../../../core/storage/user_prefs.dart';
+import '../../user/data/guest_user_service.dart';
 
 import '../../cycle/data/cycle_sync_service.dart';
 
@@ -57,15 +57,61 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       await UserPrefs.saveUid(user.uid);
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final data = userDoc.data();
 
-        if (user.email != null && user.email!.isNotEmpty) 'email': user.email,
+      String? resolvedName;
+      if (data != null) {
+        final firestoreName = (data['name'] as String?)?.trim();
+        if (firestoreName != null && firestoreName.isNotEmpty) {
+          resolvedName = firestoreName;
+          final goal = (data['goal'] as String?) ??
+              await UserPrefs.getProfileGoal() ??
+              'general';
+          await UserPrefs.setProfile(name: firestoreName, goal: goal);
+          await UserPrefs.setOnboardingDone();
+        }
+      }
 
-        'lastLoginAt': FieldValue.serverTimestamp(),
+      final displayName = user.displayName?.trim();
+      final localName = await UserPrefs.getProfileName();
+      resolvedName ??= (localName != null && localName.trim().isNotEmpty)
+          ? localName.trim()
+          : (displayName != null && displayName.isNotEmpty ? displayName : null);
 
-        if (signUpEmail != null) 'createdAt': FieldValue.serverTimestamp(),
+      if (resolvedName != null &&
+          (localName == null || localName.trim().isEmpty)) {
+        final goal = await UserPrefs.getProfileGoal() ?? 'general';
+        await UserPrefs.setProfile(name: resolvedName, goal: goal);
+      }
 
-      }, SetOptions(merge: true));
+      final userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      if (!userDoc.exists) {
+        await userDocRef.set({
+          if (user.email != null && user.email!.isNotEmpty) 'email': user.email,
+          // ignore: use_null_aware_elements
+          if (resolvedName != null) 'name': resolvedName,
+          'isPremium': false,
+          'daily_chat_count': 0,
+          'lastLoginAt': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await userDocRef.set({
+          if (user.email != null && user.email!.isNotEmpty) 'email': user.email,
+          // ignore: use_null_aware_elements
+          if (resolvedName != null) 'name': resolvedName,
+          'lastLoginAt': FieldValue.serverTimestamp(),
+          if (signUpEmail != null) 'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+
+      if (resolvedName != null) {
+        unawaited(GuestUserService().registerProfile(name: resolvedName));
+      }
 
       await CycleSyncService().onAuthChanged(user);
 

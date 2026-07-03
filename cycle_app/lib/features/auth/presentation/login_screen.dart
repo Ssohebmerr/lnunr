@@ -45,7 +45,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _onAuthenticated() async {
     await ConsentManager.acceptPrivacyPolicy();
-    if (mounted) completeAuthNavigation(context);
+    if (!mounted) return;
+    final root = Navigator.of(context, rootNavigator: true);
+    if (root.canPop()) {
+      completeAuthNavigation(context);
+    } else {
+      context.go('/home');
+    }
   }
 
   void _submit() {
@@ -64,13 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop(false);
-            } else {
-              context.go('/home');
-            }
-          },
+          onPressed: () => context.go('/welcome'),
         ),
       ),
       body: AppMeshBackground(

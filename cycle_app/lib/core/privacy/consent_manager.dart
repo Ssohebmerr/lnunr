@@ -15,6 +15,17 @@ class ConsentManager {
   static Future<void> acceptPrivacyPolicy() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_privacyAcceptedKey, true);
+    // Onboarding privacy covers cloud AI — unlock AI features for registered users.
+    await prefs.setBool(_aiKey, true);
+  }
+
+  /// One-time migration for installs that accepted privacy before AI consent was bundled.
+  static Future<void> migrateAiConsentIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_privacyAcceptedKey) == true &&
+        prefs.getBool(_aiKey) != true) {
+      await prefs.setBool(_aiKey, true);
+    }
   }
 
   static Future<bool> hasCloudSyncConsent() async {

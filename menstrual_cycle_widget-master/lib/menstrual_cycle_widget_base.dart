@@ -226,7 +226,12 @@ class MenstrualCycleWidget {
 
     currentDate = currentDateFormat.format(DateTime.now());
     final encryption = Encryption.instance;
-    String encryptedData = encryption.encrypt(json.encode(userSymptomsData));
+    // SymptomsData is a Dart class — must map through toJson() or jsonEncode throws
+    // and the whole daily log (mood/water/weight) never reaches SQLite.
+    final symptomsJson = (userSymptomsData ?? <SymptomsData>[])
+        .map((s) => s.toJson())
+        .toList();
+    String encryptedData = encryption.encrypt(json.encode(symptomsJson));
 
     Map<String, dynamic> userData = {
       MenstrualCycleDbHelper.columnCustomerId: getCustomerId(),
@@ -266,16 +271,15 @@ class MenstrualCycleWidget {
     }
   }
 
-  /// Return UserSymptomsLogs based on log date
+  /// Return UserSymptomsLogs based on log date.
+  /// Defaults to today when [symptomsLogDate] is null so the log screen can
+  /// always reload the current day's entry after save / tab switch.
   Future<UserSymptomsLogs> getSymptomsData(DateTime? symptomsLogDate) async {
     String logDate = "";
-    if (symptomsLogDate != null) {
-      try {
-        logDate = defaultDateFormat.format(symptomsLogDate);
-      } catch (e) {
-        throw WidgetBaseLanguage.errorInvalidSymptomsLogDate;
-      }
-    } else {
+    final effectiveDate = symptomsLogDate ?? DateTime.now();
+    try {
+      logDate = defaultDateFormat.format(effectiveDate);
+    } catch (e) {
       throw WidgetBaseLanguage.errorInvalidSymptomsLogDate;
     }
 
@@ -289,32 +293,47 @@ class MenstrualCycleWidget {
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
         "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnLogDate} = ? AND ${MenstrualCycleDbHelper.columnCustomerId} = ?", [logDate, customerId]);
     for (int i = 0; i < queryResponse.length; i++) {
-      String userDecryptData = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData]);
+      final row = queryResponse[i];
+      final userDecryptData = encryption
+          .decrypt(row[MenstrualCycleDbHelper.columnUserEncryptData])
+          .trim();
 
-      List<dynamic> jsonData = json.decode(userDecryptData.trim());
-      symptomsDataList.addAll(
-          jsonData.map((symptom) => SymptomsData.fromMap(symptom)).toList());
+      if (userDecryptData.isNotEmpty) {
+        try {
+          final decoded = json.decode(userDecryptData);
+          if (decoded is List) {
+            for (final symptom in decoded) {
+              if (symptom is Map) {
+                symptomsDataList.add(
+                  SymptomsData.fromMap(Map<String, dynamic>.from(symptom)),
+                );
+              }
+            }
+          }
+        } catch (e) {
+          // Keep water/weight/etc. even if an older corrupt symptoms blob exists.
+          debugPrint('getSymptomsData decode failed: $e');
+        }
+      }
 
-      userSymptomsLogs.meditationTime = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnMeditationTime]);
-
-      userSymptomsLogs.bodyTemperature = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnBodyTemperature]);
-      userSymptomsLogs.waterValue = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnWater]);
-      userSymptomsLogs.weight = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnWeight]);
-      userSymptomsLogs.weightUnit = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnWeightUnit]);
-      userSymptomsLogs.sleepTime = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnSleepTime]);
-      userSymptomsLogs.waterUnit = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnWaterUnit]);
-      userSymptomsLogs.bodyTemperatureUnit = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnBodyTemperatureUnit]);
-      userSymptomsLogs.notes = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnNotes]);
+      userSymptomsLogs.meditationTime = encryption
+          .decrypt(row[MenstrualCycleDbHelper.columnMeditationTime]);
+      userSymptomsLogs.bodyTemperature = encryption
+          .decrypt(row[MenstrualCycleDbHelper.columnBodyTemperature]);
+      userSymptomsLogs.waterValue =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnWater]);
+      userSymptomsLogs.weight =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnWeight]);
+      userSymptomsLogs.weightUnit =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnWeightUnit]);
+      userSymptomsLogs.sleepTime =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnSleepTime]);
+      userSymptomsLogs.waterUnit =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnWaterUnit]);
+      userSymptomsLogs.bodyTemperatureUnit = encryption
+          .decrypt(row[MenstrualCycleDbHelper.columnBodyTemperatureUnit]);
+      userSymptomsLogs.notes =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnNotes]);
     }
 
     userSymptomsLogs.logDate = logDate;

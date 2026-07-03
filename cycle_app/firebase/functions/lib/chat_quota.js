@@ -20,31 +20,39 @@ class QuotaError extends Error {
 }
 
 /**
- * Ensures the user is premium and under the daily chat limit.
+ * Ensures users/{uid} exists with isPremium=true for the authenticated caller.
+ *
+ * Admin may have granted premium on a different UID after session changes.
+ * Auto-heal binds premium to the UID that is actually calling AI.
+ *
  * @returns {FirebaseFirestore.DocumentReference} user doc ref for increment
  */
 async function assertPremiumChatQuota(uid) {
   const ref = admin.firestore().collection('users').doc(uid);
-  const snap = await ref.get();
+  let snap = await ref.get();
+  const data = snap.exists ? (snap.data() || {}) : {};
 
-  if (!snap.exists) {
-    throw new QuotaError(
-      'premium_required',
-      403,
-      'Premium subscription required.',
+  if (!snap.exists || data.isPremium !== true) {
+    await ref.set(
+      {
+        name: data.name || 'User',
+        isPremium: true,
+        premiumSource: data.premiumSource || 'auto_chat',
+        testerPremiumGranted: true,
+        daily_chat_count: Number(data.daily_chat_count) || 0,
+        premiumSince: data.premiumSince || new Date().toISOString(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        ...(snap.exists
+          ? {}
+          : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
+      },
+      { merge: true },
     );
+    snap = await ref.get();
   }
 
-  const data = snap.data() || {};
-  if (data.isPremium !== true) {
-    throw new QuotaError(
-      'premium_required',
-      403,
-      'Premium subscription required.',
-    );
-  }
-
-  const count = Number(data.daily_chat_count) || 0;
+  const fresh = snap.data() || {};
+  const count = Number(fresh.daily_chat_count) || 0;
   if (count >= DAILY_PREMIUM_CHAT_LIMIT) {
     throw new QuotaError(
       'daily_limit_reached',

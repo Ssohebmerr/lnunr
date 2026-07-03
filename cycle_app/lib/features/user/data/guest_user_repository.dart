@@ -22,31 +22,38 @@ class GuestUserRepository {
   Future<void> createProfile({
     required String uid,
     required String name,
-    required DateTime birthDate,
+    DateTime? birthDate,
     required String deviceId,
   }) async {
-    final profile = GuestUserProfile(uid: uid, name: name, birthDate: birthDate);
-    await _doc(uid).set(
-      profile.toCreatePayload(
-        name: name,
-        birthDate: birthDate,
-        deviceId: deviceId,
-      ),
-    );
+    final payload = <String, dynamic>{
+      'name': name,
+      'deviceId': deviceId,
+      'isPremium': false,
+      'daily_chat_count': 0,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (birthDate != null) {
+      payload['birthDate'] = Timestamp.fromDate(birthDate);
+      payload['communityBirthYear'] = birthDate.year;
+    }
+    await _doc(uid).set(payload);
   }
 
   Future<void> updateProfile({
     required String uid,
     required String name,
-    required DateTime birthDate,
+    DateTime? birthDate,
     required String deviceId,
   }) async {
-    final profile = GuestUserProfile(uid: uid, name: name, birthDate: birthDate);
-    final data = profile.toUpdatePayload(
-      name: name,
-      birthDate: birthDate,
-      deviceId: deviceId,
-    );
+    final data = <String, dynamic>{
+      'name': name,
+      'deviceId': deviceId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (birthDate != null) {
+      data['birthDate'] = Timestamp.fromDate(birthDate);
+    }
     final snap = await _doc(uid).get();
     if (!snap.exists) {
       await createProfile(
@@ -58,7 +65,7 @@ class GuestUserRepository {
       return;
     }
     final existing = snap.data() ?? {};
-    if (!existing.containsKey('communityBirthYear')) {
+    if (birthDate != null && !existing.containsKey('communityBirthYear')) {
       data['communityBirthYear'] = birthDate.year;
     }
     await _doc(uid).update(data);

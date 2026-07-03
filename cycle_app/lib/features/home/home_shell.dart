@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/app_home_refresh.dart';
 import '../../../core/cms/app_settings_repository.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/profile/local_profile.dart';
@@ -23,6 +24,7 @@ import '../self_care/presentation/self_care_tab.dart';
 import 'account_tab.dart';
 import 'home_tab.dart';
 import '../chat/presentation/ai_chat_page.dart';
+import '../premium/presentation/subscription_plans_screen.dart';
 import 'log_tab.dart';
 import 'reports_tab.dart';
 import 'sub_feature_page.dart';
@@ -63,7 +65,9 @@ class _HomeShellState extends State<HomeShell> {
     super.initState();
     HomeShellActions.switchTab = _onTabSelected;
     HomeShellActions.openLog = _openLog;
-    HomeShellActions.openAiChat = _openAiChat;
+    if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) {
+      HomeShellActions.openAiChat = _openAiChat;
+    }
     HomeShellActions.openReports = _openReports;
     _authKey = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
@@ -157,6 +161,15 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   void _openAiChat() {
+    if (!FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) return;
+    if (!_isPremium) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => const SubscriptionPlansScreen(),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const AiChatPage()),
     );
@@ -254,10 +267,11 @@ class _HomeShellState extends State<HomeShell> {
                           ),
                         ),
                       ),
-                      _AiHeaderChip(
-                        label: l10n.homeAiChipLabel,
-                        onTap: _openAiChat,
-                      ),
+                      if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
+                        _AiHeaderChip(
+                          label: l10n.homeAiChipLabel,
+                          onTap: _openAiChat,
+                        ),
                     ],
                   ),
                 )
@@ -311,10 +325,11 @@ class _HomeShellState extends State<HomeShell> {
                           ],
                         ),
                       ),
-                      _AiHeaderChip(
-                        label: l10n.homeAiChipLabel,
-                        onTap: _openAiChat,
-                      ),
+                      if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
+                        _AiHeaderChip(
+                          label: l10n.homeAiChipLabel,
+                          onTap: _openAiChat,
+                        ),
                       if (_index == 0)
                         IconButton(
                           tooltip: l10n.navReports,
