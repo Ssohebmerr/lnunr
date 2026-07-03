@@ -400,7 +400,17 @@ service cloud.firestore {
     match /appBanners/{id}             { allow read: if isSignedIn(); allow write: if false(); }
     match /educationArticles/{id}      { allow read: if isSignedIn(); allow write: if false(); }
     match /anonymousQuestions/{id}     { allow read: if isAdmin(); allow write: if false(); }
-    match /aiReports/{id}              { allow read: if isAdmin(); allow write: if isSignedIn(); /* user-submitted feedback only; constrained by App Check + Cloud Function queue */ }
+    match /aiReports/{id} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.reason.size() <= 80
+        && request.resource.data.response is string
+        && request.resource.data.response.size() <= 8000
+        && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
+    }
     match /feedback/{id}               { allow read: if isAdmin(); allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid; allow update, delete: if false(); }
 
     // -----------------------------------------------------------------------

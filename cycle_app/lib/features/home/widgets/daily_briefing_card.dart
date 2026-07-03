@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
+import '../../../core/ai/ai_gateway_exception.dart';
+import '../../../core/premium/premium_gate.dart';
 import '../../../core/ai/ai_response_cache.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/aura_scaffold.dart';
@@ -23,6 +25,7 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
   int? _cycleDay;
   bool _loading = true;
   bool _failed = false;
+  bool _needsPremium = false;
 
   @override
   void initState() {
@@ -33,6 +36,15 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
   Future<void> _load() async {
     try {
       if (!mounted) return;
+
+      if (!await PremiumGate.hasPremium()) {
+        setState(() {
+          _loading = false;
+          _needsPremium = true;
+        });
+        return;
+      }
+
       final l10n = AppLocalizations.of(context)!;
       final locale = Localizations.localeOf(context).languageCode;
       final engine = AiContextEngine();
@@ -65,11 +77,22 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
       }
 
       final gateway = AiGateway();
-      final reply = await gateway.request(
-        message: l10n.dailyBriefingPrompt,
-        context: ctx,
-        mode: 'briefing',
-      );
+      String? reply;
+      try {
+        reply = await gateway.request(
+          message: l10n.dailyBriefingPrompt,
+          context: ctx,
+          mode: 'briefing',
+        );
+      } on AiGatewayException catch (e) {
+        if (e.isPremiumRequired && mounted) {
+          setState(() {
+            _loading = false;
+            _needsPremium = true;
+          });
+          return;
+        }
+      }
 
       final ok = reply != null && reply.isNotEmpty && !_looksLikeError(reply);
       if (mounted) {
@@ -125,6 +148,26 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+
+    if (_needsPremium) {
+      return AppGlassCard(
+        blur: false,
+        child: Row(
+          children: [
+            Icon(Icons.auto_awesome_outlined, color: theme.colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.premiumRequiredAi,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (_failed) return const SizedBox.shrink();
 

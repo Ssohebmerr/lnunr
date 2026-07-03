@@ -1,13 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/navigation/home_shell_actions.dart';
+import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
 import '../../../core/premium/premium_badge.dart';
 import '../../../core/premium/premium_status_notifier.dart';
-import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../features/user/data/guest_user_service.dart';
@@ -114,10 +113,28 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   }
 
   Future<void> _activateTestPremium() async {
-    if (!kDebugMode) return;
-    await UserPrefs.setPremium(true);
-    await PremiumStatusNotifier.instance.applyRemote(true);
-    widget.onSubscribed?.call();
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _busy = true);
+    try {
+      final result = await PremiumActivationService.grantTesterPremium();
+      if (!mounted) return;
+      if (result.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.premiumActivated)),
+        );
+        widget.onSubscribed?.call();
+      } else if (result.needsProfile) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.premiumActivationNeedsProfile)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.premiumActivationFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -247,13 +264,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               icon: const Icon(Icons.restore_rounded, size: 20),
               label: Text(l10n.restorePurchases),
             ),
-          if (kDebugMode) ...[
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: _activateTestPremium,
-              child: const Text('Debug: activate Premium'),
-            ),
-          ],
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _activateTestPremium,
+            icon: const Icon(Icons.star_outline_rounded, size: 20),
+            label: Text(l10n.activatePremiumTest),
+          ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => HomeShellActions.switchTab?.call(3),

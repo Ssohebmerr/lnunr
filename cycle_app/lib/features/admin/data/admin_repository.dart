@@ -10,6 +10,43 @@ import '../../../core/cms/app_settings.dart';
 import '../../../core/config/app_secrets.dart';
 import '../../community/data/models/community_profile.dart';
 
+class AdminAiReport {
+  const AdminAiReport({
+    required this.id,
+    required this.uid,
+    required this.email,
+    required this.reason,
+    required this.response,
+    required this.status,
+    required this.createdAt,
+  });
+
+  factory AdminAiReport.fromDoc(String id, Map<String, dynamic> data) {
+    final ts = data['createdAt'] ?? data['timestamp'];
+    return AdminAiReport(
+      id: id,
+      uid: data['uid'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      reason: data['reason'] as String? ?? '',
+      response: data['response'] as String? ?? '',
+      status: data['status'] as String? ?? 'pending',
+      createdAt: ts is Timestamp
+          ? ts.toDate()
+          : DateTime.tryParse(ts?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
+  final String id;
+  final String uid;
+  final String email;
+  final String reason;
+  final String response;
+  final String status;
+  final DateTime createdAt;
+
+  bool get isPending => status == 'pending';
+}
+
 class AdminReport {
   const AdminReport({
     required this.id,
@@ -199,6 +236,18 @@ class AdminRepository {
       .snapshots()
       .map((s) => s.docs.map((d) => AdminReport.fromDoc(d.id, d.data())).toList());
 
+  Stream<List<AdminAiReport>> watchAiReports() => _firestore
+      .collection('aiReports')
+      .limit(100)
+      .snapshots()
+      .map((s) {
+        final list = s.docs
+            .map((d) => AdminAiReport.fromDoc(d.id, d.data()))
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return list;
+      });
+
   Future<void> resolveReport(String reportId) async {
     await _firestore.collection('communityReports').doc(reportId).update({
       'status': 'resolved',
@@ -206,6 +255,15 @@ class AdminRepository {
       'resolvedBy': _auth.currentUser?.uid,
     });
     await _logActivity('resolve_report', 'Report $reportId resolved');
+  }
+
+  Future<void> resolveAiReport(String reportId, {String status = 'resolved'}) async {
+    await _firestore.collection('aiReports').doc(reportId).update({
+      'status': status,
+      'resolvedAt': FieldValue.serverTimestamp(),
+      'resolvedBy': _auth.currentUser?.uid,
+    });
+    await _logActivity('resolve_ai_report', 'AI report $reportId → $status');
   }
 
   Future<void> hidePost(String communityId, String postId) async {

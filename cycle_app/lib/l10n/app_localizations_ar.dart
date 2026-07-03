@@ -40,6 +40,28 @@ class AppLocalizationsAr extends AppLocalizations {
       'بياناتك محلية. السحابة والذكاء الاصطناعي اختيارية ومشفّرة.';
 
   @override
+  String get welcomeHubTitle => 'أهلاً بكِ في Lune';
+
+  @override
+  String get welcomeHubSubtitle =>
+      'ابدئي بخصوصية باسمك فقط، أو سجّلي دخولك بإيميلك إن كان لديك حساب سابق.';
+
+  @override
+  String get welcomeNewUser => 'مستخدمة جديدة — إعداد خاص';
+
+  @override
+  String get welcomeHaveAccount => 'عندي حساب';
+
+  @override
+  String get welcomeCreateEmailAccount => 'إنشاء حساب بإيميل';
+
+  @override
+  String get accountLinkEmail => 'ربط الإيميل بالحساب';
+
+  @override
+  String get accountEmailNotLinked => 'لم يُربط إيميل بعد';
+
+  @override
   String get getStarted => 'ابدئي الآن';
 
   @override
@@ -2256,6 +2278,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goalChangedSnackbar => 'تم تحديث الهدف — التطبيق صار مخصّصاً لكِ';
+
+  @override
+  String accountUserId(String id) {
+    return 'معرّف الحساب: $id';
+  }
+
+  @override
+  String accountDeviceId(String id) {
+    return 'معرّف الجهاز: $id';
+  }
+
+  @override
+  String get accountTapToCopyId => 'اضغطي لنسخ معرّف الحساب';
+
+  @override
+  String get premiumActivationNeedsProfile =>
+      'أكملي التسجيل (الاسم + تاريخ الميلاد) قبل تفعيل Premium.';
+
+  @override
+  String get premiumActivationFailed =>
+      'تعذّر تفعيل Premium. تحققي من الاتصال وحاولي مرة أخرى.';
 
   @override
   String get guestModeTitle => 'وضع ضيف خاص';

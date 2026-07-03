@@ -92,6 +92,7 @@ class _LogTabState extends State<LogTab> {
           child: MenstrualLogPeriodView(
             key: _refreshKey,
             embeddedInTab: true,
+            symptomsLogDate: DateTime.now(),
             themeColor: theme.colorScheme.primary,
             displaySymptomsData: DisplaySymptomsData(),
             onDiscardChanges: () {
@@ -99,13 +100,20 @@ class _LogTabState extends State<LogTab> {
                 DailyLogFeedback.showDiscarded(context, l10n);
               }
             },
+            onAutoSaved: () {
+              // Keep home / AI context in sync without rebuilding this tab
+              // (rebuilding would wipe in-progress edits).
+              sync.onCycleDataChanged();
+            },
             onSuccess: (_) async {
               await NotificationService.scheduleFromPrefs();
               await sync.onCycleDataChanged();
-              HomeRefreshScope.refresh();
+              // Do not call HomeRefreshScope.refresh() here — it recreates
+              // this tab and used to look like data "didn't save".
               if (!context.mounted) return;
 
-              final messenger = widget.homeMessenger ?? ScaffoldMessenger.of(context);
+              final messenger =
+                  widget.homeMessenger ?? ScaffoldMessenger.of(context);
               if (widget.popOnSave && Navigator.of(context).canPop()) {
                 DailyLogFeedback.showSavedOn(messenger, context, l10n);
                 Navigator.of(context).pop();

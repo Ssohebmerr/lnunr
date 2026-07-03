@@ -58,6 +58,7 @@ import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/forgot_password_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
+import 'features/auth/presentation/welcome_screen.dart';
 import 'features/chat/data/chat_repository.dart';
 import 'features/community/data/community_repository.dart';
 import 'features/community/data/community_story_repository.dart';
@@ -87,12 +88,21 @@ void main() async {
     debugPrint('[Main] AppBootstrap initialize failed: $e\n$st');
   }
 
-  try {
-    await GuestUserService().ensureSession();
-    unawaited(GuestUserService().syncLocalProfileIfNeeded());
-  } catch (e, st) {
-    debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
+  // Guest session + Firestore profile for anyone who finished onboarding.
+  if (await UserPrefs.isOnboardingDone()) {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final hasEmail = _hasEmailAccount(user);
+      if (!hasEmail || user == null) {
+        await GuestUserService().ensureSession();
+      }
+      await GuestUserService().syncLocalProfileIfNeeded();
+    } catch (e, st) {
+      debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
+    }
   }
+
+  await ConsentManager.migrateAiConsentIfNeeded();
 
   tz_data.initializeTimeZones();
   try {
@@ -385,50 +395,65 @@ void syncWidgetLanguage(Locale locale) {
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+bool _hasEmailAccount(User? user) {
+  if (user == null) return false;
+  final email = user.email?.trim();
+  return email != null && email.isNotEmpty && !user.isAnonymous;
+}
+
+bool _canEnterHome(bool onboardingDone, User? user) {
+  if (_hasEmailAccount(user)) return true;
+  return onboardingDone && user != null;
+}
+
 final _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) async {
     final done = await UserPrefs.isOnboardingDone();
     final path = state.matchedLocation;
+    final user = FirebaseAuth.instance.currentUser;
     final stealthEnabled = await UserPrefs.isStealthModeEnabled();
     final isUnlocked = UserPrefs.isSessionUnlocked();
 
     // Stealth mode: redirect to calculator screen if enabled and session is locked.
-    if (stealthEnabled && done && !isUnlocked) {
+    if (stealthEnabled && _canEnterHome(done, user) && !isUnlocked) {
       if (path != '/stealth' &&
           path != '/login' &&
           path != '/register' &&
-          path != '/forgot-password') {
+          path != '/forgot-password' &&
+          path != '/welcome') {
         return '/stealth';
       }
     }
 
-    // Auth screens and stealth screen are optional — never block them.
+    // Auth + welcome screens are always reachable.
     if (path == '/login' ||
         path == '/register' ||
         path == '/forgot-password' ||
-        path == '/stealth') {
+        path == '/stealth' ||
+        path == '/welcome' ||
+        path == '/onboarding') {
+      if (path == '/welcome' && _canEnterHome(done, user)) {
+        return '/home';
+      }
       return null;
     }
 
-    final privacyAccepted = await ConsentManager.hasAcceptedPrivacyPolicy();
-
-    // First launch: go straight to onboarding (no splash wait).
-    if (!done && path != '/onboarding') return '/onboarding';
-
-    // Onboarding done but privacy never accepted — return to onboarding.
-    if (done && !privacyAccepted && path != '/onboarding') {
-      return '/onboarding';
+    if (_canEnterHome(done, user)) {
+      if (path == '/' || path == '/onboarding') return '/home';
+      return null;
     }
 
-    // Already set up: skip splash/onboarding.
-    if (done && (path == '/' || path == '/onboarding')) return '/home';
+    if (path == '/home') return '/welcome';
 
-    return null;
+    // First-time users land on welcome hub (not home, not forced onboarding).
+    if (path == '/') return '/welcome';
+    return '/welcome';
   },
   routes: [
     GoRoute(path: '/', builder: (_, _) => const _SplashScreen()),
+    GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
     GoRoute(path: '/stealth', builder: (_, _) => const StealthCalculatorScreen()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
     GoRoute(path: '/home', builder: (context, _) => _buildHome(context)),
@@ -462,8 +487,9 @@ class _SplashScreenState extends State<_SplashScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final done = await UserPrefs.isOnboardingDone();
+      final user = FirebaseAuth.instance.currentUser;
       if (!mounted) return;
-      context.go(done ? '/home' : '/onboarding');
+      context.go(_canEnterHome(done, user) ? '/home' : '/welcome');
     });
   }
 

@@ -30,11 +30,22 @@ class AuthRepository {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
-  Future<void> signInWithEmail(String email, String password) =>
-      _auth.signInWithEmailAndPassword(email: email, password: password);
+  Future<void> _signOutAnonymousIfNeeded() async {
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      await _auth.signOut();
+    }
+  }
 
-  Future<void> signUpWithEmail(String email, String password) =>
-      _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<void> signInWithEmail(String email, String password) async {
+    await _signOutAnonymousIfNeeded();
+    await _auth.signInWithEmailAndPassword(email: email, password: password);
+  }
+
+  Future<void> signUpWithEmail(String email, String password) async {
+    await _signOutAnonymousIfNeeded();
+    await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  }
 
   Future<void> sendPasswordResetEmail(String email) =>
       _auth.sendPasswordResetEmail(email: email);

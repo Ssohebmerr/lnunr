@@ -31,20 +31,21 @@ class HomeExploreRail extends StatelessWidget {
     final theme = Theme.of(context);
 
     final items = <_ExploreItem>[
-      _ExploreItem(
-        icon: FeminineIcon.ai,
-        label: l10n.accountMenuAi,
-        color: theme.colorScheme.primary,
-        onTap: () {
-          if (HomeShellActions.openAiChat != null) {
-            HomeShellActions.openAiChat!();
-          } else {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const AiChatPage()),
-            );
-          }
-        },
-      ),
+      if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
+        _ExploreItem(
+          icon: FeminineIcon.ai,
+          label: l10n.accountMenuAi,
+          color: theme.colorScheme.primary,
+          onTap: () {
+            if (HomeShellActions.openAiChat != null) {
+              HomeShellActions.openAiChat!();
+            } else {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const AiChatPage()),
+              );
+            }
+          },
+        ),
       _ExploreItem(
         icon: FeminineIcon.selfCare,
         label: l10n.navSelfCare,

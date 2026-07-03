@@ -10,6 +10,13 @@
   "navAccount": "Account",
   "welcomeTitle": "Your private cycle companion",
   "welcomeSubtitle": "Track your cycle locally. Cloud & AI are optional and encrypted.",
+  "welcomeHubTitle": "Welcome to Lune",
+  "welcomeHubSubtitle": "Start privately with your name, or sign in with your email if you already have an account.",
+  "welcomeNewUser": "New user — set up privately",
+  "welcomeHaveAccount": "I already have an account",
+  "welcomeCreateEmailAccount": "Create account with email",
+  "accountLinkEmail": "Link email to account",
+  "accountEmailNotLinked": "No email linked yet",
   "getStarted": "Get Started",
   "cycleLength": "Cycle length (days)",
   "periodDuration": "Period duration (days)",
@@ -859,6 +866,22 @@
   "accountChangeGoal": "Your goal",
   "accountChangeGoalHint": "The app adapts instantly — home, reports, self-care, and AI.",
   "goalChangedSnackbar": "Goal updated — the app is now tailored to you",
+  "accountUserId": "Account ID: {id}",
+  "@accountUserId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "accountDeviceId": "Device ID: {id}",
+  "@accountDeviceId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "accountTapToCopyId": "Tap to copy account ID",
+  "premiumActivationNeedsProfile": "Complete registration (name + birth date) before activating Premium.",
+  "premiumActivationFailed": "Could not activate Premium. Check your connection and try again.",
+
   "guestModeTitle": "Private guest mode",
   "guestModeLabel": "Local profile · no email",
   "guestModeBody": "You're using Lune privately. Sign in only for Communities, Premium, or cloud backup.",

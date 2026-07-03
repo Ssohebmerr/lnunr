@@ -999,8 +999,8 @@
           <div class="card">
             <div class="card-head">
               <div>
-                <h2>⚠️ بلاغات المجتمع</h2>
-                <p class="muted" style="margin-top:4px">راجعي البلاغات يومياً — حماية المستخدمات أولوية.</p>
+                <h2>⚠️ البلاغات</h2>
+                <p class="muted" style="margin-top:4px">بلاغات المجتمع + بلاغات ردود الذكاء الاصطناعي — راجعيها يومياً.</p>
               </div>
               <button id="refreshReports" class="btn ghost sm">🔄 تحديث</button>
             </div>
@@ -2206,27 +2206,59 @@ async function loadReports() {
   const filter = $('reportFilter').value;
   box.innerHTML = '<div class="spinner"></div>';
   try {
-    let snap;
-    if (filter === 'all') {
-      snap = await admin.query({
-        collectionPath: ['communityReports'],
-        orderBy: { field: 'createdAt', dir: 'desc' },
-        limit: 50,
-      });
-    } else {
-      snap = await admin.query({
-        collectionPath: ['communityReports'],
-        filters: [{ field: 'status', op: '==', value: filter }],
-        orderBy: { field: 'createdAt', dir: 'desc' },
-        limit: 50,
-      });
-    }
-    if (snap.empty) {
-      box.innerHTML = '<div class="empty">لا توجد بلاغات 🎉</div>';
-      return;
-    }
+    const communityQuery = filter === 'all'
+      ? { collectionPath: ['communityReports'], orderBy: { field: 'createdAt', dir: 'desc' }, limit: 50 }
+      : {
+          collectionPath: ['communityReports'],
+          filters: [{ field: 'status', op: '==', value: filter }],
+          orderBy: { field: 'createdAt', dir: 'desc' },
+          limit: 50,
+        };
+    const aiQuery = filter === 'all'
+      ? { collectionPath: ['aiReports'], limit: 50 }
+      : {
+          collectionPath: ['aiReports'],
+          filters: [{ field: 'status', op: '==', value: filter }],
+          limit: 50,
+        };
 
-    const rows = await Promise.all(snap.docs.map(async (d) => {
+    const [snap, aiSnap] = await Promise.all([
+      admin.query(communityQuery).catch(() => ({ empty: true, docs: [] })),
+      admin.query(aiQuery).catch(() => ({ empty: true, docs: [] })),
+    ]);
+
+    const aiDocs = [...(aiSnap.docs || [])].sort((a, b) => {
+      const ta = a.data().createdAt?.toMillis?.() || a.data().timestamp?.toMillis?.() || 0;
+      const tb = b.data().createdAt?.toMillis?.() || b.data().timestamp?.toMillis?.() || 0;
+      return tb - ta;
+    });
+    const aiRows = aiDocs.map((d) => {
+      const r = d.data();
+      const status = r.status || 'pending';
+      const when = r.createdAt?.toDate
+        ? r.createdAt.toDate().toLocaleString('ar')
+        : (r.timestamp?.toDate ? r.timestamp.toDate().toLocaleString('ar') : '');
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid #F3EAEF" data-ai-report="${d.id}">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="pill ${esc(status)}">${
+              status === 'pending' ? 'معلق' : status === 'resolved' ? 'تم الحل' : 'مرفوض'
+            }</span>
+            <strong>🤖 رد ذكاء اصطناعي</strong>
+            <span class="muted">${esc(when)}</span>
+          </div>
+          <div class="muted" style="margin-top:4px">السبب: ${esc(r.reason || '—')}</div>
+          <div class="muted" style="margin-top:2px">المبلّغة: ${esc(r.email || '—')} (${esc(r.uid || '—')})</div>
+          <div class="content-quote">${esc(r.response || '') || '<span class="muted">بدون نص</span>'}</div>
+          ${status === 'pending' ? `
+          <div class="row-actions">
+            <button class="btn ok sm" data-act="ai-resolve" data-id="${d.id}">تم الحل</button>
+            <button class="btn ghost sm" data-act="ai-dismiss" data-id="${d.id}">تجاهل</button>
+          </div>` : ''}
+        </div>`;
+    });
+
+    const communityRows = await Promise.all((snap.docs || []).map(async (d) => {
       const r = d.data();
       const status = r.status || 'pending';
 
@@ -2272,7 +2304,13 @@ async function loadReports() {
         </div>`;
     }));
 
-    box.innerHTML = rows.join('');
+    const allRows = [...aiRows, ...communityRows];
+    if (!allRows.length) {
+      box.innerHTML = '<div class="empty">لا توجد بلاغات 🎉</div>';
+      return;
+    }
+
+    box.innerHTML = allRows.join('');
     box.querySelectorAll('button[data-act]').forEach((b) => { b.onclick = () => handleReportAction(b); });
   } catch (e) {
     box.innerHTML = `<div class="empty">فشل التحميل: ${esc(e.message)}</div>`;
@@ -2296,6 +2334,10 @@ async function handleReportAction(btn) {
       await admin.update(['communityReports', id], { status: 'resolved' });
     } else if (act === 'dismiss') {
       await admin.update(['communityReports', id], { status: 'dismissed' });
+    } else if (act === 'ai-resolve') {
+      await admin.update(['aiReports', id], { status: 'resolved' });
+    } else if (act === 'ai-dismiss') {
+      await admin.update(['aiReports', id], { status: 'dismissed' });
     }
     await loadReports();
     loadOverview();

@@ -158,6 +158,48 @@ abstract class AppLocalizations {
   /// **'Track your cycle locally. Cloud & AI are optional and encrypted.'**
   String get welcomeSubtitle;
 
+  /// No description provided for @welcomeHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Lune'**
+  String get welcomeHubTitle;
+
+  /// No description provided for @welcomeHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start privately with your name, or sign in with your email if you already have an account.'**
+  String get welcomeHubSubtitle;
+
+  /// No description provided for @welcomeNewUser.
+  ///
+  /// In en, this message translates to:
+  /// **'New user — set up privately'**
+  String get welcomeNewUser;
+
+  /// No description provided for @welcomeHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get welcomeHaveAccount;
+
+  /// No description provided for @welcomeCreateEmailAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account with email'**
+  String get welcomeCreateEmailAccount;
+
+  /// No description provided for @accountLinkEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Link email to account'**
+  String get accountLinkEmail;
+
+  /// No description provided for @accountEmailNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'No email linked yet'**
+  String get accountEmailNotLinked;
+
   /// No description provided for @getStarted.
   ///
   /// In en, this message translates to:
@@ -4249,6 +4291,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Goal updated — the app is now tailored to you'**
   String get goalChangedSnackbar;
+
+  /// No description provided for @accountUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ID: {id}'**
+  String accountUserId(String id);
+
+  /// No description provided for @accountDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID: {id}'**
+  String accountDeviceId(String id);
+
+  /// No description provided for @accountTapToCopyId.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy account ID'**
+  String get accountTapToCopyId;
+
+  /// No description provided for @premiumActivationNeedsProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete registration (name + birth date) before activating Premium.'**
+  String get premiumActivationNeedsProfile;
+
+  /// No description provided for @premiumActivationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not activate Premium. Check your connection and try again.'**
+  String get premiumActivationFailed;
 
   /// No description provided for @guestModeTitle.
   ///

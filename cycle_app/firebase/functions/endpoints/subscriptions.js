@@ -179,6 +179,61 @@ exports.redeemPromoCode = onRequest(
 );
 
 // ---------------------------------------------------------------------------
+// grantTesterPremium — one-time beta/test grant (sets Firestore isPremium).
+// ---------------------------------------------------------------------------
+
+exports.grantTesterPremium = onRequest(
+  { cors: true, timeoutSeconds: 30 },
+  async (req, res) => {
+    if (handleCors(req, res)) return;
+
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      setCors(res);
+      res.status(401).json({ error: 'Auth required.' });
+      return;
+    }
+
+    try {
+      const decoded = await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
+      const uid = decoded.uid;
+      const db = admin.firestore();
+      const userRef = db.collection('users').doc(uid);
+      const snap = await userRef.get();
+      const data = snap.exists ? (snap.data() || {}) : {};
+
+      // Create profile if missing, and always bind premium to THIS uid.
+      // Admin premium on another account does not help a different session.
+      await userRef.set(
+        {
+          name: data.name || 'User',
+          isPremium: true,
+          premiumSource: data.premiumSource || 'tester',
+          testerPremiumGranted: true,
+          daily_chat_count: data.daily_chat_count || 0,
+          premiumSince: data.premiumSince || new Date().toISOString(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          ...(snap.exists ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
+        },
+        { merge: true },
+      );
+
+      setCors(res);
+      res.json({
+        ok: true,
+        uid,
+        created: !snap.exists,
+        already: data.testerPremiumGranted === true,
+      });
+    } catch (error) {
+      console.error('grantTesterPremium error:', error);
+      setCors(res);
+      res.status(500).json({ error: error.message || 'Failed to grant premium.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
 // googlePlayWebhook — Real-Time Developer Notifications from Pub/Sub.
 // Configure in Play Console → Monetize → Monetization setup → RTDN topic,
 // then create a Pub/Sub push subscription to this function URL.

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_error_mapper.dart';
 import '../../../core/locale/locale_controller.dart';
 import '../../../core/privacy/consent_manager.dart';
+import '../../../core/storage/user_prefs.dart';
 import '../../../core/privacy/privacy_acceptance_row.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/aura_scaffold.dart';
@@ -35,22 +36,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _goBack() {
-    final root = Navigator.of(context, rootNavigator: true);
-    if (root.canPop()) {
-      root.pop(false);
-      return;
-    }
-    if (context.canPop()) {
-      context.pop(false);
-      return;
-    }
-    context.go('/home');
-  }
+  void _goBack() => context.go('/welcome');
 
   Future<void> _onAuthenticated() async {
     await ConsentManager.acceptPrivacyPolicy();
-    if (mounted) completeAuthNavigation(context);
+    if (!mounted) return;
+    final root = Navigator.of(context, rootNavigator: true);
+    if (root.canPop()) {
+      completeAuthNavigation(context);
+    } else {
+      final done = await UserPrefs.isOnboardingDone();
+      if (!mounted) return;
+      context.go(done ? '/home' : '/onboarding');
+    }
   }
 
   void _submit() {

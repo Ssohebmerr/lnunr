@@ -43,13 +43,15 @@ class GuestUserService {
   /// Creates or updates Firestore `users/{uid}` after onboarding.
   Future<void> registerProfile({
     required String name,
-    required DateTime birthDate,
+    DateTime? birthDate,
   }) async {
     final uid = await ensureSession();
     final deviceId = await getDeviceId();
     final trimmed = name.trim().isEmpty ? 'User' : name.trim();
 
-    await UserPrefs.setProfileBirthDate(birthDate);
+    if (birthDate != null) {
+      await UserPrefs.setProfileBirthDate(birthDate);
+    }
 
     final existing = await _repository.fetch(uid);
     if (existing == null) {
@@ -63,7 +65,7 @@ class GuestUserService {
       await _repository.updateProfile(
         uid: uid,
         name: trimmed,
-        birthDate: birthDate,
+        birthDate: birthDate ?? existing.birthDate,
         deviceId: deviceId,
       );
     }
@@ -74,8 +76,9 @@ class GuestUserService {
     if (!await UserPrefs.isOnboardingDone()) return;
 
     final name = await UserPrefs.getProfileName();
+    if (name == null || name.trim().isEmpty) return;
+
     final birthDate = await UserPrefs.getProfileBirthDate();
-    if (name == null || name.trim().isEmpty || birthDate == null) return;
 
     try {
       await registerProfile(name: name, birthDate: birthDate);

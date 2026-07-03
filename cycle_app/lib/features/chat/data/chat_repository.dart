@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/ai/ai_gateway.dart';
+import '../../../core/ai/ai_gateway_exception.dart';
 import '../../../core/ai/models/ai_turn.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/storage/user_prefs.dart';
@@ -69,22 +70,19 @@ class ChatRepository {
     required Map<String, dynamic> cycleContext,
     bool analyzeMode = false,
     String mode = 'chat',
+    String? personality,
     List<ChatMessage> history = const [],
-    String? unavailableMessage,
   }) async {
     final reply = await _gateway.request(
       message: message,
       context: cycleContext,
       analyzeMode: analyzeMode,
       mode: mode,
+      personality: personality,
       history: _toAiTurns(history),
     );
     if (reply != null && reply.isNotEmpty) return reply;
-
-    return unavailableMessage ??
-        'عذراً، المساعد غير متاح حالياً.\n'
-        'فعّلي Firebase AI Logic من لوحة Firebase وسجّلي الدخول.\n\n'
-        'AI unavailable — enable Firebase AI Logic and sign in.';
+    throw const AiGatewayException('server_error');
   }
 
   /// Streaming variant of [requestAiReply] — yields partial text chunks
@@ -93,12 +91,14 @@ class ChatRepository {
     required String message,
     required Map<String, dynamic> cycleContext,
     String mode = 'chat',
+    String? personality,
     List<ChatMessage> history = const [],
   }) {
     return _gateway.stream(
       message: message,
       context: cycleContext,
       mode: mode,
+      personality: personality,
       history: _toAiTurns(history),
     );
   }

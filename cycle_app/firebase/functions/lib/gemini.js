@@ -93,9 +93,10 @@ async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 20
 
   if (lastError) {
     console.error('callGemini exhausted model fallbacks:', lastError);
+    throw lastError;
   }
 
-  return 'عذراً، لم أتمكن من توليد رد. حاولي مرة أخرى.';
+  throw new Error('Gemini returned empty response from all models');
 }
 
 module.exports = {

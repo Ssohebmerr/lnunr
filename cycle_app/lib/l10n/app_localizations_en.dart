@@ -40,6 +40,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Track your cycle locally. Cloud & AI are optional and encrypted.';
 
   @override
+  String get welcomeHubTitle => 'Welcome to Lune';
+
+  @override
+  String get welcomeHubSubtitle =>
+      'Start privately with your name, or sign in with your email if you already have an account.';
+
+  @override
+  String get welcomeNewUser => 'New user — set up privately';
+
+  @override
+  String get welcomeHaveAccount => 'I already have an account';
+
+  @override
+  String get welcomeCreateEmailAccount => 'Create account with email';
+
+  @override
+  String get accountLinkEmail => 'Link email to account';
+
+  @override
+  String get accountEmailNotLinked => 'No email linked yet';
+
+  @override
   String get getStarted => 'Get Started';
 
   @override
@@ -2272,6 +2294,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get goalChangedSnackbar =>
       'Goal updated — the app is now tailored to you';
+
+  @override
+  String accountUserId(String id) {
+    return 'Account ID: $id';
+  }
+
+  @override
+  String accountDeviceId(String id) {
+    return 'Device ID: $id';
+  }
+
+  @override
+  String get accountTapToCopyId => 'Tap to copy account ID';
+
+  @override
+  String get premiumActivationNeedsProfile =>
+      'Complete registration (name + birth date) before activating Premium.';
+
+  @override
+  String get premiumActivationFailed =>
+      'Could not activate Premium. Check your connection and try again.';
 
   @override
   String get guestModeTitle => 'Private guest mode';

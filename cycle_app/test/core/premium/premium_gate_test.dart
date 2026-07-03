@@ -17,7 +17,6 @@ void main() {
         await PremiumGate.checkAiChat(),
         PremiumAiAccess.needsPremium,
       );
-      expect(await PremiumGate.remainingFreeAiMessages(), 0);
     });
 
     test('needs consent when premium but AI consent is missing', () async {

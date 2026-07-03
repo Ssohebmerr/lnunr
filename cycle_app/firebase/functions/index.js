@@ -66,6 +66,7 @@ exports.bootstrapAdmin = users.bootstrapAdmin;
 exports.deleteUserAccount = users.deleteUserAccount;
 exports.verifyPlayPurchase = subscriptions.verifyPlayPurchase;
 exports.redeemPromoCode = subscriptions.redeemPromoCode;
+exports.grantTesterPremium = subscriptions.grantTesterPremium;
 exports.googlePlayWebhook = subscriptions.googlePlayWebhook;
 exports.syncExpiredPlayPremium = subscriptions.syncExpiredPlayPremium;
 exports.adminBroadcast = broadcast.adminBroadcast;

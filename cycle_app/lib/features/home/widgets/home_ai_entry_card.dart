@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/config/feature_flags.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/theme/app_design_tokens.dart';
@@ -54,6 +55,9 @@ class _HomeAiEntryCardState extends State<HomeAiEntryCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (!FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) {
+      return const SizedBox.shrink();
+    }
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 

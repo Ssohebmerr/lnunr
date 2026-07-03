@@ -27,6 +27,7 @@ class FeatureFlags {
   static const String voiceLogging = 'feature.voiceLogging';
   static const String partnerSync = 'feature.partnerSync';
   static const String luneStories = 'feature.luneStories';
+  static const String aiChatEnabled = 'feature.aiChatEnabled';
 
   /// Convenience group for callers that want to list every known flag.
   /// Keep this in sync with the constants above.
@@ -39,6 +40,7 @@ class FeatureFlags {
     voiceLogging,
     partnerSync,
     luneStories,
+    aiChatEnabled,
   ];
 
   /// Defaults applied the very first time a flag is read on a device.
@@ -53,6 +55,7 @@ class FeatureFlags {
     voiceLogging: false,
     partnerSync: true,
     luneStories: true,
+    aiChatEnabled: true,
   };
 
   /// In-memory cache so we don't hit SharedPreferences on every widget build.

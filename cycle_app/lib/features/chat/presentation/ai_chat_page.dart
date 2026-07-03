@@ -3,29 +3,122 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
-import '../../../core/storage/user_prefs.dart';
+import '../../../core/premium/premium_activation_service.dart';
+import '../../../core/premium/premium_gate.dart';
+import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../home/chat_tab.dart';
+import '../../premium/presentation/subscription_plans_screen.dart';
 import '../bloc/chat_bloc.dart';
 import '../data/chat_repository.dart';
 
-/// Dedicated Lune AI chat screen with its own [ChatBloc] instance.
-class AiChatPage extends StatelessWidget {
+/// Dedicated Lune AI chat screen — Premium + registered users only.
+class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
+
+  @override
+  State<AiChatPage> createState() => _AiChatPageState();
+}
+
+class _AiChatPageState extends State<AiChatPage> {
+  bool _ready = false;
+  bool _premium = false;
+  String? _uid;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
+    _bootstrap();
+  }
+
+  @override
+  void dispose() {
+    PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
+    super.dispose();
+  }
+
+  void _onPremiumChanged() {
+    if (!mounted) return;
+    setState(() => _premium = PremiumStatusNotifier.instance.isPremium);
+  }
+
+  Future<void> _bootstrap() async {
+    try {
+      // Bind profile + premium to the CURRENT Firebase uid.
+      // Admin premium on another account does not apply to a different session.
+      final grant = await PremiumActivationService.grantTesterPremium();
+      final premium = grant.ok || await PremiumGate.hasPremium();
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null || uid.isEmpty) {
+        throw StateError('No Firebase session after registration');
+      }
+
+      if (mounted) {
+        setState(() {
+          _premium = premium;
+          _uid = premium ? uid : null;
+          _ready = true;
+          _error = premium
+              ? null
+              : 'ما قدرنا نفعّل Premium على هذا الحساب. جرّبي من تبويب الحساب.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _ready = true;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final uid =
-        FirebaseAuth.instance.currentUser?.uid ?? UserPrefs.localChatUid;
+
+    if (!_ready) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_premium) {
+      return Scaffold(
+        body: SafeArea(
+          child: SubscriptionPlansScreen(
+            onSubscribed: () {
+              _bootstrap();
+            },
+          ),
+        ),
+      );
+    }
+
+    if (_uid == null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              _error ?? l10n.errorGeneric,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
 
     return BlocProvider(
       create: (c) => ChatBloc(
         repository: c.read<ChatRepository>(),
-        uid: uid,
+        uid: _uid!,
         contextEngine: c.read<AiContextEngine>(),
       )..add(LoadChatMessages()),
       child: Scaffold(

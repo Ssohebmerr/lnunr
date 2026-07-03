@@ -425,6 +425,22 @@ service cloud.firestore {
 
 
 
+    // AI chat safety reports (flag on assistant messages).
+    match /aiReports/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.reason.size() <= 80
+        && request.resource.data.response is string
+        && request.resource.data.response.size() <= 8000
+        && (!('status' in request.resource.data)
+            || request.resource.data.status == 'pending');
+      allow read, update, delete: if isAdmin();
+    }
+
+
+
     match /appSettings/{docId} {
 
       allow read: if request.auth != null;

@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway_exception.dart';
+import '../../../core/ai/lune_personality.dart';
+import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../data/chat_message.dart';
 import '../data/chat_repository.dart';
@@ -28,13 +31,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final String uid;
   final AiContextEngine contextEngine;
   StreamSubscription<List<ChatMessage>>? _subscription;
-
-  static const _unavailableReply =
-      'عذراً، المساعد غير متاح حالياً.\n'
-      'تأكدي من تفعيل Firebase AI Logic في مشروع lune-7d956 '
-      'وسجّلي الدخول ثم حاولي مرة أخرى.\n\n'
-      'AI is unavailable. Enable Firebase AI Logic for project lune-7d956, '
-      'sign in, and try again.';
+  bool _retriedPremiumSync = false;
 
   void _emitNotice(Emitter<ChatState> emit, ChatNoticeType notice) {
     if (state is ChatLoaded) {
@@ -80,6 +77,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
+  Future<void> _saveAssistantReply(
+    String text,
+  ) async {
+    await repository.saveMessage(
+      uid,
+      ChatMessage(
+        id: '',
+        text: text,
+        isUser: false,
+        timestamp: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<bool> _tryRecoverPremium() async {
+    if (_retriedPremiumSync) return false;
+    _retriedPremiumSync = true;
+    final result = await PremiumActivationService.grantTesterPremium();
+    return result.ok;
+  }
+
   Future<void> _onSend(SendChatMessage event, Emitter<ChatState> emit) async {
     final access = await PremiumGate.checkAiChat();
     if (access == PremiumAiAccess.needsPremium) {
@@ -113,18 +131,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatLoaded(messages: const [], isSending: true));
     }
 
-    await repository.saveMessage(
-      uid,
-      ChatMessage(
-        id: '',
-        text: text,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ),
-    );
+    try {
+      await repository.saveMessage(
+        uid,
+        ChatMessage(
+          id: '',
+          text: text,
+          isUser: true,
+          timestamp: DateTime.now(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[ChatBloc] save user message failed: $e');
+    }
 
     try {
-      final context = await contextEngine.buildAnonymizedContext();
+      final context = await _safeContext();
       final reply = await _streamReplyWithFallback(
         emit: emit,
         message: text,
@@ -132,49 +154,67 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         mode: mode,
         history: history,
       );
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: reply,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      await _saveAssistantReply(reply);
     } on AiGatewayException catch (e) {
-      if (e.isDailyLimit) {
-        _emitNotice(emit, ChatNoticeType.dailyLimit);
-      } else if (e.isPremiumRequired) {
+      if (e.isPremiumRequired || e.isProfileRequired) {
+        if (await _tryRecoverPremium()) {
+          try {
+            final context = await _safeContext();
+            final reply = await _streamReplyWithFallback(
+              emit: emit,
+              message: text,
+              cycleContext: context,
+              mode: mode,
+              history: history,
+            );
+            await _saveAssistantReply(reply);
+            return;
+          } on AiGatewayException catch (retryError) {
+            await _handleGatewayError(retryError, emit);
+            return;
+          }
+        }
         _emitNotice(emit, ChatNoticeType.premiumRequired);
-      } else {
-        await repository.saveMessage(
-          uid,
-          ChatMessage(
-            id: '',
-            text: _unavailableReply,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
+        await _saveAssistantReply(e.userMessage);
+        return;
       }
-    } catch (_) {
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: _unavailableReply,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
+      await _handleGatewayError(e, emit);
+    } catch (e, st) {
+      debugPrint('[ChatBloc] send failed: $e\n$st');
+      await _saveAssistantReply(
+        const AiGatewayException('server_error').userMessage,
       );
     } finally {
       _clearSending(emit);
     }
   }
 
+  Future<Map<String, dynamic>> _safeContext() async {
+    try {
+      return await contextEngine.buildAnonymizedContext();
+    } catch (e, st) {
+      debugPrint('[ChatBloc] context build failed: $e\n$st');
+      return const {'userLocale': 'ar'};
+    }
+  }
+
+  Future<void> _handleGatewayError(
+    AiGatewayException e,
+    Emitter<ChatState> emit,
+  ) async {
+    if (e.isDailyLimit) {
+      _emitNotice(emit, ChatNoticeType.dailyLimit);
+      await _saveAssistantReply(e.userMessage);
+      return;
+    }
+    if (e.isPremiumRequired || e.isProfileRequired) {
+      _emitNotice(emit, ChatNoticeType.premiumRequired);
+    }
+    await _saveAssistantReply(e.userMessage);
+  }
+
   /// Streams the reply token-by-token via [ChatRepository.streamAiReply],
-  /// emitting partial state for live rendering. If the stream yields nothing
-  /// (e.g. no API key), falls back to a single-shot [requestAiReply].
+  /// emitting partial state for live rendering.
   Future<String> _streamReplyWithFallback({
     required Emitter<ChatState> emit,
     required String message,
@@ -184,27 +224,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     bool analyzeMode = false,
   }) async {
     final buffer = StringBuffer();
-    try {
-      await for (final chunk in repository.streamAiReply(
-        message: message,
-        cycleContext: cycleContext,
-        mode: analyzeMode ? 'analyze' : mode,
-        history: history,
-      )) {
-        buffer.write(chunk);
-        if (state is ChatLoaded) {
-          emit((state as ChatLoaded).copyWith(
-            isSending: true,
-            partialReply: AiActionParser.sanitizeForDisplay(buffer.toString()),
-          ));
-        }
+    final personality = LunePersonalityPrefs.current.id;
+
+    await for (final chunk in repository.streamAiReply(
+      message: message,
+      cycleContext: cycleContext,
+      mode: analyzeMode ? 'analyze' : mode,
+      personality: personality,
+      history: history,
+    )) {
+      buffer.write(chunk);
+      if (state is ChatLoaded) {
+        emit((state as ChatLoaded).copyWith(
+          isSending: true,
+          partialReply: AiActionParser.sanitizeForDisplay(buffer.toString()),
+        ));
       }
-    } on AiGatewayException {
-      rethrow;
     }
 
     if (buffer.isNotEmpty) {
-      return AiActionParser.sanitizeForDisplay(buffer.toString());
+      return buffer.toString();
     }
 
     return repository.requestAiReply(
@@ -212,8 +251,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       cycleContext: cycleContext,
       analyzeMode: analyzeMode,
       mode: mode,
+      personality: personality,
       history: history,
-      unavailableMessage: _unavailableReply,
     );
   }
 
@@ -247,18 +286,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     const prompt =
         'Analyze my menstrual cycle patterns and give wellness insights.';
-    await repository.saveMessage(
-      uid,
-      ChatMessage(
-        id: '',
-        text: prompt,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ),
-    );
+    try {
+      await repository.saveMessage(
+        uid,
+        ChatMessage(
+          id: '',
+          text: prompt,
+          isUser: true,
+          timestamp: DateTime.now(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[ChatBloc] save analyze prompt failed: $e');
+    }
 
     try {
-      final context = await contextEngine.buildAnonymizedContext();
+      final context = await _safeContext();
       final reply = await _streamReplyWithFallback(
         emit: emit,
         message: prompt,
@@ -267,40 +310,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         history: const [],
         analyzeMode: true,
       );
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: reply,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      await _saveAssistantReply(reply);
     } on AiGatewayException catch (e) {
-      if (e.isDailyLimit) {
-        _emitNotice(emit, ChatNoticeType.dailyLimit);
-      } else if (e.isPremiumRequired) {
-        _emitNotice(emit, ChatNoticeType.premiumRequired);
-      } else {
-        await repository.saveMessage(
-          uid,
-          ChatMessage(
-            id: '',
-            text: _unavailableReply,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ),
-        );
+      if (e.isPremiumRequired || e.isProfileRequired) {
+        if (await _tryRecoverPremium()) {
+          try {
+            final context = await _safeContext();
+            final reply = await _streamReplyWithFallback(
+              emit: emit,
+              message: prompt,
+              cycleContext: context,
+              mode: 'analyze',
+              history: const [],
+              analyzeMode: true,
+            );
+            await _saveAssistantReply(reply);
+            return;
+          } on AiGatewayException catch (retryError) {
+            await _handleGatewayError(retryError, emit);
+            return;
+          }
+        }
       }
-    } catch (_) {
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: _unavailableReply,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
+      await _handleGatewayError(e, emit);
+    } catch (e, st) {
+      debugPrint('[ChatBloc] analyze failed: $e\n$st');
+      await _saveAssistantReply(
+        const AiGatewayException('server_error').userMessage,
       );
     } finally {
       _clearSending(emit);
