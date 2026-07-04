@@ -66,8 +66,9 @@ class AiGateway {
     );
   }
 
-  /// Server-backed streaming: fetches the full reply from Cloud Functions and
-  /// yields it as one chunk (Functions HTTP is non-streaming today).
+  /// Server-backed streaming — yields the reply token-by-token as it is
+  /// generated. Chat modes stream from `/chat`; analyze/doctor reports come
+  /// back as a single chunk (that endpoint is one-shot by design).
   Stream<String> stream({
     required String message,
     required Map<String, dynamic> context,
@@ -75,20 +76,38 @@ class AiGateway {
     String? personality,
     List<AiTurn> history = const [],
   }) async* {
-    debugPrint(
-      '[AiGateway.stream] mode=$mode, historyLen=${history.length}',
-    );
+    debugPrint('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
 
-    final reply = await request(
+    // Bind the Firebase session before AI (entitlement is server-enforced).
+    try {
+      await GuestUserService().ensureSession();
+    } catch (e) {
+      debugPrint('[AiGateway.stream] session prepare failed: $e');
+    }
+    if (_auth.currentUser == null) {
+      throw const AiGatewayException('auth_required');
+    }
+
+    // Reports are generated in one pass — no partial rendering benefit.
+    if (mode == 'analyze' || mode == 'doctor') {
+      final reply = await _requestFromCloudFunction(
+        message: message,
+        context: context,
+        mode: mode,
+        personality: personality,
+        history: history,
+      );
+      if (reply != null && reply.isNotEmpty) yield reply;
+      return;
+    }
+
+    yield* _streamFromCloudFunction(
       message: message,
       context: context,
       mode: mode,
       personality: personality,
       history: history,
     );
-    if (reply != null && reply.isNotEmpty) {
-      yield reply;
-    }
   }
 
   /// Cycle widget / wellness maps may contain DateTime or custom objects.
@@ -156,39 +175,13 @@ class AiGateway {
 
     final safeContext =
         Map<String, dynamic>.from(jsonSafe(context) as Map? ?? {});
-    final isPregnant = safeContext['userGoal'] == 'pregnant';
-    final systemPrompt = AiPromptStyle.forMode(mode, isPregnant: isPregnant);
-    final userPrompt =
-        AiPromptBuilder.buildUserPrompt(message, safeContext, mode);
-    final cfg = AiPromptStyle.configForMode(mode);
-
-    // Keep history small and skip prior error bubbles (old + new wording).
-    final safeHistory = history
-        .where((t) => t.text.trim().isNotEmpty && !_isFailedPlaceholderReply(t.text))
-        .where((t) => !t.text.contains('المساعد مش متاح'))
-        .where((t) => !t.text.contains('المساعد غير متاح'))
-        .where((t) => !t.text.contains('المساعدة الذكية غير متاحة'))
-        .where((t) => !t.text.contains('Firebase AI Logic'))
-        .take(8)
-        .map((t) => {
-              'role': t.role.name,
-              'text': t.text.length > 800 ? t.text.substring(0, 800) : t.text,
-            })
-        .toList();
-
-    final payload = <String, dynamic>{
-      'message': message,
-      'cycleContext': safeContext,
-      'mode': mode,
-      if (personality != null && personality.isNotEmpty)
-        'personality': personality,
-      'systemPrompt': systemPrompt,
-      'userPrompt': userPrompt,
-      'maxTokens': cfg.maxTokens,
-      'temperature': cfg.temperature,
-      if (mode == 'doctor') 'doctorReport': true,
-      if (safeHistory.isNotEmpty) 'history': safeHistory,
-    };
+    final payload = _buildPayloadMap(
+      message: message,
+      safeContext: safeContext,
+      mode: mode,
+      personality: personality,
+      history: history,
+    );
 
     late final String body;
     try {
@@ -276,5 +269,146 @@ class AiGateway {
       'server_error',
       message: errorMessage ?? errorCode,
     );
+  }
+
+  /// Builds the request body sent to the `/chat` (or `/analyze`) endpoint.
+  /// Shared by the one-shot and streaming request paths.
+  Map<String, dynamic> _buildPayloadMap({
+    required String message,
+    required Map<String, dynamic> safeContext,
+    required String mode,
+    String? personality,
+    List<AiTurn> history = const [],
+  }) {
+    final isPregnant = safeContext['userGoal'] == 'pregnant';
+    final systemPrompt = AiPromptStyle.forMode(mode, isPregnant: isPregnant);
+    final userPrompt =
+        AiPromptBuilder.buildUserPrompt(message, safeContext, mode);
+    final cfg = AiPromptStyle.configForMode(mode);
+
+    // Keep history small and skip prior error bubbles (old + new wording).
+    final safeHistory = history
+        .where((t) => t.text.trim().isNotEmpty && !_isFailedPlaceholderReply(t.text))
+        .where((t) => !t.text.contains('المساعد مش متاح'))
+        .where((t) => !t.text.contains('المساعد غير متاح'))
+        .where((t) => !t.text.contains('المساعدة الذكية غير متاحة'))
+        .where((t) => !t.text.contains('Firebase AI Logic'))
+        .take(8)
+        .map((t) => {
+              'role': t.role.name,
+              'text': t.text.length > 800 ? t.text.substring(0, 800) : t.text,
+            })
+        .toList();
+
+    return <String, dynamic>{
+      'message': message,
+      'cycleContext': safeContext,
+      'mode': mode,
+      if (personality != null && personality.isNotEmpty)
+        'personality': personality,
+      'systemPrompt': systemPrompt,
+      'userPrompt': userPrompt,
+      'maxTokens': cfg.maxTokens,
+      'temperature': cfg.temperature,
+      if (mode == 'doctor') 'doctorReport': true,
+      if (safeHistory.isNotEmpty) 'history': safeHistory,
+    };
+  }
+
+  /// Real token-by-token streaming from the `/chat` endpoint. Yields text
+  /// deltas as they arrive over the chunked HTTP response.
+  ///
+  /// Pre-stream errors (auth / quota / premium) arrive as a non-200 JSON body
+  /// and are mapped to the same [AiGatewayException]s as the one-shot path.
+  Stream<String> _streamFromCloudFunction({
+    required String message,
+    required Map<String, dynamic> context,
+    required String mode,
+    String? personality,
+    List<AiTurn> history = const [],
+  }) async* {
+    final token = await _auth.currentUser!.getIdToken(true);
+    final endpoint = '$_baseUrl/chat';
+    final safeContext =
+        Map<String, dynamic>.from(jsonSafe(context) as Map? ?? {});
+    final payload = _buildPayloadMap(
+      message: message,
+      safeContext: safeContext,
+      mode: mode,
+      personality: personality,
+      history: history,
+    )..['stream'] = true;
+
+    String body;
+    try {
+      body = jsonEncode(payload);
+    } catch (_) {
+      body = jsonEncode({
+        'message': message,
+        'cycleContext': {'userLocale': safeContext['userLocale'] ?? 'ar'},
+        'mode': mode,
+        'stream': true,
+      });
+    }
+
+    final client = http.Client();
+    try {
+      final request = http.Request('POST', Uri.parse(endpoint))
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer $token'
+        ..body = body;
+
+      final http.StreamedResponse response;
+      try {
+        response =
+            await client.send(request).timeout(const Duration(seconds: 90));
+      } catch (e, st) {
+        debugPrint('[AiGateway.stream] network error: $e\n$st');
+        throw const AiGatewayException('network_error');
+      }
+
+      debugPrint('[AiGateway.stream] status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        final errBody = await response.stream.bytesToString();
+        _throwForErrorResponse(response.statusCode, errBody);
+      }
+
+      // 200 → stream UTF-8 decoded text deltas (handles multi-byte splits).
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        if (chunk.isNotEmpty) yield chunk;
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Maps a non-200 response body to the matching [AiGatewayException].
+  /// Mirrors the error handling of the one-shot path.
+  Never _throwForErrorResponse(int statusCode, String body) {
+    Map<String, dynamic> data = {};
+    if (body.isNotEmpty) {
+      try {
+        data = jsonDecode(body) as Map<String, dynamic>;
+      } catch (_) {/* non-JSON error body */}
+    }
+    final errorCode = data['error'] as String?;
+    final errorMessage = data['message'] as String?;
+
+    if (errorCode == 'daily_limit_reached' || statusCode == 429) {
+      throw AiGatewayException('daily_limit_reached', message: errorMessage);
+    }
+    if (errorCode == 'premium_required' || statusCode == 403) {
+      throw AiGatewayException('premium_required', message: errorMessage);
+    }
+    if (errorCode == 'profile_required') {
+      throw AiGatewayException('profile_required', message: errorMessage);
+    }
+    if (statusCode == 401 ||
+        errorCode == 'Auth required.' ||
+        errorCode == 'Token expired.') {
+      throw const AiGatewayException('auth_required');
+    }
+    throw AiGatewayException('server_error', message: errorMessage ?? errorCode);
   }
 }

@@ -117,9 +117,78 @@ async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens, tem
   return text;
 }
 
+/**
+ * Streaming variant — async generator yielding `{ delta }` text chunks, then a
+ * final `{ done, usage }` event. Tries each model in GEMINI_MODELS in order;
+ * if a model yields no content before failing, the next is attempted (matching
+ * callGeminiDetailed's fallback behaviour).
+ *
+ * @yields {{delta?: string, done?: boolean, usage?: object}}
+ */
+async function* streamGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride) {
+  const apiKey = (geminiApiKey || '')
+    .replace(/^﻿/, '')
+    .replace(/[​-‌⁠]/g, '')
+    .trim();
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is empty after cleanup');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const temperature =
+    typeof temperatureOverride === 'number' && temperatureOverride > 0
+      ? temperatureOverride
+      : (maxTokens <= 400 ? 0.6 : 0.78);
+
+  let lastError = null;
+  for (const modelName of GEMINI_MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+        generationConfig: { maxOutputTokens: maxTokens || 2000, temperature },
+        safetySettings: GEMINI_SAFETY_SETTINGS,
+      });
+
+      const result = await model.generateContentStream(userPrompt);
+      let emittedAny = false;
+      for await (const chunk of result.stream) {
+        const t = typeof chunk.text === 'function' ? chunk.text() : '';
+        if (t) {
+          emittedAny = true;
+          yield { delta: t };
+        }
+      }
+
+      if (!emittedAny) {
+        // Try the next model on an empty stream (e.g. safety block).
+        lastError = new Error(`Gemini model ${modelName} streamed no content`);
+        continue;
+      }
+
+      const final = await result.response;
+      const meta = final?.usageMetadata || {};
+      yield {
+        done: true,
+        usage: {
+          promptTokens: Number(meta.promptTokenCount) || 0,
+          completionTokens: Number(meta.candidatesTokenCount) || 0,
+        },
+      };
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`streamGemini failed for ${modelName}:`, error.message || error);
+    }
+  }
+
+  throw lastError || new Error('Gemini streamed empty response from all models');
+}
+
 module.exports = {
   GEMINI_SAFETY_SETTINGS,
   GEMINI_MODELS,
   callGemini,
   callGeminiDetailed,
+  streamGemini,
 };

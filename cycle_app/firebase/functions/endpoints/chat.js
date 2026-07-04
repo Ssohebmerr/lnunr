@@ -22,7 +22,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
-const { callAiWithFallback } = require('../lib/ai_router');
+const { callAiWithFallback, streamAiWithFallback } = require('../lib/ai_router');
 const {
   QuotaError,
   reservePremiumChatSlot,
@@ -98,17 +98,85 @@ exports.chat = onRequest(
       const systemPrompt = getSecureSystemPrompt(mode, cycleContext, personality);
       const userPrompt = fallbackUserPrompt;
       const maxTokens = clampMaxTokens(req.body?.maxTokens, mode);
+      const aiArgs = {
+        deepseekKey: DEEPSEEK_API_KEY.value(),
+        geminiKey: GEMINI_API_KEY.value(),
+        systemPrompt,
+        userPrompt,
+        maxTokens,
+        temperature: clientTemperature,
+      };
 
+      // ── Streaming path (opt-in via `stream: true`) ──────────────────────
+      // Text deltas are written to the response as they arrive, so the app
+      // renders the reply token-by-token. Errors BEFORE the first byte still
+      // return a clean JSON error + release the slot; once bytes are on the
+      // wire we are committed to a 200 and end gracefully on failure.
+      if (req.body?.stream === true) {
+        let started = false;
+        let fullText = '';
+        let provider = null;
+        let usage = { promptTokens: 0, completionTokens: 0 };
+
+        try {
+          for await (const evt of streamAiWithFallback(aiArgs)) {
+            if (evt.delta) {
+              if (!started) {
+                started = true;
+                setCors(res);
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                res.setHeader('Cache-Control', 'no-cache, no-transform');
+                res.setHeader('X-Accel-Buffering', 'no');
+                res.setHeader('X-Daily-Remaining', String(remaining));
+                if (typeof res.flushHeaders === 'function') res.flushHeaders();
+              }
+              fullText += evt.delta;
+              res.write(evt.delta);
+              if (typeof res.flush === 'function') res.flush();
+            } else if (evt.done) {
+              provider = evt.provider;
+              usage = evt.usage || usage;
+            }
+          }
+        } catch (streamErr) {
+          if (!started) {
+            await releaseChatSlot(userRef);
+            setCors(res);
+            res.status(500).json({
+              error: 'server_error',
+              message: 'AI providers failed. Please try again.',
+            });
+            return;
+          }
+          // Partial reply already streamed — log and end without an error body.
+          console.error('Chat stream error after first byte:', streamErr);
+        }
+
+        if (!started) {
+          await releaseChatSlot(userRef);
+          setCors(res);
+          res.status(500).json({
+            error: 'server_error',
+            message: 'AI providers failed. Please try again.',
+          });
+          return;
+        }
+
+        await logAiUsage({
+          uid,
+          mode,
+          provider: provider || 'unknown',
+          usage,
+          messagePreview: message,
+        });
+        res.end();
+        return;
+      }
+
+      // ── Non-streaming path (JSON, backward compatible) ──────────────────
       let aiResult;
       try {
-        aiResult = await callAiWithFallback({
-          deepseekKey: DEEPSEEK_API_KEY.value(),
-          geminiKey: GEMINI_API_KEY.value(),
-          systemPrompt,
-          userPrompt,
-          maxTokens,
-          temperature: clientTemperature,
-        });
+        aiResult = await callAiWithFallback(aiArgs);
       } catch (aiError) {
         // Providers failed AFTER the slot was reserved — give it back.
         await releaseChatSlot(userRef);
