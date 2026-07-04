@@ -374,7 +374,34 @@ class AiGateway {
         _throwForErrorResponse(response.statusCode, errBody);
       }
 
-      // 200 → stream UTF-8 decoded text deltas (handles multi-byte splits).
+      // Safety net for the deploy transition: if the server hasn't been
+      // updated to stream yet it answers with a single JSON body
+      // (`application/json`). Detect that and yield the reply once, so the
+      // chat works whether or not the streaming Functions are deployed.
+      final contentType =
+          (response.headers['content-type'] ?? '').toLowerCase();
+      if (contentType.contains('application/json')) {
+        final fullBody = await response.stream.bytesToString();
+        Map<String, dynamic> data = {};
+        if (fullBody.isNotEmpty) {
+          try {
+            data = jsonDecode(fullBody) as Map<String, dynamic>;
+          } catch (_) {/* fall through to error */}
+        }
+        final reply = data['reply'] as String?;
+        if (reply != null &&
+            reply.isNotEmpty &&
+            !_isFailedPlaceholderReply(reply)) {
+          yield reply;
+          return;
+        }
+        throw AiGatewayException(
+          'server_error',
+          message: (data['message'] ?? data['error']) as String?,
+        );
+      }
+
+      // 200 text stream → yield UTF-8 decoded deltas (handles multi-byte splits).
       await for (final chunk in response.stream.transform(utf8.decoder)) {
         if (chunk.isNotEmpty) yield chunk;
       }
