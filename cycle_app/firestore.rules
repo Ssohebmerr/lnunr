@@ -4,6 +4,10 @@ service cloud.firestore {
 
   match /databases/{database}/documents {
 
+    // Admin status comes ONLY from the custom claim (set by bootstrapAdmin)
+    // or the admins/ collection (writable ONLY via the Admin SDK).
+    // NEVER from users/{uid} — users can update parts of their own document,
+    // so trusting a self-writable flag would allow privilege escalation.
     function isAdmin() {
 
       return request.auth != null
@@ -13,16 +17,6 @@ service cloud.firestore {
           request.auth.token.admin == true
 
           || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-
-          || (
-
-            exists(/databases/$(database)/documents/users/$(request.auth.uid))
-
-            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data
-
-                .get('isAdmin', false) == true
-
-          )
 
         );
 
@@ -60,7 +54,9 @@ service cloud.firestore {
 
     function protectedUserFields() {
 
-      return ['isPremium', 'daily_chat_count', 'dailyChatResetAt', 'lastChatAt']
+      return ['isPremium', 'daily_chat_count', 'dailyChatResetAt', 'lastChatAt',
+
+              'isAdmin', 'role']
 
         .concat(premiumBillingFields());
 
@@ -76,7 +72,9 @@ service cloud.firestore {
 
         && (!('daily_chat_count' in request.resource.data)
 
-              || request.resource.data.daily_chat_count == 0);
+              || request.resource.data.daily_chat_count == 0)
+
+        && !request.resource.data.keys().hasAny(['isAdmin', 'role']);
 
     }
 

@@ -101,15 +101,15 @@ class _LogTabState extends State<LogTab> {
               }
             },
             onAutoSaved: () {
-              // Keep home / AI context in sync without rebuilding this tab
-              // (rebuilding would wipe in-progress edits).
-              sync.onCycleDataChanged();
+              // Sync home / AI context WITHOUT a global refresh — a refresh
+              // recreates this very log widget mid-edit and the entry being
+              // typed appears to vanish (the "won't save" bug).
+              sync.onCycleDataChanged(notifyHomeRefresh: false);
             },
             onSuccess: (_) async {
               await NotificationService.scheduleFromPrefs();
-              await sync.onCycleDataChanged();
-              // Do not call HomeRefreshScope.refresh() here — it recreates
-              // this tab and used to look like data "didn't save".
+              // Silent sync so the form is not rebuilt out from under the user.
+              await sync.onCycleDataChanged(notifyHomeRefresh: false);
               if (!context.mounted) return;
 
               final messenger =
@@ -117,6 +117,8 @@ class _LogTabState extends State<LogTab> {
               if (widget.popOnSave && Navigator.of(context).canPop()) {
                 DailyLogFeedback.showSavedOn(messenger, context, l10n);
                 Navigator.of(context).pop();
+                // This tab is gone now, so a refresh updates home safely.
+                HomeRefreshScope.refresh();
               } else {
                 DailyLogFeedback.showSaved(context, l10n);
               }

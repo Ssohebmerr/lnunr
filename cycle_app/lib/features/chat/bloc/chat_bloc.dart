@@ -94,7 +94,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<bool> _tryRecoverPremium() async {
     if (_retriedPremiumSync) return false;
     _retriedPremiumSync = true;
-    final result = await PremiumActivationService.grantTesterPremium();
+    // The local flag may be stale (e.g. right after a purchase) — re-read the
+    // server-side entitlement once and retry if it says premium.
+    final result =
+        await PremiumActivationService.refreshPremiumStatus(force: true);
     return result.ok;
   }
 

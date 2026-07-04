@@ -206,6 +206,38 @@ class AdminUser {
   final bool isPremium;
 }
 
+class PromoCode {
+  const PromoCode({
+    required this.code,
+    required this.days,
+    required this.maxUses,
+    required this.usedCount,
+    required this.active,
+    this.note = '',
+  });
+
+  factory PromoCode.fromMap(Map<String, dynamic> data) {
+    int asInt(dynamic v) => v is int ? v : int.tryParse('$v') ?? 0;
+    return PromoCode(
+      code: (data['code'] ?? data['id'] ?? '').toString(),
+      days: asInt(data['days']),
+      maxUses: asInt(data['maxUses']),
+      usedCount: asInt(data['usedCount']),
+      active: data['active'] != false,
+      note: (data['note'] ?? '').toString(),
+    );
+  }
+
+  final String code;
+  final int days;
+  final int maxUses;
+  final int usedCount;
+  final bool active;
+  final String note;
+
+  bool get isExhausted => usedCount >= maxUses;
+}
+
 class AdminRepository {
   AdminRepository({
     FirebaseFirestore? firestore,
@@ -497,6 +529,92 @@ class AdminRepository {
     } catch (e) {
       return {'error': e.toString()};
     }
+  }
+
+  /// Shared POST helper for the action-routed `adminApi` Cloud Function.
+  /// Server re-verifies the admin role on every call — the client token alone
+  /// is never enough.
+  Future<Map<String, dynamic>> _callAdminApi(
+    String action,
+    Map<String, dynamic> payload,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) return {'error': 'Not authenticated'};
+    try {
+      final token = await user.getIdToken();
+      final response = await http.post(
+        Uri.parse('${AppSecrets.cloudFunctionsUrl}/adminApi'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'action': action, 'payload': payload}),
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        return {'error': data['error'] ?? 'HTTP ${response.statusCode}'};
+      }
+      return data;
+    } catch (e) {
+      return {'error': e.toString()};
+    }
+  }
+
+  /// Grants or revokes premium for [uid] via the server (Admin SDK write +
+  /// audit entry). Direct client Firestore writes to isPremium are blocked
+  /// for non-admins by security rules; going through the function keeps one
+  /// audited path for entitlement changes.
+  Future<bool> setUserPremium(String uid, bool isPremium) async {
+    final result = await _callAdminApi('setUserPremium', {
+      'uid': uid,
+      'isPremium': isPremium,
+    });
+    return result['ok'] == true;
+  }
+
+  /// Daily AI token/cost aggregates for the budget monitor.
+  /// Returns `{days: [...], totals: {requests, promptTokens,
+  /// completionTokens, estimatedCostUsd}}` or `{error: ...}`.
+  Future<Map<String, dynamic>> fetchAiCostStats({int days = 30}) {
+    return _callAdminApi('aiCostStats', {'days': days});
+  }
+
+  /// Creates a premium promo code on the server (validated + audited there).
+  /// Returns `null` on success, or a user-facing error message.
+  Future<String?> createPromoCode({
+    required String code,
+    required int days,
+    required int maxUses,
+    String note = '',
+  }) async {
+    final result = await _callAdminApi('createPromoCode', {
+      'code': code,
+      'days': days,
+      'maxUses': maxUses,
+      'note': note,
+    });
+    return result['error']?.toString();
+  }
+
+  /// Deactivates a promo code. Returns `null` on success, else an error.
+  Future<String?> revokePromoCode(String code) async {
+    final result = await _callAdminApi('revokePromoCode', {'code': code});
+    return result['error']?.toString();
+  }
+
+  /// Lists existing promo codes (newest first) via the admin query action.
+  Future<List<PromoCode>> listPromoCodes() async {
+    final result = await _callAdminApi('query', {
+      'collectionPath': ['promoCodes'],
+      'orderBy': {'field': 'createdAt', 'dir': 'desc'},
+      'limit': 100,
+    });
+    final items = result['items'];
+    if (items is! List) return const [];
+    return items
+        .whereType<Map>()
+        .map((e) => PromoCode.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
   }
 
   Future<void> _logActivity(String action, String details) async {

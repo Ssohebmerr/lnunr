@@ -86,6 +86,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTitle => 'Create your account';
 
   @override
+  String get registerSubtitle =>
+      'Create your account with email or Google — your data stays on your device by default';
+
+  @override
   String get forgotPasswordTitle => 'Reset password';
 
   @override
@@ -246,6 +250,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restorePurchasesDone => 'Your purchases were checked.';
 
   @override
+  String get restorePurchasesChecking => 'Checking your purchases…';
+
+  @override
+  String postpartumRecoveryWeek(int week) {
+    return 'Recovery · week $week';
+  }
+
+  @override
+  String get postpartumTodayFocus => 'Today\'s focus';
+
+  @override
+  String get postpartumYourBody => 'Your body this stage';
+
+  @override
+  String get postpartumYourBaby => 'Your baby this stage';
+
+  @override
+  String get postpartumDailyRituals => 'Daily rituals';
+
+  @override
+  String get postpartumWellbeingTitle => 'How are you, really?';
+
+  @override
+  String get postpartumWellbeingBody =>
+      'Mood swings in the early weeks are common. But if sadness, anxiety, or emptiness lasts more than two weeks, please reach out to your doctor — postpartum depression is real and treatable.';
+
+  @override
+  String get postpartumSetDateTitle => 'When was your baby born?';
+
+  @override
+  String get postpartumSetDatePrompt =>
+      'Set your baby\'s birth date so we can guide your recovery week by week.';
+
+  @override
+  String get postpartumSetDateCta => 'Set birth date';
+
+  @override
+  String get postpartumBirthDateLabel => 'Baby\'s birth date';
+
+  @override
+  String get conditionWhatToTrack => 'What to track';
+
+  @override
+  String get conditionUnderstanding => 'Understanding your body';
+
+  @override
+  String get conditionDailyRituals => 'Daily rituals';
+
+  @override
+  String get conditionWhenToSeeDoctor => 'When to see a doctor';
+
+  @override
+  String get goalMenopauseTitle => 'Menopause journey';
+
+  @override
+  String get goalPcosTitle => 'PCOS management';
+
+  @override
+  String get activatePremiumTest => 'Activate Premium (test)';
+
+  @override
+  String get planYearlyTitle => 'Yearly';
+
+  @override
+  String get planMonthlyTitle => 'Monthly';
+
+  @override
+  String get planPerYear => 'per year';
+
+  @override
+  String get planPerMonth => 'per month';
+
+  @override
+  String planSaveBadge(int percent) {
+    return 'Save $percent%';
+  }
+
+  @override
   String get communityMediaDisabled =>
       'Photo and video uploads are temporarily disabled for community safety.';
 
@@ -296,7 +378,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGeneric => 'Something went wrong. Please try again.';
 
   @override
-  String get loginRequiredAi => 'Sign in to use Gemini AI chat';
+  String get loginRequiredAi => 'Sign in to chat with Lune AI';
+
+  @override
+  String get authOrEmail => 'or continue with email';
+
+  @override
+  String get authOr => 'or';
+
+  @override
+  String get adminPromoTitle => 'Promo codes';
+
+  @override
+  String get adminPromoManageBtn => 'Manage promo codes';
+
+  @override
+  String get adminPromoCreateHeader => 'Create a code';
+
+  @override
+  String get adminPromoCodeHint => 'Code (e.g. LUNE30)';
+
+  @override
+  String get adminPromoDaysLabel => 'Premium days';
+
+  @override
+  String get adminPromoMaxUsesLabel => 'Max uses';
+
+  @override
+  String get adminPromoNoteHint => 'Note (optional)';
+
+  @override
+  String get adminPromoCreateBtn => 'Create code';
+
+  @override
+  String get adminPromoCreatedMsg => 'Code created';
+
+  @override
+  String get adminPromoExistingHeader => 'Existing codes';
+
+  @override
+  String get adminPromoEmpty => 'No codes yet';
+
+  @override
+  String get adminPromoRevokeBtn => 'Revoke';
+
+  @override
+  String get adminPromoRevokedMsg => 'Code revoked';
+
+  @override
+  String get adminPromoActiveLabel => 'Active';
+
+  @override
+  String get adminPromoRevokedLabel => 'Inactive';
+
+  @override
+  String get adminPromoUsedLabel => 'used';
+
+  @override
+  String get adminPromoCodeTooShort => 'Code must be at least 3 characters';
+
+  @override
+  String get premiumDaysShort => 'days';
 
   @override
   String get loginRequiredPremium => 'Sign in to subscribe';
@@ -399,13 +541,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAiCardTap => 'Tap to start chatting';
 
   @override
-  String homeAiCardSubtitleFree(int count) {
-    return '5 free messages daily — $count left today';
-  }
-
-  @override
   String get homeAiCardSubtitlePremium =>
-      'Your smart assistant — unlimited daily chat';
+      'Your smart assistant — up to 30 messages daily';
 
   @override
   String get homeAiCardSubtitlePremiumOnly =>
@@ -1610,6 +1747,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminBannedBadge => 'Banned';
 
   @override
+  String get adminGrantPremium => 'Grant Premium';
+
+  @override
+  String get adminRevokePremium => 'Revoke Premium';
+
+  @override
+  String get adminPremiumUpdated => 'Subscription status updated';
+
+  @override
+  String get adminAiCost30d => 'AI cost (last 30 days)';
+
+  @override
+  String adminAiTokensCount(String count) {
+    return '$count tokens';
+  }
+
+  @override
+  String adminAiRequestsCount(String count) {
+    return '$count requests';
+  }
+
+  @override
   String get adminTimeNow => 'now';
 
   @override
@@ -1749,7 +1908,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiDailyLimitReached =>
-      'You\'ve used your 10 daily Lune AI messages. Your limit resets automatically tomorrow.';
+      'You\'ve used your 30 daily Lune AI messages. Your limit resets automatically tomorrow.';
 
   @override
   String premiumAiFreeRemaining(int count) {
@@ -1771,7 +1930,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'Chat messages may be sent to Google Gemini via our secure server for responses. No ads. You can disable this anytime.';
+      'Chat messages are sent to trusted AI providers (DeepSeek / Google) through our secure server to generate responses. No ads. You can disable this anytime.';
 
   @override
   String get consentCommunityTitle => 'Join communities?';
@@ -2309,12 +2468,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountTapToCopyId => 'Tap to copy account ID';
 
   @override
-  String get premiumActivationNeedsProfile =>
-      'Complete registration (name + birth date) before activating Premium.';
-
-  @override
-  String get premiumActivationFailed =>
-      'Could not activate Premium. Check your connection and try again.';
+  String get premiumRefreshStatus => 'Check subscription status';
 
   @override
   String get guestModeTitle => 'Private guest mode';
@@ -3381,7 +3535,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get anonymousQaDesc => 'Ask health questions privately';
 
   @override
-  String get activatePremiumTest => 'Activate Premium (Test)';
+  String get accountWatchSheetTitle => 'Smart Watch Sync';
+
+  @override
+  String get accountWatchSheetBody =>
+      'Your cycle data is automatically synced to your paired smart watch. You can view your cycle progress and log your period directly from your watch.';
+
+  @override
+  String get accountWatchFeatureSync => 'Auto-syncs cycle data to watch';
+
+  @override
+  String get accountWatchFeatureRing => 'Cycle ring on watch face';
+
+  @override
+  String get accountWatchFeatureLog => 'Log period from watch';
+
+  @override
+  String get accountWatchFeaturePhase => 'Current phase display';
+
+  @override
+  String get watchSyncNow => 'Sync now';
+
+  @override
+  String get watchSyncSuccess => 'Watch data synced successfully!';
+
+  @override
+  String get watchSyncFailed => 'Sync failed: make sure your watch is paired.';
 
   @override
   String get dateFormatDDMMYYYY => 'DD/MM/YYYY';

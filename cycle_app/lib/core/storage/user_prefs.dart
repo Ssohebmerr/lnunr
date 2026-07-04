@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPrefs {
@@ -7,6 +10,7 @@ class UserPrefs {
   static const _profileNameKey = 'profile_name';
   static const _profileGoalKey = 'profile_goal';
   static const _profileBirthDateKey = 'profile_birth_date';
+  static const _postpartumStartKey = 'postpartum_start_date';
   static const _deviceUserIdKey = 'device_user_id';
   static const avatarIndexKey = 'profile_avatar_index';
   static const _stealthEnabledKey = 'stealth_mode_enabled';
@@ -84,6 +88,20 @@ class UserPrefs {
     return DateTime.tryParse(raw);
   }
 
+  /// Baby's birth date — anchors postpartum recovery week/milestones.
+  static Future<void> setPostpartumStartDate(DateTime date) async {
+    final p = await SharedPreferences.getInstance();
+    final d = DateTime(date.year, date.month, date.day);
+    await p.setString(_postpartumStartKey, d.toIso8601String());
+  }
+
+  static Future<DateTime?> getPostpartumStartDate() async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_postpartumStartKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
   static Future<String> getOrCreateDeviceId() async {
     final p = await SharedPreferences.getInstance();
     final existing = p.getString(_deviceUserIdKey);
@@ -93,10 +111,13 @@ class UserPrefs {
     return id;
   }
 
+  /// Cryptographically random, URL-safe device id (128 bits of entropy).
+  /// Stored once in SharedPreferences and reused for the device's lifetime.
   static String _generateDeviceId() {
-    final ms = DateTime.now().microsecondsSinceEpoch;
-    final rand = ms.hashCode ^ Object().hashCode;
-    return 'lune_${ms.toRadixString(36)}_${rand.toRadixString(36)}';
+    final r = Random.secure();
+    final bytes = List<int>.generate(16, (_) => r.nextInt(256));
+    final token = base64Url.encode(bytes).replaceAll('=', '');
+    return 'lune_$token';
   }
 
   static Future<bool> isStealthModeEnabled() async {

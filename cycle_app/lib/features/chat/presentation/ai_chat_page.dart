@@ -48,10 +48,10 @@ class _AiChatPageState extends State<AiChatPage> {
 
   Future<void> _bootstrap() async {
     try {
-      // Bind profile + premium to the CURRENT Firebase uid.
-      // Admin premium on another account does not apply to a different session.
-      final grant = await PremiumActivationService.grantTesterPremium();
-      final premium = grant.ok || await PremiumGate.hasPremium();
+      // Read the server-side premium flag for the CURRENT Firebase uid.
+      // Entitlement lives in Firestore only — the client never grants it.
+      final status = await PremiumActivationService.refreshPremiumStatus();
+      final premium = status.ok || await PremiumGate.hasPremium();
 
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null || uid.isEmpty) {
@@ -63,9 +63,7 @@ class _AiChatPageState extends State<AiChatPage> {
           _premium = premium;
           _uid = premium ? uid : null;
           _ready = true;
-          _error = premium
-              ? null
-              : 'ما قدرنا نفعّل Premium على هذا الحساب. جرّبي من تبويب الحساب.';
+          _error = null;
         });
       }
     } catch (e) {

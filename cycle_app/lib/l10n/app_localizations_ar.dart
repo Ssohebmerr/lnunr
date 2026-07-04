@@ -86,6 +86,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get registerTitle => 'إنشاء حسابك';
 
   @override
+  String get registerSubtitle =>
+      'أنشئي حسابكِ بالإيميل أو Google — بياناتكِ تبقى على جهازكِ افتراضياً';
+
+  @override
   String get forgotPasswordTitle => 'إعادة تعيين كلمة المرور';
 
   @override
@@ -245,6 +249,84 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restorePurchasesDone => 'تمت مراجعة مشترياتك.';
 
   @override
+  String get restorePurchasesChecking => 'جارٍ التحقق من مشترياتك…';
+
+  @override
+  String postpartumRecoveryWeek(int week) {
+    return 'التعافي · الأسبوع $week';
+  }
+
+  @override
+  String get postpartumTodayFocus => 'تركيز اليوم';
+
+  @override
+  String get postpartumYourBody => 'جسمكِ في هذه المرحلة';
+
+  @override
+  String get postpartumYourBaby => 'طفلكِ في هذه المرحلة';
+
+  @override
+  String get postpartumDailyRituals => 'طقوس يومية';
+
+  @override
+  String get postpartumWellbeingTitle => 'كيف حالكِ حقاً؟';
+
+  @override
+  String get postpartumWellbeingBody =>
+      'تقلّبات المزاج في الأسابيع الأولى شائعة. لكن إذا استمر الحزن أو القلق أو الشعور بالفراغ أكثر من أسبوعين، تواصلي مع طبيبتكِ — اكتئاب ما بعد الولادة حقيقي وقابل للعلاج.';
+
+  @override
+  String get postpartumSetDateTitle => 'متى وُلد طفلكِ؟';
+
+  @override
+  String get postpartumSetDatePrompt =>
+      'حدّدي تاريخ ولادة طفلكِ لنرافق تعافيكِ أسبوعاً بأسبوع.';
+
+  @override
+  String get postpartumSetDateCta => 'تحديد تاريخ الولادة';
+
+  @override
+  String get postpartumBirthDateLabel => 'تاريخ ولادة الطفل';
+
+  @override
+  String get conditionWhatToTrack => 'ماذا تتبعين';
+
+  @override
+  String get conditionUnderstanding => 'افهمي جسمكِ';
+
+  @override
+  String get conditionDailyRituals => 'طقوس يومية';
+
+  @override
+  String get conditionWhenToSeeDoctor => 'متى تراجعين الطبيبة';
+
+  @override
+  String get goalMenopauseTitle => 'رحلة سنّ الأمل';
+
+  @override
+  String get goalPcosTitle => 'إدارة تكيّس المبايض';
+
+  @override
+  String get activatePremiumTest => 'تفعيل Premium (تجريبي)';
+
+  @override
+  String get planYearlyTitle => 'سنوي';
+
+  @override
+  String get planMonthlyTitle => 'شهري';
+
+  @override
+  String get planPerYear => 'سنوياً';
+
+  @override
+  String get planPerMonth => 'شهرياً';
+
+  @override
+  String planSaveBadge(int percent) {
+    return 'وفّري $percent%';
+  }
+
+  @override
   String get communityMediaDisabled =>
       'رفع الصور والفيديو متوقف مؤقتاً لحماية المجتمع.';
 
@@ -295,7 +377,67 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorGeneric => 'حدث خطأ. حاولي مرة أخرى.';
 
   @override
-  String get loginRequiredAi => 'سجّلي الدخول لاستخدام محادثة Gemini';
+  String get loginRequiredAi => 'سجّلي الدخول للمحادثة مع مساعدة لُون الذكية';
+
+  @override
+  String get authOrEmail => 'أو تابعي بالبريد الإلكتروني';
+
+  @override
+  String get authOr => 'أو';
+
+  @override
+  String get adminPromoTitle => 'أكواد الهدية';
+
+  @override
+  String get adminPromoManageBtn => 'إدارة أكواد الهدية';
+
+  @override
+  String get adminPromoCreateHeader => 'إنشاء كود';
+
+  @override
+  String get adminPromoCodeHint => 'الكود (مثال LUNE30)';
+
+  @override
+  String get adminPromoDaysLabel => 'أيام البريميوم';
+
+  @override
+  String get adminPromoMaxUsesLabel => 'أقصى عدد استخدامات';
+
+  @override
+  String get adminPromoNoteHint => 'ملاحظة (اختياري)';
+
+  @override
+  String get adminPromoCreateBtn => 'إنشاء الكود';
+
+  @override
+  String get adminPromoCreatedMsg => 'تم إنشاء الكود';
+
+  @override
+  String get adminPromoExistingHeader => 'الأكواد الحالية';
+
+  @override
+  String get adminPromoEmpty => 'لا توجد أكواد بعد';
+
+  @override
+  String get adminPromoRevokeBtn => 'إلغاء';
+
+  @override
+  String get adminPromoRevokedMsg => 'تم إلغاء الكود';
+
+  @override
+  String get adminPromoActiveLabel => 'فعّال';
+
+  @override
+  String get adminPromoRevokedLabel => 'غير فعّال';
+
+  @override
+  String get adminPromoUsedLabel => 'مستخدم';
+
+  @override
+  String get adminPromoCodeTooShort => 'الكود يجب أن يكون 3 أحرف على الأقل';
+
+  @override
+  String get premiumDaysShort => 'يوم';
 
   @override
   String get loginRequiredPremium => 'سجّلي الدخول للاشتراك';
@@ -399,12 +541,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeAiCardTap => 'اضغطي لبدء المحادثة';
 
   @override
-  String homeAiCardSubtitleFree(int count) {
-    return '5 رسائل مجانية يومياً — متبقٍ $count اليوم';
-  }
-
-  @override
-  String get homeAiCardSubtitlePremium => 'مساعدتكِ الذكية — اسألي بلا حد يومي';
+  String get homeAiCardSubtitlePremium =>
+      'مساعدتكِ الذكية — حتى 30 رسالة يومياً';
 
   @override
   String get homeAiCardSubtitlePremiumOnly =>
@@ -1106,7 +1244,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String healthReportDaysCycle(int count) {
-    return '$count دورة الأيام';
+    return 'دورة من $count يوماً';
   }
 
   @override
@@ -1600,6 +1738,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminBannedBadge => 'محظور';
 
   @override
+  String get adminGrantPremium => 'تفعيل الاشتراك المميز';
+
+  @override
+  String get adminRevokePremium => 'إلغاء الاشتراك المميز';
+
+  @override
+  String get adminPremiumUpdated => 'تم تحديث حالة الاشتراك';
+
+  @override
+  String get adminAiCost30d => 'تكلفة الذكاء الاصطناعي (آخر 30 يوماً)';
+
+  @override
+  String adminAiTokensCount(String count) {
+    return '$count توكن';
+  }
+
+  @override
+  String adminAiRequestsCount(String count) {
+    return '$count طلب';
+  }
+
+  @override
   String get adminTimeNow => 'الآن';
 
   @override
@@ -1738,7 +1898,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aiDailyLimitReached =>
-      'استنفدتِ 10 رسائل Lune AI اليومية. يتجدد رصيدك تلقائياً غداً.';
+      'استنفدتِ 30 رسالة Lune AI اليومية. يتجدد رصيدك تلقائياً غداً.';
 
   @override
   String premiumAiFreeRemaining(int count) {
@@ -1760,7 +1920,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'قد تُرسل رسائل المحادثة إلى Google Gemini عبر خادمنا الآمن للرد. بدون إعلانات. يمكنك الإيقاف في أي وقت.';
+      'تُرسل رسائل المحادثة إلى مزوّدي ذكاء اصطناعي موثوقين (DeepSeek / Google) عبر خادمنا الآمن لتوليد الردود. بدون إعلانات. يمكنك الإيقاف في أي وقت.';
 
   @override
   String get consentCommunityTitle => 'الانضمام للمجتمعات؟';
@@ -2293,12 +2453,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountTapToCopyId => 'اضغطي لنسخ معرّف الحساب';
 
   @override
-  String get premiumActivationNeedsProfile =>
-      'أكملي التسجيل (الاسم + تاريخ الميلاد) قبل تفعيل Premium.';
-
-  @override
-  String get premiumActivationFailed =>
-      'تعذّر تفعيل Premium. تحققي من الاتصال وحاولي مرة أخرى.';
+  String get premiumRefreshStatus => 'التحقق من حالة الاشتراك';
 
   @override
   String get guestModeTitle => 'وضع ضيف خاص';
@@ -3279,7 +3434,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountWatchAppleSubtitle => 'دعم Apple Watch';
 
   @override
-  String get accountWatchWearSubtitle => 'دعم Wear OS';
+  String get accountWatchWearSubtitle => 'المزامنة مع ساعات Wear OS الذكية';
 
   @override
   String get insightHeadlineFirstTrimester => 'الثلث الأول';
@@ -3358,7 +3513,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get anonymousQaDesc => 'اسألي أسئلة صحية بشكل خاص';
 
   @override
-  String get activatePremiumTest => 'تفعيل Premium (اختبار)';
+  String get accountWatchSheetTitle => 'المزامنة مع الساعة الذكية';
+
+  @override
+  String get accountWatchSheetBody =>
+      'تتم مزامنة بيانات دورتك تلقائياً مع ساعتك الذكية المقترنة. يمكنك متابعة تقدم الدورة وتسجيل الحيض مباشرة من الساعة.';
+
+  @override
+  String get accountWatchFeatureSync =>
+      'مزامنة تلقائية لبيانات الدورة مع الساعة';
+
+  @override
+  String get accountWatchFeatureRing => 'حلقة الدورة على واجهة الساعة';
+
+  @override
+  String get accountWatchFeatureLog => 'تسجيل الحيض من الساعة';
+
+  @override
+  String get accountWatchFeaturePhase => 'عرض المرحلة الحالية';
+
+  @override
+  String get watchSyncNow => 'مزامنة الآن';
+
+  @override
+  String get watchSyncSuccess => 'تمت مزامنة بيانات الساعة بنجاح!';
+
+  @override
+  String get watchSyncFailed => 'فشلت المزامنة: تأكدي من اقتران الساعة.';
 
   @override
   String get dateFormatDDMMYYYY => 'DD/MM/YYYY';

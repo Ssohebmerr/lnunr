@@ -22,7 +22,13 @@ class Encryption {
   }
 
   /// this function encrypt data
+  ///
+  /// An empty input is stored as an empty string: AES-CBC + PKCS7 in the
+  /// `encrypt` package throws a "-16" RangeError when asked to encrypt "",
+  /// which previously made every daily-log save fail silently (empty fields
+  /// such as notes). [decrypt] already maps "" back to "", so this round-trips.
   String encrypt(String value) {
+    if (value.isEmpty) return '';
     return _encryption.encrypt(value, iv: _iv).base64;
   }
 

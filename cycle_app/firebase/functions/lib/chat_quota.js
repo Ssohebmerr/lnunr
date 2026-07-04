@@ -1,9 +1,24 @@
+// ============================================================================
+// lib/chat_quota.js — strict server-side paywall gate for AI endpoints.
+// ----------------------------------------------------------------------------
+// Security contract (enforced HERE, never trusted from the client):
+//   1. users/{uid} MUST exist and carry `isPremium == true`, otherwise the
+//      request is rejected with 403 `premium_required`. The server NEVER
+//      grants premium as a side effect of calling AI.
+//   2. `daily_chat_count` MUST be below DAILY_PREMIUM_CHAT_LIMIT. The check
+//      and the increment happen inside ONE Firestore transaction so parallel
+//      requests cannot race past the limit.
+//   3. The slot is reserved BEFORE the external AI call (DeepSeek/Gemini).
+//      If every provider fails, callers roll the reservation back with
+//      `releaseChatSlot()` so users are not billed a message for our failure.
+// ============================================================================
+
 'use strict';
 
 const admin = require('firebase-admin');
 
 /** Premium users: max AI chat messages per calendar day (server-enforced). */
-const DAILY_PREMIUM_CHAT_LIMIT = 10;
+const DAILY_PREMIUM_CHAT_LIMIT = 30;
 
 class QuotaError extends Error {
   /**
@@ -20,60 +35,71 @@ class QuotaError extends Error {
 }
 
 /**
- * Ensures users/{uid} exists with isPremium=true for the authenticated caller.
+ * Atomically verifies premium entitlement and reserves one daily chat slot.
  *
- * Admin may have granted premium on a different UID after session changes.
- * Auto-heal binds premium to the UID that is actually calling AI.
- *
- * @returns {FirebaseFirestore.DocumentReference} user doc ref for increment
+ * @param {string} uid Authenticated Firebase uid (from a verified ID token).
+ * @returns {Promise<{ref: FirebaseFirestore.DocumentReference, remaining: number}>}
+ *   `remaining` = slots left AFTER this reservation (for the client counter).
+ * @throws {QuotaError} 403 premium_required | 429 daily_limit_reached
  */
-async function assertPremiumChatQuota(uid) {
-  const ref = admin.firestore().collection('users').doc(uid);
-  let snap = await ref.get();
-  const data = snap.exists ? (snap.data() || {}) : {};
+async function reservePremiumChatSlot(uid) {
+  const db = admin.firestore();
+  const ref = db.collection('users').doc(uid);
 
-  if (!snap.exists || data.isPremium !== true) {
-    await ref.set(
-      {
-        name: data.name || 'User',
-        isPremium: true,
-        premiumSource: data.premiumSource || 'auto_chat',
-        testerPremiumGranted: true,
-        daily_chat_count: Number(data.daily_chat_count) || 0,
-        premiumSince: data.premiumSince || new Date().toISOString(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        ...(snap.exists
-          ? {}
-          : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
-      },
-      { merge: true },
-    );
-    snap = await ref.get();
-  }
+  const remaining = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const data = snap.exists ? (snap.data() || {}) : {};
 
-  const fresh = snap.data() || {};
-  const count = Number(fresh.daily_chat_count) || 0;
-  if (count >= DAILY_PREMIUM_CHAT_LIMIT) {
-    throw new QuotaError(
-      'daily_limit_reached',
-      429,
-      'Daily AI message limit reached.',
-    );
-  }
+    if (!snap.exists || data.isPremium !== true) {
+      throw new QuotaError(
+        'premium_required',
+        403,
+        'Premium subscription required.',
+      );
+    }
 
-  return ref;
+    const count = Number(data.daily_chat_count) || 0;
+    if (count >= DAILY_PREMIUM_CHAT_LIMIT) {
+      throw new QuotaError(
+        'daily_limit_reached',
+        429,
+        'Daily AI message limit reached.',
+      );
+    }
+
+    tx.update(ref, {
+      daily_chat_count: count + 1,
+      lastChatAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return DAILY_PREMIUM_CHAT_LIMIT - (count + 1);
+  });
+
+  return { ref, remaining };
 }
 
-async function incrementDailyChatCount(userRef) {
-  await userRef.update({
-    daily_chat_count: admin.firestore.FieldValue.increment(1),
-    lastChatAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+/**
+ * Returns a reserved slot when the AI call failed after reservation.
+ * Best effort — a failure to release only costs the user one slot, it never
+ * lets them exceed the limit.
+ */
+async function releaseChatSlot(ref) {
+  try {
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const count = Number(snap.data()?.daily_chat_count) || 0;
+      if (count > 0) {
+        tx.update(ref, { daily_chat_count: count - 1 });
+      }
+    });
+  } catch (error) {
+    console.warn('releaseChatSlot failed (slot lost, limit still safe):', error.message);
+  }
 }
 
 module.exports = {
   DAILY_PREMIUM_CHAT_LIMIT,
   QuotaError,
-  assertPremiumChatQuota,
-  incrementDailyChatCount,
+  reservePremiumChatSlot,
+  releaseChatSlot,
 };

@@ -19,23 +19,9 @@ const { defineSecret } = require('firebase-functions/params');
 
 const { moderateContent } = require('../lib/moderation');
 const { verifyCallerIsAdmin } = require('../lib/adminAuth');
+const { handleCors, setCors } = require('../lib/http');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
-
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
 
 async function applyModerationResult(ref, text, kind) {
   if (text.length < 3) {

@@ -25,6 +25,7 @@
   "loginTitle": "Sign in for cloud features",
   "loginSubtitle": "Optional — your data stays on device by default",
   "registerTitle": "Create your account",
+  "registerSubtitle": "Create your account with email or Google — your data stays on your device by default",
   "forgotPasswordTitle": "Reset password",
   "forgotPasswordHint": "Enter your email and we will send a reset link.",
   "resetPassword": "Send reset link",
@@ -75,6 +76,40 @@
   "premiumProductUnavailable": "Product unavailable. Set up the subscription in Play Console first.",
   "restorePurchases": "Restore purchases",
   "restorePurchasesDone": "Your purchases were checked.",
+  "restorePurchasesChecking": "Checking your purchases…",
+  "postpartumRecoveryWeek": "Recovery · week {week}",
+  "@postpartumRecoveryWeek": {
+    "placeholders": {
+      "week": {"type": "int"}
+    }
+  },
+  "postpartumTodayFocus": "Today's focus",
+  "postpartumYourBody": "Your body this stage",
+  "postpartumYourBaby": "Your baby this stage",
+  "postpartumDailyRituals": "Daily rituals",
+  "postpartumWellbeingTitle": "How are you, really?",
+  "postpartumWellbeingBody": "Mood swings in the early weeks are common. But if sadness, anxiety, or emptiness lasts more than two weeks, please reach out to your doctor — postpartum depression is real and treatable.",
+  "postpartumSetDateTitle": "When was your baby born?",
+  "postpartumSetDatePrompt": "Set your baby's birth date so we can guide your recovery week by week.",
+  "postpartumSetDateCta": "Set birth date",
+  "postpartumBirthDateLabel": "Baby's birth date",
+  "conditionWhatToTrack": "What to track",
+  "conditionUnderstanding": "Understanding your body",
+  "conditionDailyRituals": "Daily rituals",
+  "conditionWhenToSeeDoctor": "When to see a doctor",
+  "goalMenopauseTitle": "Menopause journey",
+  "goalPcosTitle": "PCOS management",
+  "activatePremiumTest": "Activate Premium (test)",
+  "planYearlyTitle": "Yearly",
+  "planMonthlyTitle": "Monthly",
+  "planPerYear": "per year",
+  "planPerMonth": "per month",
+  "planSaveBadge": "Save {percent}%",
+  "@planSaveBadge": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
   "communityMediaDisabled": "Photo and video uploads are temporarily disabled for community safety.",
   "privacyTitle": "Your privacy matters",
   "privacyBody": "Cycle data is encrypted on your device. Cloud sync and AI only run when you sign in and opt in.",
@@ -91,7 +126,27 @@
   "send": "Send",
   "loading": "Loading...",
   "errorGeneric": "Something went wrong. Please try again.",
-  "loginRequiredAi": "Sign in to use Gemini AI chat",
+  "loginRequiredAi": "Sign in to chat with Lune AI",
+  "authOrEmail": "or continue with email",
+  "authOr": "or",
+  "adminPromoTitle": "Promo codes",
+  "adminPromoManageBtn": "Manage promo codes",
+  "adminPromoCreateHeader": "Create a code",
+  "adminPromoCodeHint": "Code (e.g. LUNE30)",
+  "adminPromoDaysLabel": "Premium days",
+  "adminPromoMaxUsesLabel": "Max uses",
+  "adminPromoNoteHint": "Note (optional)",
+  "adminPromoCreateBtn": "Create code",
+  "adminPromoCreatedMsg": "Code created",
+  "adminPromoExistingHeader": "Existing codes",
+  "adminPromoEmpty": "No codes yet",
+  "adminPromoRevokeBtn": "Revoke",
+  "adminPromoRevokedMsg": "Code revoked",
+  "adminPromoActiveLabel": "Active",
+  "adminPromoRevokedLabel": "Inactive",
+  "adminPromoUsedLabel": "used",
+  "adminPromoCodeTooShort": "Code must be at least 3 characters",
+  "premiumDaysShort": "days",
   "loginRequiredPremium": "Sign in to subscribe",
   "notifications": "Notifications",
   "notificationsEnable": "Enable reminders",
@@ -128,13 +183,7 @@
   "homeAiChipLabel": "Lune AI",
   "homeAiCardTitle": "Lune AI",
   "homeAiCardTap": "Tap to start chatting",
-  "homeAiCardSubtitleFree": "5 free messages daily — {count} left today",
-  "@homeAiCardSubtitleFree": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "homeAiCardSubtitlePremium": "Your smart assistant — unlimited daily chat",
+  "homeAiCardSubtitlePremium": "Your smart assistant — up to 30 messages daily",
   "homeAiCardSubtitlePremiumOnly": "Premium only — tap to view plans",
   "onboardingBirthDateLabel": "Date of birth",
   "onboardingBirthDateHint": "Select your date of birth",
@@ -566,6 +615,22 @@
   "adminNotifPreview": "Preview",
   "adminNoEmail": "No email",
   "adminBannedBadge": "Banned",
+  "adminGrantPremium": "Grant Premium",
+  "adminRevokePremium": "Revoke Premium",
+  "adminPremiumUpdated": "Subscription status updated",
+  "adminAiCost30d": "AI cost (last 30 days)",
+  "adminAiTokensCount": "{count} tokens",
+  "@adminAiTokensCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "adminAiRequestsCount": "{count} requests",
+  "@adminAiRequestsCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
   "adminTimeNow": "now",
   "adminTimeMinutes": "{n}m",
   "@adminTimeMinutes": {
@@ -613,7 +678,7 @@
   "premiumRequiredCloud": "Cloud backup is a Premium feature. Subscribe in Account.",
   "premiumRequiredAi": "This AI feature requires Premium. Subscribe in Account.",
   "premiumAiLimitReached": "You've used today's free AI messages. Upgrade to Premium for unlimited chat.",
-  "aiDailyLimitReached": "You've used your 10 daily Lune AI messages. Your limit resets automatically tomorrow.",
+  "aiDailyLimitReached": "You've used your 30 daily Lune AI messages. Your limit resets automatically tomorrow.",
   "premiumAiFreeRemaining": "{count} free AI messages left today",
   "@premiumAiFreeRemaining": {
     "placeholders": {
@@ -624,7 +689,7 @@
   "consentCloudTitle": "Enable cloud backup?",
   "consentCloudBody": "Encrypted cycle backups will be stored in your Firebase account. You can turn this off anytime.",
   "consentAiTitle": "Enable AI features?",
-  "consentAiBody": "Chat messages may be sent to Google Gemini via our secure server for responses. No ads. You can disable this anytime.",
+  "consentAiBody": "Chat messages are sent to trusted AI providers (DeepSeek / Google) through our secure server to generate responses. No ads. You can disable this anytime.",
   "consentCommunityTitle": "Join communities?",
   "consentCommunityBody": "You will use an anonymous alias. Posts are moderated by AI. Your cycle data is never shared.",
   "consentAccept": "I agree",
@@ -879,8 +944,7 @@
     }
   },
   "accountTapToCopyId": "Tap to copy account ID",
-  "premiumActivationNeedsProfile": "Complete registration (name + birth date) before activating Premium.",
-  "premiumActivationFailed": "Could not activate Premium. Check your connection and try again.",
+  "premiumRefreshStatus": "Check subscription status",
 
   "guestModeTitle": "Private guest mode",
   "guestModeLabel": "Local profile · no email",
@@ -1285,7 +1349,15 @@
   "smartWatch": "Smart Watch",
   "anonymousQa": "Anonymous Q&A",
   "anonymousQaDesc": "Ask health questions privately",
-  "activatePremiumTest": "Activate Premium (Test)",
+  "accountWatchSheetTitle": "Smart Watch Sync",
+  "accountWatchSheetBody": "Your cycle data is automatically synced to your paired smart watch. You can view your cycle progress and log your period directly from your watch.",
+  "accountWatchFeatureSync": "Auto-syncs cycle data to watch",
+  "accountWatchFeatureRing": "Cycle ring on watch face",
+  "accountWatchFeatureLog": "Log period from watch",
+  "accountWatchFeaturePhase": "Current phase display",
+  "watchSyncNow": "Sync now",
+  "watchSyncSuccess": "Watch data synced successfully!",
+  "watchSyncFailed": "Sync failed: make sure your watch is paired.",
 
   "dateFormatDDMMYYYY": "DD/MM/YYYY",
   "dateFormatMMDDYYYY": "MM/DD/YYYY",

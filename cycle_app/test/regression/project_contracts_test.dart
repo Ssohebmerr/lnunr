@@ -23,6 +23,7 @@ void main() {
         FeatureFlags.voiceLogging,
         FeatureFlags.partnerSync,
         FeatureFlags.luneStories,
+        FeatureFlags.aiChatEnabled,
       };
       expect(FeatureFlags.allFlags.toSet(), declared);
       expect(FeatureFlags.allFlags.length, declared.length);
@@ -39,6 +40,7 @@ void main() {
       expect(flags[FeatureFlags.luneStories], isTrue);
       expect(flags[FeatureFlags.moodJournal], isFalse);
       expect(flags[FeatureFlags.voiceLogging], isFalse);
+      expect(flags[FeatureFlags.aiChatEnabled], isTrue);
     });
   });
 
@@ -49,7 +51,12 @@ void main() {
       );
       expect(jsPath.existsSync(), isTrue, reason: 'play_billing.js must exist');
       final js = jsPath.readAsStringSync();
-      expect(js, contains("'${PlayBillingService.productId}'"));
+      // Every Dart SKU must exist in the server's PREMIUM_PRODUCT_IDS set.
+      for (final sku in PlayBillingService.productIds) {
+        expect(js, contains("'$sku'"), reason: 'play_billing.js missing $sku');
+      }
+      expect(js, contains("'${PlayBillingService.monthlyProductId}'"));
+      expect(js, contains("'${PlayBillingService.yearlyProductId}'"));
       expect(PlayBillingService.packageName, 'com.lune.app');
       expect(js, contains("'com.lune.app'"));
     });

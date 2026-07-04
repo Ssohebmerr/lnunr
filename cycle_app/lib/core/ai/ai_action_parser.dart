@@ -89,12 +89,20 @@ class AiActionParser {
 
   static final _zeroWidth = RegExp(r'[\u200B-\u200D\uFEFF]');
 
+  /// Raw model stop/control tokens that occasionally leak through providers
+  /// (`<|im_end|>`, `<|im_start|>`, `<|endoftext|>`, `</s>`, `<s>`).
+  static final _modelStopTokens = RegExp(
+    r'<\|(?:im_end|im_start|endoftext)\|>|</?s>',
+    caseSensitive: false,
+  );
+
   /// Strips action tags, internal meta messages, and incomplete trailing tags
   /// so AI replies never leak English system strings to the UI.
   static String sanitizeForDisplay(String reply) {
     if (reply.isEmpty) return reply;
 
     var text = reply.replaceAll(_zeroWidth, '');
+    text = text.replaceAll(_modelStopTokens, '');
     text = _stripMetaMessages(text);
     text = text.replaceAll(_truncatedAnywhere, '');
     text = text.replaceAll(_stoppedAnywhere, '');

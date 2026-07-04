@@ -10,23 +10,9 @@
 
 const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
+const { handleCors, setCors } = require('../lib/http');
 
 const ALLOWED_FEEDBACK_TYPES = ['bug', 'idea', 'help', 'other'];
-
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
 
 exports.submitFeedback = onRequest(
   { cors: true, timeoutSeconds: 20 },

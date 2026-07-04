@@ -29,14 +29,6 @@ class PremiumGate {
     return PremiumAiAccess.allowed;
   }
 
-  static Future<void> recordAiMessage() async {
-    // Premium-only AI — daily count tracked in Firestore (see GuestUserRepository).
-  }
-
-  static Future<int> remainingFreeAiMessages() async {
-    return 0;
-  }
-
   /// Check if user can generate a doctor report (1 free per month, then premium).
   static Future<bool> canGenerateDoctorReport() async {
     if (await hasPremium()) return true;

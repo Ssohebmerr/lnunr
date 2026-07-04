@@ -1,18 +1,26 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../../../core/navigation/home_shell_actions.dart';
-import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
+import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/premium_badge.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../features/premium/data/play_billing_service.dart';
 import '../../../features/user/data/guest_user_service.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Full-screen upsell when Lune AI requires Premium.
+///
+/// Shows the monthly + yearly plans (prices pulled live from Play), a savings
+/// badge on the annual plan, and a single CTA that subscribes to the selected
+/// plan. Premium is applied by the app-wide Firestore listener once the server
+/// verifies the purchase — this screen never writes entitlement itself.
 class SubscriptionPlansScreen extends StatefulWidget {
   const SubscriptionPlansScreen({
     super.key,
@@ -30,11 +38,16 @@ class SubscriptionPlansScreen extends StatefulWidget {
 
 class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   bool _busy = false;
+  bool _loadingPlans = true;
+
+  Map<String, ProductDetails> _products = const {};
+  String _selectedSku = PlayBillingService.yearlyProductId;
 
   @override
   void initState() {
     super.initState();
     PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
+    _loadPlans();
   }
 
   @override
@@ -50,34 +63,64 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     }
   }
 
+  Future<void> _loadPlans() async {
+    if (!Platform.isAndroid) {
+      if (mounted) setState(() => _loadingPlans = false);
+      return;
+    }
+    final products =
+        await PlayBillingCoordinator.instance.billing.loadProducts();
+    if (!mounted) return;
+    setState(() {
+      _products = products;
+      // Prefer the annual plan (best value) when available.
+      if (!products.containsKey(_selectedSku) && products.isNotEmpty) {
+        _selectedSku = products.containsKey(PlayBillingService.monthlyProductId)
+            ? PlayBillingService.monthlyProductId
+            : products.keys.first;
+      }
+      _loadingPlans = false;
+    });
+  }
+
+  /// Percentage saved by the yearly plan vs. 12× the monthly price.
+  /// Returns null when either price is missing.
+  int? _yearlySavingsPercent() {
+    final monthly = _products[PlayBillingService.monthlyProductId];
+    final yearly = _products[PlayBillingService.yearlyProductId];
+    if (monthly == null || yearly == null) return null;
+    final yearlyIfMonthly = monthly.rawPrice * 12;
+    if (yearlyIfMonthly <= 0) return null;
+    final saved = (yearlyIfMonthly - yearly.rawPrice) / yearlyIfMonthly;
+    final pct = (saved * 100).round();
+    return pct > 0 ? pct : null;
+  }
+
   Future<void> _subscribe() async {
     final l10n = AppLocalizations.of(context)!;
+
+    if (!Platform.isAndroid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.premiumPlayOnly)),
+      );
+      return;
+    }
+
     setState(() => _busy = true);
     try {
       await GuestUserService().ensureSession();
     } catch (_) {
       if (mounted) {
+        setState(() => _busy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
       return;
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
 
-    if (!Platform.isAndroid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumPlayOnly)),
-        );
-      }
-      return;
-    }
-
-    setState(() => _busy = true);
     final billing = PlayBillingCoordinator.instance.billing;
-    final product = await billing.loadProduct();
+    final product = _products[_selectedSku] ?? await billing.loadProduct();
     if (product == null) {
       if (mounted) {
         setState(() => _busy = false);
@@ -96,6 +139,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
+      // On success the Play sheet takes over; the app-wide purchase listener
+      // verifies + flips premium, which fires [_onPremiumChanged].
     }
   }
 
@@ -103,44 +148,40 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
     await PlayBillingCoordinator.instance.billing.restorePurchases();
-    if (mounted) {
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.restorePurchasesDone)),
-      );
-      widget.onSubscribed?.call();
-    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    // Do NOT claim success — restore results arrive asynchronously through the
+    // purchase stream, which flips premium via the app-wide listener. We only
+    // acknowledge the request; if a subscription is found, the paywall closes
+    // automatically via [_onPremiumChanged].
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.restorePurchasesChecking)),
+    );
   }
 
+  /// DEBUG builds only — grants premium via the QA-gated server endpoint so
+  /// the developer can exercise the premium experience without Play Console.
   Future<void> _activateTestPremium() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
-    try {
-      final result = await PremiumActivationService.grantTesterPremium();
-      if (!mounted) return;
-      if (result.ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumActivated)),
-        );
-        widget.onSubscribed?.call();
-      } else if (result.needsProfile) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumActivationNeedsProfile)),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumActivationFailed)),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    final result = await PremiumActivationService.activateTesterPremium();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.ok ? l10n.premiumActivated : l10n.errorGeneric,
+        ),
+      ),
+    );
+    if (result.ok) widget.onSubscribed?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final savings = _yearlySavingsPercent();
 
     final body = SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -209,6 +250,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
+          // ── Benefits ────────────────────────────────────────────────────
           AppGlassCard(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -240,22 +283,78 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   icon: Icons.cloud_done_rounded,
                   text: l10n.premiumFeature3,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.premiumPlayHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
               ],
             ),
           ),
+          const SizedBox(height: 20),
+
+          // ── Plan selector ───────────────────────────────────────────────
+          if (Platform.isAndroid) ...[
+            if (_loadingPlans)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_products.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l10n.premiumProductUnavailable,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else ...[
+              if (_products.containsKey(PlayBillingService.yearlyProductId))
+                _PlanCard(
+                  title: l10n.planYearlyTitle,
+                  price: _products[PlayBillingService.yearlyProductId]!.price,
+                  period: l10n.planPerYear,
+                  badge: savings != null ? l10n.planSaveBadge(savings) : null,
+                  selected: _selectedSku == PlayBillingService.yearlyProductId,
+                  onTap: () => setState(
+                    () => _selectedSku = PlayBillingService.yearlyProductId,
+                  ),
+                ),
+              if (_products.containsKey(PlayBillingService.monthlyProductId))
+                _PlanCard(
+                  title: l10n.planMonthlyTitle,
+                  price: _products[PlayBillingService.monthlyProductId]!.price,
+                  period: l10n.planPerMonth,
+                  selected: _selectedSku == PlayBillingService.monthlyProductId,
+                  onTap: () => setState(
+                    () => _selectedSku = PlayBillingService.monthlyProductId,
+                  ),
+                ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              l10n.premiumPlayHint,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ] else
+            Text(
+              l10n.premiumPlayOnly,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+
           const SizedBox(height: 20),
           AppGradientButton(
             label: l10n.subscriptionPlansCta,
             icon: Icons.diamond_rounded,
             loading: _busy,
-            onPressed: _busy ? null : _subscribe,
+            onPressed:
+                (_busy || (Platform.isAndroid && _products.isEmpty))
+                    ? null
+                    : _subscribe,
           ),
           const SizedBox(height: 10),
           if (Platform.isAndroid)
@@ -264,12 +363,17 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               icon: const Icon(Icons.restore_rounded, size: 20),
               label: Text(l10n.restorePurchases),
             ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _busy ? null : _activateTestPremium,
-            icon: const Icon(Icons.star_outline_rounded, size: 20),
-            label: Text(l10n.activatePremiumTest),
-          ),
+
+          // Debug-only tester activation (never present in release builds).
+          if (kDebugMode) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _busy ? null : _activateTestPremium,
+              icon: const Icon(Icons.bug_report_outlined, size: 20),
+              label: Text(l10n.activatePremiumTest),
+            ),
+          ],
+
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => HomeShellActions.switchTab?.call(3),
@@ -296,6 +400,120 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
         ),
         child: SafeArea(child: body),
+      ),
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.title,
+    required this.price,
+    required this.period,
+    required this.selected,
+    required this.onTap,
+    this.badge,
+  });
+
+  final String title;
+  final String price;
+  final String period;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              color: selected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                  : theme.colorScheme.surface.withValues(alpha: 0.5),
+              border: Border.all(
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outline,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (badge != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: AuraDecorations.primaryGradient,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                              ),
+                              child: Text(
+                                badge!,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        period,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  price,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

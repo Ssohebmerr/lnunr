@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_error_mapper.dart';
-import '../../../core/locale/locale_controller.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/privacy/privacy_acceptance_row.dart';
 import '../../../core/theme/app_design_tokens.dart';
@@ -13,6 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import 'auth_form_shell.dart';
 import 'auth_navigation.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,12 +26,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _privacyAccepted = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/welcome');
+    }
   }
 
   bool _requirePrivacy() {
@@ -65,172 +74,135 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/welcome'),
-        ),
-      ),
-      body: AppMeshBackground(
-        child: SafeArea(
-          child: BlocConsumer<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is Authenticated) _onAuthenticated();
-              if (state is AuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AuthErrorMapper.message(state.error, l10n),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) _onAuthenticated();
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AuthErrorMapper.message(state.error, l10n),
+              ),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final loading = state is AuthLoading;
+
+        return AuthFormShell(
+          icon: Icons.lock_outline,
+          title: l10n.loginTitle,
+          subtitle: l10n.loginSubtitle,
+          onBack: _goBack,
+          extraHeader: Text(
+            l10n.signInOptionalSubtitle,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                textInputAction: TextInputAction.next,
+                decoration: AuraDecorations.glassInput(
+                  isDark: isDark,
+                  hint: l10n.email,
+                  prefixIcon: Icons.email_outlined,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: _password,
+                obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                decoration: AuraDecorations.glassInput(
+                  isDark: isDark,
+                  hint: l10n.password,
+                  prefixIcon: Icons.lock_outline,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 20,
                     ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
-                );
-              }
-            },
-            builder: (context, state) {
-              final loading = state is AuthLoading;
-              return Stack(
-                children: [
-                  Align(
-                    alignment: AlignmentDirectional.topEnd,
-                    child: IconButton(
-                      icon: const Icon(Icons.language),
-                      onPressed: () => context.read<LocaleController>().toggle(),
-                    ),
-                  ),
-                  Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: AppGlassCard(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: AuraDecorations.primaryGradient,
-                                boxShadow: AppShadows.softRose(opacity: 0.25),
-                              ),
-                              child: const Icon(Icons.lock_outline,
-                                  size: 32, color: Colors.white),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(l10n.loginTitle,
-                                style: theme.textTheme.headlineSmall,
-                                textAlign: TextAlign.center),
-                            const SizedBox(height: 8),
-                            Text(l10n.loginSubtitle,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium),
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.signInOptionalSubtitle,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            TextField(
-                              controller: _email,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: AuraDecorations.glassInput(
-                                isDark: theme.brightness == Brightness.dark,
-                                hint: l10n.email,
-                                prefixIcon: Icons.email_outlined,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _password,
-                              obscureText: true,
-                              decoration: AuraDecorations.glassInput(
-                                isDark: theme.brightness == Brightness.dark,
-                                hint: l10n.password,
-                                prefixIcon: Icons.lock_outline,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            PrivacyAcceptanceRow(
-                              accepted: _privacyAccepted,
-                              onChanged: (v) =>
-                                  setState(() => _privacyAccepted = v),
-                            ),
-                            const SizedBox(height: 16),
-                            AppGradientButton(
-                              label: loading ? l10n.loading : l10n.signIn,
-                              loading: loading,
-                              onPressed: loading ? null : _submit,
-                            ),
-                            if (!kIsWeb) ...[
-                              const SizedBox(height: 12),
-                              OutlinedButton.icon(
-                                onPressed: loading
-                                    ? null
-                                    : () {
-                                        if (!_requirePrivacy()) return;
-                                        context
-                                            .read<AuthBloc>()
-                                            .add(GoogleSignInRequested());
-                                      },
-                                icon: const Icon(Icons.g_mobiledata, size: 28),
-                                label: Text(l10n.signInGoogle),
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size.fromHeight(52),
-                                ),
-                              ),
-                              if (defaultTargetPlatform == TargetPlatform.iOS) ...[
-                                const SizedBox(height: 12),
-                                OutlinedButton.icon(
-                                  onPressed: loading
-                                      ? null
-                                      : () {
-                                          if (!_requirePrivacy()) return;
-                                          context
-                                              .read<AuthBloc>()
-                                              .add(AppleSignInRequested());
-                                        },
-                                  icon: const Icon(Icons.apple, size: 22),
-                                  label: Text(l10n.signInApple),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(52),
-                                  ),
-                                ),
-                              ],
-                            ],
-                            TextButton(
-                              onPressed: () => openRegisterScreen(context),
-                              child: Text(l10n.noAccount),
-                            ),
-                            TextButton(
-                              onPressed: () => openForgotPasswordScreen(context),
-                              child: Text(l10n.forgotPassword),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                if (Navigator.of(context).canPop()) {
-                                  Navigator.of(context).pop(false);
-                                } else {
-                                  context.go('/home');
-                                }
-                              },
-                              child: Text(l10n.skipLogin),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PrivacyAcceptanceRow(
+                accepted: _privacyAccepted,
+                onChanged: (v) => setState(() => _privacyAccepted = v),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              AppGradientButton(
+                label: loading ? l10n.loading : l10n.signIn,
+                loading: loading,
+                onPressed: loading ? null : _submit,
+              ),
+              if (!kIsWeb) ...[
+                const SizedBox(height: AppSpacing.sm + 4),
+                OutlinedButton.icon(
+                  onPressed: loading
+                      ? null
+                      : () {
+                          if (!_requirePrivacy()) return;
+                          context.read<AuthBloc>().add(GoogleSignInRequested());
+                        },
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: Text(l10n.signInGoogle),
+                  style: authSocialButtonStyle(context),
+                ),
+                if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                  const SizedBox(height: AppSpacing.sm + 4),
+                  OutlinedButton.icon(
+                    onPressed: loading
+                        ? null
+                        : () {
+                            if (!_requirePrivacy()) return;
+                            context.read<AuthBloc>().add(AppleSignInRequested());
+                          },
+                    icon: const Icon(Icons.apple, size: 22),
+                    label: Text(l10n.signInApple),
+                    style: authSocialButtonStyle(context),
                   ),
                 ],
-              );
-            },
+              ],
+              AuthSecondaryLink(
+                label: l10n.noAccount,
+                onPressed: () => context.go('/register'),
+              ),
+              TextButton(
+                onPressed: () => context.go('/forgot-password'),
+                child: Text(l10n.forgotPassword),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop(false);
+                  } else {
+                    context.go('/home');
+                  }
+                },
+                child: Text(l10n.skipLogin),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
