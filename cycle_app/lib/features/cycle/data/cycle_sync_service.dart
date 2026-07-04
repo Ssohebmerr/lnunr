@@ -149,7 +149,12 @@ class CycleSyncService {
   }
 
   /// Call after any cycle log, backup import, or cloud restore.
-  Future<void> onCycleDataChanged() async {
+  ///
+  /// [notifyHomeRefresh] broadcasts a global [HomeRefreshScope.refresh] so the
+  /// home/reports/log surfaces rebuild. The live daily-log form passes `false`
+  /// for its OWN saves — otherwise the global refresh recreates the log widget
+  /// mid-edit and the entry being typed appears to vanish ("won't save").
+  Future<void> onCycleDataChanged({bool notifyHomeRefresh = true}) async {
     // Mirror widget period days into the Menstrudel store.
     try {
       final bridge = PeriodBridgeService.instance;
@@ -173,7 +178,7 @@ class CycleSyncService {
       debugPrint('syncHomeWidget failed (non-fatal): $e\n$st');
     }
 
-    HomeRefreshScope.refresh();
+    if (notifyHomeRefresh) HomeRefreshScope.refresh();
   }
 
   Future<void> onAuthChanged(User? user) async {
