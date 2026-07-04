@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 import 'models/guest_user_profile.dart';
 
@@ -71,14 +70,7 @@ class GuestUserRepository {
     await _doc(uid).update(data);
   }
 
-  Future<void> incrementDailyChatCount(String uid) async {
-    try {
-      await _doc(uid).update({
-        'daily_chat_count': FieldValue.increment(1),
-        'lastChatAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e, st) {
-      debugPrint('GuestUserRepository incrementDailyChatCount: $e\n$st');
-    }
-  }
+  // NOTE: daily_chat_count is incremented ONLY server-side (Cloud Functions
+  // transaction in lib/chat_quota.js). Client writes to it are blocked by
+  // security rules, so no client-side increment exists here.
 }

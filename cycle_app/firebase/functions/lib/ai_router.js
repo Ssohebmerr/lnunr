@@ -1,10 +1,13 @@
 'use strict';
 
-const { callDeepSeek } = require('./deepseek');
-const { callGemini } = require('./gemini');
+const { callDeepSeekDetailed } = require('./deepseek');
+const { callGeminiDetailed } = require('./gemini');
 
 /**
  * Primary: DeepSeek. Fallback: Google Gemini (AI Studio key on server).
+ *
+ * @returns {Promise<{reply: string, provider: 'deepseek'|'gemini',
+ *   usage: {promptTokens: number, completionTokens: number}}>}
  */
 async function callAiWithFallback({
   deepseekKey,
@@ -16,15 +19,15 @@ async function callAiWithFallback({
 }) {
   if (deepseekKey) {
     try {
-      const reply = await callDeepSeek(
+      const { text, usage } = await callDeepSeekDetailed(
         deepseekKey,
         systemPrompt,
         userPrompt,
         maxTokens,
         temperature,
       );
-      if (reply) {
-        return { reply, provider: 'deepseek' };
+      if (text) {
+        return { reply: text, provider: 'deepseek', usage };
       }
     } catch (error) {
       console.error('DeepSeek failed, falling back to Gemini:', error.message || error);
@@ -35,14 +38,14 @@ async function callAiWithFallback({
     throw new Error('No AI provider keys configured on server');
   }
 
-  const reply = await callGemini(
+  const { text, usage } = await callGeminiDetailed(
     geminiKey,
     systemPrompt,
     userPrompt,
     maxTokens,
     temperature,
   );
-  return { reply, provider: 'gemini' };
+  return { reply: text, provider: 'gemini', usage };
 }
 
 module.exports = {

@@ -434,7 +434,7 @@ final _router = GoRouter(
         path == '/stealth' ||
         path == '/welcome' ||
         path == '/onboarding') {
-      if (path == '/welcome' && _canEnterHome(done, user)) {
+      if (path == '/welcome' && _hasEmailAccount(user)) {
         return '/home';
       }
       return null;

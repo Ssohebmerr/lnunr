@@ -10,7 +10,6 @@ import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
 import 'models/ai_turn.dart';
 import '../config/app_secrets.dart';
-import '../premium/premium_activation_service.dart';
 import '../../features/user/data/guest_user_service.dart';
 
 /// Single entry point for AI — all keys live on Firebase Functions.
@@ -40,12 +39,12 @@ class AiGateway {
         ? 'doctor'
         : (analyzeMode ? 'analyze' : mode);
 
-    // Bind Firebase session + server premium to the current UID before AI.
+    // Bind the Firebase session to the current UID before AI. Entitlement is
+    // enforced server-side; the client never grants itself premium.
     try {
       await GuestUserService().ensureSession();
-      await PremiumActivationService.grantTesterPremium();
     } catch (e) {
-      debugPrint('[AiGateway] session/premium prepare failed: $e');
+      debugPrint('[AiGateway] session prepare failed: $e');
     }
 
     final user = _auth.currentUser;
@@ -163,11 +162,12 @@ class AiGateway {
         AiPromptBuilder.buildUserPrompt(message, safeContext, mode);
     final cfg = AiPromptStyle.configForMode(mode);
 
-    // Keep history small and skip prior error bubbles.
+    // Keep history small and skip prior error bubbles (old + new wording).
     final safeHistory = history
         .where((t) => t.text.trim().isNotEmpty && !_isFailedPlaceholderReply(t.text))
         .where((t) => !t.text.contains('المساعد مش متاح'))
         .where((t) => !t.text.contains('المساعد غير متاح'))
+        .where((t) => !t.text.contains('المساعدة الذكية غير متاحة'))
         .where((t) => !t.text.contains('Firebase AI Logic'))
         .take(8)
         .map((t) => {

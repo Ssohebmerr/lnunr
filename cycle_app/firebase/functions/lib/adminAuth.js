@@ -41,17 +41,22 @@ const ACTION_MIN_ROLE = {
   count: 'moderator',
   get: 'moderator',
   analyticsHistory: 'moderator',
+  aiUsageStats: 'moderator',
+  aiCostStats: 'moderator',
   // admin and above
   set: 'admin',
   update: 'admin',
   delete: 'admin',
   add: 'admin',
+  setUserPremium: 'admin',
   createPromoCode: 'admin',
   revokePromoCode: 'admin',
   scheduleBroadcast: 'admin',
   cancelScheduledBroadcast: 'admin',
   segmentPreview: 'admin',
   replyToFeedback: 'admin',
+  runSnapshotNow: 'admin',
+  translateText: 'admin',
   // owner only
   setAdminRole: 'owner',
   removeAdmin: 'owner',
@@ -67,20 +72,22 @@ const ACTION_MIN_ROLE = {
  * Order of recognition (cheap → expensive):
  *   1. `decoded.admin === true` custom claim — set by bootstrapAdmin, never
  *      depends on Firestore.
- *   2. `admins/{uid}` document existence (any role).
- *   3. Legacy `users/{uid}.isAdmin` / `.role` flag.
+ *   2. `admins/{uid}` document existence (any role). This collection is
+ *      writable ONLY through the Admin SDK (rules: `allow write: if false`).
+ *
+ * SECURITY: `users/{uid}.isAdmin` is deliberately NOT consulted. Users can
+ * update parts of their own document, so a self-writable flag must never be
+ * a source of authority (privilege-escalation vector, fixed).
  */
 async function verifyCallerIsAdmin(decoded) {
   if (decoded.admin === true) return true;
   const adminDoc = await admin.firestore().collection('admins').doc(decoded.uid).get();
-  if (adminDoc.exists) return true;
-  const userDoc = await admin.firestore().collection('users').doc(decoded.uid).get();
-  return userDoc.exists
-    && (userDoc.data()?.isAdmin === true || userDoc.data()?.role === 'admin');
+  return adminDoc.exists;
 }
 
 /**
  * Returns the caller's effective role: 'owner' | 'admin' | 'moderator' | null.
+ * Same trusted sources as verifyCallerIsAdmin — claim first, then admins/.
  */
 async function getCallerRole(decoded) {
   if (decoded.admin === true) return 'owner';
@@ -89,10 +96,6 @@ async function getCallerRole(decoded) {
     const role = adminDoc.data()?.role;
     if (['owner', 'admin', 'moderator'].includes(role)) return role;
     return 'admin'; // default if doc exists without explicit role
-  }
-  const userDoc = await admin.firestore().collection('users').doc(decoded.uid).get();
-  if (userDoc.exists && (userDoc.data()?.isAdmin === true || userDoc.data()?.role === 'admin')) {
-    return 'admin';
   }
   return null;
 }

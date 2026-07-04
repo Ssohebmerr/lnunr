@@ -11,39 +11,16 @@ const { defineSecret } = require('firebase-functions/params');
 
 const { callAiWithFallback } = require('../lib/ai_router');
 const {
-  DAILY_PREMIUM_CHAT_LIMIT,
   QuotaError,
-  assertPremiumChatQuota,
-  incrementDailyChatCount,
+  reservePremiumChatSlot,
+  releaseChatSlot,
 } = require('../lib/chat_quota');
+const { logAiUsage } = require('../lib/ai_usage');
 const { getSystemPromptForMode, getMaxTokensForMode, getSecureSystemPrompt } = require('../lib/prompts');
+const { handleCors, setCors, bearerToken } = require('../lib/http');
 
 const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
-
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
-
-function authError(req, res) {
-  const authHeader = req.headers.authorization || '';
-  if (!authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Auth required.' });
-    return null;
-  }
-  return authHeader.split('Bearer ')[1];
-}
 
 function buildAnalyzeContext(cycleContext) {
   const goal = cycleContext.userGoal || 'unknown';
@@ -99,7 +76,7 @@ exports.analyze = onRequest(
   async (req, res) => {
     if (handleCors(req, res)) return;
 
-    const token = authError(req, res);
+    const token = bearerToken(req, res);
     if (!token) return;
 
     try {
@@ -115,13 +92,8 @@ exports.analyze = onRequest(
         return;
       }
 
-      const userRef = await assertPremiumChatQuota(uid);
-
-      await admin.firestore().collection('ai_usage').doc(uid).collection('messages').add({
-        message: message.substring(0, 500),
-        mode: isDoctorReport ? 'doctor' : 'analyze',
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      // Strict paywall + quota — throws QuotaError before any AI spend.
+      const { ref: userRef, remaining } = await reservePremiumChatSlot(uid);
 
       const clientSystemPrompt = (req.body?.systemPrompt || '').trim();
       const clientMaxTokens = Number(req.body?.maxTokens) || 0;
@@ -149,22 +121,37 @@ exports.analyze = onRequest(
         ? getSystemPromptForMode('doctor', cycleContext)
         : getSecureSystemPrompt('analyze', cycleContext, personality);
       const userPrompt = fallbackUserPrompt;
-      const maxTokens = clientMaxTokens || (isDoctorReport ? 1200 : getMaxTokensForMode('analyze'));
+      // Client may only shrink the budget — the server ceiling always wins.
+      const ceiling = isDoctorReport ? 1200 : getMaxTokensForMode('analyze');
+      const maxTokens = clientMaxTokens > 0
+        ? Math.min(clientMaxTokens, ceiling)
+        : ceiling;
 
-      const { reply, provider } = await callAiWithFallback({
-        deepseekKey: DEEPSEEK_API_KEY.value(),
-        geminiKey: GEMINI_API_KEY.value(),
-        systemPrompt,
-        userPrompt,
-        maxTokens,
-        temperature: clientTemperature,
+      let aiResult;
+      try {
+        aiResult = await callAiWithFallback({
+          deepseekKey: DEEPSEEK_API_KEY.value(),
+          geminiKey: GEMINI_API_KEY.value(),
+          systemPrompt,
+          userPrompt,
+          maxTokens,
+          temperature: clientTemperature,
+        });
+      } catch (aiError) {
+        // Providers failed AFTER the slot was reserved — give it back.
+        await releaseChatSlot(userRef);
+        throw aiError;
+      }
+
+      const { reply, provider, usage } = aiResult;
+
+      await logAiUsage({
+        uid,
+        mode: isDoctorReport ? 'doctor' : 'analyze',
+        provider,
+        usage,
+        messagePreview: message,
       });
-
-      await incrementDailyChatCount(userRef);
-
-      const snap = await userRef.get();
-      const used = Number(snap.data()?.daily_chat_count) || 0;
-      const remaining = Math.max(0, DAILY_PREMIUM_CHAT_LIMIT - used);
 
       setCors(res);
       res.json({ reply, provider, dailyRemaining: remaining });

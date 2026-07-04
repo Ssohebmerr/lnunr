@@ -13,21 +13,7 @@ const admin = require('firebase-admin');
 
 const { verifyCallerIsAdmin } = require('../lib/adminAuth');
 const { sendBroadcastInternal } = require('../lib/broadcast');
-
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
+const { handleCors, setCors } = require('../lib/http');
 
 exports.adminBroadcast = onRequest(
   { cors: true, timeoutSeconds: 60 },

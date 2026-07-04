@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -219,9 +220,11 @@ class _AccountTabState extends State<AccountTab> {
     }
 
     if (!Platform.isAndroid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumPlayOnly)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.premiumPlayOnly)),
+        );
+      }
       return;
     }
 
@@ -254,22 +257,38 @@ class _AccountTabState extends State<AccountTab> {
     }
   }
 
-  Future<void> _activateTestPremium() async {
+  /// Re-reads the server-side entitlement (e.g. after an admin grant or a
+  /// purchase on another device). Never grants premium from the client.
+  Future<void> _refreshPremiumStatus() async {
     final l10n = AppLocalizations.of(context)!;
-    final result = await PremiumActivationService.grantTesterPremium();
+    final result =
+        await PremiumActivationService.refreshPremiumStatus(force: true);
     if (!mounted) return;
     if (result.ok) {
       setState(() => _premium = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.premiumActivated)),
       );
-    } else if (result.needsProfile) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumActivationNeedsProfile)),
+        SnackBar(content: Text(l10n.notPremium)),
+      );
+    }
+  }
+
+  /// DEBUG builds only — grants premium via the QA-gated server endpoint.
+  Future<void> _activateTestPremium() async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await PremiumActivationService.activateTesterPremium();
+    if (!mounted) return;
+    if (result.ok) {
+      setState(() => _premium = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.premiumActivated)),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumActivationFailed)),
+        SnackBar(content: Text(l10n.errorGeneric)),
       );
     }
   }
@@ -294,52 +313,45 @@ class _AccountTabState extends State<AccountTab> {
           children: [
             Icon(Icons.watch_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
-            const Text('Smart Watch Sync', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              l10n.accountWatchSheetTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 12),
-            const Text(
-              'Your cycle data is automatically synced to your paired smart watch. '
-              'You can view your cycle progress and log your period directly from your watch.',
+            Text(
+              l10n.accountWatchSheetBody,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            _WatchFeature(icon: Icons.sync, text: 'Auto-syncs cycle data to watch'),
-            _WatchFeature(icon: Icons.circle_outlined, text: 'Cycle ring on watch face'),
-            _WatchFeature(icon: Icons.water_drop, text: 'Log period from watch'),
-            _WatchFeature(icon: Icons.calendar_today, text: 'Current phase display'),
+            _WatchFeature(icon: Icons.sync, text: l10n.accountWatchFeatureSync),
+            _WatchFeature(icon: Icons.circle_outlined, text: l10n.accountWatchFeatureRing),
+            _WatchFeature(icon: Icons.water_drop, text: l10n.accountWatchFeatureLog),
+            _WatchFeature(icon: Icons.calendar_today, text: l10n.accountWatchFeaturePhase),
             const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
                       try {
                         final periodService = ctx.read<PeriodService>();
                         await periodService.syncWatch();
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(isAr 
-                                ? 'تمت مزامنة بيانات الساعة بنجاح!' 
-                                : 'Watch data synced successfully!'),
-                            ),
+                            SnackBar(content: Text(l10n.watchSyncSuccess)),
                           );
                         }
                       } catch (e) {
                         if (ctx.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(isAr 
-                                ? 'فشلت المزامنة: يرجى التأكد من اتصال الساعة.' 
-                                : 'Sync failed: Make sure your watch is paired.'),
-                            ),
+                            SnackBar(content: Text(l10n.watchSyncFailed)),
                           );
                         }
                       }
                     },
                     icon: const Icon(Icons.sync_rounded),
-                    label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مزامنة الآن' : 'Sync Now'),
+                    label: Text(l10n.watchSyncNow),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -374,7 +386,8 @@ class _AccountTabState extends State<AccountTab> {
           premium: _premium,
           onSubscribePlayStore: Platform.isAndroid ? _subscribe : null,
           onRestore: Platform.isAndroid ? _restorePurchases : null,
-          onActivateTest: !_premium ? _activateTestPremium : null,
+          onRefreshStatus: !_premium ? _refreshPremiumStatus : null,
+          onActivateTest: (kDebugMode && !_premium) ? _activateTestPremium : null,
         ),
       ),
     );
@@ -664,97 +677,49 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (centered) {
-      return Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              AppAvatar(
-                radius: 44,
-                avatarIndex: avatarIndex,
-                photoPath: photoPath,
-                networkUrl: photoUrl,
-                isPremium: premium,
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Material(
-                  color: theme.colorScheme.primaryContainer,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    onTap: onEditProfile,
-                    customBorder: const CircleBorder(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6),
-                      child: Icon(
-                        Icons.edit_outlined,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
+      return _AccountHeroCard(
+        avatar: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AppAvatar(
+              radius: 44,
+              avatarIndex: avatarIndex,
+              photoPath: photoPath,
+              networkUrl: photoUrl,
+              isPremium: premium,
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Material(
+                color: theme.colorScheme.primaryContainer,
+                shape: const CircleBorder(),
+                elevation: 1,
+                child: InkWell(
+                  onTap: onEditProfile,
+                  customBorder: const CircleBorder(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            localName,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          GestureDetector(
-            onLongPress: onCopyAccountId,
-            onTap: onCopyAccountId,
-            child: Text(
-              _subtitleLine(),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          if (accountUid != null && accountUid!.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            GestureDetector(
-              onLongPress: onCopyAccountId,
-              onTap: onCopyAccountId,
-              child: Text(
-                l10n.accountUserId(_shortId(accountUid!)),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
-                textAlign: TextAlign.center,
-              ),
             ),
           ],
-          if (deviceId != null && deviceId!.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              l10n.accountDeviceId(_shortId(deviceId!)),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          if (!_hasEmail && onLinkEmail != null) ...[
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: onLinkEmail,
-              icon: const Icon(Icons.email_outlined, size: 18),
-              label: Text(l10n.accountLinkEmail),
-            ),
-          ],
-          if (premium) ...[
-            const SizedBox(height: 8),
-            const PremiumBadge(size: 22, showLabel: true),
-          ],
-        ],
+        ),
+        name: localName,
+        subtitle: _subtitleLine(),
+        premium: premium,
+        l10n: l10n,
+        theme: theme,
+        accountUid: accountUid,
+        shortId: accountUid != null ? _shortId(accountUid!) : null,
+        onCopyAccountId: onCopyAccountId,
+        onLinkEmail: (!_hasEmail && onLinkEmail != null) ? onLinkEmail : null,
       );
     }
 
@@ -801,6 +766,172 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
+/// Polished profile header — gradient hero, name, status pill, and a subtle
+/// copyable account-ID chip for support. The raw device id is intentionally
+/// not surfaced here (it stays internal); professional apps don't show it.
+class _AccountHeroCard extends StatelessWidget {
+  const _AccountHeroCard({
+    required this.avatar,
+    required this.name,
+    required this.subtitle,
+    required this.premium,
+    required this.l10n,
+    required this.theme,
+    required this.accountUid,
+    required this.shortId,
+    this.onCopyAccountId,
+    this.onLinkEmail,
+  });
+
+  final Widget avatar;
+  final String name;
+  final String subtitle;
+  final bool premium;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final String? accountUid;
+  final String? shortId;
+  final VoidCallback? onCopyAccountId;
+  final VoidCallback? onLinkEmail;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGlassCard(
+      padding: EdgeInsets.zero,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.10),
+              theme.colorScheme.secondary.withValues(alpha: 0.04),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+        child: Column(
+          children: [
+            avatar,
+            const SizedBox(height: 14),
+            Text(
+              name,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            // Status pill — Premium (gradient) or Free (muted).
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                gradient: premium ? AuraDecorations.primaryGradient : null,
+                color: premium
+                    ? null
+                    : theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                boxShadow:
+                    premium ? AppShadows.softRose(opacity: 0.25) : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    premium
+                        ? Icons.workspace_premium_rounded
+                        : Icons.lock_open_rounded,
+                    size: 16,
+                    color: premium
+                        ? Colors.white
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    premium ? l10n.premiumActive : l10n.notPremium,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: premium
+                          ? Colors.white
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onLinkEmail != null) ...[
+              const SizedBox(height: 10),
+              TextButton.icon(
+                onPressed: onLinkEmail,
+                icon: const Icon(Icons.email_outlined, size: 18),
+                label: Text(l10n.accountLinkEmail),
+              ),
+            ],
+            if (accountUid != null && accountUid!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              // Subtle copyable ID chip — for support, not front-and-center.
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onCopyAccountId,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant
+                            .withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.badge_outlined,
+                          size: 13,
+                          color: theme.colorScheme.outline,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.accountUserId(shortId ?? ''),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.copy_rounded,
+                          size: 12,
+                          color: theme.colorScheme.outline,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PremiumCard extends StatelessWidget {
   const _PremiumCard({
     required this.l10n,
@@ -808,6 +939,7 @@ class _PremiumCard extends StatelessWidget {
     required this.premium,
     this.onSubscribePlayStore,
     this.onRestore,
+    this.onRefreshStatus,
     this.onActivateTest,
   });
 
@@ -816,6 +948,7 @@ class _PremiumCard extends StatelessWidget {
   final bool premium;
   final VoidCallback? onSubscribePlayStore;
   final VoidCallback? onRestore;
+  final VoidCallback? onRefreshStatus;
   final VoidCallback? onActivateTest;
 
   @override
@@ -887,13 +1020,22 @@ class _PremiumCard extends StatelessWidget {
                     child: Text(l10n.restorePurchases),
                   ),
                 ],
-                if (onActivateTest != null) ...[
+                if (onRefreshStatus != null) ...[
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
+                    onPressed: onRefreshStatus,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(l10n.premiumRefreshStatus),
+                  ),
+                ],
+                // Debug-only tester activation (never shown in release builds).
+                if (onActivateTest != null) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
                     onPressed: onActivateTest,
-                    icon: const Icon(Icons.star_outline),
+                    icon: const Icon(Icons.bug_report_outlined),
                     label: Text(l10n.activatePremiumTest),
                   ),
                 ],

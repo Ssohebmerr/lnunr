@@ -44,6 +44,7 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
         });
         return;
       }
+      if (!mounted) return;
 
       final l10n = AppLocalizations.of(context)!;
       final locale = Localizations.localeOf(context).languageCode;

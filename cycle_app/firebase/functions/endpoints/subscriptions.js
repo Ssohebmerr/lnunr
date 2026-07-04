@@ -24,26 +24,22 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
-const { defineSecret } = require('firebase-functions/params');
+const { defineSecret, defineString } = require('firebase-functions/params');
 
 const playBilling = require('../play_billing');
+const { handleCors, setCors } = require('../lib/http');
 
 const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT');
 
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
+// Server-side kill switch for the debug/QA "activate premium" path.
+// Default 'false' → the endpoint is fully disabled in production. Enable ONLY
+// during testing with:  firebase deploy  after setting TESTER_PREMIUM_ENABLED=true
+// (functions .env or Console). The client button is ALSO gated to debug builds,
+// so this is defense-in-depth: a release build can't grant premium even if the
+// flag is accidentally left on.
+const TESTER_PREMIUM_ENABLED = defineString('TESTER_PREMIUM_ENABLED', {
+  default: 'false',
+});
 
 // ---------------------------------------------------------------------------
 // verifyPlayPurchase — Dart calls this right after a successful purchase.
@@ -179,13 +175,29 @@ exports.redeemPromoCode = onRequest(
 );
 
 // ---------------------------------------------------------------------------
-// grantTesterPremium — one-time beta/test grant (sets Firestore isPremium).
+// grantTesterPremium — DEBUG / QA ONLY. Disabled unless the server-side flag
+// TESTER_PREMIUM_ENABLED === 'true'. Grants `isPremium: true` to the CURRENT
+// uid so the developer can exercise the premium experience without a live
+// Play Console subscription. Production keeps the flag off (default), so this
+// endpoint returns 403 and the paywall stays enforced.
+//
+// Regular premium grants still flow ONLY through:
+//   - verifyPlayPurchase (Google Play server-side verification)
+//   - redeemPromoCode    (admin-issued codes)
+//   - adminApi `setUserPremium` action (manual admin override, audited)
 // ---------------------------------------------------------------------------
 
 exports.grantTesterPremium = onRequest(
   { cors: true, timeoutSeconds: 30 },
   async (req, res) => {
     if (handleCors(req, res)) return;
+
+    // Hard gate: refuse entirely unless explicitly enabled for a QA build.
+    if (TESTER_PREMIUM_ENABLED.value() !== 'true') {
+      setCors(res);
+      res.status(403).json({ error: 'tester_premium_disabled' });
+      return;
+    }
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -202,15 +214,13 @@ exports.grantTesterPremium = onRequest(
       const snap = await userRef.get();
       const data = snap.exists ? (snap.data() || {}) : {};
 
-      // Create profile if missing, and always bind premium to THIS uid.
-      // Admin premium on another account does not help a different session.
       await userRef.set(
         {
           name: data.name || 'User',
           isPremium: true,
           premiumSource: data.premiumSource || 'tester',
           testerPremiumGranted: true,
-          daily_chat_count: data.daily_chat_count || 0,
+          daily_chat_count: Number(data.daily_chat_count) || 0,
           premiumSince: data.premiumSince || new Date().toISOString(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           ...(snap.exists ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
@@ -219,12 +229,7 @@ exports.grantTesterPremium = onRequest(
       );
 
       setCors(res);
-      res.json({
-        ok: true,
-        uid,
-        created: !snap.exists,
-        already: data.testerPremiumGranted === true,
-      });
+      res.json({ ok: true, uid, created: !snap.exists });
     } catch (error) {
       console.error('grantTesterPremium error:', error);
       setCors(res);

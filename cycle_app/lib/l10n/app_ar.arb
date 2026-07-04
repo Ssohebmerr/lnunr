@@ -25,6 +25,7 @@
   "loginTitle": "تسجيل الدخول للميزات السحابية",
   "loginSubtitle": "اختياري — بياناتك تبقى على جهازك افتراضياً",
   "registerTitle": "إنشاء حسابك",
+  "registerSubtitle": "أنشئي حسابكِ بالإيميل أو Google — بياناتكِ تبقى على جهازكِ افتراضياً",
   "forgotPasswordTitle": "إعادة تعيين كلمة المرور",
   "forgotPasswordHint": "أدخلي بريدك وسنرسل رابط إعادة التعيين.",
   "resetPassword": "إرسال رابط",
@@ -75,6 +76,40 @@
   "premiumProductUnavailable": "المنتج غير متاح حالياً. تأكدي من إعداد الاشتراك في Play Console.",
   "restorePurchases": "استعادة المشتريات",
   "restorePurchasesDone": "تمت مراجعة مشترياتك.",
+  "restorePurchasesChecking": "جارٍ التحقق من مشترياتك…",
+  "postpartumRecoveryWeek": "التعافي · الأسبوع {week}",
+  "@postpartumRecoveryWeek": {
+    "placeholders": {
+      "week": {"type": "int"}
+    }
+  },
+  "postpartumTodayFocus": "تركيز اليوم",
+  "postpartumYourBody": "جسمكِ في هذه المرحلة",
+  "postpartumYourBaby": "طفلكِ في هذه المرحلة",
+  "postpartumDailyRituals": "طقوس يومية",
+  "postpartumWellbeingTitle": "كيف حالكِ حقاً؟",
+  "postpartumWellbeingBody": "تقلّبات المزاج في الأسابيع الأولى شائعة. لكن إذا استمر الحزن أو القلق أو الشعور بالفراغ أكثر من أسبوعين، تواصلي مع طبيبتكِ — اكتئاب ما بعد الولادة حقيقي وقابل للعلاج.",
+  "postpartumSetDateTitle": "متى وُلد طفلكِ؟",
+  "postpartumSetDatePrompt": "حدّدي تاريخ ولادة طفلكِ لنرافق تعافيكِ أسبوعاً بأسبوع.",
+  "postpartumSetDateCta": "تحديد تاريخ الولادة",
+  "postpartumBirthDateLabel": "تاريخ ولادة الطفل",
+  "conditionWhatToTrack": "ماذا تتبعين",
+  "conditionUnderstanding": "افهمي جسمكِ",
+  "conditionDailyRituals": "طقوس يومية",
+  "conditionWhenToSeeDoctor": "متى تراجعين الطبيبة",
+  "goalMenopauseTitle": "رحلة سنّ الأمل",
+  "goalPcosTitle": "إدارة تكيّس المبايض",
+  "activatePremiumTest": "تفعيل Premium (تجريبي)",
+  "planYearlyTitle": "سنوي",
+  "planMonthlyTitle": "شهري",
+  "planPerYear": "سنوياً",
+  "planPerMonth": "شهرياً",
+  "planSaveBadge": "وفّري {percent}%",
+  "@planSaveBadge": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
   "communityMediaDisabled": "رفع الصور والفيديو متوقف مؤقتاً لحماية المجتمع.",
   "privacyTitle": "خصوصيتك مهمة",
   "privacyBody": "بيانات الدورة مشفّرة على جهازك. المزامنة السحابية والAI تعمل فقط عند تسجيل الدخول والموافقة.",
@@ -91,7 +126,9 @@
   "send": "إرسال",
   "loading": "جاري التحميل...",
   "errorGeneric": "حدث خطأ. حاولي مرة أخرى.",
-  "loginRequiredAi": "سجّلي الدخول لاستخدام محادثة Gemini",
+  "loginRequiredAi": "سجّلي الدخول للمحادثة مع مساعدة لُون الذكية",
+  "authOrEmail": "أو تابعي بالبريد الإلكتروني",
+  "authOr": "أو",
   "loginRequiredPremium": "سجّلي الدخول للاشتراك",
   "notifications": "الإشعارات",
   "notificationsEnable": "تفعيل التذكيرات",
@@ -118,13 +155,7 @@
   "homeAiChipLabel": "Lune AI",
   "homeAiCardTitle": "Lune AI",
   "homeAiCardTap": "اضغطي لبدء المحادثة",
-  "homeAiCardSubtitleFree": "5 رسائل مجانية يومياً — متبقٍ {count} اليوم",
-  "@homeAiCardSubtitleFree": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "homeAiCardSubtitlePremium": "مساعدتكِ الذكية — اسألي بلا حد يومي",
+  "homeAiCardSubtitlePremium": "مساعدتكِ الذكية — حتى 30 رسالة يومياً",
   "homeAiCardSubtitlePremiumOnly": "للمشتركات في Premium — اضغطي لعرض الخطط",
   "onboardingBirthDateLabel": "تاريخ الميلاد",
   "onboardingBirthDateHint": "اختاري تاريخ ميلادك",
@@ -370,7 +401,7 @@
   "healthReportPeriodRegularityScore": "درجة انتظام الدورة الشهرية",
   "healthReportNextPeriodDay": "دورة يوم التالي",
   "healthReportNextOvulationDay": "يوم الإباضة القادم",
-  "healthReportDaysCycle": "{count} دورة الأيام",
+  "healthReportDaysCycle": "دورة من {count} يوماً",
   "@healthReportDaysCycle": {
     "placeholders": {
       "count": { "type": "int" }
@@ -566,6 +597,22 @@
   "adminNotifPreview": "معاينة",
   "adminNoEmail": "بدون بريد",
   "adminBannedBadge": "محظور",
+  "adminGrantPremium": "تفعيل الاشتراك المميز",
+  "adminRevokePremium": "إلغاء الاشتراك المميز",
+  "adminPremiumUpdated": "تم تحديث حالة الاشتراك",
+  "adminAiCost30d": "تكلفة الذكاء الاصطناعي (آخر 30 يوماً)",
+  "adminAiTokensCount": "{count} توكن",
+  "@adminAiTokensCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "adminAiRequestsCount": "{count} طلب",
+  "@adminAiRequestsCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
   "adminTimeNow": "الآن",
   "adminTimeMinutes": "{n} د",
   "@adminTimeMinutes": {
@@ -613,7 +660,7 @@
   "premiumRequiredCloud": "النسخ السحابي ميزة Premium. اشتركي من الحساب.",
   "premiumRequiredAi": "هذه ميزة AI تتطلب Premium. اشتركي من الحساب.",
   "premiumAiLimitReached": "استنفدتِ رسائل AI المجانية اليوم. Premium يمنحك محادثة غير محدودة.",
-  "aiDailyLimitReached": "استنفدتِ 10 رسائل Lune AI اليومية. يتجدد رصيدك تلقائياً غداً.",
+  "aiDailyLimitReached": "استنفدتِ 30 رسالة Lune AI اليومية. يتجدد رصيدك تلقائياً غداً.",
   "premiumAiFreeRemaining": "متبقٍ {count} رسائل AI مجانية اليوم",
   "@premiumAiFreeRemaining": {
     "placeholders": {
@@ -624,7 +671,7 @@
   "consentCloudTitle": "تفعيل النسخ السحابي؟",
   "consentCloudBody": "سيتم تخزين نسخ احتياطية مشفّرة في حساب Firebase. يمكنك إيقافها في أي وقت.",
   "consentAiTitle": "تفعيل ميزات الذكاء الاصطناعي؟",
-  "consentAiBody": "قد تُرسل رسائل المحادثة إلى Google Gemini عبر خادمنا الآمن للرد. بدون إعلانات. يمكنك الإيقاف في أي وقت.",
+  "consentAiBody": "تُرسل رسائل المحادثة إلى مزوّدي ذكاء اصطناعي موثوقين (DeepSeek / Google) عبر خادمنا الآمن لتوليد الردود. بدون إعلانات. يمكنك الإيقاف في أي وقت.",
   "consentCommunityTitle": "الانضمام للمجتمعات؟",
   "consentCommunityBody": "ستستخدمين اسماً مستعاراً. المنشورات تُراجع بالذكاء الاصطناعي. بيانات دورتك لا تُشارك أبداً.",
   "consentAccept": "أوافق",
@@ -852,8 +899,7 @@
     }
   },
   "accountTapToCopyId": "اضغطي لنسخ معرّف الحساب",
-  "premiumActivationNeedsProfile": "أكملي التسجيل (الاسم + تاريخ الميلاد) قبل تفعيل Premium.",
-  "premiumActivationFailed": "تعذّر تفعيل Premium. تحققي من الاتصال وحاولي مرة أخرى.",
+  "premiumRefreshStatus": "التحقق من حالة الاشتراك",
 
   "guestModeTitle": "وضع ضيف خاص",
   "guestModeLabel": "ملف محلي · بدون إيميل",
@@ -1232,7 +1278,7 @@
   "premiumActivated": "تم تفعيل Premium!",
   "gotIt": "فهمت",
   "accountWatchAppleSubtitle": "دعم Apple Watch",
-  "accountWatchWearSubtitle": "دعم Wear OS",
+  "accountWatchWearSubtitle": "المزامنة مع ساعات Wear OS الذكية",
 
   "insightHeadlineFirstTrimester": "الثلث الأول",
   "insightBodyFirstTrimester": "الحركة الخفيفة والترطيب والراحة أفضل رفقاءك هذا الأسبوع.",
@@ -1257,7 +1303,15 @@
   "smartWatch": "الساعة الذكية",
   "anonymousQa": "أسئلة مجهولة",
   "anonymousQaDesc": "اسألي أسئلة صحية بشكل خاص",
-  "activatePremiumTest": "تفعيل Premium (اختبار)",
+  "accountWatchSheetTitle": "المزامنة مع الساعة الذكية",
+  "accountWatchSheetBody": "تتم مزامنة بيانات دورتك تلقائياً مع ساعتك الذكية المقترنة. يمكنك متابعة تقدم الدورة وتسجيل الحيض مباشرة من الساعة.",
+  "accountWatchFeatureSync": "مزامنة تلقائية لبيانات الدورة مع الساعة",
+  "accountWatchFeatureRing": "حلقة الدورة على واجهة الساعة",
+  "accountWatchFeatureLog": "تسجيل الحيض من الساعة",
+  "accountWatchFeaturePhase": "عرض المرحلة الحالية",
+  "watchSyncNow": "مزامنة الآن",
+  "watchSyncSuccess": "تمت مزامنة بيانات الساعة بنجاح!",
+  "watchSyncFailed": "فشلت المزامنة: تأكدي من اقتران الساعة.",
 
   "dateFormatDDMMYYYY": "DD/MM/YYYY",
   "dateFormatMMDDYYYY": "MM/DD/YYYY",

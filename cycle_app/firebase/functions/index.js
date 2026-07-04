@@ -21,7 +21,8 @@
 //     reprocessModeration.js   POST /reprocessPendingModeration
 //     users.js           syncUsersFromAuth + bootstrapAdmin + deleteUserAccount
 //     subscriptions.js   verifyPlayPurchase + redeemPromoCode
-//                        + googlePlayWebhook + syncExpiredPlayPremium
+//                        + grantTesterPremium (QA-gated) + googlePlayWebhook
+//                        + syncExpiredPlayPremium
 //     broadcast.js       POST /adminBroadcast
 //     feedback.js        POST /submitFeedback
 //

@@ -11,10 +11,22 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import '../../../core/config/app_secrets.dart';
 
 /// Google Play Billing for Premium subscriptions on Android (Play policy).
+///
+/// Two subscription SKUs are supported (must exist in Play Console and match
+/// `play_billing.js` — enforced by a contract test):
+///   - premium_monthly
+///   - premium_yearly  (usually the better value; shows a savings badge)
 class PlayBillingService {
   PlayBillingService({InAppPurchase? iap}) : _iap = iap ?? InAppPurchase.instance;
 
-  static const productId = 'premium_monthly';
+  static const monthlyProductId = 'premium_monthly';
+  static const yearlyProductId = 'premium_yearly';
+
+  /// Back-compat alias — the monthly SKU is the default plan.
+  static const productId = monthlyProductId;
+
+  static const Set<String> productIds = {monthlyProductId, yearlyProductId};
+
   static const packageName = 'com.lune.app';
   static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
@@ -31,7 +43,7 @@ class PlayBillingService {
     await _purchaseSub?.cancel();
     _purchaseSub = _iap.purchaseStream.listen((purchases) async {
       for (final purchase in purchases) {
-        if (purchase.productID != productId) continue;
+        if (!productIds.contains(purchase.productID)) continue;
 
         switch (purchase.status) {
           case PurchaseStatus.purchased:
@@ -54,18 +66,27 @@ class PlayBillingService {
 
   void dispose() => _purchaseSub?.cancel();
 
-  Future<ProductDetails?> loadProduct() async {
-    if (!await isAvailable()) return null;
-    final response = await _iap.queryProductDetails({productId});
+  /// Loads all configured plans (monthly + yearly) from Play, keyed by SKU.
+  /// Returns an empty map when billing is unavailable or none are found.
+  Future<Map<String, ProductDetails>> loadProducts() async {
+    if (!await isAvailable()) return const {};
+    final response = await _iap.queryProductDetails(productIds);
     if (response.error != null) {
       debugPrint('Play product query error: ${response.error}');
-      return null;
     }
     if (response.notFoundIDs.isNotEmpty) {
-      debugPrint('Play product not found: ${response.notFoundIDs}');
+      debugPrint('Play products not found: ${response.notFoundIDs}');
     }
-    if (response.productDetails.isEmpty) return null;
-    return response.productDetails.first;
+    return {for (final p in response.productDetails) p.id: p};
+  }
+
+  /// Back-compat: loads just the monthly plan (falls back to any available).
+  Future<ProductDetails?> loadProduct() async {
+    final products = await loadProducts();
+    if (products.containsKey(monthlyProductId)) {
+      return products[monthlyProductId];
+    }
+    return products.isEmpty ? null : products.values.first;
   }
 
   Future<bool> subscribe(ProductDetails product) async {

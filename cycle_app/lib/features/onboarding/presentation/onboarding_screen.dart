@@ -19,6 +19,7 @@ import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../core/widgets/avatar_picker_row.dart';
+import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_sync_service.dart';
 
@@ -170,6 +171,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       await LocalProfile.saveAvatarIndex(_avatarIndex);
       await _ensureCycleWidgetReady();
+      // For postpartum, the date field IS the baby's birth date — anchor the
+      // recovery experience so the home section doesn't prompt again.
+      if (_goal.isPostpartumMode) {
+        await UserPrefs.setPostpartumStartDate(_lastPeriod);
+      }
       await _sync.completeOnboarding(
         cycleLength: _cycleLength,
         periodDuration: _periodDuration,
@@ -482,6 +488,9 @@ class _GoalStep extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
+                      color: isSelected
+                          ? theme.colorScheme.primary.withValues(alpha: 0.06)
+                          : null,
                       border: Border.all(
                         color: isSelected
                             ? theme.colorScheme.primary
@@ -489,18 +498,54 @@ class _GoalStep extends StatelessWidget {
                         width: isSelected ? 2 : 1,
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Stack(
                       children: [
-                        Icon(goal.icon, color: theme.colorScheme.primary, size: 32),
-                        const SizedBox(height: 10),
-                        Text(
-                          mdL10n != null ? goal.getDisplayName(mdL10n!) : goal.dbName,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.colorScheme.primary
+                                          .withValues(alpha: isSelected ? 0.22 : 0.12),
+                                      theme.colorScheme.secondary
+                                          .withValues(alpha: isSelected ? 0.14 : 0.08),
+                                    ],
+                                  ),
+                                ),
+                                child: FeminineIconView(
+                                  goal.femIcon,
+                                  size: 30,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                mdL10n != null
+                                    ? goal.getDisplayName(mdL10n!)
+                                    : goal.dbName,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        if (isSelected)
+                          PositionedDirectional(
+                            top: 0,
+                            end: 0,
+                            child: Icon(
+                              Icons.check_circle_rounded,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -543,31 +588,44 @@ class _CycleStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPregnant = goal.isPregnancyMode;
+    final isPostpartum = goal.isPostpartumMode;
     final isCycleMode = goal.isCycleGoalMode;
+    final isAr = Localizations.localeOf(context).languageCode.startsWith('ar');
+
+    final String title;
+    final String subtitle;
+    final String dateLabel;
+    final IconData dateIcon;
+    if (isPregnant) {
+      title = l10n.onboardingPregnancyDataTitle;
+      subtitle = l10n.onboardingPregnancyDataSubtitle;
+      dateLabel = l10n.onboardingPregnancyLmp;
+      dateIcon = Icons.calendar_today;
+    } else if (isPostpartum) {
+      title = l10n.postpartumSetDateTitle;
+      subtitle = l10n.postpartumSetDatePrompt;
+      dateLabel = l10n.postpartumBirthDateLabel;
+      dateIcon = Icons.child_care_outlined;
+    } else if (isCycleMode) {
+      title = l10n.onboardingCycleTitle;
+      subtitle = l10n.onboardingCycleSubtitle;
+      dateLabel = l10n.lastPeriodDate;
+      dateIcon = Icons.calendar_today;
+    } else {
+      title = isAr ? 'تفاصيل سريعة' : 'A few quick details';
+      subtitle = isAr
+          ? 'سنسأل فقط عن آخر دورة لتبدأ التتبّع.'
+          : 'We only ask for the basics so we can start tracking.';
+      dateLabel = l10n.lastPeriodDate;
+      dateIcon = Icons.calendar_today;
+    }
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          isPregnant
-              ? l10n.onboardingPregnancyDataTitle
-              : (isCycleMode
-                  ? l10n.onboardingCycleTitle
-                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
-                      ? 'تفاصيل سريعة'
-                      : 'A few quick details')),
-          style: theme.textTheme.headlineSmall,
-        ),
+        Text(title, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
-        Text(
-          isPregnant
-              ? l10n.onboardingPregnancyDataSubtitle
-              : (isCycleMode
-                  ? l10n.onboardingCycleSubtitle
-                  : (Localizations.localeOf(context).languageCode.startsWith('ar')
-                      ? 'سنسأل فقط عن آخر دورة لتبدأ التتبّع.'
-                      : 'We only ask for the basics so we can start tracking.')),
-          style: theme.textTheme.bodyMedium,
-        ),
+        Text(subtitle, style: theme.textTheme.bodyMedium),
         const SizedBox(height: 20),
         if (isCycleMode) ...[
           _StepperCard(label: l10n.cycleLength, value: cycleLength, onChanged: onCycleLength),
@@ -579,8 +637,8 @@ class _CycleStep extends StatelessWidget {
           onTap: onPickDate,
           child: ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.calendar_today, color: theme.colorScheme.primary),
-            title: Text(isPregnant ? l10n.onboardingPregnancyLmp : l10n.lastPeriodDate),
+            leading: Icon(dateIcon, color: theme.colorScheme.primary),
+            title: Text(dateLabel),
             subtitle: Text(
               '${lastPeriod.year}-${lastPeriod.month.toString().padLeft(2, '0')}-${lastPeriod.day.toString().padLeft(2, '0')}',
             ),

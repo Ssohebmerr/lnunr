@@ -499,6 +499,54 @@ class AdminRepository {
     }
   }
 
+  /// Shared POST helper for the action-routed `adminApi` Cloud Function.
+  /// Server re-verifies the admin role on every call — the client token alone
+  /// is never enough.
+  Future<Map<String, dynamic>> _callAdminApi(
+    String action,
+    Map<String, dynamic> payload,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) return {'error': 'Not authenticated'};
+    try {
+      final token = await user.getIdToken();
+      final response = await http.post(
+        Uri.parse('${AppSecrets.cloudFunctionsUrl}/adminApi'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'action': action, 'payload': payload}),
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        return {'error': data['error'] ?? 'HTTP ${response.statusCode}'};
+      }
+      return data;
+    } catch (e) {
+      return {'error': e.toString()};
+    }
+  }
+
+  /// Grants or revokes premium for [uid] via the server (Admin SDK write +
+  /// audit entry). Direct client Firestore writes to isPremium are blocked
+  /// for non-admins by security rules; going through the function keeps one
+  /// audited path for entitlement changes.
+  Future<bool> setUserPremium(String uid, bool isPremium) async {
+    final result = await _callAdminApi('setUserPremium', {
+      'uid': uid,
+      'isPremium': isPremium,
+    });
+    return result['ok'] == true;
+  }
+
+  /// Daily AI token/cost aggregates for the budget monitor.
+  /// Returns `{days: [...], totals: {requests, promptTokens,
+  /// completionTokens, estimatedCostUsd}}` or `{error: ...}`.
+  Future<Map<String, dynamic>> fetchAiCostStats({int days = 30}) {
+    return _callAdminApi('aiCostStats', {'days': days});
+  }
+
   Future<void> _logActivity(String action, String details) async {
     try {
       final admin = _auth.currentUser;

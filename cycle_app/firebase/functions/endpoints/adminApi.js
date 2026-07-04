@@ -35,22 +35,9 @@ const {
   docFromPath,
 } = require('../lib/adminAuth');
 
+const { handleCors, setCors } = require('../lib/http');
+
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
-
-function handleCors(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    res.status(204).send('');
-    return true;
-  }
-  return false;
-}
-
-function setCors(res) {
-  res.set('Access-Control-Allow-Origin', '*');
-}
 
 // ---------------------------------------------------------------------------
 // Query / Count helpers — used by 'query' and 'count' actions.
@@ -254,6 +241,63 @@ exports.adminApi = onRequest(
         }
 
         // ============== NEW ADMIN EXTENSIONS ==============
+        case 'setUserPremium': {
+          // Manual premium override — the ONLY sanctioned client-triggerable
+          // path besides Play Billing / promo codes. Admin-gated + audited.
+          const uid = (payload.uid || '').toString().trim();
+          const isPremium = payload.isPremium === true;
+          if (!uid) throw new Error('uid مطلوب');
+
+          const userRef = admin.firestore().collection('users').doc(uid);
+          const snap = await userRef.get();
+          if (!snap.exists) throw new Error('المستخدم غير موجود');
+
+          await userRef.set({
+            isPremium,
+            premiumSource: isPremium ? 'admin_grant' : admin.firestore.FieldValue.delete(),
+            premiumSince: isPremium
+              ? (snap.data()?.premiumSince || new Date().toISOString())
+              : admin.firestore.FieldValue.delete(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          // Audit trail — who flipped whom, when, in which direction.
+          await admin.firestore().collection('adminActivityLog').add({
+            action: 'setUserPremium',
+            targetUid: uid,
+            isPremium,
+            performedBy: decoded.uid,
+            performedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          result = { ok: true, uid, isPremium };
+          break;
+        }
+        case 'aiCostStats': {
+          // Budget monitor — reads O(days) aggregate docs written by
+          // lib/ai_usage.js on every AI request. No subcollection scans.
+          const days = Math.min(Math.max(parseInt(payload.days, 10) || 30, 1), 90);
+          const since = new Date();
+          since.setUTCDate(since.getUTCDate() - days);
+          const sinceKey = since.toISOString().slice(0, 10);
+          const snap = await admin.firestore()
+            .collection('aiUsageDaily')
+            .where(admin.firestore.FieldPath.documentId(), '>=', sinceKey)
+            .orderBy(admin.firestore.FieldPath.documentId(), 'asc')
+            .limit(days)
+            .get();
+
+          const daysOut = snap.docs.map(serializeDoc);
+          const totals = daysOut.reduce((acc, d) => ({
+            requests: acc.requests + (Number(d.requests) || 0),
+            promptTokens: acc.promptTokens + (Number(d.promptTokens) || 0),
+            completionTokens: acc.completionTokens + (Number(d.completionTokens) || 0),
+            estimatedCostUsd: acc.estimatedCostUsd + (Number(d.estimatedCostUsd) || 0),
+          }), { requests: 0, promptTokens: 0, completionTokens: 0, estimatedCostUsd: 0 });
+
+          result = { days: daysOut, totals };
+          break;
+        }
         case 'analyticsHistory': {
           const days = Math.min(Math.max(parseInt(payload.days, 10) || 30, 7), 90);
           const since = new Date();

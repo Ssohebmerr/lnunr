@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -85,11 +82,5 @@ class GuestUserService {
     } catch (e, st) {
       debugPrint('GuestUserService syncLocalProfileIfNeeded: $e\n$st');
     }
-  }
-
-  static String generateDeviceId() {
-    final r = Random.secure();
-    final bytes = List<int>.generate(16, (_) => r.nextInt(256));
-    return base64Url.encode(bytes).replaceAll('=', '').substring(0, 22);
   }
 }

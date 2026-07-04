@@ -39,11 +39,10 @@ const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
  * @param {string} userPrompt The user-side prompt.
  * @param {number} [maxTokens=2000] Output budget.
  * @param {number} [temperatureOverride] Optional caller-provided temperature.
- * @returns {Promise<string>} The model output. Returns an Arabic error string
- *   when the call exhausts all fallbacks so callers can detect failure via
- *   string-match.
+ * @returns {Promise<{text: string, usage: {promptTokens: number, completionTokens: number}}>}
+ *   Model output + token usage (zeros when the SDK omits usageMetadata).
  */
-async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride) {
+async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride) {
   // Defensive cleanup — strip BOM, zero-width chars, whitespace.
   const apiKey = (geminiApiKey || '')
     .replace(/^\uFEFF/, '')
@@ -77,13 +76,21 @@ async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 20
 
       const result = await model.generateContent(userPrompt);
       const text = result.response.text();
+      const meta = result.response?.usageMetadata || {};
+      const usage = {
+        promptTokens: Number(meta.promptTokenCount) || 0,
+        completionTokens: Number(meta.candidatesTokenCount) || 0,
+      };
       if (text && text.trim().length > 0) {
-        return text.trim();
+        return { text: text.trim(), usage };
       }
 
       const blockReason = result.response?.promptFeedback?.blockReason;
       if (blockReason) {
-        return '⚠️ Content blocked: ' + blockReason + '. Please rephrase your message.';
+        return {
+          text: '⚠️ Content blocked: ' + blockReason + '. Please rephrase your message.',
+          usage,
+        };
       }
     } catch (error) {
       lastError = error;
@@ -99,8 +106,20 @@ async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 20
   throw new Error('Gemini returned empty response from all models');
 }
 
+/**
+ * Backwards-compatible variant returning only the reply text — used by
+ * moderate / adminApi translateText / moderation triggers.
+ */
+async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride) {
+  const { text } = await callGeminiDetailed(
+    geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride,
+  );
+  return text;
+}
+
 module.exports = {
   GEMINI_SAFETY_SETTINGS,
   GEMINI_MODELS,
   callGemini,
+  callGeminiDetailed,
 };

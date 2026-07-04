@@ -248,6 +248,12 @@ abstract class AppLocalizations {
   /// **'Create your account'**
   String get registerTitle;
 
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account with email or Google — your data stays on your device by default'**
+  String get registerSubtitle;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:
@@ -548,6 +554,150 @@ abstract class AppLocalizations {
   /// **'Your purchases were checked.'**
   String get restorePurchasesDone;
 
+  /// No description provided for @restorePurchasesChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your purchases…'**
+  String get restorePurchasesChecking;
+
+  /// No description provided for @postpartumRecoveryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery · week {week}'**
+  String postpartumRecoveryWeek(int week);
+
+  /// No description provided for @postpartumTodayFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s focus'**
+  String get postpartumTodayFocus;
+
+  /// No description provided for @postpartumYourBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body this stage'**
+  String get postpartumYourBody;
+
+  /// No description provided for @postpartumYourBaby.
+  ///
+  /// In en, this message translates to:
+  /// **'Your baby this stage'**
+  String get postpartumYourBaby;
+
+  /// No description provided for @postpartumDailyRituals.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily rituals'**
+  String get postpartumDailyRituals;
+
+  /// No description provided for @postpartumWellbeingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you, really?'**
+  String get postpartumWellbeingTitle;
+
+  /// No description provided for @postpartumWellbeingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood swings in the early weeks are common. But if sadness, anxiety, or emptiness lasts more than two weeks, please reach out to your doctor — postpartum depression is real and treatable.'**
+  String get postpartumWellbeingBody;
+
+  /// No description provided for @postpartumSetDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When was your baby born?'**
+  String get postpartumSetDateTitle;
+
+  /// No description provided for @postpartumSetDatePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your baby\'s birth date so we can guide your recovery week by week.'**
+  String get postpartumSetDatePrompt;
+
+  /// No description provided for @postpartumSetDateCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Set birth date'**
+  String get postpartumSetDateCta;
+
+  /// No description provided for @postpartumBirthDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Baby\'s birth date'**
+  String get postpartumBirthDateLabel;
+
+  /// No description provided for @conditionWhatToTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'What to track'**
+  String get conditionWhatToTrack;
+
+  /// No description provided for @conditionUnderstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Understanding your body'**
+  String get conditionUnderstanding;
+
+  /// No description provided for @conditionDailyRituals.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily rituals'**
+  String get conditionDailyRituals;
+
+  /// No description provided for @conditionWhenToSeeDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'When to see a doctor'**
+  String get conditionWhenToSeeDoctor;
+
+  /// No description provided for @goalMenopauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menopause journey'**
+  String get goalMenopauseTitle;
+
+  /// No description provided for @goalPcosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PCOS management'**
+  String get goalPcosTitle;
+
+  /// No description provided for @activatePremiumTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Premium (test)'**
+  String get activatePremiumTest;
+
+  /// No description provided for @planYearlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get planYearlyTitle;
+
+  /// No description provided for @planMonthlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get planMonthlyTitle;
+
+  /// No description provided for @planPerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'per year'**
+  String get planPerYear;
+
+  /// No description provided for @planPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'per month'**
+  String get planPerMonth;
+
+  /// No description provided for @planSaveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {percent}%'**
+  String planSaveBadge(int percent);
+
   /// No description provided for @communityMediaDisabled.
   ///
   /// In en, this message translates to:
@@ -647,8 +797,20 @@ abstract class AppLocalizations {
   /// No description provided for @loginRequiredAi.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to use Gemini AI chat'**
+  /// **'Sign in to chat with Lune AI'**
   String get loginRequiredAi;
+
+  /// No description provided for @authOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with email'**
+  String get authOrEmail;
+
+  /// No description provided for @authOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get authOr;
 
   /// No description provided for @loginRequiredPremium.
   ///
@@ -836,16 +998,10 @@ abstract class AppLocalizations {
   /// **'Tap to start chatting'**
   String get homeAiCardTap;
 
-  /// No description provided for @homeAiCardSubtitleFree.
-  ///
-  /// In en, this message translates to:
-  /// **'5 free messages daily — {count} left today'**
-  String homeAiCardSubtitleFree(int count);
-
   /// No description provided for @homeAiCardSubtitlePremium.
   ///
   /// In en, this message translates to:
-  /// **'Your smart assistant — unlimited daily chat'**
+  /// **'Your smart assistant — up to 30 messages daily'**
   String get homeAiCardSubtitlePremium;
 
   /// No description provided for @homeAiCardSubtitlePremiumOnly.
@@ -3104,6 +3260,42 @@ abstract class AppLocalizations {
   /// **'Banned'**
   String get adminBannedBadge;
 
+  /// No description provided for @adminGrantPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Premium'**
+  String get adminGrantPremium;
+
+  /// No description provided for @adminRevokePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke Premium'**
+  String get adminRevokePremium;
+
+  /// No description provided for @adminPremiumUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription status updated'**
+  String get adminPremiumUpdated;
+
+  /// No description provided for @adminAiCost30d.
+  ///
+  /// In en, this message translates to:
+  /// **'AI cost (last 30 days)'**
+  String get adminAiCost30d;
+
+  /// No description provided for @adminAiTokensCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tokens'**
+  String adminAiTokensCount(String count);
+
+  /// No description provided for @adminAiRequestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests'**
+  String adminAiRequestsCount(String count);
+
   /// No description provided for @adminTimeNow.
   ///
   /// In en, this message translates to:
@@ -3335,7 +3527,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiDailyLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve used your 10 daily Lune AI messages. Your limit resets automatically tomorrow.'**
+  /// **'You\'ve used your 30 daily Lune AI messages. Your limit resets automatically tomorrow.'**
   String get aiDailyLimitReached;
 
   /// No description provided for @premiumAiFreeRemaining.
@@ -3371,7 +3563,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentAiBody.
   ///
   /// In en, this message translates to:
-  /// **'Chat messages may be sent to Google Gemini via our secure server for responses. No ads. You can disable this anytime.'**
+  /// **'Chat messages are sent to trusted AI providers (DeepSeek / Google) through our secure server to generate responses. No ads. You can disable this anytime.'**
   String get consentAiBody;
 
   /// No description provided for @consentCommunityTitle.
@@ -4310,17 +4502,11 @@ abstract class AppLocalizations {
   /// **'Tap to copy account ID'**
   String get accountTapToCopyId;
 
-  /// No description provided for @premiumActivationNeedsProfile.
+  /// No description provided for @premiumRefreshStatus.
   ///
   /// In en, this message translates to:
-  /// **'Complete registration (name + birth date) before activating Premium.'**
-  String get premiumActivationNeedsProfile;
-
-  /// No description provided for @premiumActivationFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not activate Premium. Check your connection and try again.'**
-  String get premiumActivationFailed;
+  /// **'Check subscription status'**
+  String get premiumRefreshStatus;
 
   /// No description provided for @guestModeTitle.
   ///
@@ -6272,11 +6458,59 @@ abstract class AppLocalizations {
   /// **'Ask health questions privately'**
   String get anonymousQaDesc;
 
-  /// No description provided for @activatePremiumTest.
+  /// No description provided for @accountWatchSheetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Activate Premium (Test)'**
-  String get activatePremiumTest;
+  /// **'Smart Watch Sync'**
+  String get accountWatchSheetTitle;
+
+  /// No description provided for @accountWatchSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle data is automatically synced to your paired smart watch. You can view your cycle progress and log your period directly from your watch.'**
+  String get accountWatchSheetBody;
+
+  /// No description provided for @accountWatchFeatureSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-syncs cycle data to watch'**
+  String get accountWatchFeatureSync;
+
+  /// No description provided for @accountWatchFeatureRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle ring on watch face'**
+  String get accountWatchFeatureRing;
+
+  /// No description provided for @accountWatchFeatureLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log period from watch'**
+  String get accountWatchFeatureLog;
+
+  /// No description provided for @accountWatchFeaturePhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Current phase display'**
+  String get accountWatchFeaturePhase;
+
+  /// No description provided for @watchSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get watchSyncNow;
+
+  /// No description provided for @watchSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch data synced successfully!'**
+  String get watchSyncSuccess;
+
+  /// No description provided for @watchSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: make sure your watch is paired.'**
+  String get watchSyncFailed;
 
   /// No description provided for @dateFormatDDMMYYYY.
   ///

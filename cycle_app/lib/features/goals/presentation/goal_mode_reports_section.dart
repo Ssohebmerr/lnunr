@@ -232,30 +232,32 @@ class GoalModeReportsSection extends StatelessWidget {
     }
 
     if (goal == UserGoalTypes.postpartum) {
+      // Postpartum uses ONLY real cycle data — no fabricated sleep/mood values.
+      final periodReturned = data.totalCycles > 0 || data.isPeriodStarted;
       return ReportsMetricGrid(
         children: [
           ReportsMetricTile(
             icon: Icons.healing_outlined,
-            label: l10n.homeCycleDay(data.cycleDay),
+            label: l10n.reportCycleDay,
             value: '${data.cycleDay}',
             accent: const Color(0xFFEC407A),
           ),
           ReportsMetricTile(
             icon: Icons.event_outlined,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: periodReturned ? data.nextPeriod : '—',
             accent: theme.colorScheme.primary,
           ),
           ReportsMetricTile(
-            icon: Icons.bedtime_outlined,
-            label: l10n.homeDayShort,
-            value: '7.5h',
+            icon: Icons.timeline_rounded,
+            label: l10n.homeRegularity,
+            value: '${data.cycleRegularity.round()}%',
             accent: theme.colorScheme.secondary,
           ),
           ReportsMetricTile(
-            icon: Icons.favorite_outline,
-            label: l10n.homeDayShort,
-            value: '6',
+            icon: Icons.calendar_view_month_rounded,
+            label: l10n.reportTotalCycles,
+            value: '${data.totalCycles}',
             accent: AuraColors.peachGold,
           ),
         ],
