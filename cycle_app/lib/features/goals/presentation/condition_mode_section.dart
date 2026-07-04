@@ -108,53 +108,59 @@ class ConditionModeSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // ── Cycle context + daily tip ─────────────────────────────────────
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: AppGlassCard(
-                blur: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.timeline_rounded,
-                        color: theme.colorScheme.primary, size: 20),
-                    const SizedBox(height: 8),
-                    Text(
-                      cycleContextValue,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+        // IntrinsicHeight gives the Row a bounded height so the two cards can
+        // stretch to equal height. Without it, CrossAxisAlignment.stretch
+        // inside the scrolling home list forces an infinite height and the
+        // section fails to lay out.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: AppGlassCard(
+                  blur: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.timeline_rounded,
+                          color: theme.colorScheme.primary, size: 20),
+                      const SizedBox(height: 8),
+                      Text(
+                        cycleContextValue,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    Text(
-                      cycleContextLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      Text(
+                        cycleContextLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppGlassCard(
-                blur: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.tips_and_updates_outlined,
-                        color: theme.colorScheme.secondary, size: 20),
-                    const SizedBox(height: 8),
-                    Text(
-                      dailyTip,
-                      style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
-                    ),
-                  ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppGlassCard(
+                  blur: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.tips_and_updates_outlined,
+                          color: theme.colorScheme.secondary, size: 20),
+                      const SizedBox(height: 8),
+                      Text(
+                        dailyTip,
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 14),
 
