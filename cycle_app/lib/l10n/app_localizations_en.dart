@@ -387,6 +387,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authOr => 'or';
 
   @override
+  String get adminPromoTitle => 'Promo codes';
+
+  @override
+  String get adminPromoManageBtn => 'Manage promo codes';
+
+  @override
+  String get adminPromoCreateHeader => 'Create a code';
+
+  @override
+  String get adminPromoCodeHint => 'Code (e.g. LUNE30)';
+
+  @override
+  String get adminPromoDaysLabel => 'Premium days';
+
+  @override
+  String get adminPromoMaxUsesLabel => 'Max uses';
+
+  @override
+  String get adminPromoNoteHint => 'Note (optional)';
+
+  @override
+  String get adminPromoCreateBtn => 'Create code';
+
+  @override
+  String get adminPromoCreatedMsg => 'Code created';
+
+  @override
+  String get adminPromoExistingHeader => 'Existing codes';
+
+  @override
+  String get adminPromoEmpty => 'No codes yet';
+
+  @override
+  String get adminPromoRevokeBtn => 'Revoke';
+
+  @override
+  String get adminPromoRevokedMsg => 'Code revoked';
+
+  @override
+  String get adminPromoActiveLabel => 'Active';
+
+  @override
+  String get adminPromoRevokedLabel => 'Inactive';
+
+  @override
+  String get adminPromoUsedLabel => 'used';
+
+  @override
+  String get adminPromoCodeTooShort => 'Code must be at least 3 characters';
+
+  @override
+  String get premiumDaysShort => 'days';
+
+  @override
   String get loginRequiredPremium => 'Sign in to subscribe';
 
   @override

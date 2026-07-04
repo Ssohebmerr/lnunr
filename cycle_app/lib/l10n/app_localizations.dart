@@ -812,6 +812,114 @@ abstract class AppLocalizations {
   /// **'or'**
   String get authOr;
 
+  /// No description provided for @adminPromoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo codes'**
+  String get adminPromoTitle;
+
+  /// No description provided for @adminPromoManageBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage promo codes'**
+  String get adminPromoManageBtn;
+
+  /// No description provided for @adminPromoCreateHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a code'**
+  String get adminPromoCreateHeader;
+
+  /// No description provided for @adminPromoCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code (e.g. LUNE30)'**
+  String get adminPromoCodeHint;
+
+  /// No description provided for @adminPromoDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium days'**
+  String get adminPromoDaysLabel;
+
+  /// No description provided for @adminPromoMaxUsesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max uses'**
+  String get adminPromoMaxUsesLabel;
+
+  /// No description provided for @adminPromoNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get adminPromoNoteHint;
+
+  /// No description provided for @adminPromoCreateBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Create code'**
+  String get adminPromoCreateBtn;
+
+  /// No description provided for @adminPromoCreatedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Code created'**
+  String get adminPromoCreatedMsg;
+
+  /// No description provided for @adminPromoExistingHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing codes'**
+  String get adminPromoExistingHeader;
+
+  /// No description provided for @adminPromoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No codes yet'**
+  String get adminPromoEmpty;
+
+  /// No description provided for @adminPromoRevokeBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get adminPromoRevokeBtn;
+
+  /// No description provided for @adminPromoRevokedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Code revoked'**
+  String get adminPromoRevokedMsg;
+
+  /// No description provided for @adminPromoActiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminPromoActiveLabel;
+
+  /// No description provided for @adminPromoRevokedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get adminPromoRevokedLabel;
+
+  /// No description provided for @adminPromoUsedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'used'**
+  String get adminPromoUsedLabel;
+
+  /// No description provided for @adminPromoCodeTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Code must be at least 3 characters'**
+  String get adminPromoCodeTooShort;
+
+  /// No description provided for @premiumDaysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get premiumDaysShort;
+
   /// No description provided for @loginRequiredPremium.
   ///
   /// In en, this message translates to:

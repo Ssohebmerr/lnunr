@@ -110,6 +110,21 @@ class _UsersTabState extends State<_UsersTab> {
     return Column(
       children: [
         Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => AdminPromoCodesScreen(repo: widget.repo),
+              ),
+            ),
+            icon: const Icon(Icons.confirmation_number_outlined, size: 20),
+            label: Text(l10n.adminPromoManageBtn),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(46),
+            ),
+          ),
+        ),
+        Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: Container(
             decoration: BoxDecoration(

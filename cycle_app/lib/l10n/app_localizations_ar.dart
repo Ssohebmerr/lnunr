@@ -386,6 +386,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authOr => 'أو';
 
   @override
+  String get adminPromoTitle => 'أكواد الهدية';
+
+  @override
+  String get adminPromoManageBtn => 'إدارة أكواد الهدية';
+
+  @override
+  String get adminPromoCreateHeader => 'إنشاء كود';
+
+  @override
+  String get adminPromoCodeHint => 'الكود (مثال LUNE30)';
+
+  @override
+  String get adminPromoDaysLabel => 'أيام البريميوم';
+
+  @override
+  String get adminPromoMaxUsesLabel => 'أقصى عدد استخدامات';
+
+  @override
+  String get adminPromoNoteHint => 'ملاحظة (اختياري)';
+
+  @override
+  String get adminPromoCreateBtn => 'إنشاء الكود';
+
+  @override
+  String get adminPromoCreatedMsg => 'تم إنشاء الكود';
+
+  @override
+  String get adminPromoExistingHeader => 'الأكواد الحالية';
+
+  @override
+  String get adminPromoEmpty => 'لا توجد أكواد بعد';
+
+  @override
+  String get adminPromoRevokeBtn => 'إلغاء';
+
+  @override
+  String get adminPromoRevokedMsg => 'تم إلغاء الكود';
+
+  @override
+  String get adminPromoActiveLabel => 'فعّال';
+
+  @override
+  String get adminPromoRevokedLabel => 'غير فعّال';
+
+  @override
+  String get adminPromoUsedLabel => 'مستخدم';
+
+  @override
+  String get adminPromoCodeTooShort => 'الكود يجب أن يكون 3 أحرف على الأقل';
+
+  @override
+  String get premiumDaysShort => 'يوم';
+
+  @override
   String get loginRequiredPremium => 'سجّلي الدخول للاشتراك';
 
   @override
