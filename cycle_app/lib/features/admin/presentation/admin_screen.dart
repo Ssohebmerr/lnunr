@@ -10,6 +10,7 @@ import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/admin_repository.dart';
 import 'admin_promo_codes_screen.dart';
+import 'admin_roles_screen.dart';
 
 part 'admin_dashboard_tab.dart';
 part 'admin_reports_tab.dart';

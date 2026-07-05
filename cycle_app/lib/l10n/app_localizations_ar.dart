@@ -440,6 +440,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get premiumDaysShort => 'يوم';
 
   @override
+  String get adminRolesTitle => 'المشرفون والمراقبون';
+
+  @override
+  String get adminRolesManageBtn => 'إدارة المشرفين';
+
+  @override
+  String get adminRolesAddHeader => 'إضافة مشرف';
+
+  @override
+  String get adminRolesEmailHint => 'بريد المستخدم';
+
+  @override
+  String get adminRolesRoleModerator => 'مراقب';
+
+  @override
+  String get adminRolesRoleAdmin => 'مشرف';
+
+  @override
+  String get adminRolesRoleOwner => 'مالك';
+
+  @override
+  String get adminRolesGrant => 'منح الصلاحية';
+
+  @override
+  String get adminRolesGranted => 'تم تحديث الصلاحية';
+
+  @override
+  String get adminRolesCurrentHeader => 'المشرفون الحاليون';
+
+  @override
+  String get adminRolesEmpty => 'لا يوجد مشرفون بعد';
+
+  @override
+  String get adminRolesRemove => 'إزالة';
+
+  @override
+  String get adminRolesRemoved => 'تمت إزالة المشرف';
+
+  @override
+  String get adminRolesOwnerOnly => 'فقط المالك يمكنه إضافة أو إزالة المشرفين.';
+
+  @override
+  String get adminRolesUserNotFound => 'لا يوجد مستخدم بهذا البريد';
+
+  @override
   String get loginRequiredPremium => 'سجّلي الدخول للاشتراك';
 
   @override

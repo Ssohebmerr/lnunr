@@ -441,6 +441,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumDaysShort => 'days';
 
   @override
+  String get adminRolesTitle => 'Admins and moderators';
+
+  @override
+  String get adminRolesManageBtn => 'Manage admins';
+
+  @override
+  String get adminRolesAddHeader => 'Add an admin';
+
+  @override
+  String get adminRolesEmailHint => 'User email';
+
+  @override
+  String get adminRolesRoleModerator => 'Moderator';
+
+  @override
+  String get adminRolesRoleAdmin => 'Admin';
+
+  @override
+  String get adminRolesRoleOwner => 'Owner';
+
+  @override
+  String get adminRolesGrant => 'Grant role';
+
+  @override
+  String get adminRolesGranted => 'Role updated';
+
+  @override
+  String get adminRolesCurrentHeader => 'Current admins';
+
+  @override
+  String get adminRolesEmpty => 'No admins yet';
+
+  @override
+  String get adminRolesRemove => 'Remove';
+
+  @override
+  String get adminRolesRemoved => 'Admin removed';
+
+  @override
+  String get adminRolesOwnerOnly => 'Only the owner can add or remove admins.';
+
+  @override
+  String get adminRolesUserNotFound => 'No user found with that email';
+
+  @override
   String get loginRequiredPremium => 'Sign in to subscribe';
 
   @override

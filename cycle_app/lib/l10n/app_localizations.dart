@@ -920,6 +920,96 @@ abstract class AppLocalizations {
   /// **'days'**
   String get premiumDaysShort;
 
+  /// No description provided for @adminRolesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins and moderators'**
+  String get adminRolesTitle;
+
+  /// No description provided for @adminRolesManageBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage admins'**
+  String get adminRolesManageBtn;
+
+  /// No description provided for @adminRolesAddHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an admin'**
+  String get adminRolesAddHeader;
+
+  /// No description provided for @adminRolesEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'User email'**
+  String get adminRolesEmailHint;
+
+  /// No description provided for @adminRolesRoleModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator'**
+  String get adminRolesRoleModerator;
+
+  /// No description provided for @adminRolesRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminRolesRoleAdmin;
+
+  /// No description provided for @adminRolesRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get adminRolesRoleOwner;
+
+  /// No description provided for @adminRolesGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant role'**
+  String get adminRolesGrant;
+
+  /// No description provided for @adminRolesGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Role updated'**
+  String get adminRolesGranted;
+
+  /// No description provided for @adminRolesCurrentHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Current admins'**
+  String get adminRolesCurrentHeader;
+
+  /// No description provided for @adminRolesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No admins yet'**
+  String get adminRolesEmpty;
+
+  /// No description provided for @adminRolesRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get adminRolesRemove;
+
+  /// No description provided for @adminRolesRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin removed'**
+  String get adminRolesRemoved;
+
+  /// No description provided for @adminRolesOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the owner can add or remove admins.'**
+  String get adminRolesOwnerOnly;
+
+  /// No description provided for @adminRolesUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No user found with that email'**
+  String get adminRolesUserNotFound;
+
   /// No description provided for @loginRequiredPremium.
   ///
   /// In en, this message translates to:
