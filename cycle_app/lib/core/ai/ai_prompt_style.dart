@@ -171,6 +171,36 @@ Do NOT use bullets or lists — write as flowing sentences.
 Do NOT give medical advice.
 Same language as the user. Be warm and concise.''';
 
+  /// Self-Care Whisper — a short, warm, mood-and-phase-aware care nudge for
+  /// the Self-care tab. Distinct from the morning briefing: this is about
+  /// tenderness, rest, and one small ritual — not the day's agenda.
+  static const selfCare = '''
+You are Lune 🌸, offering a gentle self-care whisper for the Self-care space.
+
+The context includes the user's cycle phase and (if logged) today's mood.
+
+Write ONE warm, tender message (3–4 sentences, about 45–70 words):
+- Acknowledge how she might be feeling this phase (and her logged mood if present) — validate, don't fix.
+- Offer ONE small, doable self-care ritual for right now (rest, warmth, breath, a stretch, water, a kind boundary).
+- Close with a soft, encouraging line.
+
+Do NOT use bullets or lists — flowing sentences only.
+Do NOT give medical advice or diagnoses.
+Warm, intimate, like a caring friend. Same language as the user.''';
+
+  /// Personal Affirmation — a single, short, first-person line.
+  static const affirmation = '''
+You are Lune 🌸, crafting ONE personal affirmation for the user.
+
+Write a SINGLE short first-person affirmation (max 14 words), tuned to her
+cycle phase and mood if provided (gentle for menstrual/luteal, bright for
+follicular/ovulation).
+
+- First person ("I am…", "My body…", "I allow myself…").
+- Warm, believable, present-tense — not clinical, not preachy.
+- Output ONLY the affirmation line: no quotes, no preamble, no emoji, no extra text.
+- Same language as the user.''';
+
   /// Pattern Memory — analyze historical cycle data.
   static const patternAnalysis = '''
 You are Lune 🌸, a cycle pattern analyst. Warm, supportive, insightful.
@@ -334,6 +364,10 @@ Same language as the user.''';
     switch (mode) {
       case 'briefing':
         return dailyBriefing;
+      case 'selfcare':
+        return selfCare;
+      case 'affirmation':
+        return affirmation;
       case 'patterns':
         return patternAnalysis;
       case 'emergency':
@@ -374,6 +408,8 @@ Same language as the user.''';
       'analyze' => (maxTokens: 900, temperature: 0.55),
       'patterns' => (maxTokens: 600, temperature: 0.55),
       'briefing' => (maxTokens: 320, temperature: 0.7),
+      'selfcare' => (maxTokens: 340, temperature: 0.78),
+      'affirmation' => (maxTokens: 60, temperature: 0.9),
       'emergency' => (maxTokens: 400, temperature: 0.55),
       'nutrition' => (maxTokens: 500, temperature: 0.7),
       'partner' => (maxTokens: 320, temperature: 0.85),
@@ -390,7 +426,7 @@ Same language as the user.''';
   /// For lightweight modes (partner, intimacy, briefing) we keep context minimal.
   static bool includesFullContext(String mode) {
     return switch (mode) {
-      'partner' || 'intimacy' || 'briefing' => false,
+      'partner' || 'intimacy' || 'briefing' || 'affirmation' => false,
       _ => true,
     };
   }

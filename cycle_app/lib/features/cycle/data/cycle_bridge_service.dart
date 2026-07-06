@@ -232,6 +232,104 @@ class CycleBridgeService {
         backupData: backup,
         customerId: _api.getCustomerId(),
       );
+
+  /// Loads the real historical series used by the Analytics charts, swallowing
+  /// any error so a failing history query never blanks the dashboard.
+  Future<AnalyticsHistory> tryLoadAnalyticsHistory() async {
+    try {
+      return await loadAnalyticsHistory();
+    } catch (e, st) {
+      debugPrint('CycleBridgeService.loadAnalyticsHistory failed: $e\n$st');
+      return AnalyticsHistory.empty;
+    }
+  }
+
+  /// Real cycle-length / period-duration history plus monthly body-temperature
+  /// averages. Everything here comes from the user's own logged data — no
+  /// synthetic or placeholder values.
+  Future<AnalyticsHistory> loadAnalyticsHistory() async {
+    final periods =
+        await _safeField(_api.getAllPeriodsDetails, <PeriodsDateRange>[]);
+
+    // getAllPeriodsDetails() returns newest → oldest; flip to chronological so
+    // charts read left (older) → right (newer).
+    final chrono = periods.reversed.toList();
+
+    // The most recent entry is the *ongoing* cycle: its cycleLength is only
+    // "days elapsed so far", so it would render as an artificially short bar.
+    // Drop it and keep only completed cycles for the length/duration history.
+    final completed =
+        chrono.length > 1 ? chrono.sublist(0, chrono.length - 1) : const [];
+
+    final cycleLengths = <int>[];
+    final periodDurations = <int>[];
+    for (final p in completed) {
+      final len = p.cycleLength ?? 0;
+      if (len > 0 && len < 120) cycleLengths.add(len);
+      final dur = p.periodDuration ?? 0;
+      if (dur > 0 && dur < 30) periodDurations.add(dur);
+    }
+
+    final monthlyTemps =
+        await _safeField(_loadMonthlyTemperatures, <MonthlyTemperature>[]);
+
+    return AnalyticsHistory(
+      cycleLengths: _lastN(cycleLengths, 12),
+      periodDurations: _lastN(periodDurations, 12),
+      monthlyTemps: monthlyTemps,
+    );
+  }
+
+  List<int> _lastN(List<int> list, int n) =>
+      list.length > n ? list.sublist(list.length - n) : list;
+
+  /// Buckets every temperature log from the past ~12 months into monthly
+  /// averages (°C). The app stores temperatures in Celsius by default; any
+  /// obviously-Fahrenheit value is converted defensively.
+  Future<List<MonthlyTemperature>> _loadMonthlyTemperatures() async {
+    final now = DateTime.now();
+    final start = DateTime(now.year - 1, now.month, 1);
+    final logs = await _api.getSymptomsLogReport(
+      startDate: start,
+      endDate: now,
+    );
+
+    final sums = <String, double>{};
+    final counts = <String, int>{};
+    final meta = <String, List<int>>{}; // key -> [year, month]
+    for (final log in logs) {
+      final date = log.logDate;
+      final raw = log.bodyTemperature;
+      if (date == null || raw == null) continue;
+      final value = double.tryParse(raw.trim());
+      if (value == null || value <= 0) continue;
+      final celsius = value > 45 ? (value - 32) * 5 / 9 : value;
+      final key = '${date.year}-${date.month}';
+      sums[key] = (sums[key] ?? 0) + celsius;
+      counts[key] = (counts[key] ?? 0) + 1;
+      meta[key] = [date.year, date.month];
+    }
+
+    final result = <MonthlyTemperature>[];
+    for (final entry in meta.entries) {
+      final avg = sums[entry.key]! / counts[entry.key]!;
+      result.add(
+        MonthlyTemperature(
+          year: entry.value[0],
+          month: entry.value[1],
+          avgCelsius: double.parse(avg.toStringAsFixed(1)),
+        ),
+      );
+    }
+    result.sort(
+      (a, b) => a.year != b.year
+          ? a.year.compareTo(b.year)
+          : a.month.compareTo(b.month),
+    );
+    return result.length > 12
+        ? result.sublist(result.length - 12)
+        : result;
+  }
 }
 
 class CycleDashboardData {
@@ -324,4 +422,48 @@ class CycleReportData {
   final Map<String, dynamic> predictionMatrix;
   final List<PeriodsDateRange> cycles;
   final List<SymptomsPatterns> symptomPatterns;
+}
+
+/// One month's averaged basal body temperature (°C).
+class MonthlyTemperature {
+  const MonthlyTemperature({
+    required this.year,
+    required this.month,
+    required this.avgCelsius,
+  });
+
+  final int year;
+  final int month; // 1..12
+  final double avgCelsius;
+}
+
+/// Real historical series backing the Analytics charts. Every field is derived
+/// from the user's own logged data, so charts reflect reality instead of
+/// placeholder values.
+class AnalyticsHistory {
+  const AnalyticsHistory({
+    required this.cycleLengths,
+    required this.periodDurations,
+    required this.monthlyTemps,
+  });
+
+  /// Completed cycle lengths (days), oldest → newest. Excludes the ongoing
+  /// cycle. Empty when the user has fewer than two completed cycles.
+  final List<int> cycleLengths;
+
+  /// Period durations (days) per completed cycle, oldest → newest.
+  final List<int> periodDurations;
+
+  /// Up to 12 most recent monthly body-temperature averages, oldest → newest.
+  final List<MonthlyTemperature> monthlyTemps;
+
+  bool get hasCycleHistory => cycleLengths.length >= 2;
+  bool get hasPeriodHistory => periodDurations.length >= 2;
+  bool get hasTemperature => monthlyTemps.isNotEmpty;
+
+  static const AnalyticsHistory empty = AnalyticsHistory(
+    cycleLengths: [],
+    periodDurations: [],
+    monthlyTemps: [],
+  );
 }

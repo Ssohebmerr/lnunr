@@ -132,6 +132,7 @@ class AiInsightsService {
   Future<DoctorReportEnrichment?> enrichDoctorReport({
     required String languageCode,
     required bool limitedData,
+    Map<String, dynamic> clinicalMetrics = const {},
   }) async {
     if (!await ConsentManager.hasAiConsent()) return null;
 
@@ -154,14 +155,20 @@ class AiInsightsService {
         '{\n'
         '  "clinical_summary": "2-3 concise professional sentences for a physician",\n'
         '  "patterns": ["observed pattern 1", "observed pattern 2"],\n'
-        '  "discussion_points": ["discussion point 1", "discussion point 2"],\n'
+        '  "discussion_points": ["question the patient could ask the doctor", "..."],\n'
+        '  "red_flags": ["observation worth raising with a clinician sooner", "..."],\n'
         '  "data_quality_note": "optional single sentence or null"\n'
         '}\n'
         '${isPregnant ? "Context: prenatal tracking." : "Context: menstrual cycle tracking."}\n'
+        'Base every statement on the provided cycleContext and clinicalMetrics '
+        '(cycle length range, variability, period duration, average pain, flags). '
+        'Reference the actual figures. Leave "red_flags" as an empty array if '
+        'nothing clearly stands out — never invent concerns.\n'
         '$limitedHint\n'
         'Never diagnose or prescribe. Write for a doctor reading a clean visit report.';
 
     final context = Map<String, dynamic>.from(snapshot.toPromptMap());
+    if (clinicalMetrics.isNotEmpty) context['clinicalMetrics'] = clinicalMetrics;
     if (limitedData) context['reportDataLimited'] = true;
 
     final raw = await _gateway.request(
@@ -200,6 +207,7 @@ class AiInsightsService {
       final summary = decoded['clinical_summary']?.toString().trim();
       final patterns = listOf(decoded['patterns']);
       final points = listOf(decoded['discussion_points']);
+      final redFlags = listOf(decoded['red_flags']);
       var note = decoded['data_quality_note']?.toString().trim();
       if (note == null || note.isEmpty || note.toLowerCase() == 'null') {
         note = limitedData
@@ -213,6 +221,7 @@ class AiInsightsService {
         clinicalSummary: summary,
         patterns: patterns,
         discussionPoints: points,
+        redFlags: redFlags,
         dataQualityNote: note,
       );
       return enrichment.isEmpty ? null : enrichment;

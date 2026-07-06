@@ -272,6 +272,15 @@
   "reportsMoreTitle": "Detailed charts & history",
   "reportsMoreSubtitle": "Full stats, cycle log & patterns",
   "reportsChecklistHint": "Your personalized action list",
+  "reportsHeaderTitle": "Your reports",
+  "reportsHeaderSubtitle": "A clear look at your cycle, your trends, and a doctor-ready summary.",
+  "reportsQuickActions": "Quick actions",
+  "reportsAnalyticsCardTitle": "Full analytics",
+  "reportsAnalyticsCardSubtitle": "All metrics, charts, and insights for your goal.",
+  "reportsPregnancyOverview": "Pregnancy overview",
+  "reportsMenopauseOverview": "Menopause overview",
+  "reportsPcosOverview": "PCOS overview",
+  "reportsRecoveryOverview": "Recovery overview",
   "goalModeGeneralReportStats": "Cycle overview",
   "goalModeConceiveReportStats": "Fertility overview",
   "goalModeAvoidReportStats": "Protection overview",
@@ -319,6 +328,57 @@
   "selfCareRitualMindful": "5 min mindfulness",
   "selfCareHealthTools": "Health tracking",
   "selfCareHealthToolsDesc": "Pills, sanitary, sex & more",
+  "selfCareWhisperTitle": "Whisper of the day",
+  "selfCareWhisperLocked": "Unlock Lune's personal whisper with Premium.",
+  "selfCareWhisperPrompt": "Give me a gentle self-care whisper for today based on my cycle phase and mood.",
+  "moodCheckInTitle": "How are you feeling today?",
+  "moodCheckInDone": "Today's mood is logged 🌸",
+  "moodTrendTitle": "This week",
+  "selfCareAffirmationGenerate": "Personal affirmation from Lune",
+  "selfCareAffirmationPrompt": "Write one short, uplifting first-person affirmation for me based on my cycle phase and mood.",
+  "selfCareMovement": "Gentle movement",
+  "selfCareMovementStep": "Step {current} of {total}",
+  "@selfCareMovementStep": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "selfCareMovementDone": "Beautifully done 🌸",
+  "selfCareMovementDoneCue": "Take a moment to notice how your body feels.",
+  "selfCareRestart": "Restart",
+  "selfCareSkip": "Skip",
+  "selfCareBreatheCycles": "{count} cycles completed",
+  "@selfCareBreatheCycles": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "selfCareCopied": "Copied to clipboard",
+  "selfCareLibraryTitle": "Cycle self-care guide",
+  "selfCareLibrarySubtitle": "Nutrition, movement, rest & mind for every phase.",
+  "selfCareLibraryCurrent": "You're here",
+  "selfCareJournalHistory": "Past entries",
+  "selfCareJournalEmpty": "No entries yet. Write your first reflection above.",
+  "selfCareJournalDelete": "Delete",
+  "selfCareJournalReflect": "Reflect with Lune",
+  "selfCareJournalReflecting": "Lune is reflecting on your words…",
+  "selfCareRitualStreak": "{days}d",
+  "@selfCareRitualStreak": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "selfCareRitualsProgress": "{done}/{total}",
+  "@selfCareRitualsProgress": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "showMore": "Show more",
+  "showLess": "Show less",
+  "aiUnavailable": "Lune is unavailable right now. Please try again later.",
   "communityTabFeed": "Feed",
   "communityTabDiscover": "Discover",
   "communityTabMine": "My groups",
@@ -442,6 +502,61 @@
   },
   "healthReportUntilNow": "Now",
   "healthReportFooter": "© Lune",
+  "healthReportPatientSection": "Patient",
+  "healthReportMode": "Tracking mode",
+  "healthReportModeCycle": "Cycle tracking",
+  "healthReportModePregnancy": "Pregnancy tracking",
+  "healthReportReportId": "Report ID",
+  "healthReportMenstrualHistory": "Menstrual history",
+  "healthReportLastPeriod": "Last period (LMP)",
+  "healthReportDataPeriod": "Data period",
+  "healthReportCyclesAnalyzed": "Cycles analyzed",
+  "healthReportCycleLengthRange": "Cycle length range",
+  "healthReportCycleVariability": "Cycle variability",
+  "healthReportPeriodLengthRange": "Period length range",
+  "healthReportPatternsToDiscuss": "Patterns worth discussing",
+  "healthReportSymptomBurden": "Symptom & pain summary",
+  "healthReportAveragePain": "Average pain (last 30 days)",
+  "healthReportWellnessEntries": "Wellness log entries",
+  "healthReportRedFlags": "Worth mentioning to your doctor",
+  "healthReportVitalsAdherence": "Vitals & adherence",
+  "healthReportLatestWeight": "Latest weight",
+  "healthReportLatestTemperature": "Latest temperature",
+  "healthReportAvgWater": "Average water (30 days)",
+  "healthReportPillAdherence": "Pill adherence (last 7 days)",
+  "clinicalFlagShortCycle": "Average cycle {days} days — shorter than the typical 21–35 day range; worth discussing with your doctor.",
+  "@clinicalFlagShortCycle": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "clinicalFlagLongCycle": "Average cycle {days} days — longer than the typical 21–35 day range; worth discussing with your doctor.",
+  "@clinicalFlagLongCycle": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "clinicalFlagIrregularCycle": "Cycle length varies by about {days} days between cycles — worth discussing regularity with your doctor.",
+  "@clinicalFlagIrregularCycle": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "clinicalFlagProlongedPeriod": "Average period {days} days — longer than the usual ~7 days; worth discussing with your doctor.",
+  "@clinicalFlagProlongedPeriod": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "clinicalFlagHighPain": "Average logged pain is in the severe range — worth discussing pain management with your doctor.",
+  "doctorReportPatientTitle": "Patient details",
+  "doctorReportPatientSubtitle": "Optional — shown at the top of the report for your doctor. Stored on your device only.",
+  "doctorReportPatientName": "Name",
+  "doctorReportPatientAge": "Age",
+  "doctorReportPatientNote": "Note for the doctor",
+  "doctorReportPatientNoteHint": "e.g. reason for visit, medications, concerns",
+  "doctorReportPatientSave": "Save",
+  "doctorReportEditPatient": "Edit patient details",
   "communityAdultsOnlyTitle": "Communities are for adults",
   "communityAdultsOnly": "Community features are available from age 18. You can still use all other app features.",
   "communityGuidelinesTitle": "Community guidelines",
@@ -1080,6 +1195,45 @@
   "communityCopied": "Copied to clipboard",
   "communityCopy": "Copy text",
   "communityGuidelinesShort": "Guidelines",
+  "communityPollAddOption": "Add option",
+  "communityPollOptionHint": "Option {number}",
+  "@communityPollOptionHint": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "communityPollNeedsOptions": "Add at least 2 poll options",
+  "communityPollVotesCount": "{count, plural, =0{No votes yet} =1{1 vote} other{{count} votes}}",
+  "@communityPollVotesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "communityPollTapToVote": "Tap an option to vote",
+  "communityFilters": "Filters",
+  "communityFilterCategory": "Category",
+  "communityFilterPostType": "Post type",
+  "communityFilterReset": "Reset",
+  "communityFilterApply": "Apply",
+  "storyChooseCommunity": "Share story to...",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count, plural, =1{1m ago} other{{count}m ago}}",
+  "@timeMinutesAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "timeHoursAgo": "{count, plural, =1{1h ago} other{{count}h ago}}",
+  "@timeHoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "timeDaysAgo": "{count, plural, =1{Yesterday} other{{count}d ago}}",
+  "@timeDaysAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reactionHeart": "Love",
+  "reactionHug": "Hug",
+  "reactionCelebrate": "Celebrate",
+  "reactionStrong": "Strength",
+  "communityMemberProfile": "Member profile",
+  "communityRecentPosts": "Recent posts",
+  "communityNoRecentPosts": "No public posts yet",
+  "communityWeeklyQuestion": "Question of the week",
+  "communityWeeklyAnswer": "Share your answer",
   "premiumUpsellTitle": "Lune Premium",
   "premiumUpsellSubscribe": "View subscription",
   "premiumUpsellNotNow": "Not now",

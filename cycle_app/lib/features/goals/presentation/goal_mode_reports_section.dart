@@ -308,18 +308,10 @@ class GoalModeReportsSection extends StatelessWidget {
     return switch (goal) {
       UserGoalTypes.conceive => l10n.goalModeConceiveReportStats,
       UserGoalTypes.avoid => l10n.goalModeAvoidReportStats,
-      UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
-          ? 'نظرة على الحمل'
-          : 'Pregnancy overview',
-      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
-          ? 'نظرة على سنّ الأمل'
-          : 'Menopause overview',
-      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
-          ? 'نظرة على إدارة PCOS'
-          : 'PCOS overview',
-      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
-          ? 'نظرة على الاستشفاء'
-          : 'Recovery overview',
+      UserGoalTypes.pregnant => l10n.reportsPregnancyOverview,
+      UserGoalTypes.menopause => l10n.reportsMenopauseOverview,
+      UserGoalTypes.pcos => l10n.reportsPcosOverview,
+      UserGoalTypes.postpartum => l10n.reportsRecoveryOverview,
       _ => l10n.goalModeGeneralReportStats,
     };
   }

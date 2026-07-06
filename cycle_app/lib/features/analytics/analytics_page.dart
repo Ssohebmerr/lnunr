@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 import '../cycle/data/cycle_sync_service.dart';
+import '../home/doctor_report_screen.dart';
 import 'analytics_data.dart';
 import 'analytics_sections.dart';
 
@@ -28,6 +29,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   final _sync = CycleSyncService();
 
   CycleDashboardData? _data;
+  AnalyticsHistory _history = AnalyticsHistory.empty;
   UserGoalTypes _goal = UserGoalTypes.general;
   bool _loading = true;
   bool _failed = false;
@@ -64,10 +66,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     try {
       final goal = await _sync.getUserGoal();
       final data = await _bridge.tryLoadDashboard();
+      final history = await _bridge.tryLoadAnalyticsHistory();
       if (mounted) {
         setState(() {
           _goal = goal;
           _data = data;
+          _history = history;
           _loading = false;
           _failed = data == null;
         });
@@ -119,20 +123,27 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Widget _buildSection(CycleDashboardData data) {
     switch (_goal) {
       case UserGoalTypes.pregnant:
-        return AnalyticsPregnancySection(data: data, goal: _goal);
+        return AnalyticsPregnancySection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.menopause:
-        return AnalyticsMenopauseSection(data: data, goal: _goal);
+        return AnalyticsMenopauseSection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.pcos:
-        return AnalyticsPcosSection(data: data, goal: _goal);
+        return AnalyticsPcosSection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.postpartum:
-        return AnalyticsPostpartumSection(data: data, goal: _goal);
+        return AnalyticsPostpartumSection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.conceive:
-        return AnalyticsConceiveSection(data: data, goal: _goal);
+        return AnalyticsConceiveSection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.avoid:
-        return AnalyticsAvoidSection(data: data, goal: _goal);
+        return AnalyticsAvoidSection(
+            data: data, goal: _goal, history: _history);
       case UserGoalTypes.general:
       case UserGoalTypes.sexual:
-        return AnalyticsGeneralSection(data: data, goal: _goal);
+        return AnalyticsGeneralSection(
+            data: data, goal: _goal, history: _history);
     }
   }
 }
@@ -187,6 +198,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
@@ -206,7 +218,7 @@ class _EmptyState extends StatelessWidget {
           FilledButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.retry),
           ),
         ],
       ),
@@ -220,6 +232,9 @@ class _DoctorExportBanner extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return AppGlassCard(
       blur: false,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const DoctorReportScreen()),
+      ),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(

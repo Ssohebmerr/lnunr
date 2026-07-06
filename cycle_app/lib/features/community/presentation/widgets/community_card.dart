@@ -219,7 +219,8 @@ class CommunityCard extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 18, left: 4),
+                        padding:
+                            const EdgeInsetsDirectional.only(top: 18, start: 4),
                         child: Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 14,

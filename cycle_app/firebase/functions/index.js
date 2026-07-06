@@ -77,11 +77,14 @@ exports.submitFeedback = feedback.submitFeedback;
 // Firestore triggers
 // ---------------------------------------------------------------------------
 const moderationTriggers = require('./triggers/moderationTriggers');
+const communityNotifications = require('./triggers/communityNotifications');
 
 exports.onStoryCreated = moderationTriggers.onStoryCreated;
 exports.onPostCreated = moderationTriggers.onPostCreated;
 exports.onCommentCreated = moderationTriggers.onCommentCreated;
 exports.onReportCreated = moderationTriggers.onReportCreated;
+exports.onCommentApproved = communityNotifications.onCommentApproved;
+exports.onPostLiked = communityNotifications.onPostLiked;
 
 // ---------------------------------------------------------------------------
 // Scheduled jobs

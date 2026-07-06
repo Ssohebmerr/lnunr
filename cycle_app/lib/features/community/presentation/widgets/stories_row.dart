@@ -71,12 +71,13 @@ class StoriesRow extends StatelessWidget {
             existing.stories.add(s);
           } else {
             final community = CommunitySeed.byId(s.communityId);
+            final lang = Localizations.localeOf(context).languageCode;
             groupMap[s.authorUid] = StoryGroup(
               authorUid: s.authorUid,
               authorAlias: s.authorAlias,
               authorAvatarIndex: s.authorAvatarIndex,
               stories: [s],
-              communityName: community?.nameForLocale('en'),
+              communityName: community?.nameForLocale(lang),
               currentUid: uid,
             );
           }

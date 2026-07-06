@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/premium/premium_badge.dart';
@@ -13,11 +12,15 @@ import '../../../../l10n/app_localizations.dart';
 import '../../data/community_repository.dart';
 import '../../data/community_seed.dart';
 import '../../data/models/community_post.dart';
+import '../../data/models/post_reactions.dart';
 import '../../data/models/post_type.dart';
 import '../community_clipboard.dart';
 import '../community_share.dart';
 import 'community_safety_actions.dart';
+import 'community_time.dart';
 import 'community_ui.dart';
+import 'member_profile_sheet.dart';
+import 'poll_view.dart';
 import 'post_media_view.dart';
 
 class PostCard extends StatelessWidget {
@@ -66,7 +69,7 @@ class PostCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final repo = context.read<CommunityRepository>();
-    final time = DateFormat.MMMd().add_Hm().format(post.createdAt);
+    final time = communityRelativeTime(context, post.createdAt);
     final typeColor = _typeColor(post.postType);
 
     return Padding(
@@ -110,43 +113,58 @@ class PostCard extends StatelessWidget {
                   children: [
                     // ── Header ──
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 12, 0),
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(16, 16, 12, 0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Avatar with ring
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  typeColor.withValues(alpha: 0.5),
-                                  typeColor.withValues(alpha: 0.15),
-                                ],
+                          // Avatar with ring — tap opens the member profile
+                          GestureDetector(
+                            onTap: post.isAnonymous
+                                ? null
+                                : () => showMemberProfileSheet(
+                                      context,
+                                      communityId: post.communityId,
+                                      authorUid: post.authorUid,
+                                      alias: post.authorAlias,
+                                      avatarIndex: post.authorAvatarIndex,
+                                      isPremium: post.authorIsPremium,
+                                    ),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    typeColor.withValues(alpha: 0.5),
+                                    typeColor.withValues(alpha: 0.15),
+                                  ],
+                                ),
                               ),
+                              child: post.isAnonymous
+                                  ? Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: theme
+                                            .colorScheme.primaryContainer
+                                            .withValues(alpha: 0.55),
+                                      ),
+                                      child: Icon(
+                                        Icons.visibility_off_outlined,
+                                        size: 18,
+                                        color: theme
+                                            .colorScheme.onPrimaryContainer,
+                                      ),
+                                    )
+                                  : AppAvatar(
+                                      radius: 20,
+                                      avatarIndex: post.authorAvatarIndex,
+                                      uidSeed: post.authorUid,
+                                      isPremium: post.authorIsPremium,
+                                    ),
                             ),
-                            child: post.isAnonymous
-                                ? Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: theme.colorScheme.primaryContainer
-                                          .withValues(alpha: 0.55),
-                                    ),
-                                    child: Icon(
-                                      Icons.visibility_off_outlined,
-                                      size: 18,
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                    ),
-                                  )
-                                : AppAvatar(
-                                    radius: 20,
-                                    avatarIndex: post.authorAvatarIndex,
-                                    uidSeed: post.authorUid,
-                                    isPremium: post.authorIsPremium,
-                                  ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -415,6 +433,14 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    // ── Poll ──
+                    if (post.isPoll) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: PollView(post: post, accentColor: typeColor),
+                      ),
+                    ],
                     // ── Action bar ──
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
@@ -431,42 +457,7 @@ class PostCard extends StatelessWidget {
                             child: Row(
                               children: [
                                 if (uid != null) ...[
-                                  StreamBuilder<bool>(
-                                    stream: repo.watchUserLiked(
-                                      post.communityId,
-                                      post.id,
-                                      uid,
-                                    ),
-                                    builder: (context, likedSnap) {
-                                      final liked = likedSnap.data ?? false;
-                                      return StreamBuilder<int>(
-                                        stream: repo.watchLikeCount(
-                                          post.communityId,
-                                          post.id,
-                                        ),
-                                        builder: (context, countSnap) {
-                                          final count = countSnap.data ?? 0;
-                                          return CommunityPostAction(
-                                            icon: liked
-                                                ? Icons.favorite_rounded
-                                                : Icons.favorite_border_rounded,
-                                            label:
-                                                count > 0 ? '$count' : null,
-                                            active: liked,
-                                            activeColor: AuraColors.rose,
-                                            onTap: () {
-                                              HapticFeedback.selectionClick();
-                                              repo.toggleLike(
-                                                communityId: post.communityId,
-                                                postId: post.id,
-                                                uid: uid,
-                                              );
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
+                                  _ReactionAction(post: post, uid: uid),
                                   StreamBuilder<bool>(
                                     stream: repo.watchPostSaved(
                                       uid,
@@ -570,6 +561,213 @@ class PostCard extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Reaction button: tap toggles a heart, long-press opens a picker with the
+/// per-reaction breakdown. One Firestore listener per card (replaces the old
+/// liked + count pair).
+class _ReactionAction extends StatelessWidget {
+  const _ReactionAction({required this.post, required this.uid});
+
+  final CommunityPost post;
+  final String uid;
+
+  static const _emoji = {
+    'heart': '❤️',
+    'hug': '🤗',
+    'celebrate': '🎉',
+    'strong': '💪',
+  };
+
+  String _label(String kind, AppLocalizations l10n) => switch (kind) {
+        'hug' => l10n.reactionHug,
+        'celebrate' => l10n.reactionCelebrate,
+        'strong' => l10n.reactionStrong,
+        _ => l10n.reactionHeart,
+      };
+
+  Future<void> _react(
+    BuildContext context,
+    CommunityRepository repo,
+    String reaction,
+  ) async {
+    HapticFeedback.selectionClick();
+    try {
+      await repo.setPostReaction(
+        communityId: post.communityId,
+        postId: post.id,
+        uid: uid,
+        reaction: reaction,
+      );
+    } catch (e) {
+      debugPrint('_ReactionAction failed: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorGeneric)),
+        );
+      }
+    }
+  }
+
+  void _showPicker(
+    BuildContext context,
+    CommunityRepository repo,
+    PostReactions reactions,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Row(
+            children: [
+              for (final kind in CommunityRepository.postReactionKinds)
+                Expanded(
+                  child: _ReactionPickerItem(
+                    emoji: _emoji[kind]!,
+                    label: _label(kind, l10n),
+                    count: reactions.countFor(kind),
+                    selected: reactions.myReaction == kind,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _react(context, repo, kind);
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = context.read<CommunityRepository>();
+
+    return StreamBuilder<PostReactions>(
+      stream: repo.watchPostReactions(post.communityId, post.id, uid),
+      builder: (context, snap) {
+        final reactions = snap.data ?? const PostReactions();
+        final mine = reactions.myReaction;
+        final theme = Theme.of(context);
+        final color = mine != null
+            ? AuraColors.rose
+            : theme.colorScheme.onSurfaceVariant;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _react(context, repo, mine ?? 'heart'),
+            onLongPress: () {
+              HapticFeedback.mediumImpact();
+              _showPicker(context, repo, reactions);
+            },
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: mine == null
+                        ? Icon(
+                            Icons.favorite_border_rounded,
+                            key: const ValueKey('none'),
+                            size: 18,
+                            color: color,
+                          )
+                        : Text(
+                            _emoji[mine] ?? '❤️',
+                            key: ValueKey(mine),
+                            style: const TextStyle(fontSize: 15),
+                          ),
+                  ),
+                  if (reactions.total > 0) ...[
+                    const SizedBox(width: 5),
+                    Text(
+                      '${reactions.total}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: color,
+                        fontWeight:
+                            mine != null ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ReactionPickerItem extends StatelessWidget {
+  const _ReactionPickerItem({
+    required this.emoji,
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                : theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (count > 0)
+              Text(
+                '$count',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -8,6 +8,8 @@ import '../../../../core/widgets/app_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/models/community_comment.dart';
 import '../community_feed_utils.dart';
+import 'comment_like_button.dart';
+import 'community_time.dart';
 
 typedef CommentActionCallback = void Function(CommunityComment comment);
 
@@ -17,6 +19,8 @@ Future<void> showCommentThreadSheet({
   required List<CommunityComment> allComments,
   required String? bestAnswerId,
   required CommentActionCallback onCommentTap,
+  String? communityId,
+  String? postId,
 }) {
   final l10n = AppLocalizations.of(context)!;
   final replies = collectThreadReplies(root.id, allComments);
@@ -128,6 +132,8 @@ Future<void> showCommentThreadSheet({
                         comment: root,
                         isBest: bestAnswerId == root.id,
                         isRoot: true,
+                        communityId: communityId,
+                        postId: postId,
                         onTap: () => onCommentTap(root),
                       ),
                       if (replies.isEmpty)
@@ -167,6 +173,8 @@ Future<void> showCommentThreadSheet({
                             comment: entry.value,
                             isBest: bestAnswerId == entry.value.id,
                             isLast: entry.key == replies.length - 1,
+                            communityId: communityId,
+                            postId: postId,
                             onTap: () => onCommentTap(entry.value),
                           ),
                         ),
@@ -189,6 +197,8 @@ class _ThreadCommentTile extends StatelessWidget {
     this.isBest = false,
     this.isRoot = false,
     this.isLast = false,
+    this.communityId,
+    this.postId,
   });
 
   final CommunityComment comment;
@@ -196,6 +206,8 @@ class _ThreadCommentTile extends StatelessWidget {
   final bool isBest;
   final bool isRoot;
   final bool isLast;
+  final String? communityId;
+  final String? postId;
 
   @override
   Widget build(BuildContext context) {
@@ -290,9 +302,10 @@ class _ThreadCommentTile extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      Expanded(
+                                      Flexible(
                                         child: Text(
                                           comment.authorAlias,
+                                          overflow: TextOverflow.ellipsis,
                                           style: theme.textTheme.titleSmall
                                               ?.copyWith(
                                             fontWeight: FontWeight.w700,
@@ -302,6 +315,22 @@ class _ThreadCommentTile extends StatelessWidget {
                                       ),
                                       if (comment.authorIsPremium)
                                         const PremiumNameBadge(),
+                                      Expanded(
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsetsDirectional.only(
+                                                  start: 8),
+                                          child: Text(
+                                            communityRelativeTime(
+                                                context, comment.createdAt),
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                              color: theme.colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                       if (isBest)
                                         Container(
                                           padding: const EdgeInsets.symmetric(
@@ -360,6 +389,19 @@ class _ThreadCommentTile extends StatelessWidget {
                                       fontSize: isRoot ? null : 13,
                                     ),
                                   ),
+                                  if (communityId != null &&
+                                      postId != null) ...[
+                                    const SizedBox(height: 4),
+                                    Align(
+                                      alignment:
+                                          AlignmentDirectional.centerStart,
+                                      child: CommentLikeButton(
+                                        communityId: communityId!,
+                                        postId: postId!,
+                                        commentId: comment.id,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

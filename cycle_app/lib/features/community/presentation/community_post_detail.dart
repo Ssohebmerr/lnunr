@@ -378,8 +378,23 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
           ),
           title: Row(
             children: [
-              Expanded(child: Text(c.authorAlias)),
+              Flexible(
+                child: Text(
+                  c.authorAlias,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               if (c.authorIsPremium) const PremiumNameBadge(),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Text(
+                  communityRelativeTime(context, c.createdAt),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const Spacer(),
               if (isBest)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(start: 8),
@@ -419,29 +434,41 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   ),
                 ),
               Text(c.text),
-              if (replyCount > 0) ...[
-                const SizedBox(height: 6),
-                TextButton.icon(
-                  onPressed: () => showCommentThreadSheet(
-                    context: context,
-                    root: c,
-                    allComments: comments,
-                    bestAnswerId: bestAnswerId,
-                    onCommentTap: (comment) => _showCommentActions(
-                      comment,
-                      post,
-                      isPostAuthor: isPostAuthor,
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  CommentLikeButton(
+                    communityId: widget.community.id,
+                    postId: widget.post.id,
+                    commentId: c.id,
+                  ),
+                  if (replyCount > 0) ...[
+                    const SizedBox(width: 10),
+                    TextButton.icon(
+                      onPressed: () => showCommentThreadSheet(
+                        context: context,
+                        root: c,
+                        allComments: comments,
+                        bestAnswerId: bestAnswerId,
+                        communityId: widget.community.id,
+                        postId: widget.post.id,
+                        onCommentTap: (comment) => _showCommentActions(
+                          comment,
+                          post,
+                          isPostAuthor: isPostAuthor,
+                        ),
+                      ),
+                      icon: const Icon(Icons.forum_outlined, size: 16),
+                      label: Text(l10n.communityViewReplies(replyCount)),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.forum_outlined, size: 16),
-                  label: Text(l10n.communityViewReplies(replyCount)),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
+                  ],
+                ],
+              ),
             ],
           ),
           onLongPress: () => _showCommentActions(c, post, isPostAuthor: isPostAuthor),
@@ -453,6 +480,8 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                         root: c,
                         allComments: comments,
                         bestAnswerId: bestAnswerId,
+                        communityId: widget.community.id,
+                        postId: widget.post.id,
                         onCommentTap: (comment) => _showCommentActions(
                           comment,
                           post,
@@ -725,7 +754,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                 ),
                 boxShadow: AppShadows.navFloat(isDark),
               ),
-              padding: const EdgeInsets.only(left: 18, right: 6),
+              padding: const EdgeInsetsDirectional.only(start: 18, end: 6),
               child: Row(
                 children: [
                   Expanded(

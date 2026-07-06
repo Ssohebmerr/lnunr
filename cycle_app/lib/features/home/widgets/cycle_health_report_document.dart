@@ -4,10 +4,14 @@ import 'package:menstrual_cycle_widget/ui/model/symptoms_patterns.dart';
 import 'package:menstrual_cycle_widget/utils/model/periods_date_range.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../core/ai/doctor_report_analyzer.dart';
 import '../../../core/ai/models/doctor_report_enrichment.dart';
+import '../../../core/ai/models/health_snapshot.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
+import '../data/doctor_report_flag_text.dart';
+import '../data/doctor_report_patient.dart';
 
 /// Era-style printable cycle health report (stats, history dots, symptoms, QR).
 class CycleHealthReportDocument extends StatelessWidget {
@@ -17,6 +21,10 @@ class CycleHealthReportDocument extends StatelessWidget {
     required this.dashboard,
     required this.qrPayload,
     required this.exportedAt,
+    this.metrics,
+    this.patient,
+    this.snapshot,
+    this.reportId,
     this.enrichment,
     this.refining = false,
     this.limitedData = false,
@@ -27,6 +35,10 @@ class CycleHealthReportDocument extends StatelessWidget {
   final CycleDashboardData? dashboard;
   final String qrPayload;
   final DateTime exportedAt;
+  final DoctorReportMetrics? metrics;
+  final PatientInfo? patient;
+  final HealthSnapshot? snapshot;
+  final String? reportId;
   final DoctorReportEnrichment? enrichment;
   final bool refining;
   final bool limitedData;
@@ -44,6 +56,10 @@ class CycleHealthReportDocument extends StatelessWidget {
     final pm = report.predictionMatrix;
     final dash = dashboard;
     final enrich = enrichment;
+    final m = metrics;
+    final pt = patient;
+    final snap = snapshot;
+    final vitalsRows = _vitalsRows(l10n, snap);
 
     return Container(
       color: const Color(0xFFD4D4D4),
@@ -75,6 +91,15 @@ class CycleHealthReportDocument extends StatelessWidget {
                   ),
                   qrPayload: qrPayload,
                 ),
+                const SizedBox(height: 14),
+                _PatientHeader(
+                  patient: pt,
+                  metrics: m,
+                  reportId: reportId,
+                  goalLabel: _goalLabel(l10n, snap),
+                  ar: ar,
+                  l10n: l10n,
+                ),
                 if (refining) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -95,6 +120,22 @@ class CycleHealthReportDocument extends StatelessWidget {
                         enrich.clinicalSummary!.trim(),
                         style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
                       ),
+                    ],
+                  ),
+                ],
+                if (m != null && !m.isEmpty) ...[
+                  const SizedBox(height: 20),
+                  _ReportSection(
+                    title: l10n.healthReportMenstrualHistory,
+                    children: _menstrualHistoryRows(l10n, m, dateFmt, ar),
+                  ),
+                ],
+                if (m != null && m.flags.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _RedFlagSection(
+                    title: l10n.healthReportPatternsToDiscuss,
+                    items: [
+                      for (final f in m.flags) DoctorReportFlagText.of(l10n, f),
                     ],
                   ),
                 ],
@@ -183,6 +224,13 @@ class CycleHealthReportDocument extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (_hasSymptomBurden(m, snap)) ...[
+                  const SizedBox(height: 18),
+                  _ReportSection(
+                    title: l10n.healthReportSymptomBurden,
+                    children: _symptomBurdenRows(l10n, m, snap, ar),
+                  ),
+                ],
                 if (enrich != null && enrich.patterns.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _ReportSection(
@@ -201,6 +249,20 @@ class CycleHealthReportDocument extends StatelessWidget {
                       for (final item in enrich.discussionPoints)
                         _BulletRow(text: item),
                     ],
+                  ),
+                ],
+                if (enrich != null && enrich.redFlags.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _RedFlagSection(
+                    title: l10n.healthReportRedFlags,
+                    items: enrich.redFlags,
+                  ),
+                ],
+                if (vitalsRows.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  _ReportSection(
+                    title: l10n.healthReportVitalsAdherence,
+                    children: vitalsRows,
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -250,6 +312,139 @@ class CycleHealthReportDocument extends StatelessWidget {
     );
   }
 
+  static String _goalLabel(AppLocalizations l10n, HealthSnapshot? snap) {
+    if (snap != null && snap.isPregnancyMode) {
+      return l10n.healthReportModePregnancy;
+    }
+    return l10n.healthReportModeCycle;
+  }
+
+  static List<Widget> _menstrualHistoryRows(
+    AppLocalizations l10n,
+    DoctorReportMetrics m,
+    DateFormat dateFmt,
+    bool ar,
+  ) {
+    final rows = <Widget>[];
+    if (m.lastPeriodStart != null) {
+      rows.add(_StatRow(
+        label: l10n.healthReportLastPeriod,
+        value: dateFmt.format(m.lastPeriodStart!),
+      ));
+    }
+    if (m.firstCycleDate != null && m.lastCycleDate != null) {
+      rows.add(_StatRow(
+        label: l10n.healthReportDataPeriod,
+        value: '${dateFmt.format(m.firstCycleDate!)} — '
+            '${dateFmt.format(m.lastCycleDate!)}',
+      ));
+    }
+    if (m.analyzedCycleCount > 0) {
+      rows.add(_StatRow(
+        label: l10n.healthReportCyclesAnalyzed,
+        value: '${m.analyzedCycleCount}',
+      ));
+    }
+    if (m.hasRangeData) {
+      rows.add(_StatRow(
+        label: l10n.healthReportCycleLengthRange,
+        value: _rangeLabel(m.minCycleLength!, m.maxCycleLength!, ar),
+      ));
+    }
+    if (m.cycleVariability != null) {
+      rows.add(_StatRow(
+        label: l10n.healthReportCycleVariability,
+        value: _daysLabel(m.cycleVariability, ar),
+      ));
+    }
+    if (m.minPeriodDuration != null &&
+        m.maxPeriodDuration != null &&
+        m.minPeriodDuration != m.maxPeriodDuration) {
+      rows.add(_StatRow(
+        label: l10n.healthReportPeriodLengthRange,
+        value: _rangeLabel(m.minPeriodDuration!, m.maxPeriodDuration!, ar),
+      ));
+    }
+    return rows;
+  }
+
+  static bool _hasSymptomBurden(DoctorReportMetrics? m, HealthSnapshot? snap) {
+    return (m?.averagePainLevel != null) ||
+        (snap != null && snap.wellnessLogCount > 0);
+  }
+
+  static List<Widget> _symptomBurdenRows(
+    AppLocalizations l10n,
+    DoctorReportMetrics? m,
+    HealthSnapshot? snap,
+    bool ar,
+  ) {
+    final rows = <Widget>[];
+    final pain = m?.averagePainLevel;
+    if (pain != null) {
+      rows.add(_StatRow(
+        label: l10n.healthReportAveragePain,
+        value: '${pain.toStringAsFixed(1)} / 4',
+      ));
+    }
+    if (snap != null && snap.wellnessLogCount > 0) {
+      rows.add(_StatRow(
+        label: l10n.healthReportWellnessEntries,
+        value: '${snap.wellnessLogCount}',
+      ));
+    }
+    return rows;
+  }
+
+  static List<Widget> _vitalsRows(AppLocalizations l10n, HealthSnapshot? snap) {
+    if (snap == null) return const [];
+    final rows = <Widget>[];
+    final hub = snap.wellnessHub;
+
+    final vitals = hub['dailyVitals'];
+    if (vitals is Map) {
+      final weight = vitals['latestWeight'];
+      if (weight != null && weight.toString().trim().isNotEmpty) {
+        rows.add(_StatRow(
+          label: l10n.healthReportLatestWeight,
+          value: weight.toString().trim(),
+        ));
+      }
+      final temp = vitals['latestBodyTemperature'];
+      if (temp != null && temp.toString().trim().isNotEmpty) {
+        rows.add(_StatRow(
+          label: l10n.healthReportLatestTemperature,
+          value: temp.toString().trim(),
+        ));
+      }
+      final water = vitals['avgWaterLast30Days'];
+      if (water != null) {
+        final unit = (vitals['waterUnit'] ?? '').toString().trim();
+        rows.add(_StatRow(
+          label: l10n.healthReportAvgWater,
+          value: '$water $unit'.trim(),
+        ));
+      }
+    }
+
+    final pills = hub['birthControlPills'];
+    if (pills is Map && pills['active'] == true) {
+      final taken = pills['takenLast7Days'];
+      final scheduled = pills['scheduledLast7Days'];
+      if (taken != null && scheduled is num && scheduled > 0) {
+        rows.add(_StatRow(
+          label: l10n.healthReportPillAdherence,
+          value: '$taken / $scheduled',
+        ));
+      }
+    }
+
+    return rows;
+  }
+
+  static String _rangeLabel(int min, int max, bool ar) =>
+      ar ? '$min–$max يوم' : '$min–$max days';
+
   static String _text(dynamic v) {
     if (v == null) return '—';
     final s = v.toString().trim();
@@ -289,6 +484,188 @@ class _BulletRow extends StatelessWidget {
           Expanded(
             child: Text(text, style: Theme.of(context).textTheme.bodySmall),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Official-looking patient identity block at the top of the report.
+class _PatientHeader extends StatelessWidget {
+  const _PatientHeader({
+    required this.patient,
+    required this.metrics,
+    required this.reportId,
+    required this.goalLabel,
+    required this.ar,
+    required this.l10n,
+  });
+
+  final PatientInfo? patient;
+  final DoctorReportMetrics? metrics;
+  final String? reportId;
+  final String goalLabel;
+  final bool ar;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final pt = patient;
+    final rows = <Widget>[];
+
+    if (pt != null && pt.hasName) {
+      rows.add(_kv(theme, l10n.doctorReportPatientName, pt.name!.trim(),
+          emphasize: true));
+    }
+    if (pt?.age != null) {
+      rows.add(_kv(
+        theme,
+        l10n.doctorReportPatientAge,
+        ar ? '${pt!.age} سنة' : '${pt!.age} yrs',
+      ));
+    }
+    rows.add(_kv(theme, l10n.healthReportMode, goalLabel));
+    if (reportId != null && reportId!.isNotEmpty) {
+      rows.add(_kv(theme, l10n.healthReportReportId, reportId!));
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AuraColors.blush.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AuraColors.roseDeep.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.badge_outlined, size: 16, color: AuraColors.roseDeep),
+              const SizedBox(width: 6),
+              Text(
+                l10n.healthReportPatientSection,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...rows,
+          if (pt != null && pt.hasNote) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.doctorReportPatientNote,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              pt.note!.trim(),
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _kv(ThemeData theme, String k, String v, {bool emphasize = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              k,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.outline),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(
+              v,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: emphasize ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Amber attention panel used for both on-device clinical flags and the AI's
+/// "worth mentioning" list. Never diagnostic — framed as discussion prompts.
+class _RedFlagSection extends StatelessWidget {
+  const _RedFlagSection({required this.title, required this.items});
+
+  final String title;
+  final List<String> items;
+
+  static const _accent = Color(0xFFB26A00);
+  static const _accentDeep = Color(0xFF8A5200);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6EC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE0A34E).withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, size: 18, color: _accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: _accentDeep,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(Icons.flag_outlined, size: 13, color: _accent),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

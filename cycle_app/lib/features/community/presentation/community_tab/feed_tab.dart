@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/config/feature_flags.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/community_repository.dart';
 import '../../data/community_seed.dart';
@@ -59,6 +60,129 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
         PostType.milestone => l10n.postTypeMilestone,
         PostType.poll => l10n.postTypePoll,
       };
+
+  int get _activeFilterCount =>
+      (_categoryFilter != 'all' ? 1 : 0) + (_typeFilter != null ? 1 : 0);
+
+  List<({String id, String label})> _categories(AppLocalizations l10n) => [
+        (id: 'all', label: l10n.communityCatAll),
+        (id: 'general', label: l10n.communityCatGeneral),
+        (id: 'conception', label: l10n.communityCatConception),
+        (id: 'contraception', label: l10n.communityCatContraception),
+        (id: 'condition', label: l10n.communityCatCondition),
+        (id: 'support', label: l10n.communityCatSupport),
+        (id: 'culture', label: l10n.communityCatCulture),
+        (id: 'age', label: l10n.communityCatAge),
+      ];
+
+  /// Category + post-type filters live in a bottom sheet so the feed header
+  /// stays clean — one search row and one sort row.
+  Future<void> _openFilterSheet(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    var category = _categoryFilter;
+    var type = _typeFilter;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return StatefulBuilder(
+          builder: (ctx, setModalState) => SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.communityFilters,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => setModalState(() {
+                          category = 'all';
+                          type = null;
+                        }),
+                        child: Text(l10n.communityFilterReset),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.communityFilterCategory,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final c in _categories(l10n))
+                        CommunityChoiceChip(
+                          label: c.label,
+                          selected: category == c.id,
+                          onTap: () => setModalState(() => category = c.id),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    l10n.communityFilterPostType,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      CommunityChoiceChip(
+                        label: l10n.communityFilterAll,
+                        selected: type == null,
+                        onTap: () => setModalState(() => type = null),
+                      ),
+                      for (final t in PostType.values)
+                        CommunityChoiceChip(
+                          label: _typeLabel(t, l10n),
+                          selected: type == t,
+                          onTap: () => setModalState(() => type = t),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n.communityFilterApply),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (mounted && (category != _categoryFilter || type != _typeFilter)) {
+      setState(() {
+        _categoryFilter = category;
+        _typeFilter = type;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,68 +242,50 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                         onCreateStory: widget.onCreateStory,
                       ),
                     ),
+                  // Search + filters in a single row
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: CommunitySearchField(
-                        controller: _searchController,
-                        hint: l10n.communitySearchPosts,
-                        onChanged: (v) => setState(() => _search = v),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: CommunityFilterChips(
-                        items: [
-                          (id: 'all', label: l10n.communityCatAll, icon: null),
-                          (id: 'general', label: l10n.communityCatGeneral, icon: null),
-                          (id: 'conception', label: l10n.communityCatConception, icon: null),
-                          (id: 'contraception', label: l10n.communityCatContraception, icon: null),
-                          (id: 'condition', label: l10n.communityCatCondition, icon: null),
-                          (id: 'support', label: l10n.communityCatSupport, icon: null),
-                          (id: 'culture', label: l10n.communityCatCulture, icon: null),
-                          (id: 'age', label: l10n.communityCatAge, icon: null),
-                        ],
-                        selected: _categoryFilter,
-                        onSelected: (id) => setState(() => _categoryFilter = id),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: CommunityFilterChips(
-                        items: [
-                          (id: 'all', label: l10n.communityFilterAll, icon: null),
-                          ...PostType.values.map(
-                            (t) => (
-                              id: t.value,
-                              label: _typeLabel(t, l10n),
-                              icon: null,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: CommunitySearchField(
+                              controller: _searchController,
+                              hint: l10n.communitySearchPosts,
+                              onChanged: (v) => setState(() => _search = v),
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          _FilterButton(
+                            activeCount: _activeFilterCount,
+                            tooltip: l10n.communityFilters,
+                            onTap: () => _openFilterSheet(context),
+                          ),
                         ],
-                        selected: _typeFilter?.value ?? 'all',
-                        onSelected: (id) => setState(() {
-                          if (id == 'all') {
-                            _typeFilter = null;
-                          } else {
-                            _typeFilter = PostType.fromValue(id);
-                          }
-                        }),
                       ),
                     ),
                   ),
+                  // Single sort row
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 6),
+                      padding: const EdgeInsets.only(top: 10),
                       child: CommunityFilterChips(
                         items: [
-                          (id: 'newest', label: l10n.communitySortNewest, icon: null),
-                          (id: 'discussed', label: l10n.communitySortDiscussed, icon: null),
-                          (id: 'mine', label: l10n.communityFilterMyPosts, icon: null),
+                          (
+                            id: 'newest',
+                            label: l10n.communitySortNewest,
+                            icon: Icons.schedule_rounded
+                          ),
+                          (
+                            id: 'discussed',
+                            label: l10n.communitySortDiscussed,
+                            icon: Icons.forum_outlined
+                          ),
+                          (
+                            id: 'mine',
+                            label: l10n.communityFilterMyPosts,
+                            icon: Icons.person_outline_rounded
+                          ),
                         ],
                         selected: _myPostsOnly
                             ? 'mine'
@@ -228,6 +334,104 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
           },
         );
       },
+    );
+  }
+}
+
+/// Compact filter button with an active-filter count badge.
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({
+    required this.activeCount,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final int activeCount;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final active = activeCount > 0;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Ink(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: active ? AuraDecorations.primaryGradient : null,
+              color: active
+                  ? null
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.white.withValues(alpha: 0.85)),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(
+                color: active
+                    ? Colors.transparent
+                    : (isDark ? Colors.white : theme.colorScheme.outline)
+                        .withValues(alpha: isDark ? 0.08 : 0.1),
+              ),
+              boxShadow: active
+                  ? [
+                      BoxShadow(
+                        color: AuraColors.rose.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: active
+                      ? Colors.white
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+                if (active)
+                  PositionedDirectional(
+                    top: 6,
+                    end: 6,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AuraColors.rose.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$activeCount',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: AuraColors.roseDeep,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

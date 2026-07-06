@@ -30,12 +30,18 @@ class ComposePostScreen extends StatefulWidget {
     required this.alias,
     required this.profile,
     this.existingPost,
+    this.initialText,
+    this.initialType,
   });
 
   final Community community;
   final String alias;
   final CommunityProfile profile;
   final CommunityPost? existingPost;
+
+  /// Pre-filled text for prompt-driven posts (e.g. question of the week).
+  final String? initialText;
+  final PostType? initialType;
 
   bool get isEditing => existingPost != null;
 
@@ -49,6 +55,10 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   bool _sending = false;
   bool _isAnonymous = false;
 
+  // Poll options (2 required, up to 4)
+  static const _maxPollOptions = 4;
+  final List<TextEditingController> _pollControllers = [];
+
   // Media (Premium only)
   XFile? _pickedFile;
   bool _uploadingMedia = false;
@@ -57,15 +67,33 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.existingPost?.text ?? '');
-    _type = widget.existingPost?.postType ?? PostType.support;
+    _controller = TextEditingController(
+      text: widget.existingPost?.text ?? widget.initialText ?? '',
+    );
+    _type =
+        widget.existingPost?.postType ?? widget.initialType ?? PostType.support;
+    final existingOptions = widget.existingPost?.pollOptions ?? const [];
+    for (final option in existingOptions) {
+      _pollControllers.add(TextEditingController(text: option));
+    }
+    while (_pollControllers.length < 2) {
+      _pollControllers.add(TextEditingController());
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    for (final c in _pollControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
+
+  List<String> get _pollOptions => _pollControllers
+      .map((c) => c.text.trim())
+      .where((t) => t.isNotEmpty)
+      .toList();
 
   // ──────────────────────────────────────────────────────────
   // Media picker
@@ -153,8 +181,17 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     final text = _controller.text.trim();
     if (user == null || text.isEmpty) return;
 
-    setState(() => _sending = true);
     final l10n = AppLocalizations.of(context)!;
+    if (_type == PostType.poll &&
+        !widget.isEditing &&
+        _pollOptions.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.communityPollNeedsOptions)),
+      );
+      return;
+    }
+
+    setState(() => _sending = true);
     final lang = Localizations.localeOf(context).languageCode;
     final repo = context.read<CommunityRepository>();
 
@@ -184,6 +221,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
           mediaUrl: uploadedUrl,
           mediaType: uploadedUrl != null ? 'image' : null,
           isAnonymous: _isAnonymous,
+          pollOptions: _type == PostType.poll ? _pollOptions : null,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -224,6 +262,104 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  /// Poll option fields — 2 required, "add option" up to 4.
+  Widget _buildPollEditor(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AuraColors.darkCard.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.poll_rounded,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                l10n.postTypePoll,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < _pollControllers.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _pollControllers[i],
+                      maxLength: 60,
+                      decoration: InputDecoration(
+                        hintText: l10n.communityPollOptionHint(i + 1),
+                        counterText: '',
+                        isDense: true,
+                        filled: true,
+                        fillColor: (isDark ? Colors.white : Colors.black)
+                            .withValues(alpha: isDark ? 0.06 : 0.03),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_pollControllers.length > 2)
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: l10n.cancel,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: theme.colorScheme.outline,
+                      ),
+                      onPressed: () => setState(() {
+                        _pollControllers.removeAt(i).dispose();
+                      }),
+                    ),
+                ],
+              ),
+            ),
+          if (_pollControllers.length < _maxPollOptions)
+            TextButton.icon(
+              onPressed: () => setState(() {
+                _pollControllers.add(TextEditingController());
+              }),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(l10n.communityPollAddOption),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   // ──────────────────────────────────────────────────────────
@@ -432,6 +568,10 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                     ),
                   ),
                 ),
+                if (_type == PostType.poll && !widget.isEditing) ...[
+                  const SizedBox(height: 16),
+                  _buildPollEditor(context, l10n, theme, isDark),
+                ],
                 if (_pickedFile != null) ...[
                   const SizedBox(height: 14),
                   Stack(
@@ -445,9 +585,9 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                 fit: BoxFit.cover,
                               ),
                       ),
-                      Positioned(
+                      PositionedDirectional(
                         top: 8,
-                        right: 8,
+                        end: 8,
                         child: Material(
                           color: Colors.black54,
                           shape: const CircleBorder(),
