@@ -1,6 +1,9 @@
+import '../../../core/ai/doctor_report_analyzer.dart';
 import '../../../core/ai/models/doctor_report_enrichment.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_bridge_service.dart';
+import 'data/doctor_report_flag_text.dart';
+import 'data/doctor_report_patient.dart';
 
 /// Plain-text export for copy/share from structured cycle report data.
 class CycleReportExporter {
@@ -12,6 +15,8 @@ class CycleReportExporter {
     CycleDashboardData? dashboard,
     required String exportedDate,
     DoctorReportEnrichment? enrichment,
+    DoctorReportMetrics? metrics,
+    PatientInfo? patient,
     String? limitedDataNote,
   }) {
     final buf = StringBuffer();
@@ -19,17 +24,62 @@ class CycleReportExporter {
     final pm = report.predictionMatrix;
     final dash = dashboard;
     final enrich = enrichment;
+    final m = metrics;
 
     buf.writeln(l10n.healthReportTitle);
     buf.writeln(l10n.healthReportCreatedBy);
     buf.writeln(l10n.healthReportExportedOn(exportedDate));
     buf.writeln();
 
+    if (patient != null && !patient.isEmpty) {
+      buf.writeln(l10n.healthReportPatientSection);
+      if (patient.hasName) {
+        _line(buf, l10n.doctorReportPatientName, patient.name!.trim());
+      }
+      if (patient.age != null) {
+        _line(buf, l10n.doctorReportPatientAge, '${patient.age}');
+      }
+      if (patient.hasNote) {
+        _line(buf, l10n.doctorReportPatientNote, patient.note!.trim());
+      }
+      buf.writeln();
+    }
+
     if (enrich?.clinicalSummary != null &&
         enrich!.clinicalSummary!.trim().isNotEmpty) {
       buf.writeln(l10n.healthReportClinicalSummary);
       buf.writeln(enrich.clinicalSummary!.trim());
       buf.writeln();
+    }
+
+    if (m != null && !m.isEmpty) {
+      buf.writeln(l10n.healthReportMenstrualHistory);
+      if (m.lastPeriodStart != null) {
+        _line(buf, l10n.healthReportLastPeriod, _isoDate(m.lastPeriodStart!));
+      }
+      if (m.analyzedCycleCount > 0) {
+        _line(buf, l10n.healthReportCyclesAnalyzed, '${m.analyzedCycleCount}');
+      }
+      if (m.hasRangeData) {
+        _line(buf, l10n.healthReportCycleLengthRange,
+            '${m.minCycleLength}–${m.maxCycleLength}');
+      }
+      if (m.cycleVariability != null) {
+        _line(buf, l10n.healthReportCycleVariability, '${m.cycleVariability}');
+      }
+      if (m.averagePainLevel != null) {
+        _line(buf, l10n.healthReportAveragePain,
+            '${m.averagePainLevel!.toStringAsFixed(1)} / 4');
+      }
+      buf.writeln();
+
+      if (m.flags.isNotEmpty) {
+        buf.writeln(l10n.healthReportPatternsToDiscuss);
+        for (final f in m.flags) {
+          buf.writeln('• ${DoctorReportFlagText.of(l10n, f)}');
+        }
+        buf.writeln();
+      }
     }
 
     buf.writeln(l10n.healthReportCyclePeriodLength);
@@ -92,6 +142,14 @@ class CycleReportExporter {
       buf.writeln();
     }
 
+    if (enrich != null && enrich.redFlags.isNotEmpty) {
+      buf.writeln(l10n.healthReportRedFlags);
+      for (final item in enrich.redFlags) {
+        buf.writeln('• $item');
+      }
+      buf.writeln();
+    }
+
     final note = enrich?.dataQualityNote?.trim();
     if (note != null && note.isNotEmpty) {
       buf.writeln(note);
@@ -99,8 +157,16 @@ class CycleReportExporter {
       buf.writeln(limitedDataNote.trim());
     }
 
+    buf.writeln();
+    buf.writeln(l10n.doctorReportDisclaimer);
+
     return buf.toString().trim();
   }
+
+  static String _isoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   /// CSV export of cycle data for spreadsheet import.
   static String toCsv({

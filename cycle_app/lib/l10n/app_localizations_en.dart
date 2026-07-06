@@ -441,6 +441,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumDaysShort => 'days';
 
   @override
+  String get adminRolesTitle => 'Admins and moderators';
+
+  @override
+  String get adminRolesManageBtn => 'Manage admins';
+
+  @override
+  String get adminRolesAddHeader => 'Add an admin';
+
+  @override
+  String get adminRolesEmailHint => 'User email';
+
+  @override
+  String get adminRolesRoleModerator => 'Moderator';
+
+  @override
+  String get adminRolesRoleAdmin => 'Admin';
+
+  @override
+  String get adminRolesRoleOwner => 'Owner';
+
+  @override
+  String get adminRolesGrant => 'Grant role';
+
+  @override
+  String get adminRolesGranted => 'Role updated';
+
+  @override
+  String get adminRolesCurrentHeader => 'Current admins';
+
+  @override
+  String get adminRolesEmpty => 'No admins yet';
+
+  @override
+  String get adminRolesRemove => 'Remove';
+
+  @override
+  String get adminRolesRemoved => 'Admin removed';
+
+  @override
+  String get adminRolesOwnerOnly => 'Only the owner can add or remove admins.';
+
+  @override
+  String get adminRolesUserNotFound => 'No user found with that email';
+
+  @override
   String get loginRequiredPremium => 'Sign in to subscribe';
 
   @override
@@ -769,6 +814,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportsChecklistHint => 'Your personalized action list';
 
   @override
+  String get reportsHeaderTitle => 'Your reports';
+
+  @override
+  String get reportsHeaderSubtitle =>
+      'A clear look at your cycle, your trends, and a doctor-ready summary.';
+
+  @override
+  String get reportsQuickActions => 'Quick actions';
+
+  @override
+  String get reportsAnalyticsCardTitle => 'Full analytics';
+
+  @override
+  String get reportsAnalyticsCardSubtitle =>
+      'All metrics, charts, and insights for your goal.';
+
+  @override
+  String get reportsPregnancyOverview => 'Pregnancy overview';
+
+  @override
+  String get reportsMenopauseOverview => 'Menopause overview';
+
+  @override
+  String get reportsPcosOverview => 'PCOS overview';
+
+  @override
+  String get reportsRecoveryOverview => 'Recovery overview';
+
+  @override
   String get goalModeGeneralReportStats => 'Cycle overview';
 
   @override
@@ -913,6 +987,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selfCareHealthToolsDesc => 'Pills, sanitary, sex & more';
+
+  @override
+  String get selfCareWhisperTitle => 'Whisper of the day';
+
+  @override
+  String get selfCareWhisperLocked =>
+      'Unlock Lune\'s personal whisper with Premium.';
+
+  @override
+  String get selfCareWhisperPrompt =>
+      'Give me a gentle self-care whisper for today based on my cycle phase and mood.';
+
+  @override
+  String get moodCheckInTitle => 'How are you feeling today?';
+
+  @override
+  String get moodCheckInDone => 'Today\'s mood is logged 🌸';
+
+  @override
+  String get moodTrendTitle => 'This week';
+
+  @override
+  String get selfCareAffirmationGenerate => 'Personal affirmation from Lune';
+
+  @override
+  String get selfCareAffirmationPrompt =>
+      'Write one short, uplifting first-person affirmation for me based on my cycle phase and mood.';
+
+  @override
+  String get selfCareMovement => 'Gentle movement';
+
+  @override
+  String selfCareMovementStep(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get selfCareMovementDone => 'Beautifully done 🌸';
+
+  @override
+  String get selfCareMovementDoneCue =>
+      'Take a moment to notice how your body feels.';
+
+  @override
+  String get selfCareRestart => 'Restart';
+
+  @override
+  String get selfCareSkip => 'Skip';
+
+  @override
+  String selfCareBreatheCycles(int count) {
+    return '$count cycles completed';
+  }
+
+  @override
+  String get selfCareCopied => 'Copied to clipboard';
+
+  @override
+  String get selfCareLibraryTitle => 'Cycle self-care guide';
+
+  @override
+  String get selfCareLibrarySubtitle =>
+      'Nutrition, movement, rest & mind for every phase.';
+
+  @override
+  String get selfCareLibraryCurrent => 'You\'re here';
+
+  @override
+  String get selfCareJournalHistory => 'Past entries';
+
+  @override
+  String get selfCareJournalEmpty =>
+      'No entries yet. Write your first reflection above.';
+
+  @override
+  String get selfCareJournalDelete => 'Delete';
+
+  @override
+  String get selfCareJournalReflect => 'Reflect with Lune';
+
+  @override
+  String get selfCareJournalReflecting => 'Lune is reflecting on your words…';
+
+  @override
+  String selfCareRitualStreak(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String selfCareRitualsProgress(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get aiUnavailable =>
+      'Lune is unavailable right now. Please try again later.';
 
   @override
   String get communityTabFeed => 'Feed';
@@ -1257,6 +1433,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthReportFooter => '© Lune';
+
+  @override
+  String get healthReportPatientSection => 'Patient';
+
+  @override
+  String get healthReportMode => 'Tracking mode';
+
+  @override
+  String get healthReportModeCycle => 'Cycle tracking';
+
+  @override
+  String get healthReportModePregnancy => 'Pregnancy tracking';
+
+  @override
+  String get healthReportReportId => 'Report ID';
+
+  @override
+  String get healthReportMenstrualHistory => 'Menstrual history';
+
+  @override
+  String get healthReportLastPeriod => 'Last period (LMP)';
+
+  @override
+  String get healthReportDataPeriod => 'Data period';
+
+  @override
+  String get healthReportCyclesAnalyzed => 'Cycles analyzed';
+
+  @override
+  String get healthReportCycleLengthRange => 'Cycle length range';
+
+  @override
+  String get healthReportCycleVariability => 'Cycle variability';
+
+  @override
+  String get healthReportPeriodLengthRange => 'Period length range';
+
+  @override
+  String get healthReportPatternsToDiscuss => 'Patterns worth discussing';
+
+  @override
+  String get healthReportSymptomBurden => 'Symptom & pain summary';
+
+  @override
+  String get healthReportAveragePain => 'Average pain (last 30 days)';
+
+  @override
+  String get healthReportWellnessEntries => 'Wellness log entries';
+
+  @override
+  String get healthReportRedFlags => 'Worth mentioning to your doctor';
+
+  @override
+  String get healthReportVitalsAdherence => 'Vitals & adherence';
+
+  @override
+  String get healthReportLatestWeight => 'Latest weight';
+
+  @override
+  String get healthReportLatestTemperature => 'Latest temperature';
+
+  @override
+  String get healthReportAvgWater => 'Average water (30 days)';
+
+  @override
+  String get healthReportPillAdherence => 'Pill adherence (last 7 days)';
+
+  @override
+  String clinicalFlagShortCycle(int days) {
+    return 'Average cycle $days days — shorter than the typical 21–35 day range; worth discussing with your doctor.';
+  }
+
+  @override
+  String clinicalFlagLongCycle(int days) {
+    return 'Average cycle $days days — longer than the typical 21–35 day range; worth discussing with your doctor.';
+  }
+
+  @override
+  String clinicalFlagIrregularCycle(int days) {
+    return 'Cycle length varies by about $days days between cycles — worth discussing regularity with your doctor.';
+  }
+
+  @override
+  String clinicalFlagProlongedPeriod(int days) {
+    return 'Average period $days days — longer than the usual ~7 days; worth discussing with your doctor.';
+  }
+
+  @override
+  String get clinicalFlagHighPain =>
+      'Average logged pain is in the severe range — worth discussing pain management with your doctor.';
+
+  @override
+  String get doctorReportPatientTitle => 'Patient details';
+
+  @override
+  String get doctorReportPatientSubtitle =>
+      'Optional — shown at the top of the report for your doctor. Stored on your device only.';
+
+  @override
+  String get doctorReportPatientName => 'Name';
+
+  @override
+  String get doctorReportPatientAge => 'Age';
+
+  @override
+  String get doctorReportPatientNote => 'Note for the doctor';
+
+  @override
+  String get doctorReportPatientNoteHint =>
+      'e.g. reason for visit, medications, concerns';
+
+  @override
+  String get doctorReportPatientSave => 'Save';
+
+  @override
+  String get doctorReportEditPatient => 'Edit patient details';
 
   @override
   String get communityAdultsOnlyTitle => 'Communities are for adults';
@@ -2784,6 +3076,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get communityGuidelinesShort => 'Guidelines';
+
+  @override
+  String get communityPollAddOption => 'Add option';
+
+  @override
+  String communityPollOptionHint(int number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get communityPollNeedsOptions => 'Add at least 2 poll options';
+
+  @override
+  String communityPollVotesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count votes',
+      one: '1 vote',
+      zero: 'No votes yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get communityPollTapToVote => 'Tap an option to vote';
+
+  @override
+  String get communityFilters => 'Filters';
+
+  @override
+  String get communityFilterCategory => 'Category';
+
+  @override
+  String get communityFilterPostType => 'Post type';
+
+  @override
+  String get communityFilterReset => 'Reset';
+
+  @override
+  String get communityFilterApply => 'Apply';
+
+  @override
+  String get storyChooseCommunity => 'Share story to...';
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}m ago',
+      one: '1m ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}h ago',
+      one: '1h ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}d ago',
+      one: 'Yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reactionHeart => 'Love';
+
+  @override
+  String get reactionHug => 'Hug';
+
+  @override
+  String get reactionCelebrate => 'Celebrate';
+
+  @override
+  String get reactionStrong => 'Strength';
+
+  @override
+  String get communityMemberProfile => 'Member profile';
+
+  @override
+  String get communityRecentPosts => 'Recent posts';
+
+  @override
+  String get communityNoRecentPosts => 'No public posts yet';
+
+  @override
+  String get communityWeeklyQuestion => 'Question of the week';
+
+  @override
+  String get communityWeeklyAnswer => 'Share your answer';
 
   @override
   String get premiumUpsellTitle => 'Lune Premium';

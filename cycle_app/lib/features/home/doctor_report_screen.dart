@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_insights_service.dart';
+import '../../../core/ai/doctor_report_analyzer.dart';
 import '../../../core/ai/models/doctor_report_enrichment.dart';
 import '../../../core/ai/models/health_snapshot.dart';
 import '../../../core/privacy/privacy_constants.dart';
@@ -15,7 +16,9 @@ import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 import 'cycle_report_exporter.dart';
 import 'cycle_report_file_exporter.dart';
+import 'data/doctor_report_patient.dart';
 import 'widgets/cycle_health_report_document.dart';
+import 'widgets/doctor_report_patient_sheet.dart';
 import 'widgets/report_export_sheet.dart';
 
 /// Structured monthly cycle report with QR — similar to professional health apps.
@@ -32,6 +35,9 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
   CycleReportData? _report;
   CycleDashboardData? _dashboard;
   HealthSnapshot? _snapshot;
+  DoctorReportMetrics? _metrics;
+  PatientInfo _patient = const PatientInfo();
+  String? _reportId;
   DoctorReportEnrichment? _enrichment;
   String? _plainText;
   bool _loading = true;
@@ -66,6 +72,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     final engine = context.read<AiContextEngine>();
     final dashboard = await _bridge.tryLoadDashboard();
     final loadedReport = await _bridge.tryLoadStructuredReport();
+    final patient = await DoctorReportPatientStore.load();
     HealthSnapshot snapshot = const HealthSnapshot();
     try {
       snapshot = await engine.buildSnapshot();
@@ -81,10 +88,17 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
           symptomPatterns: [],
         );
 
+    final metrics = DoctorReportAnalyzer.analyze(
+      report: report,
+      dashboard: dashboard,
+      snapshot: snapshot.isEmpty ? null : snapshot,
+    );
+
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
     final dateFmt = DateFormat.yMMMMd(locale.toString());
     final exportedLabel = dateFmt.format(_exportedAt);
+    final reportId = 'LN-${DateFormat('yyyyMMdd-HHmm').format(_exportedAt)}';
 
     final isLimited = (report.cycles.isEmpty &&
             report.keyMatrix.isEmpty &&
@@ -98,6 +112,8 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
       report: report,
       dashboard: dashboard,
       exportedDate: exportedLabel,
+      metrics: metrics,
+      patient: patient,
       limitedDataNote: isLimited ? l10n.doctorReportLimitedData : null,
     );
 
@@ -105,6 +121,9 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
       _dashboard = dashboard;
       _report = report;
       _snapshot = snapshot.isEmpty ? null : snapshot;
+      _metrics = metrics;
+      _patient = patient;
+      _reportId = reportId;
       _enrichment = null;
       _plainText = plain;
       _loading = false;
@@ -119,6 +138,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
       exportedLabel: exportedLabel,
       report: report,
       dashboard: dashboard,
+      metrics: metrics,
     );
   }
 
@@ -128,11 +148,13 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     required String exportedLabel,
     required CycleReportData report,
     required CycleDashboardData? dashboard,
+    required DoctorReportMetrics metrics,
   }) async {
     final service = context.read<AiInsightsService>();
     final enrichment = await service.enrichDoctorReport(
       languageCode: languageCode,
       limitedData: limitedData,
+      clinicalMetrics: metrics.toContextMap(),
     );
 
     if (!mounted) return;
@@ -144,6 +166,8 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
       dashboard: dashboard,
       exportedDate: exportedLabel,
       enrichment: enrichment,
+      metrics: metrics,
+      patient: _patient,
       limitedDataNote:
           limitedData && (enrichment?.dataQualityNote == null)
               ? l10n.doctorReportLimitedData
@@ -186,6 +210,10 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
         dashboard: _dashboard,
         exportedAt: _exportedAt,
         snapshot: _snapshot,
+        metrics: _metrics,
+        patient: _patient,
+        enrichment: _enrichment,
+        reportId: _reportId,
         exportedDateLabel: dateFmt.format(_exportedAt),
         rtl: locale.languageCode == 'ar',
         plainText: _plainText,
@@ -212,6 +240,34 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     }
   }
 
+  Future<void> _editPatient() async {
+    final updated = await DoctorReportPatientSheet.show(context, _patient);
+    if (updated == null || !mounted) return;
+
+    setState(() => _patient = updated);
+
+    // Regenerate the plain-text export so copy/share reflect the new header.
+    if (_report != null) {
+      final l10n = AppLocalizations.of(context)!;
+      final locale = Localizations.localeOf(context);
+      final exportedLabel = DateFormat.yMMMMd(locale.toString()).format(_exportedAt);
+      final plain = CycleReportExporter.toPlainText(
+        l10n: l10n,
+        report: _report!,
+        dashboard: _dashboard,
+        exportedDate: exportedLabel,
+        enrichment: _enrichment,
+        metrics: _metrics,
+        patient: updated,
+        limitedDataNote:
+            _limitedData && (_enrichment?.dataQualityNote == null)
+                ? l10n.doctorReportLimitedData
+                : null,
+      );
+      if (mounted) setState(() => _plainText = plain);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -224,6 +280,12 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
         elevation: 0,
         title: Text(l10n.doctorReportTitle),
         actions: [
+          if (!_loading && !_failed)
+            IconButton(
+              tooltip: l10n.doctorReportEditPatient,
+              icon: const Icon(Icons.badge_outlined),
+              onPressed: _editPatient,
+            ),
           if (_plainText != null && !_refining) ...[
             IconButton(
               tooltip: l10n.doctorReportDownload,
@@ -275,6 +337,10 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
                       dashboard: _dashboard,
                       qrPayload: _qrPayload(),
                       exportedAt: _exportedAt,
+                      metrics: _metrics,
+                      patient: _patient,
+                      snapshot: _snapshot,
+                      reportId: _reportId,
                       enrichment: _enrichment,
                       refining: _refining,
                       limitedData: _limitedData,

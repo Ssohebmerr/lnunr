@@ -301,20 +301,77 @@ class _CommunityTabState extends State<CommunityTab>
     );
   }
 
-  void _openStoryComposer(
+  Future<void> _openStoryComposer(
     BuildContext context,
     List<CommunityMembership> memberships,
-  ) {
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || _profile == null) return;
     if (memberships.isEmpty) return;
 
-    final communityId = memberships.first.communityId;
+    // With multiple joined communities, let the user pick where the story
+    // goes instead of silently posting to the most recently joined one.
+    String? communityId = memberships.first.communityId;
+    if (memberships.length > 1) {
+      communityId = await _pickStoryCommunity(context, memberships);
+      if (communityId == null || !context.mounted) return;
+    }
+
     showStoryComposer(
       context: context,
       communityId: communityId,
       alias: _alias ?? 'User',
       profile: _profile!,
+    );
+  }
+
+  Future<String?> _pickStoryCommunity(
+    BuildContext context,
+    List<CommunityMembership> memberships,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+
+    return showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.storyChooseCommunity,
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final m in memberships)
+                    if (CommunitySeed.byId(m.communityId) case final c?)
+                      ListTile(
+                        leading: Icon(
+                          c.icon,
+                          color: Theme.of(ctx).colorScheme.primary,
+                        ),
+                        title: Text(c.nameForLocale(lang)),
+                        onTap: () => Navigator.pop(ctx, m.communityId),
+                      ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 

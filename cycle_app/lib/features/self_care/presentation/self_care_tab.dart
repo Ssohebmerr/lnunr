@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/app_home_refresh.dart';
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -14,10 +14,17 @@ import '../../goals/data/goal_mode_content.dart';
 import '../../pregnancy/data/pregnancy_self_care_content.dart';
 import '../../gamification/data/gamification_service.dart';
 import '../../gamification/presentation/challenges_page.dart';
+import '../data/movement_content.dart';
+import '../data/mood_service.dart';
+import '../data/ritual_service.dart';
 import '../data/self_care_content.dart';
 import 'affirmations_screen.dart';
 import 'breathing_screen.dart';
 import 'journal_screen.dart';
+import 'movement_screen.dart';
+import 'self_care_library_screen.dart';
+import 'widgets/mood_check_in_card.dart';
+import 'widgets/self_care_briefing_card.dart';
 
 class SelfCareTab extends StatefulWidget {
   const SelfCareTab({super.key});
@@ -30,18 +37,16 @@ class _SelfCareTabState extends State<SelfCareTab> {
   final _bridge = CycleBridgeService();
   final _sync = CycleSyncService();
   final _gamification = GamificationService();
-  int _streak = 0;
+  int _challengeStreak = 0;
+  int _ritualStreak = 0;
   String _phase = '';
   UserGoalTypes _goal = UserGoalTypes.general;
   int _pregnancyWeek = 20;
   int _gestationalDay = 0;
   CycleDashboardData? _dashboard;
-  final _rituals = <String, bool>{
-    'water': false,
-    'rest': false,
-    'stretch': false,
-    'mindful': false,
-  };
+  String? _moodKey;
+  List<({String date, String mood})> _moodHistory = const [];
+  List<bool> _ritualStates = List<bool>.filled(8, false);
 
   @override
   void initState() {
@@ -73,33 +78,47 @@ class _SelfCareTabState extends State<SelfCareTab> {
       final gami = await _gamification.getState();
       final data = await _bridge.tryLoadDashboard();
       final goal = await _sync.getUserGoal();
-      final prefs = await SharedPreferences.getInstance();
+      final mood = await MoodService.todayMood();
+      final moodHistory = await MoodService.recent(days: 7);
+      final ritualStates = await RitualService.loadToday(8);
+      final ritualStreak = await RitualService.streak();
       if (mounted) {
         setState(() {
-          _streak = gami.streak;
+          _challengeStreak = gami.streak;
           _dashboard = data;
           _phase = data?.phase ?? '';
           _goal = goal;
           _pregnancyWeek = data?.pregnancyWeek ?? 20;
           _gestationalDay = data?.cycleDay ?? 0;
-          _rituals['water'] = prefs.getBool('ritual_water') ?? false;
-          _rituals['rest'] = prefs.getBool('ritual_rest') ?? false;
-          _rituals['stretch'] = prefs.getBool('ritual_stretch') ?? false;
-          _rituals['mindful'] = prefs.getBool('ritual_mindful') ?? false;
-          // Goal-specific rituals are keyed by position; restore their state
-          // so the checkmarks survive a refresh/restart.
-          for (var i = 0; i < 6; i++) {
-            _rituals['goal_$i'] = prefs.getBool('ritual_goal_$i') ?? false;
-          }
+          _moodKey = mood;
+          _moodHistory = moodHistory;
+          _ritualStates = ritualStates;
+          _ritualStreak = ritualStreak;
         });
       }
     } catch (_) {}
   }
 
-  Future<void> _toggleRitual(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('ritual_$key', value);
-    setState(() => _rituals[key] = value);
+  Future<void> _toggleRitual(int index, bool value) async {
+    await RitualService.setToday(index, value);
+    final streak = await RitualService.streak();
+    if (mounted) {
+      setState(() {
+        _ritualStates[index] = value;
+        _ritualStreak = streak;
+      });
+    }
+  }
+
+  Future<void> _selectMood(String key) async {
+    await MoodService.setTodayMood(key);
+    final history = await MoodService.recent(days: 7);
+    if (mounted) {
+      setState(() {
+        _moodKey = key;
+        _moodHistory = history;
+      });
+    }
   }
 
   @override
@@ -110,21 +129,27 @@ class _SelfCareTabState extends State<SelfCareTab> {
     final isPregnant = _goal.isPregnancyMode;
     final displayGoal =
         _goal == UserGoalTypes.sexual ? UserGoalTypes.general : _goal;
+
     final String tipText;
     if (isPregnant) {
-      tipText =
-          PregnancySelfCareContent.tipForWeek(_pregnancyWeek, lang).forLocale(lang);
+      tipText = PregnancySelfCareContent.tipForWeek(_pregnancyWeek, lang)
+          .forLocale(lang);
     } else if (_dashboard != null) {
-      tipText = GoalModeContent.dailyTip(displayGoal, _dashboard!, lang)
-          .forLang(lang);
+      tipText =
+          GoalModeContent.dailyTip(displayGoal, _dashboard!, lang).forLang(lang);
     } else {
       tipText = SelfCareContent.tipForPhase(_phase, lang).forLocale(lang);
     }
+
     final rituals = isPregnant
         ? PregnancySelfCareContent.ritualsForWeek(_pregnancyWeek)
         : GoalModeContent.rituals(displayGoal)
             .map((t) => SelfCareTip(en: t.en, ar: t.ar))
             .toList();
+
+    final ritualsDone = List.generate(rituals.length, (i) => _ritualStates[i])
+        .where((v) => v)
+        .length;
 
     String sectionTitle() {
       if (isPregnant) return l10n.pregnancySelfCareTitle;
@@ -135,7 +160,11 @@ class _SelfCareTabState extends State<SelfCareTab> {
       };
     }
 
-    final isFirstTime = _dashboard == null && _streak == 0;
+    final String? phaseLabel = isPregnant
+        ? l10n.pregnancyWeekDay(_pregnancyWeek.clamp(4, 42), _gestationalDay)
+        : (_phase.isNotEmpty ? _phase : null);
+
+    final isFirstTime = _dashboard == null && _challengeStreak == 0;
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -160,12 +189,14 @@ class _SelfCareTabState extends State<SelfCareTab> {
                       shape: BoxShape.circle,
                       color: theme.colorScheme.primary.withValues(alpha: 0.15),
                     ),
-                    child: Icon(Icons.spa_rounded, size: 36, color: theme.colorScheme.primary),
+                    child: Icon(Icons.spa_rounded,
+                        size: 36, color: theme.colorScheme.primary),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l10n.selfCareWelcomeTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -179,37 +210,132 @@ class _SelfCareTabState extends State<SelfCareTab> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
           ],
+          const SizedBox(height: 8),
           AppSectionHeader(title: sectionTitle()),
+
+          // ── AI whisper of the day (personal, mood + phase aware) ──────────
+          SelfCareBriefingCard(
+            fallbackTip: tipText,
+            phase: _phase,
+            cycleDay: _dashboard?.cycleDay,
+            moodKey: _moodKey,
+            phaseLabel: phaseLabel,
+          ),
           const SizedBox(height: 12),
-          AppGlassCard(
-            blur: false,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.selfCareTodayTip, style: theme.textTheme.titleSmall),
-                const SizedBox(height: 8),
-                if (isPregnant)
-                  Text(
-                    l10n.pregnancyWeekDay(
-                      _pregnancyWeek.clamp(4, 42),
-                      _gestationalDay,
-                    ),
-                    style: theme.textTheme.labelLarge,
-                  )
-                else if (_phase.isNotEmpty)
-                  Text(_phase, style: theme.textTheme.labelLarge),
-                const SizedBox(height: 6),
-                Text(tipText),
-              ],
-            ),
+
+          // ── Daily mood check-in ───────────────────────────────────────────
+          MoodCheckInCard(
+            selected: _moodKey,
+            onSelect: _selectMood,
+            history: _moodHistory,
           ),
           const SizedBox(height: 20),
 
-          // ── Wellness Hub: the powerful health-tracking centre, surfaced
-          // up front instead of buried in a collapsed "more" menu. ──────────
+          // ── Quick self-care activities ────────────────────────────────────
+          AppSectionHeader(title: l10n.selfCareActivities),
+          Row(
+            children: [
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.air,
+                  label: l10n.selfCareBreathe,
+                  color: theme.colorScheme.primary,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BreathingScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.favorite_border,
+                  label: l10n.selfCareAffirmations,
+                  color: theme.colorScheme.secondary,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AffirmationsScreen(phase: _phase),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.menu_book_outlined,
+                  label: l10n.selfCareJournal,
+                  color: AppColors.accent,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const JournalScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppQuickTile(
+                  icon: Icons.self_improvement_outlined,
+                  label: l10n.selfCareMovement,
+                  color: const Color(0xFF26A69A),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MovementScreen(
+                        routine: MovementContent.forPhase(_phase),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // ── Daily rituals (reset every day) with progress + streak ────────
+          AppSectionHeader(
+            title: l10n.selfCareRituals,
+            trailing: _ritualStreak > 0
+                ? _StreakPill(days: _ritualStreak)
+                : null,
+          ),
+          if (rituals.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _RitualProgress(done: ritualsDone, total: rituals.length),
+            ),
+          ...rituals.asMap().entries.map(
+                (e) => _RitualTile(
+                  title: e.value.forLocale(lang),
+                  value: e.key < _ritualStates.length && _ritualStates[e.key],
+                  onChanged: (v) => _toggleRitual(e.key, v),
+                ),
+              ),
+          const SizedBox(height: 20),
+
+          // ── Phase-based self-care library ─────────────────────────────────
+          AppSectionHeader(title: l10n.selfCareLibraryTitle),
+          AppHubCard(
+            blur: false,
+            icon: Icons.auto_stories_rounded,
+            title: l10n.selfCareLibraryTitle,
+            subtitle: l10n.selfCareLibrarySubtitle,
+            color: AuraColors.lavenderSoft,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SelfCareLibraryScreen(currentPhase: _phase),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // ── Wellness Hub: the powerful health-tracking centre ─────────────
           AppSectionHeader(title: l10n.wellnessHubTitle),
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -262,67 +388,7 @@ class _SelfCareTabState extends State<SelfCareTab> {
           ),
           const SizedBox(height: 8),
 
-          // ── Quick self-care activities ───────────────────────────────────
-          AppSectionHeader(title: l10n.selfCareActivities),
-          Row(
-            children: [
-              Expanded(
-                child: AppQuickTile(
-                  icon: Icons.air,
-                  label: l10n.selfCareBreathe,
-                  color: theme.colorScheme.primary,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BreathingScreen()),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppQuickTile(
-                  icon: Icons.favorite_border,
-                  label: l10n.selfCareAffirmations,
-                  color: theme.colorScheme.secondary,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AffirmationsScreen()),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: AppQuickTile(
-                  icon: Icons.menu_book_outlined,
-                  label: l10n.selfCareJournal,
-                  color: AppColors.accent,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const JournalScreen()),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppQuickTile(
-                  icon: Icons.self_improvement_outlined,
-                  label: l10n.selfCareStretch,
-                  color: const Color(0xFF26A69A),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.selfCareStretchTip)),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // ── Challenges — surfaced directly, no longer hidden away ─────────
+          // ── Challenges ────────────────────────────────────────────────────
           AppSectionHeader(title: l10n.challengesTitle),
           AppGlassCard(
             blur: false,
@@ -370,11 +436,11 @@ class _SelfCareTabState extends State<SelfCareTab> {
                     ],
                   ),
                 ),
-                if (_streak > 0)
+                if (_challengeStreak > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
-                      l10n.challengeStreakValue(_streak),
+                      l10n.challengeStreakValue(_challengeStreak),
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: Colors.deepOrange,
                         fontWeight: FontWeight.bold,
@@ -386,20 +452,84 @@ class _SelfCareTabState extends State<SelfCareTab> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-
-          // ── Daily rituals ─────────────────────────────────────────────────
-          AppSectionHeader(title: l10n.selfCareRituals),
-          ...rituals.asMap().entries.map(
-                (e) => _RitualTile(
-                  title: e.value.forLocale(lang),
-                  value: _rituals['goal_${e.key}'] ?? false,
-                  onChanged: (v) => _toggleRitual('goal_${e.key}', v),
-                ),
-              ),
         ],
+      ),
+    );
+  }
+}
+
+/// Small streak pill shown next to the rituals header.
+class _StreakPill extends StatelessWidget {
+  const _StreakPill({required this.days});
+
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.deepOrange.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.local_fire_department,
+              size: 14, color: Colors.deepOrange),
+          const SizedBox(width: 4),
+          Text(
+            l10n.selfCareRitualStreak(days),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: Colors.deepOrange,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RitualProgress extends StatelessWidget {
+  const _RitualProgress({required this.done, required this.total});
+
+  final int done;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final ratio = total == 0 ? 0.0 : done / total;
+
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 8,
+              backgroundColor:
+                  theme.colorScheme.primary.withValues(alpha: 0.12),
+              valueColor:
+                  AlwaysStoppedAnimation(theme.colorScheme.primary),
+            ),
+          ),
         ),
-      );
+        const SizedBox(width: 10),
+        Text(
+          l10n.selfCareRitualsProgress(done, total),
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -421,12 +551,18 @@ class _RitualTile extends StatelessWidget {
       blur: false,
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      onTap: () => onChanged(!value),
       child: Row(
         children: [
           Expanded(
             child: Text(
               title,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                decoration: value ? TextDecoration.lineThrough : null,
+                color: value
+                    ? theme.colorScheme.onSurfaceVariant
+                    : theme.colorScheme.onSurface,
+              ),
             ),
           ),
           Checkbox(

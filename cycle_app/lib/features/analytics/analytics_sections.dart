@@ -1,10 +1,49 @@
 import 'package:flutter/material.dart';
 
+import '../../core/ai/models/ai_insight.dart';
+import '../../core/ai/widgets/ai_insight_card.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 import 'analytics_data.dart';
 import 'analytics_widgets.dart';
+
+/// Picks the most relevant AI insight for a goal so the Analytics page opens
+/// with a personalized, goal-aware read of the user's data.
+AiInsightType analyticsInsightType(UserGoalTypes goal) {
+  switch (goal) {
+    case UserGoalTypes.pregnant:
+      return AiInsightType.prenatalTip;
+    case UserGoalTypes.conceive:
+      return AiInsightType.conceiveTip;
+    case UserGoalTypes.avoid:
+      return AiInsightType.avoidTip;
+    case UserGoalTypes.pcos:
+    case UserGoalTypes.menopause:
+    case UserGoalTypes.postpartum:
+    case UserGoalTypes.general:
+    case UserGoalTypes.sexual:
+      return AiInsightType.cycleHealth;
+  }
+}
+
+/// Builds a bar chart of the user's real completed cycle lengths (oldest →
+/// newest). Returns null when there isn't enough history to be meaningful, so
+/// callers can fall back to their placeholder chart.
+AnalyticsBarChart? realCycleLengthChart(
+  AnalyticsHistory? history,
+  Color accent,
+) {
+  if (history == null || !history.hasCycleHistory) return null;
+  final n = history.cycleLengths.length;
+  return AnalyticsBarChart(
+    titleAr: 'طول الدورة الفعلي (آخر $n دورات)',
+    titleEn: 'Actual cycle length (last $n)',
+    values: history.cycleLengths,
+    accent: accent,
+    suffix: 'd',
+  );
+}
 
 /// Analytics page sections for the **General / Wellness / Sexual** goal.
 class AnalyticsGeneralSection extends StatelessWidget {
@@ -12,22 +51,25 @@ class AnalyticsGeneralSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final variation = AnalyticsData.cycleVariation(
       data.avgCycleLength,
       data.cycleDay,
     );
-    final barValues = <num>[
+    // Fallback series used only when the user has no completed-cycle history.
+    final fallbackBars = <num>[
       mathMax(0, data.cycleRegularity - 15),
       mathMax(0, data.cycleRegularity - 8),
       mathMax(0, data.cycleRegularity - 4),
@@ -36,9 +78,12 @@ class AnalyticsGeneralSection extends StatelessWidget {
       variation.clamp(0, 100),
     ];
 
+    final realChart = realCycleLengthChart(history, accent);
+
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'صحة الدورة العامة',
       titleEn: 'Cycle & Wellness',
       subtitleAr:
@@ -46,13 +91,14 @@ class AnalyticsGeneralSection extends StatelessWidget {
       subtitleEn: 'A full view of your cycle regularity, symptoms, and wellness.',
       scores: scores,
       charts: [
-        AnalyticsBarChart(
-          titleAr: 'تذبذب الانتظام (6 أشهر)',
-          titleEn: 'Regularity variation (6 mo)',
-          values: barValues,
-          accent: accent,
-          suffix: '%',
-        ),
+        realChart ??
+            AnalyticsBarChart(
+              titleAr: 'تذبذب الانتظام (6 أشهر)',
+              titleEn: 'Regularity variation (6 mo)',
+              values: fallbackBars,
+              accent: accent,
+              suffix: '%',
+            ),
       ],
       metrics: metrics,
     );
@@ -67,24 +113,29 @@ class AnalyticsConceiveSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final phasePercent = data.avgCycleLength > 0
         ? (data.cycleDay / data.avgCycleLength).clamp(0.0, 1.0)
         : 0.0;
 
+    final realChart = realCycleLengthChart(history, accent);
+
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات الخصوبة',
       titleEn: 'Fertility Analytics',
       subtitleAr:
@@ -100,6 +151,7 @@ class AnalyticsConceiveSection extends StatelessWidget {
           accent: accent,
           suffix: '%',
         ),
+        ?realChart,
       ],
       ring: AnalyticsPhaseRing(
         titleAr: 'تقدّم الدورة',
@@ -120,20 +172,25 @@ class AnalyticsAvoidSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
+
+    final realChart = realCycleLengthChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات الحماية',
       titleEn: 'Protection Analytics',
       subtitleAr:
@@ -149,6 +206,7 @@ class AnalyticsAvoidSection extends StatelessWidget {
           accent: accent,
           suffix: '%',
         ),
+        ?realChart,
       ],
       metrics: metrics,
     );
@@ -161,16 +219,18 @@ class AnalyticsPregnancySection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final week = data.pregnancyWeek.clamp(0, 42);
     final trim = AnalyticsData.trimesterFromWeek(week);
@@ -178,6 +238,7 @@ class AnalyticsPregnancySection extends StatelessWidget {
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات الحمل',
       titleEn: 'Pregnancy Analytics',
       subtitleAr:
@@ -213,20 +274,25 @@ class AnalyticsMenopauseSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
+
+    final realChart = realCycleLengthChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات سنّ الأمل',
       titleEn: 'Menopause Analytics',
       subtitleAr:
@@ -235,13 +301,14 @@ class AnalyticsMenopauseSection extends StatelessWidget {
           'Hot flashes, sleep, cycle irregularity, and wellness signals.',
       scores: scores,
       charts: [
-        AnalyticsBarChart(
-          titleAr: 'تذبذب طول الدورة (6 أشهر)',
-          titleEn: 'Cycle length variation (6 mo)',
-          values: const [24, 28, 31, 35, 42, 38],
-          accent: accent,
-          suffix: 'd',
-        ),
+        realChart ??
+            AnalyticsBarChart(
+              titleAr: 'تذبذب طول الدورة (6 أشهر)',
+              titleEn: 'Cycle length variation (6 mo)',
+              values: const [24, 28, 31, 35, 42, 38],
+              accent: accent,
+              suffix: 'd',
+            ),
       ],
       metrics: metrics,
     );
@@ -254,20 +321,25 @@ class AnalyticsPcosSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
+
+    final realChart = realCycleLengthChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات PCOS',
       titleEn: 'PCOS Analytics',
       subtitleAr:
@@ -276,13 +348,14 @@ class AnalyticsPcosSection extends StatelessWidget {
           'Cycle regularity, hormonal signs, and metabolic indicators.',
       scores: scores,
       charts: [
-        AnalyticsBarChart(
-          titleAr: 'تذبذب الدورة (6 أشهر)',
-          titleEn: 'Cycle length variation (6 mo)',
-          values: const [33, 38, 42, 45, 40, 38],
-          accent: accent,
-          suffix: 'd',
-        ),
+        realChart ??
+            AnalyticsBarChart(
+              titleAr: 'تذبذب الدورة (6 أشهر)',
+              titleEn: 'Cycle length variation (6 mo)',
+              values: const [33, 38, 42, 45, 40, 38],
+              accent: accent,
+              suffix: 'd',
+            ),
       ],
       metrics: metrics,
     );
@@ -295,21 +368,24 @@ class AnalyticsPostpartumSection extends StatelessWidget {
     super.key,
     required this.data,
     required this.goal,
+    this.history,
   });
 
   final CycleDashboardData data;
   final UserGoalTypes goal;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
     final accent = AnalyticsData.accentFor(goal);
-    final metrics = AnalyticsData.metricsFor(goal, data);
-    final scores = AnalyticsData.scoreCardsFor(goal, data);
+    final metrics = AnalyticsData.metricsFor(goal, data, history: history);
+    final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
     final recovery = AnalyticsData.recoveryDay(data);
 
     return AnalyticsSectionShell(
       goal: goal,
       accent: accent,
+      history: history,
       titleAr: 'تحليلات الاستشفاء',
       titleEn: 'Postpartum Analytics',
       subtitleAr: 'تقدّم الشفاء، النوم، الرضاعة، والمزاج.',
@@ -346,6 +422,7 @@ class AnalyticsSectionShell extends StatelessWidget {
     required this.metrics,
     this.charts = const [],
     this.ring,
+    this.history,
   });
 
   final UserGoalTypes goal;
@@ -358,9 +435,11 @@ class AnalyticsSectionShell extends StatelessWidget {
   final List<AnalyticsMetric> metrics;
   final List<AnalyticsBarChart> charts;
   final AnalyticsPhaseRing? ring;
+  final AnalyticsHistory? history;
 
   @override
   Widget build(BuildContext context) {
+    final ar = Localizations.localeOf(context).languageCode.startsWith('ar');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -373,6 +452,13 @@ class AnalyticsSectionShell extends StatelessWidget {
           subtitleEn: subtitleEn,
         ),
         const SizedBox(height: 12),
+        // Goal-aware AI reading of the user's data. Hides itself entirely when
+        // AI is unavailable (no consent / not premium / no provider).
+        AiInsightCard(
+          type: analyticsInsightType(goal),
+          blur: false,
+          margin: const EdgeInsets.only(bottom: 12),
+        ),
         for (final s in scores) ...[
           AnalyticsHeadlineScore(card: s, accent: accent),
           const SizedBox(height: 10),
@@ -385,11 +471,19 @@ class AnalyticsSectionShell extends StatelessWidget {
           c,
           const SizedBox(height: 12),
         ],
-        AppSectionHeader(
-          title: Localizations.localeOf(context).languageCode.startsWith('ar')
-              ? 'كل المؤشرات'
-              : 'All metrics',
-        ),
+        // Annual body-temperature indicator — real monthly curve when the user
+        // has logged temperatures, otherwise a gentle prompt to start.
+        if (history != null && history!.hasTemperature) ...[
+          AnalyticsTemperatureChart(
+            points: history!.monthlyTemps,
+            accent: accent,
+          ),
+          const SizedBox(height: 12),
+        ] else ...[
+          AnalyticsTemperatureHint(accent: accent),
+          const SizedBox(height: 12),
+        ],
+        AppSectionHeader(title: ar ? 'كل المؤشرات' : 'All metrics'),
         AnalyticsMetricsGrid(metrics: metrics, accent: accent),
       ],
     );

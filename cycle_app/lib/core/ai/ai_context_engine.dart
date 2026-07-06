@@ -8,6 +8,7 @@ import '../../features/pregnancy/data/pregnancy_development_content.dart';
 import '../../features/pregnancy/data/pregnancy_tracking_service.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../menstrudel/models/period_logs/symptom.dart';
+import '../../features/self_care/data/ritual_service.dart';
 import '../../menstrudel_integration/menstrudel_init.dart';
 import 'models/health_snapshot.dart';
 import 'wellness_hub_collector.dart';
@@ -207,9 +208,8 @@ class AiContextEngine {
 
   Future<int> _countCompletedRituals() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      const keys = ['ritual_water', 'ritual_rest', 'ritual_stretch', 'ritual_mindful'];
-      return keys.where((k) => prefs.getBool(k) ?? false).length;
+      // Rituals now reset daily and are stored date-scoped by RitualService.
+      return await RitualService.completedTodayCount();
     } catch (_) {
       return 0;
     }

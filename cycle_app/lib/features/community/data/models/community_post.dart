@@ -2,6 +2,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'post_type.dart';
 
+/// Aggregated live results for a poll post.
+class PollResults {
+  const PollResults({
+    this.counts = const {},
+    this.totalVotes = 0,
+    this.myVote,
+  });
+
+  /// Option index → number of votes.
+  final Map<int, int> counts;
+  final int totalVotes;
+
+  /// The viewer's chosen option index, or null if they haven't voted.
+  final int? myVote;
+
+  bool get hasVoted => myVote != null;
+
+  int countFor(int index) => counts[index] ?? 0;
+
+  double fractionFor(int index) =>
+      totalVotes == 0 ? 0 : countFor(index) / totalVotes;
+}
+
 class CommunityPost {
   const CommunityPost({
     required this.id,
@@ -22,6 +45,7 @@ class CommunityPost {
     this.isAnonymous = false,
     this.moderationStatus = 'approved',
     this.authorIsPremium = false,
+    this.pollOptions,
   });
 
   final String id;
@@ -46,7 +70,15 @@ class CommunityPost {
   final String moderationStatus;
   final bool authorIsPremium;
 
+  /// 2–4 choices when [postType] is [PostType.poll].
+  final List<String>? pollOptions;
+
   bool get isPendingReview => moderationStatus == 'pending_review';
+
+  bool get isPoll =>
+      postType == PostType.poll &&
+      pollOptions != null &&
+      pollOptions!.length >= 2;
 
   bool isVisibleTo(String? viewerUid) {
     if (hidden) return false;
@@ -100,6 +132,9 @@ class CommunityPost {
       isAnonymous: data['isAnonymous'] as bool? ?? false,
       moderationStatus: data['moderationStatus'] as String? ?? 'approved',
       authorIsPremium: data['authorIsPremium'] as bool? ?? false,
+      pollOptions: (data['pollOptions'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
     );
   }
 
@@ -130,5 +165,7 @@ class CommunityPost {
         if (mediaType != null) 'mediaType': mediaType,
         'isAnonymous': isAnonymous,
         'authorIsPremium': authorIsPremium,
+        if (pollOptions != null && pollOptions!.isNotEmpty)
+          'pollOptions': pollOptions,
       };
 }

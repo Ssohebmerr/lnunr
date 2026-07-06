@@ -118,6 +118,9 @@ class _ReportsTabState extends State<ReportsTab> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         children: [
+          const _ReportsHeader(),
+          const SizedBox(height: 8),
+          AppSectionHeader(title: l10n.reportsQuickActions),
           _OpenAnalyticsCard(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AnalyticsPage()),
@@ -437,7 +440,7 @@ class _OpenAnalyticsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final lang = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
     return AppGlassCard(
       blur: false,
       onTap: onTap,
@@ -472,18 +475,14 @@ class _OpenAnalyticsCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    lang.startsWith('ar')
-                        ? 'صفحة التحليلات الكاملة'
-                        : 'Full Analytics',
+                    l10n.reportsAnalyticsCardTitle,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    lang.startsWith('ar')
-                        ? 'كل المؤشرات، الرسوم، والنتائج حسب هدفكِ.'
-                        : 'All metrics, charts, and insights for your goal.',
+                    l10n.reportsAnalyticsCardSubtitle,
                     style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
                   ),
                 ],
@@ -493,6 +492,36 @@ class _OpenAnalyticsCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Page title + one-line intro at the top of the Reports tab.
+class _ReportsHeader extends StatelessWidget {
+  const _ReportsHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.reportsHeaderTitle,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.reportsHeaderSubtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }

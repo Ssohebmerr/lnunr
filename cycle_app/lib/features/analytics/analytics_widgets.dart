@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_design_tokens.dart';
 import '../../core/widgets/app_surface.dart';
+import '../cycle/data/cycle_bridge_service.dart';
 import 'analytics_data.dart';
 
 /// Big headline score card — used at the top of each goal section.
@@ -356,6 +357,267 @@ class AnalyticsBarChart extends StatelessWidget {
                   ),
                 );
               }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Annual basal body-temperature (BBT) indicator — a monthly-average curve
+/// over the last 12 months, drawn from the user's own logged temperatures.
+class AnalyticsTemperatureChart extends StatelessWidget {
+  const AnalyticsTemperatureChart({
+    super.key,
+    required this.points,
+    this.accent,
+  });
+
+  final List<MonthlyTemperature> points;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    final ar = lang.startsWith('ar');
+    final color = accent ?? theme.colorScheme.primary;
+
+    final values = points.map((p) => p.avgCelsius).toList();
+    final minV = values.reduce(math.min);
+    final maxV = values.reduce(math.max);
+    final avgV = values.reduce((a, b) => a + b) / values.length;
+
+    return AppGlassCard(
+      blur: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.device_thermostat, size: 18, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  ar
+                      ? 'المؤشر الحراري السنوي (متوسط شهري)'
+                      : 'Annual temperature (monthly avg)',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _tempStat(theme, ar ? 'الأدنى' : 'Min', minV, color),
+              const SizedBox(width: 8),
+              _tempStat(theme, ar ? 'المتوسط' : 'Avg', avgV, color),
+              const SizedBox(width: 8),
+              _tempStat(theme, ar ? 'الأعلى' : 'Max', maxV, color),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 96,
+            child: CustomPaint(
+              painter: _TemperatureLinePainter(values: values, color: color),
+              size: Size.infinite,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: points
+                .map(
+                  (p) => Expanded(
+                    child: Text(
+                      AnalyticsData.monthShort(p.month, lang),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tempStat(ThemeData theme, String label, double value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${value.toStringAsFixed(1)}°',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Draws the temperature curve: gradient fill under a smooth line, with a dot
+/// on each monthly point. Points are centered in equal slots so they align
+/// with the month labels rendered below the chart.
+class _TemperatureLinePainter extends CustomPainter {
+  _TemperatureLinePainter({required this.values, required this.color});
+
+  final List<double> values;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.isEmpty) return;
+
+    final minV = values.reduce(math.min);
+    final maxV = values.reduce(math.max);
+    final range = math.max(0.4, maxV - minV); // avoid a flat, edge-hugging line
+    const topPad = 8.0;
+    const bottomPad = 8.0;
+    final usableH = size.height - topPad - bottomPad;
+    final slot = size.width / values.length;
+
+    Offset pointAt(int i) {
+      final x = slot * (i + 0.5);
+      final norm = (values[i] - minV) / range;
+      final y = topPad + (1 - norm) * usableH;
+      return Offset(x, y);
+    }
+
+    final pts = [for (var i = 0; i < values.length; i++) pointAt(i)];
+
+    // Single sample: just a labelled dot in the middle.
+    if (pts.length == 1) {
+      canvas.drawCircle(
+        pts.first,
+        4,
+        Paint()..color = color,
+      );
+      return;
+    }
+
+    final line = Path()..moveTo(pts.first.dx, pts.first.dy);
+    for (var i = 1; i < pts.length; i++) {
+      line.lineTo(pts[i].dx, pts[i].dy);
+    }
+
+    // Gradient fill under the curve.
+    final fill = Path.from(line)
+      ..lineTo(pts.last.dx, size.height)
+      ..lineTo(pts.first.dx, size.height)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            color.withValues(alpha: 0.35),
+            color.withValues(alpha: 0.02),
+          ],
+        ).createShader(Offset.zero & size),
+    );
+
+    // The line itself.
+    canvas.drawPath(
+      line,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2.5
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Dots on each point.
+    final dot = Paint()..color = color;
+    final dotCore = Paint()..color = Colors.white;
+    for (final p in pts) {
+      canvas.drawCircle(p, 3.5, dot);
+      canvas.drawCircle(p, 1.6, dotCore);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TemperatureLinePainter old) =>
+      old.values != values || old.color != color;
+}
+
+/// Compact prompt shown in place of the temperature curve when the user hasn't
+/// logged any body-temperature readings yet.
+class AnalyticsTemperatureHint extends StatelessWidget {
+  const AnalyticsTemperatureHint({super.key, this.accent});
+
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ar = Localizations.localeOf(context).languageCode.startsWith('ar');
+    final color = accent ?? theme.colorScheme.primary;
+
+    return AppGlassCard(
+      blur: false,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Icon(Icons.device_thermostat, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ar ? 'المؤشر الحراري السنوي' : 'Annual temperature',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  ar
+                      ? 'سجّلي درجة حرارتكِ يومياً لرؤية المنحنى الحراري عبر السنة.'
+                      : 'Log your temperature daily to unlock the yearly curve.',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+                ),
+              ],
             ),
           ),
         ],

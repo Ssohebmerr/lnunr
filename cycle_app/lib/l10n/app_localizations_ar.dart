@@ -440,6 +440,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get premiumDaysShort => 'يوم';
 
   @override
+  String get adminRolesTitle => 'المشرفون والمراقبون';
+
+  @override
+  String get adminRolesManageBtn => 'إدارة المشرفين';
+
+  @override
+  String get adminRolesAddHeader => 'إضافة مشرف';
+
+  @override
+  String get adminRolesEmailHint => 'بريد المستخدم';
+
+  @override
+  String get adminRolesRoleModerator => 'مراقب';
+
+  @override
+  String get adminRolesRoleAdmin => 'مشرف';
+
+  @override
+  String get adminRolesRoleOwner => 'مالك';
+
+  @override
+  String get adminRolesGrant => 'منح الصلاحية';
+
+  @override
+  String get adminRolesGranted => 'تم تحديث الصلاحية';
+
+  @override
+  String get adminRolesCurrentHeader => 'المشرفون الحاليون';
+
+  @override
+  String get adminRolesEmpty => 'لا يوجد مشرفون بعد';
+
+  @override
+  String get adminRolesRemove => 'إزالة';
+
+  @override
+  String get adminRolesRemoved => 'تمت إزالة المشرف';
+
+  @override
+  String get adminRolesOwnerOnly => 'فقط المالك يمكنه إضافة أو إزالة المشرفين.';
+
+  @override
+  String get adminRolesUserNotFound => 'لا يوجد مستخدم بهذا البريد';
+
+  @override
   String get loginRequiredPremium => 'سجّلي الدخول للاشتراك';
 
   @override
@@ -769,6 +814,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportsChecklistHint => 'قائمة مهام مخصّصة لك';
 
   @override
+  String get reportsHeaderTitle => 'تقاريرك';
+
+  @override
+  String get reportsHeaderSubtitle =>
+      'نظرة واضحة على دورتكِ، اتجاهاتكِ، وملخّص جاهز للطبيب.';
+
+  @override
+  String get reportsQuickActions => 'إجراءات سريعة';
+
+  @override
+  String get reportsAnalyticsCardTitle => 'التحليلات الكاملة';
+
+  @override
+  String get reportsAnalyticsCardSubtitle =>
+      'كل المؤشرات والرسوم والنتائج حسب هدفكِ.';
+
+  @override
+  String get reportsPregnancyOverview => 'نظرة على الحمل';
+
+  @override
+  String get reportsMenopauseOverview => 'نظرة على سنّ الأمل';
+
+  @override
+  String get reportsPcosOverview => 'نظرة على إدارة PCOS';
+
+  @override
+  String get reportsRecoveryOverview => 'نظرة على الاستشفاء';
+
+  @override
   String get goalModeGeneralReportStats => 'نظرة على الدورة';
 
   @override
@@ -910,6 +984,105 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selfCareHealthToolsDesc => 'حبوب، منتجات صحية، وأكثر';
+
+  @override
+  String get selfCareWhisperTitle => 'همسة اليوم';
+
+  @override
+  String get selfCareWhisperLocked =>
+      'افتحي همسة Lune الشخصية مع النسخة المميّزة.';
+
+  @override
+  String get selfCareWhisperPrompt =>
+      'امنحيني همسة رعاية ذاتية لطيفة لليوم حسب مرحلتي ومزاجي.';
+
+  @override
+  String get moodCheckInTitle => 'كيف تشعرين اليوم؟';
+
+  @override
+  String get moodCheckInDone => 'تم تسجيل مزاج اليوم 🌸';
+
+  @override
+  String get moodTrendTitle => 'هذا الأسبوع';
+
+  @override
+  String get selfCareAffirmationGenerate => 'تأكيد شخصي من Lune';
+
+  @override
+  String get selfCareAffirmationPrompt =>
+      'اكتبي لي تأكيداً واحداً قصيراً وملهماً بصيغة المتكلّم حسب مرحلتي ومزاجي.';
+
+  @override
+  String get selfCareMovement => 'حركة لطيفة';
+
+  @override
+  String selfCareMovementStep(int current, int total) {
+    return 'خطوة $current من $total';
+  }
+
+  @override
+  String get selfCareMovementDone => 'أحسنتِ 🌸';
+
+  @override
+  String get selfCareMovementDoneCue => 'خذي لحظة لتلاحظي شعور جسدك.';
+
+  @override
+  String get selfCareRestart => 'من جديد';
+
+  @override
+  String get selfCareSkip => 'تخطّي';
+
+  @override
+  String selfCareBreatheCycles(int count) {
+    return '$count دورات مكتملة';
+  }
+
+  @override
+  String get selfCareCopied => 'تم النسخ';
+
+  @override
+  String get selfCareLibraryTitle => 'دليل العناية حسب الدورة';
+
+  @override
+  String get selfCareLibrarySubtitle => 'تغذية وحركة وراحة ومزاج لكل مرحلة.';
+
+  @override
+  String get selfCareLibraryCurrent => 'أنتِ هنا';
+
+  @override
+  String get selfCareJournalHistory => 'مدوّناتك السابقة';
+
+  @override
+  String get selfCareJournalEmpty =>
+      'لا مدوّنات بعد. اكتبي أول تأمّل لكِ بالأعلى.';
+
+  @override
+  String get selfCareJournalDelete => 'حذف';
+
+  @override
+  String get selfCareJournalReflect => 'تأمّل مع Lune';
+
+  @override
+  String get selfCareJournalReflecting => 'Lune تتأمّل كلماتك…';
+
+  @override
+  String selfCareRitualStreak(int days) {
+    return '$days يوم';
+  }
+
+  @override
+  String selfCareRitualsProgress(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get showMore => 'عرض المزيد';
+
+  @override
+  String get showLess => 'عرض أقل';
+
+  @override
+  String get aiUnavailable => 'Lune غير متاحة الآن. حاولي لاحقاً.';
 
   @override
   String get communityTabFeed => 'الخلاصة';
@@ -1252,6 +1425,121 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get healthReportFooter => '© Lune';
+
+  @override
+  String get healthReportPatientSection => 'المريضة';
+
+  @override
+  String get healthReportMode => 'نمط التتبّع';
+
+  @override
+  String get healthReportModeCycle => 'تتبّع الدورة';
+
+  @override
+  String get healthReportModePregnancy => 'تتبّع الحمل';
+
+  @override
+  String get healthReportReportId => 'رقم التقرير';
+
+  @override
+  String get healthReportMenstrualHistory => 'تاريخ الحيض';
+
+  @override
+  String get healthReportLastPeriod => 'آخر دورة (LMP)';
+
+  @override
+  String get healthReportDataPeriod => 'فترة البيانات';
+
+  @override
+  String get healthReportCyclesAnalyzed => 'عدد الدورات المُحلَّلة';
+
+  @override
+  String get healthReportCycleLengthRange => 'مدى طول الدورة';
+
+  @override
+  String get healthReportCycleVariability => 'تباين الدورة';
+
+  @override
+  String get healthReportPeriodLengthRange => 'مدى مدة الطمث';
+
+  @override
+  String get healthReportPatternsToDiscuss => 'أنماط تستحق النقاش';
+
+  @override
+  String get healthReportSymptomBurden => 'ملخّص الأعراض والألم';
+
+  @override
+  String get healthReportAveragePain => 'متوسط الألم (آخر 30 يوماً)';
+
+  @override
+  String get healthReportWellnessEntries => 'عدد سجلات العافية';
+
+  @override
+  String get healthReportRedFlags => 'يُستحسن ذكرها للطبيب';
+
+  @override
+  String get healthReportVitalsAdherence => 'المؤشرات الحيوية والالتزام';
+
+  @override
+  String get healthReportLatestWeight => 'آخر وزن';
+
+  @override
+  String get healthReportLatestTemperature => 'آخر حرارة';
+
+  @override
+  String get healthReportAvgWater => 'متوسط الماء (30 يوماً)';
+
+  @override
+  String get healthReportPillAdherence => 'الالتزام بالحبوب (آخر 7 أيام)';
+
+  @override
+  String clinicalFlagShortCycle(int days) {
+    return 'متوسط الدورة $days يوماً — أقصر من النطاق المعتاد 21–35 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
+  }
+
+  @override
+  String clinicalFlagLongCycle(int days) {
+    return 'متوسط الدورة $days يوماً — أطول من النطاق المعتاد 21–35 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
+  }
+
+  @override
+  String clinicalFlagIrregularCycle(int days) {
+    return 'يختلف طول الدورة بنحو $days يوماً بين دورة وأخرى — يُستحسن مناقشة الانتظام مع طبيبكِ.';
+  }
+
+  @override
+  String clinicalFlagProlongedPeriod(int days) {
+    return 'متوسط مدة الطمث $days أيام — أطول من المعتاد (نحو 7 أيام)؛ يُستحسن مناقشته مع طبيبكِ.';
+  }
+
+  @override
+  String get clinicalFlagHighPain =>
+      'متوسط الألم المُسجَّل في النطاق الشديد — يُستحسن مناقشة إدارة الألم مع طبيبكِ.';
+
+  @override
+  String get doctorReportPatientTitle => 'بيانات المريضة';
+
+  @override
+  String get doctorReportPatientSubtitle =>
+      'اختياري — يظهر أعلى التقرير للطبيب. يُحفظ على جهازكِ فقط.';
+
+  @override
+  String get doctorReportPatientName => 'الاسم';
+
+  @override
+  String get doctorReportPatientAge => 'العمر';
+
+  @override
+  String get doctorReportPatientNote => 'ملاحظة للطبيب';
+
+  @override
+  String get doctorReportPatientNoteHint => 'مثال: سبب الزيارة، الأدوية، مخاوف';
+
+  @override
+  String get doctorReportPatientSave => 'حفظ';
+
+  @override
+  String get doctorReportEditPatient => 'تعديل بيانات المريضة';
 
   @override
   String get communityAdultsOnlyTitle => 'المجتمعات للبالغات';
@@ -2766,6 +3054,125 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get communityGuidelinesShort => 'القواعد';
+
+  @override
+  String get communityPollAddOption => 'إضافة خيار';
+
+  @override
+  String communityPollOptionHint(int number) {
+    return 'الخيار $number';
+  }
+
+  @override
+  String get communityPollNeedsOptions => 'أضيفي خيارين على الأقل للاستطلاع';
+
+  @override
+  String communityPollVotesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صوت',
+      many: '$count صوتًا',
+      few: '$count أصوات',
+      two: 'صوتان',
+      one: 'صوت واحد',
+      zero: 'لا أصوات بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get communityPollTapToVote => 'اضغطي على خيار للتصويت';
+
+  @override
+  String get communityFilters => 'الفلاتر';
+
+  @override
+  String get communityFilterCategory => 'الفئة';
+
+  @override
+  String get communityFilterPostType => 'نوع المنشور';
+
+  @override
+  String get communityFilterReset => 'إعادة تعيين';
+
+  @override
+  String get communityFilterApply => 'تطبيق';
+
+  @override
+  String get storyChooseCommunity => 'مشاركة القصة في...';
+
+  @override
+  String get timeJustNow => 'الآن';
+
+  @override
+  String timeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count دقيقة',
+      many: 'منذ $count دقيقة',
+      few: 'منذ $count دقائق',
+      two: 'منذ دقيقتين',
+      one: 'منذ دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count ساعة',
+      many: 'منذ $count ساعة',
+      few: 'منذ $count ساعات',
+      two: 'منذ ساعتين',
+      one: 'منذ ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count يوم',
+      many: 'منذ $count يومًا',
+      few: 'منذ $count أيام',
+      two: 'منذ يومين',
+      one: 'أمس',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reactionHeart => 'حب';
+
+  @override
+  String get reactionHug => 'احتضان';
+
+  @override
+  String get reactionCelebrate => 'احتفال';
+
+  @override
+  String get reactionStrong => 'قوة';
+
+  @override
+  String get communityMemberProfile => 'ملف العضوة';
+
+  @override
+  String get communityRecentPosts => 'آخر المنشورات';
+
+  @override
+  String get communityNoRecentPosts => 'لا منشورات عامة بعد';
+
+  @override
+  String get communityWeeklyQuestion => 'سؤال الأسبوع';
+
+  @override
+  String get communityWeeklyAnswer => 'شاركي إجابتك';
 
   @override
   String get premiumUpsellTitle => 'Lune Premium';

@@ -252,6 +252,34 @@ service cloud.firestore {
 
 
 
+    // Poll posts may carry 2–4 short text options.
+
+    function pollOptionsValid(data) {
+
+      return !('pollOptions' in data)
+
+        || (data.pollOptions is list
+
+            && data.pollOptions.size() >= 2
+
+            && data.pollOptions.size() <= 4);
+
+    }
+
+
+
+    // Reaction docs: legacy likes have no `reaction` field (treated as heart).
+
+    function reactionValid(data) {
+
+      return !('reaction' in data)
+
+        || data.reaction in ['heart', 'hug', 'celebrate', 'strong'];
+
+    }
+
+
+
     match /admins/{adminId} {
 
       allow get: if request.auth != null && request.auth.uid == adminId;
@@ -603,6 +631,8 @@ service cloud.firestore {
 
           && noProtectedPostFieldsOnCreate()
 
+          && pollOptionsValid(request.resource.data)
+
           && isCommunityAdult()
 
           && isCommunityNotBanned()
@@ -616,6 +646,19 @@ service cloud.firestore {
           && (
 
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+
+            // Deleting a comment that was marked best answer clears the
+            // marker in the same transaction as the count decrement.
+
+            || (
+
+              request.resource.data.diff(resource.data).affectedKeys()
+
+                  .hasOnly(['commentCount', 'bestAnswerCommentId'])
+
+              && !('bestAnswerCommentId' in request.resource.data)
+
+            )
 
             || (
 
@@ -777,6 +820,30 @@ service cloud.firestore {
 
             && resource.data.authorUid == request.auth.uid) || isAdmin();
 
+
+
+          // Comment likes — simple hearts, one doc per member.
+
+          match /likes/{likeUid} {
+
+            allow read: if request.auth != null && isCommunityAdult();
+
+            allow create: if request.auth != null
+
+              && request.auth.uid == likeUid
+
+              && isCommunityAdult()
+
+              && isCommunityNotBanned()
+
+              && isCommunityMember(communityId);
+
+            allow delete: if request.auth != null && request.auth.uid == likeUid;
+
+            allow update: if false;
+
+          }
+
         }
 
 
@@ -785,7 +852,11 @@ service cloud.firestore {
 
           allow read: if request.auth != null && isCommunityAdult();
 
-          allow create, delete: if request.auth != null
+          // Update allowed so members can switch their reaction emoji
+
+          // without a delete+create round trip.
+
+          allow create, update: if request.auth != null
 
             && request.auth.uid == likeUid
 
@@ -793,9 +864,41 @@ service cloud.firestore {
 
             && isCommunityNotBanned()
 
-            && isCommunityMember(communityId);
+            && isCommunityMember(communityId)
 
-          allow update: if false;
+            && reactionValid(request.resource.data);
+
+          allow delete: if request.auth != null && request.auth.uid == likeUid;
+
+        }
+
+
+
+        // pollVotes/{voteUid} — one vote doc per member; changing your vote
+
+        // overwrites the same doc, so counts stay consistent.
+
+        match /pollVotes/{voteUid} {
+
+          allow read: if request.auth != null && isCommunityAdult();
+
+          allow create, update: if request.auth != null
+
+            && request.auth.uid == voteUid
+
+            && isCommunityAdult()
+
+            && isCommunityNotBanned()
+
+            && isCommunityMember(communityId)
+
+            && request.resource.data.option is int
+
+            && request.resource.data.option >= 0
+
+            && request.resource.data.option < 4;
+
+          allow delete: if request.auth != null && request.auth.uid == voteUid;
 
         }
 

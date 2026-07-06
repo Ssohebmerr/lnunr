@@ -128,6 +128,21 @@ class AnalyticsData {
     }
   }
 
+  static const List<String> _monthsAr = [
+    'ينا', 'فبر', 'مار', 'أبر', 'ماي', 'يون',
+    'يول', 'أغس', 'سبت', 'أكت', 'نوف', 'ديس',
+  ];
+  static const List<String> _monthsEn = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  /// Short month label (1..12) for chart axes.
+  static String monthShort(int month, String lang) {
+    if (month < 1 || month > 12) return '';
+    return (lang.startsWith('ar') ? _monthsAr : _monthsEn)[month - 1];
+  }
+
   /// Cycle regularity band based on the API-provided score (0..100).
   static MetricBand regularityBand(double score) {
     if (score >= 85) return MetricBand.excellent;
@@ -145,11 +160,34 @@ class AnalyticsData {
 
   /// Cycle variation: how much the cycle length fluctuates.
   /// We approximate this with avgCycleLength vs current cycle day.
-  /// Higher = more irregular.
+  /// Higher = more irregular. Used only as a fallback when there isn't enough
+  /// real cycle history — see [realCycleVariation].
   static double cycleVariation(int avgLength, int cycleDay) {
     if (avgLength <= 0) return 0;
     final diff = (cycleDay - avgLength).abs();
     return (diff / avgLength) * 100;
+  }
+
+  /// Real cycle-length variability as a coefficient of variation (%),
+  /// computed from the user's actual completed cycles (std dev ÷ mean × 100).
+  /// A low value means regular cycles. Falls back to the day-vs-average
+  /// heuristic when fewer than two completed cycles are available.
+  static double realCycleVariation(
+    AnalyticsHistory? history,
+    int avgLength,
+    int cycleDay,
+  ) {
+    final lengths = history?.cycleLengths ?? const <int>[];
+    if (lengths.length >= 2) {
+      final mean = lengths.reduce((a, b) => a + b) / lengths.length;
+      if (mean <= 0) return 0;
+      final variance = lengths
+              .map((l) => (l - mean) * (l - mean))
+              .reduce((a, b) => a + b) /
+          lengths.length;
+      return (math.sqrt(variance) / mean) * 100;
+    }
+    return cycleVariation(avgLength, cycleDay);
   }
 
   /// Days trying to conceive (from LMP), capped at 0 if not pregnant.
@@ -234,15 +272,17 @@ class AnalyticsData {
     return math.min(180, math.max(0, 45 - data.cycleDay + 45));
   }
 
-  /// Generate the goal-specific metric set.
+  /// Generate the goal-specific metric set. [history] supplies real cycle
+  /// data so variability-style indicators reflect actual logs when available.
   static List<AnalyticsMetric> metricsFor(
     UserGoalTypes goal,
-    CycleDashboardData data,
-  ) {
+    CycleDashboardData data, {
+    AnalyticsHistory? history,
+  }) {
     switch (goal) {
       case UserGoalTypes.general:
       case UserGoalTypes.sexual:
-        return _generalMetrics(data);
+        return _generalMetrics(data, history);
       case UserGoalTypes.conceive:
         return _conceiveMetrics(data);
       case UserGoalTypes.avoid:
@@ -250,19 +290,21 @@ class AnalyticsData {
       case UserGoalTypes.pregnant:
         return _pregnancyMetrics(data);
       case UserGoalTypes.menopause:
-        return _menopauseMetrics(data);
+        return _menopauseMetrics(data, history);
       case UserGoalTypes.pcos:
-        return _pcosMetrics(data);
+        return _pcosMetrics(data, history);
       case UserGoalTypes.postpartum:
         return _postpartumMetrics(data);
     }
   }
 
-  /// Aggregate score cards per goal.
+  /// Aggregate score cards per goal. [history] supplies real cycle data so
+  /// variability-derived scores reflect actual logs when available.
   static List<AnalyticsScoreCard> scoreCardsFor(
     UserGoalTypes goal,
-    CycleDashboardData data,
-  ) {
+    CycleDashboardData data, {
+    AnalyticsHistory? history,
+  }) {
     switch (goal) {
       case UserGoalTypes.general:
       case UserGoalTypes.sexual:
@@ -276,7 +318,7 @@ class AnalyticsData {
       case UserGoalTypes.menopause:
         return _menopauseScores(data);
       case UserGoalTypes.pcos:
-        return _pcosScores(data);
+        return _pcosScores(data, history);
       case UserGoalTypes.postpartum:
         return _postpartumScores(data);
     }
@@ -285,8 +327,12 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // GENERAL / SEXUAL
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _generalMetrics(CycleDashboardData data) {
-    final variation = cycleVariation(data.avgCycleLength, data.cycleDay);
+  static List<AnalyticsMetric> _generalMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
+    final variation =
+        realCycleVariation(history, data.avgCycleLength, data.cycleDay);
     return [
       AnalyticsMetric(
         id: 'cycle_day',
@@ -810,7 +856,10 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // MENOPAUSE
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _menopauseMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _menopauseMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsMetric(
         id: 'cycle_regularity',
@@ -852,7 +901,7 @@ class AnalyticsData {
         id: 'cycle_variation',
         labelAr: 'تذبذب الدورة',
         labelEn: 'Cycle variation',
-        value: cycleVariation(data.avgCycleLength, data.cycleDay),
+        value: realCycleVariation(history, data.avgCycleLength, data.cycleDay),
         suffix: '%',
         icon: Icons.show_chart,
         status: 'warning',
@@ -946,7 +995,10 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // PCOS
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _pcosMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _pcosMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsMetric(
         id: 'cycle_regularity',
@@ -961,7 +1013,7 @@ class AnalyticsData {
         id: 'cycle_variation',
         labelAr: 'تذبذب الدورة',
         labelEn: 'Cycle variation',
-        value: cycleVariation(data.avgCycleLength, data.cycleDay),
+        value: realCycleVariation(history, data.avgCycleLength, data.cycleDay),
         suffix: '%',
         icon: Icons.show_chart,
         status: 'bad',
@@ -1041,7 +1093,14 @@ class AnalyticsData {
     ];
   }
 
-  static List<AnalyticsScoreCard> _pcosScores(CycleDashboardData data) {
+  static List<AnalyticsScoreCard> _pcosScores(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
+    final metabolic = math.max(
+      0.0,
+      100 - realCycleVariation(history, data.avgCycleLength, data.cycleDay).abs(),
+    );
     return [
       AnalyticsScoreCard(
         id: 'cycle_irregularity',
@@ -1060,8 +1119,8 @@ class AnalyticsData {
         id: 'metabolic',
         titleAr: 'صحة التمثيل الغذائي',
         titleEn: 'Metabolic health',
-        score: math.max(0, 100 - cycleVariation(data.avgCycleLength, data.cycleDay).abs()),
-        band: regularityBand(math.max(0, 100 - cycleVariation(data.avgCycleLength, data.cycleDay).abs())),
+        score: metabolic,
+        band: regularityBand(metabolic),
         descriptionAr: 'الألياف، الحركة، والنوم يدعمان توازن الإنسولين.',
         descriptionEn:
             'Fiber, movement, and sleep support insulin balance.',

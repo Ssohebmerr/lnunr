@@ -13,8 +13,9 @@
 //                                       their Auth account.
 //
 // Note: `deleteUserAccount`'s subcollection list must stay in sync with the
-// per-user allow-list in `cycle_app/firebase/firestore.rules` — otherwise a
-// "delete my data" request will leak data the rules permit reading.
+// per-user allow-list in `cycle_app/firestore.rules` (the deployed rules
+// file, see firebase.json) — otherwise a "delete my data" request will leak
+// data the rules permit reading.
 // ============================================================================
 
 'use strict';

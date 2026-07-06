@@ -920,6 +920,96 @@ abstract class AppLocalizations {
   /// **'days'**
   String get premiumDaysShort;
 
+  /// No description provided for @adminRolesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins and moderators'**
+  String get adminRolesTitle;
+
+  /// No description provided for @adminRolesManageBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage admins'**
+  String get adminRolesManageBtn;
+
+  /// No description provided for @adminRolesAddHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an admin'**
+  String get adminRolesAddHeader;
+
+  /// No description provided for @adminRolesEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'User email'**
+  String get adminRolesEmailHint;
+
+  /// No description provided for @adminRolesRoleModerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator'**
+  String get adminRolesRoleModerator;
+
+  /// No description provided for @adminRolesRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminRolesRoleAdmin;
+
+  /// No description provided for @adminRolesRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get adminRolesRoleOwner;
+
+  /// No description provided for @adminRolesGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant role'**
+  String get adminRolesGrant;
+
+  /// No description provided for @adminRolesGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Role updated'**
+  String get adminRolesGranted;
+
+  /// No description provided for @adminRolesCurrentHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Current admins'**
+  String get adminRolesCurrentHeader;
+
+  /// No description provided for @adminRolesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No admins yet'**
+  String get adminRolesEmpty;
+
+  /// No description provided for @adminRolesRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get adminRolesRemove;
+
+  /// No description provided for @adminRolesRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin removed'**
+  String get adminRolesRemoved;
+
+  /// No description provided for @adminRolesOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the owner can add or remove admins.'**
+  String get adminRolesOwnerOnly;
+
+  /// No description provided for @adminRolesUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No user found with that email'**
+  String get adminRolesUserNotFound;
+
   /// No description provided for @loginRequiredPremium.
   ///
   /// In en, this message translates to:
@@ -1550,6 +1640,60 @@ abstract class AppLocalizations {
   /// **'Your personalized action list'**
   String get reportsChecklistHint;
 
+  /// No description provided for @reportsHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reports'**
+  String get reportsHeaderTitle;
+
+  /// No description provided for @reportsHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A clear look at your cycle, your trends, and a doctor-ready summary.'**
+  String get reportsHeaderSubtitle;
+
+  /// No description provided for @reportsQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get reportsQuickActions;
+
+  /// No description provided for @reportsAnalyticsCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full analytics'**
+  String get reportsAnalyticsCardTitle;
+
+  /// No description provided for @reportsAnalyticsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All metrics, charts, and insights for your goal.'**
+  String get reportsAnalyticsCardSubtitle;
+
+  /// No description provided for @reportsPregnancyOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy overview'**
+  String get reportsPregnancyOverview;
+
+  /// No description provided for @reportsMenopauseOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Menopause overview'**
+  String get reportsMenopauseOverview;
+
+  /// No description provided for @reportsPcosOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'PCOS overview'**
+  String get reportsPcosOverview;
+
+  /// No description provided for @reportsRecoveryOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery overview'**
+  String get reportsRecoveryOverview;
+
   /// No description provided for @goalModeGeneralReportStats.
   ///
   /// In en, this message translates to:
@@ -1831,6 +1975,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pills, sanitary, sex & more'**
   String get selfCareHealthToolsDesc;
+
+  /// No description provided for @selfCareWhisperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Whisper of the day'**
+  String get selfCareWhisperTitle;
+
+  /// No description provided for @selfCareWhisperLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Lune\'s personal whisper with Premium.'**
+  String get selfCareWhisperLocked;
+
+  /// No description provided for @selfCareWhisperPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Give me a gentle self-care whisper for today based on my cycle phase and mood.'**
+  String get selfCareWhisperPrompt;
+
+  /// No description provided for @moodCheckInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling today?'**
+  String get moodCheckInTitle;
+
+  /// No description provided for @moodCheckInDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s mood is logged 🌸'**
+  String get moodCheckInDone;
+
+  /// No description provided for @moodTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get moodTrendTitle;
+
+  /// No description provided for @selfCareAffirmationGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal affirmation from Lune'**
+  String get selfCareAffirmationGenerate;
+
+  /// No description provided for @selfCareAffirmationPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Write one short, uplifting first-person affirmation for me based on my cycle phase and mood.'**
+  String get selfCareAffirmationPrompt;
+
+  /// No description provided for @selfCareMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle movement'**
+  String get selfCareMovement;
+
+  /// No description provided for @selfCareMovementStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String selfCareMovementStep(int current, int total);
+
+  /// No description provided for @selfCareMovementDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Beautifully done 🌸'**
+  String get selfCareMovementDone;
+
+  /// No description provided for @selfCareMovementDoneCue.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a moment to notice how your body feels.'**
+  String get selfCareMovementDoneCue;
+
+  /// No description provided for @selfCareRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get selfCareRestart;
+
+  /// No description provided for @selfCareSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get selfCareSkip;
+
+  /// No description provided for @selfCareBreatheCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cycles completed'**
+  String selfCareBreatheCycles(int count);
+
+  /// No description provided for @selfCareCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get selfCareCopied;
+
+  /// No description provided for @selfCareLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle self-care guide'**
+  String get selfCareLibraryTitle;
+
+  /// No description provided for @selfCareLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition, movement, rest & mind for every phase.'**
+  String get selfCareLibrarySubtitle;
+
+  /// No description provided for @selfCareLibraryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re here'**
+  String get selfCareLibraryCurrent;
+
+  /// No description provided for @selfCareJournalHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Past entries'**
+  String get selfCareJournalHistory;
+
+  /// No description provided for @selfCareJournalEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet. Write your first reflection above.'**
+  String get selfCareJournalEmpty;
+
+  /// No description provided for @selfCareJournalDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get selfCareJournalDelete;
+
+  /// No description provided for @selfCareJournalReflect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflect with Lune'**
+  String get selfCareJournalReflect;
+
+  /// No description provided for @selfCareJournalReflecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is reflecting on your words…'**
+  String get selfCareJournalReflecting;
+
+  /// No description provided for @selfCareRitualStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String selfCareRitualStreak(int days);
+
+  /// No description provided for @selfCareRitualsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total}'**
+  String selfCareRitualsProgress(int done, int total);
+
+  /// No description provided for @showMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// No description provided for @aiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is unavailable right now. Please try again later.'**
+  String get aiUnavailable;
 
   /// No description provided for @communityTabFeed.
   ///
@@ -2473,6 +2791,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'© Lune'**
   String get healthReportFooter;
+
+  /// No description provided for @healthReportPatientSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient'**
+  String get healthReportPatientSection;
+
+  /// No description provided for @healthReportMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking mode'**
+  String get healthReportMode;
+
+  /// No description provided for @healthReportModeCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle tracking'**
+  String get healthReportModeCycle;
+
+  /// No description provided for @healthReportModePregnancy.
+  ///
+  /// In en, this message translates to:
+  /// **'Pregnancy tracking'**
+  String get healthReportModePregnancy;
+
+  /// No description provided for @healthReportReportId.
+  ///
+  /// In en, this message translates to:
+  /// **'Report ID'**
+  String get healthReportReportId;
+
+  /// No description provided for @healthReportMenstrualHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Menstrual history'**
+  String get healthReportMenstrualHistory;
+
+  /// No description provided for @healthReportLastPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Last period (LMP)'**
+  String get healthReportLastPeriod;
+
+  /// No description provided for @healthReportDataPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Data period'**
+  String get healthReportDataPeriod;
+
+  /// No description provided for @healthReportCyclesAnalyzed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycles analyzed'**
+  String get healthReportCyclesAnalyzed;
+
+  /// No description provided for @healthReportCycleLengthRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle length range'**
+  String get healthReportCycleLengthRange;
+
+  /// No description provided for @healthReportCycleVariability.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle variability'**
+  String get healthReportCycleVariability;
+
+  /// No description provided for @healthReportPeriodLengthRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Period length range'**
+  String get healthReportPeriodLengthRange;
+
+  /// No description provided for @healthReportPatternsToDiscuss.
+  ///
+  /// In en, this message translates to:
+  /// **'Patterns worth discussing'**
+  String get healthReportPatternsToDiscuss;
+
+  /// No description provided for @healthReportSymptomBurden.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptom & pain summary'**
+  String get healthReportSymptomBurden;
+
+  /// No description provided for @healthReportAveragePain.
+  ///
+  /// In en, this message translates to:
+  /// **'Average pain (last 30 days)'**
+  String get healthReportAveragePain;
+
+  /// No description provided for @healthReportWellnessEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness log entries'**
+  String get healthReportWellnessEntries;
+
+  /// No description provided for @healthReportRedFlags.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth mentioning to your doctor'**
+  String get healthReportRedFlags;
+
+  /// No description provided for @healthReportVitalsAdherence.
+  ///
+  /// In en, this message translates to:
+  /// **'Vitals & adherence'**
+  String get healthReportVitalsAdherence;
+
+  /// No description provided for @healthReportLatestWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest weight'**
+  String get healthReportLatestWeight;
+
+  /// No description provided for @healthReportLatestTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest temperature'**
+  String get healthReportLatestTemperature;
+
+  /// No description provided for @healthReportAvgWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Average water (30 days)'**
+  String get healthReportAvgWater;
+
+  /// No description provided for @healthReportPillAdherence.
+  ///
+  /// In en, this message translates to:
+  /// **'Pill adherence (last 7 days)'**
+  String get healthReportPillAdherence;
+
+  /// No description provided for @clinicalFlagShortCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Average cycle {days} days — shorter than the typical 21–35 day range; worth discussing with your doctor.'**
+  String clinicalFlagShortCycle(int days);
+
+  /// No description provided for @clinicalFlagLongCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Average cycle {days} days — longer than the typical 21–35 day range; worth discussing with your doctor.'**
+  String clinicalFlagLongCycle(int days);
+
+  /// No description provided for @clinicalFlagIrregularCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle length varies by about {days} days between cycles — worth discussing regularity with your doctor.'**
+  String clinicalFlagIrregularCycle(int days);
+
+  /// No description provided for @clinicalFlagProlongedPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Average period {days} days — longer than the usual ~7 days; worth discussing with your doctor.'**
+  String clinicalFlagProlongedPeriod(int days);
+
+  /// No description provided for @clinicalFlagHighPain.
+  ///
+  /// In en, this message translates to:
+  /// **'Average logged pain is in the severe range — worth discussing pain management with your doctor.'**
+  String get clinicalFlagHighPain;
+
+  /// No description provided for @doctorReportPatientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient details'**
+  String get doctorReportPatientTitle;
+
+  /// No description provided for @doctorReportPatientSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — shown at the top of the report for your doctor. Stored on your device only.'**
+  String get doctorReportPatientSubtitle;
+
+  /// No description provided for @doctorReportPatientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get doctorReportPatientName;
+
+  /// No description provided for @doctorReportPatientAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get doctorReportPatientAge;
+
+  /// No description provided for @doctorReportPatientNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the doctor'**
+  String get doctorReportPatientNote;
+
+  /// No description provided for @doctorReportPatientNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. reason for visit, medications, concerns'**
+  String get doctorReportPatientNoteHint;
+
+  /// No description provided for @doctorReportPatientSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get doctorReportPatientSave;
+
+  /// No description provided for @doctorReportEditPatient.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit patient details'**
+  String get doctorReportEditPatient;
 
   /// No description provided for @communityAdultsOnlyTitle.
   ///
@@ -5185,6 +5713,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guidelines'**
   String get communityGuidelinesShort;
+
+  /// No description provided for @communityPollAddOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add option'**
+  String get communityPollAddOption;
+
+  /// No description provided for @communityPollOptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Option {number}'**
+  String communityPollOptionHint(int number);
+
+  /// No description provided for @communityPollNeedsOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least 2 poll options'**
+  String get communityPollNeedsOptions;
+
+  /// No description provided for @communityPollVotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No votes yet} =1{1 vote} other{{count} votes}}'**
+  String communityPollVotesCount(int count);
+
+  /// No description provided for @communityPollTapToVote.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an option to vote'**
+  String get communityPollTapToVote;
+
+  /// No description provided for @communityFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get communityFilters;
+
+  /// No description provided for @communityFilterCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get communityFilterCategory;
+
+  /// No description provided for @communityFilterPostType.
+  ///
+  /// In en, this message translates to:
+  /// **'Post type'**
+  String get communityFilterPostType;
+
+  /// No description provided for @communityFilterReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get communityFilterReset;
+
+  /// No description provided for @communityFilterApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get communityFilterApply;
+
+  /// No description provided for @storyChooseCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Share story to...'**
+  String get storyChooseCommunity;
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1m ago} other{{count}m ago}}'**
+  String timeMinutesAgo(int count);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1h ago} other{{count}h ago}}'**
+  String timeHoursAgo(int count);
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Yesterday} other{{count}d ago}}'**
+  String timeDaysAgo(int count);
+
+  /// No description provided for @reactionHeart.
+  ///
+  /// In en, this message translates to:
+  /// **'Love'**
+  String get reactionHeart;
+
+  /// No description provided for @reactionHug.
+  ///
+  /// In en, this message translates to:
+  /// **'Hug'**
+  String get reactionHug;
+
+  /// No description provided for @reactionCelebrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Celebrate'**
+  String get reactionCelebrate;
+
+  /// No description provided for @reactionStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get reactionStrong;
+
+  /// No description provided for @communityMemberProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Member profile'**
+  String get communityMemberProfile;
+
+  /// No description provided for @communityRecentPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent posts'**
+  String get communityRecentPosts;
+
+  /// No description provided for @communityNoRecentPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No public posts yet'**
+  String get communityNoRecentPosts;
+
+  /// No description provided for @communityWeeklyQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Question of the week'**
+  String get communityWeeklyQuestion;
+
+  /// No description provided for @communityWeeklyAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your answer'**
+  String get communityWeeklyAnswer;
 
   /// No description provided for @premiumUpsellTitle.
   ///

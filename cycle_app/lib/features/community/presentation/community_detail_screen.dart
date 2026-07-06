@@ -24,12 +24,15 @@ import 'community_clipboard.dart';
 import 'community_share.dart';
 import 'community_feed_utils.dart';
 import 'compose_post_screen.dart';
+import 'widgets/comment_like_button.dart';
 import 'widgets/comment_thread_sheet.dart';
 import 'widgets/community_guidelines_dialog.dart';
 import 'widgets/community_safety_actions.dart';
+import 'widgets/community_time.dart';
 import 'widgets/community_ui.dart';
 import 'widgets/moderation_rejected_dialog.dart';
 import 'widgets/post_card.dart';
+import 'widgets/weekly_question_card.dart';
 
 part 'community_detail_tabs.dart';
 part 'community_post_detail.dart';
@@ -187,7 +190,7 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
     }
   }
 
-  Future<void> _createPost() async {
+  Future<void> _createPost({String? initialText, PostType? initialType}) async {
     if (!_joined) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -200,10 +203,17 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           community: widget.community,
           alias: widget.alias,
           profile: profile,
+          initialText: initialText,
+          initialType: initialType,
         ),
       ),
     );
     // Success feedback is shown inside ComposePostScreen.
+  }
+
+  /// Weekly question → composer pre-filled with the quoted prompt.
+  void _answerWeeklyQuestion(String question) {
+    _createPost(initialText: '«$question»\n\n');
   }
 
   void _openPostDetail(CommunityPost post) {
@@ -315,9 +325,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
                     ),
                   ),
                   // Community name — fixed at top so it never overlaps chips/tabs
-                  Positioned(
-                    left: 16,
-                    right: 88,
+                  PositionedDirectional(
+                    start: 16,
+                    end: 88,
                     top: kToolbarHeight + 12,
                     child: Text(
                       name,
@@ -496,10 +506,12 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           children: [
             _PostsList(
               communityId: widget.community.id,
+              topic: widget.community.topic,
               joined: _joined,
               busy: _busy,
               onJoin: _toggleJoin,
               onPostTap: _openPostDetail,
+              onAnswerPrompt: _answerWeeklyQuestion,
             ),
             _AboutTab(
               community: widget.community,

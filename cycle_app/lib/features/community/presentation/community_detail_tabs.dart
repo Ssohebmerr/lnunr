@@ -3,17 +3,23 @@ part of 'community_detail_screen.dart';
 class _PostsList extends StatefulWidget {
   const _PostsList({
     required this.communityId,
+    required this.topic,
     required this.joined,
     required this.busy,
     required this.onJoin,
     required this.onPostTap,
+    required this.onAnswerPrompt,
   });
 
   final String communityId;
+  final String topic;
   final bool joined;
   final bool busy;
   final VoidCallback onJoin;
   final void Function(CommunityPost) onPostTap;
+
+  /// Opens the composer pre-filled with the weekly question.
+  final void Function(String question) onAnswerPrompt;
 
   @override
   State<_PostsList> createState() => _PostsListState();
@@ -129,6 +135,11 @@ class _PostsListState extends State<_PostsList> {
               icon: const Icon(Icons.group_add_rounded),
               label: Text(l10n.communityJoin),
             ),
+          )
+        else
+          WeeklyQuestionCard(
+            topic: widget.topic,
+            onAnswer: widget.onAnswerPrompt,
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),

@@ -20,6 +20,7 @@ import 'models/community_comment.dart';
 import 'models/community_membership.dart';
 import 'models/community_post.dart';
 import 'models/community_profile.dart';
+import 'models/post_reactions.dart';
 import 'models/post_type.dart';
 import 'models/community_inbox_item.dart';
 import 'models/blocked_user.dart';
@@ -399,6 +400,52 @@ class CommunityRepository {
     return controller.stream;
   }
 
+  // ---------------------------------------------------------------------
+  // Polls
+  // ---------------------------------------------------------------------
+
+  CollectionReference<Map<String, dynamic>> _pollVotesRef(
+    String communityId,
+    String postId,
+  ) =>
+      _postsRef(communityId).doc(postId).collection('pollVotes');
+
+  /// Live poll results: vote count per option index + the viewer's own vote.
+  Stream<PollResults> watchPollResults(
+    String communityId,
+    String postId,
+    String? viewerUid,
+  ) =>
+      _pollVotesRef(communityId, postId).snapshots().map((snap) {
+        final counts = <int, int>{};
+        int? myVote;
+        for (final doc in snap.docs) {
+          final option = doc.data()['option'] as int? ?? -1;
+          if (option < 0) continue;
+          counts[option] = (counts[option] ?? 0) + 1;
+          if (doc.id == viewerUid) myVote = option;
+        }
+        return PollResults(
+          counts: counts,
+          totalVotes: snap.docs.length,
+          myVote: myVote,
+        );
+      });
+
+  /// Casts (or changes) the member's vote — one doc per uid so re-voting
+  /// simply overwrites the previous choice.
+  Future<void> votePoll({
+    required String communityId,
+    required String postId,
+    required String uid,
+    required int optionIndex,
+  }) async {
+    await _pollVotesRef(communityId, postId).doc(uid).set({
+      'option': optionIndex,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Stream<int> watchLikeCount(String communityId, String postId) =>
       _likesRef(communityId, postId)
           .snapshots()
@@ -426,6 +473,116 @@ class CommunityRepository {
     } else {
       await ref.set({'createdAt': FieldValue.serverTimestamp()});
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Reactions (stored on the like docs — legacy docs count as 'heart')
+  // ---------------------------------------------------------------------
+
+  static const postReactionKinds = ['heart', 'hug', 'celebrate', 'strong'];
+
+  /// One listener per card: total, per-reaction breakdown, and my reaction.
+  /// Replaces the old watchLikeCount + watchUserLiked pair.
+  Stream<PostReactions> watchPostReactions(
+    String communityId,
+    String postId,
+    String? viewerUid,
+  ) =>
+      _likesRef(communityId, postId).snapshots().map((s) {
+        final counts = <String, int>{};
+        String? mine;
+        for (final doc in s.docs) {
+          final reaction = (doc.data()['reaction'] as String?) ?? 'heart';
+          counts[reaction] = (counts[reaction] ?? 0) + 1;
+          if (doc.id == viewerUid) mine = reaction;
+        }
+        return PostReactions(
+          total: s.docs.length,
+          counts: counts,
+          myReaction: mine,
+        );
+      });
+
+  /// Tapping the same reaction removes it; anything else sets/overwrites it.
+  Future<void> setPostReaction({
+    required String communityId,
+    required String postId,
+    required String uid,
+    required String reaction,
+  }) async {
+    final ref = _likesRef(communityId, postId).doc(uid);
+    final snap = await ref.get();
+    final current = snap.exists
+        ? ((snap.data()?['reaction'] as String?) ?? 'heart')
+        : null;
+    if (current == reaction) {
+      await ref.delete();
+      return;
+    }
+    await ref.set({
+      'reaction': reaction,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Comment likes
+  // ---------------------------------------------------------------------
+
+  CollectionReference<Map<String, dynamic>> _commentLikesRef(
+    String communityId,
+    String postId,
+    String commentId,
+  ) =>
+      _commentsRef(communityId, postId).doc(commentId).collection('likes');
+
+  Stream<({int count, bool liked})> watchCommentLikes(
+    String communityId,
+    String postId,
+    String commentId,
+    String? viewerUid,
+  ) =>
+      _commentLikesRef(communityId, postId, commentId).snapshots().map(
+            (s) => (
+              count: s.docs.length,
+              liked: viewerUid != null &&
+                  s.docs.any((d) => d.id == viewerUid),
+            ),
+          );
+
+  Future<void> toggleCommentLike({
+    required String communityId,
+    required String postId,
+    required String commentId,
+    required String uid,
+  }) async {
+    final ref = _commentLikesRef(communityId, postId, commentId).doc(uid);
+    final snap = await ref.get();
+    if (snap.exists) {
+      await ref.delete();
+    } else {
+      await ref.set({'createdAt': FieldValue.serverTimestamp()});
+    }
+  }
+
+  /// Recent public (non-anonymous) posts by one member in a community, for
+  /// the member profile sheet. Sorted client-side so the single-field
+  /// `authorUid` filter needs no composite index.
+  Future<List<CommunityPost>> fetchMemberPosts(
+    String communityId,
+    String authorUid, {
+    int limit = 30,
+  }) async {
+    final snap = await _postsRef(communityId)
+        .where('authorUid', isEqualTo: authorUid)
+        .limit(limit)
+        .get();
+    final viewerUid = _auth.currentUser?.uid;
+    return snap.docs
+        .map((d) => CommunityPost.fromMap(d.id, d.data()))
+        .where((p) => !p.isAnonymous && p.isVisibleTo(viewerUid))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   Future<void> reportPost({
@@ -966,6 +1123,7 @@ class CommunityRepository {
     String? mediaUrl,
     String? mediaType,
     bool isAnonymous = false,
+    List<String>? pollOptions,
   }) async {
     await _ensureCanParticipate(uid);
     // Media uploads require a Premium subscription.
@@ -1008,6 +1166,7 @@ class CommunityRepository {
         mediaType: mediaType,
         isAnonymous: isAnonymous,
         authorIsPremium: authorIsPremium,
+        pollOptions: postType == PostType.poll ? pollOptions : null,
       ).toMap(),
       'moderationStatus': 'pending_review',
       'contentHash': contentHash,

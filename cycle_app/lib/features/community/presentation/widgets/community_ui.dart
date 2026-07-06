@@ -374,7 +374,7 @@ class _HeaderIconBtn extends StatelessWidget {
     return Container(
       width: 36,
       height: 36,
-      margin: const EdgeInsets.only(left: 4),
+      margin: const EdgeInsetsDirectional.only(start: 4),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : theme.colorScheme.surface)
             .withValues(alpha: isDark ? 0.08 : 0.65),

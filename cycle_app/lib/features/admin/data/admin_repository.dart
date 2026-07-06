@@ -206,6 +206,27 @@ class AdminUser {
   final bool isPremium;
 }
 
+class AdminMember {
+  const AdminMember({
+    required this.uid,
+    required this.email,
+    required this.role,
+  });
+
+  factory AdminMember.fromMap(Map<String, dynamic> data) {
+    final role = (data['role'] ?? 'admin').toString();
+    return AdminMember(
+      uid: (data['id'] ?? '').toString(),
+      email: (data['email'] ?? '').toString(),
+      role: ['owner', 'admin', 'moderator'].contains(role) ? role : 'admin',
+    );
+  }
+
+  final String uid;
+  final String email;
+  final String role;
+}
+
 class PromoCode {
   const PromoCode({
     required this.code,
@@ -599,6 +620,42 @@ class AdminRepository {
   /// Deactivates a promo code. Returns `null` on success, else an error.
   Future<String?> revokePromoCode(String code) async {
     final result = await _callAdminApi('revokePromoCode', {'code': code});
+    return result['error']?.toString();
+  }
+
+  /// Returns the signed-in admin's own role ('owner'|'admin'|'moderator') or
+  /// null when not an admin. Used to gate owner-only screens client-side
+  /// (the server re-checks every action regardless).
+  Future<String?> myAdminRole() async {
+    final result = await _callAdminApi('checkAdmin', {});
+    if (result['isAdmin'] != true) return null;
+    return result['role']?.toString();
+  }
+
+  /// Lists current admins/moderators via the admin query action.
+  Future<List<AdminMember>> listAdmins() async {
+    final result = await _callAdminApi('query', {
+      'collectionPath': ['admins'],
+      'limit': 100,
+    });
+    final items = result['items'];
+    if (items is! List) return const [];
+    return items
+        .whereType<Map>()
+        .map((e) => AdminMember.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  /// Grants/updates an admin role (owner-only on the server). Returns `null`
+  /// on success or a user-facing error.
+  Future<String?> setAdminRole(String uid, String role) async {
+    final result = await _callAdminApi('setAdminRole', {'uid': uid, 'role': role});
+    return result['error']?.toString();
+  }
+
+  /// Removes an admin (owner-only on the server).
+  Future<String?> removeAdmin(String uid) async {
+    final result = await _callAdminApi('removeAdmin', {'uid': uid});
     return result['error']?.toString();
   }
 
