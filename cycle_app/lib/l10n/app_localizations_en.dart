@@ -229,9 +229,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumFeature3 => 'Priority support';
 
   @override
-  String get subscribePlayStore => 'Subscribe with Google Play';
-
-  @override
   String get premiumPlayHint =>
       'Payment is handled securely by Google Play. Manage or cancel your subscription anytime in Play Store settings.';
 
@@ -740,9 +737,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navAnalysis => 'Analysis';
-
-  @override
-  String get accountUpgradePro => 'Upgrade to Pro';
 
   @override
   String get accountMenuReports => 'Charts & reports';
@@ -2752,15 +2746,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String accountDeviceId(String id) {
-    return 'Device ID: $id';
-  }
-
-  @override
-  String get accountTapToCopyId => 'Tap to copy account ID';
-
-  @override
   String get premiumRefreshStatus => 'Check subscription status';
+
+  @override
+  String get signOutConfirmTitle => 'Sign out?';
+
+  @override
+  String get signOutConfirmBody =>
+      'Your local data stays on this device. You can sign back in anytime.';
 
   @override
   String get guestModeTitle => 'Private guest mode';
@@ -4075,4 +4068,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dailyBriefingPrompt => 'Give me my daily briefing for today.';
+
+  @override
+  String get accountSectionPremium => 'Premium';
+
+  @override
+  String get accountViewPlans => 'View subscription plans';
+
+  @override
+  String get accountPremiumThanks =>
+      'You\'re a Premium member — thank you for supporting Lune!';
+
+  @override
+  String get accountManageSubscription => 'Manage subscription';
+
+  @override
+  String get accountManageSubscriptionHint => 'Opens Google Play subscriptions';
+
+  @override
+  String get accountSectionInfo => 'Account info';
+
+  @override
+  String get accountUsernameTitle => 'Username';
+
+  @override
+  String get accountUsernameNotSet => 'Not set — edit your profile to add one';
+
+  @override
+  String get accountEmailTitle => 'Email';
+
+  @override
+  String get accountEmailVerified => 'Verified';
+
+  @override
+  String get accountEmailNotVerified => 'Not verified';
+
+  @override
+  String get accountVerificationSent =>
+      'Verification email sent. Check your inbox.';
+
+  @override
+  String get accountIdTitle => 'Account ID';
+
+  @override
+  String get accountMemberSinceTitle => 'Member since';
+
+  @override
+  String get accountTypeGuest => 'Guest account';
+
+  @override
+  String get accountTypeEmail => 'Email account';
+
+  @override
+  String get accountCopied => 'Copied to clipboard';
+
+  @override
+  String get accountUsernameLabel => 'Username';
+
+  @override
+  String get accountUsernameHint => 'e.g. luna_star';
+
+  @override
+  String get accountUsernameInvalid =>
+      '3–20 characters: letters, numbers, dot or underscore';
 }

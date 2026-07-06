@@ -229,9 +229,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get premiumFeature3 => 'دعم أولوية';
 
   @override
-  String get subscribePlayStore => 'الاشتراك عبر Google Play';
-
-  @override
   String get premiumPlayHint =>
       'الدفع يتم بأمان عبر Google Play. يمكنكِ إدارة الاشتراك أو إلغاؤه من إعدادات متجر Play في أي وقت.';
 
@@ -740,9 +737,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get navAnalysis => 'تحليل';
-
-  @override
-  String get accountUpgradePro => 'الترقية إلى برو';
 
   @override
   String get accountMenuReports => 'الرسوم البيانية والتقارير';
@@ -2733,15 +2727,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String accountDeviceId(String id) {
-    return 'معرّف الجهاز: $id';
-  }
-
-  @override
-  String get accountTapToCopyId => 'اضغطي لنسخ معرّف الحساب';
-
-  @override
   String get premiumRefreshStatus => 'التحقق من حالة الاشتراك';
+
+  @override
+  String get signOutConfirmTitle => 'تسجيل الخروج؟';
+
+  @override
+  String get signOutConfirmBody =>
+      'بياناتك المحلية ستبقى على هذا الجهاز. يمكنك تسجيل الدخول مجدداً في أي وقت.';
 
   @override
   String get guestModeTitle => 'وضع ضيف خاص';
@@ -4058,4 +4051,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dailyBriefingPrompt => 'أعطيني ملخص اليوم';
+
+  @override
+  String get accountSectionPremium => 'بريميوم';
+
+  @override
+  String get accountViewPlans => 'عرض خطط الاشتراك';
+
+  @override
+  String get accountPremiumThanks => 'أنتِ عضوة بريميوم — شكراً لدعمك Lune!';
+
+  @override
+  String get accountManageSubscription => 'إدارة الاشتراك';
+
+  @override
+  String get accountManageSubscriptionHint => 'يفتح اشتراكات Google Play';
+
+  @override
+  String get accountSectionInfo => 'معلومات الحساب';
+
+  @override
+  String get accountUsernameTitle => 'اسم المستخدم';
+
+  @override
+  String get accountUsernameNotSet => 'غير محدد — عدّلي ملفك الشخصي لإضافته';
+
+  @override
+  String get accountEmailTitle => 'البريد الإلكتروني';
+
+  @override
+  String get accountEmailVerified => 'موثّق';
+
+  @override
+  String get accountEmailNotVerified => 'غير موثّق';
+
+  @override
+  String get accountVerificationSent => 'أُرسلت رسالة التوثيق. تفقّدي بريدك.';
+
+  @override
+  String get accountIdTitle => 'معرّف الحساب';
+
+  @override
+  String get accountMemberSinceTitle => 'عضوة منذ';
+
+  @override
+  String get accountTypeGuest => 'حساب ضيفة';
+
+  @override
+  String get accountTypeEmail => 'حساب بريد إلكتروني';
+
+  @override
+  String get accountCopied => 'تم النسخ';
+
+  @override
+  String get accountUsernameLabel => 'اسم المستخدم';
+
+  @override
+  String get accountUsernameHint => 'مثال: luna_star';
+
+  @override
+  String get accountUsernameInvalid =>
+      'من 3 إلى 20 حرفاً: أحرف إنجليزية أو أرقام أو نقطة أو شرطة سفلية';
 }

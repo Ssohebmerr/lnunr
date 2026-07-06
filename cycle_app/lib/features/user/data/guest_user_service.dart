@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/profile/local_profile.dart';
 import '../../../core/storage/user_prefs.dart';
 import 'guest_user_repository.dart';
 
@@ -66,6 +67,43 @@ class GuestUserService {
         deviceId: deviceId,
       );
     }
+  }
+
+  /// Saves the handle locally, then best-effort to Firestore (offline-safe).
+  Future<void> saveUsername(String username) async {
+    final normalized = LocalProfile.normalizeUsername(username);
+    await LocalProfile.saveUsername(normalized);
+    try {
+      final uid = await ensureSession();
+      await _repository.saveUsername(uid: uid, username: normalized);
+    } catch (e) {
+      debugPrint('GuestUserService saveUsername: $e');
+    }
+  }
+
+  /// Local handle first; falls back to Firestore, then generates a default.
+  Future<String> resolveUsername() async {
+    final local = await LocalProfile.username();
+    if (local != null && local.isNotEmpty) return local;
+
+    final uid = _auth.currentUser?.uid ?? await UserPrefs.getUid();
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        final remote = (await _repository.fetch(uid))?.username?.trim();
+        if (remote != null && remote.isNotEmpty) {
+          await LocalProfile.saveUsername(remote);
+          return remote;
+        }
+      } catch (_) {}
+    }
+
+    final generated = await LocalProfile.ensureUsername(uid: uid);
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _repository.saveUsername(uid: uid, username: generated);
+      } catch (_) {}
+    }
+    return generated;
   }
 
   /// Best-effort sync for returning users who already finished onboarding.

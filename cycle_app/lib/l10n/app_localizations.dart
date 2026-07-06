@@ -518,12 +518,6 @@ abstract class AppLocalizations {
   /// **'Priority support'**
   String get premiumFeature3;
 
-  /// No description provided for @subscribePlayStore.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribe with Google Play'**
-  String get subscribePlayStore;
-
   /// No description provided for @premiumPlayHint.
   ///
   /// In en, this message translates to:
@@ -1495,12 +1489,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis'**
   String get navAnalysis;
-
-  /// No description provided for @accountUpgradePro.
-  ///
-  /// In en, this message translates to:
-  /// **'Upgrade to Pro'**
-  String get accountUpgradePro;
 
   /// No description provided for @accountMenuReports.
   ///
@@ -5126,23 +5114,23 @@ abstract class AppLocalizations {
   /// **'Account ID: {id}'**
   String accountUserId(String id);
 
-  /// No description provided for @accountDeviceId.
-  ///
-  /// In en, this message translates to:
-  /// **'Device ID: {id}'**
-  String accountDeviceId(String id);
-
-  /// No description provided for @accountTapToCopyId.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to copy account ID'**
-  String get accountTapToCopyId;
-
   /// No description provided for @premiumRefreshStatus.
   ///
   /// In en, this message translates to:
   /// **'Check subscription status'**
   String get premiumRefreshStatus;
+
+  /// No description provided for @signOutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get signOutConfirmTitle;
+
+  /// No description provided for @signOutConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your local data stays on this device. You can sign back in anytime.'**
+  String get signOutConfirmBody;
 
   /// No description provided for @guestModeTitle.
   ///
@@ -7501,6 +7489,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Give me my daily briefing for today.'**
   String get dailyBriefingPrompt;
+
+  /// No description provided for @accountSectionPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get accountSectionPremium;
+
+  /// No description provided for @accountViewPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View subscription plans'**
+  String get accountViewPlans;
+
+  /// No description provided for @accountPremiumThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re a Premium member — thank you for supporting Lune!'**
+  String get accountPremiumThanks;
+
+  /// No description provided for @accountManageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get accountManageSubscription;
+
+  /// No description provided for @accountManageSubscriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Google Play subscriptions'**
+  String get accountManageSubscriptionHint;
+
+  /// No description provided for @accountSectionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Account info'**
+  String get accountSectionInfo;
+
+  /// No description provided for @accountUsernameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get accountUsernameTitle;
+
+  /// No description provided for @accountUsernameNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — edit your profile to add one'**
+  String get accountUsernameNotSet;
+
+  /// No description provided for @accountEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get accountEmailTitle;
+
+  /// No description provided for @accountEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get accountEmailVerified;
+
+  /// No description provided for @accountEmailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get accountEmailNotVerified;
+
+  /// No description provided for @accountVerificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent. Check your inbox.'**
+  String get accountVerificationSent;
+
+  /// No description provided for @accountIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ID'**
+  String get accountIdTitle;
+
+  /// No description provided for @accountMemberSinceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since'**
+  String get accountMemberSinceTitle;
+
+  /// No description provided for @accountTypeGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest account'**
+  String get accountTypeGuest;
+
+  /// No description provided for @accountTypeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email account'**
+  String get accountTypeEmail;
+
+  /// No description provided for @accountCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get accountCopied;
+
+  /// No description provided for @accountUsernameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get accountUsernameLabel;
+
+  /// No description provided for @accountUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. luna_star'**
+  String get accountUsernameHint;
+
+  /// No description provided for @accountUsernameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'3–20 characters: letters, numbers, dot or underscore'**
+  String get accountUsernameInvalid;
 }
 
 class _AppLocalizationsDelegate

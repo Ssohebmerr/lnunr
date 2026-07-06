@@ -70,7 +70,6 @@
   "premiumFeature1": "محادثة Lune وتحليل دورة غير محدود",
   "premiumFeature2": "نسخ احتياطي سحابي مشفّر",
   "premiumFeature3": "دعم أولوية",
-  "subscribePlayStore": "الاشتراك عبر Google Play",
   "premiumPlayHint": "الدفع يتم بأمان عبر Google Play. يمكنكِ إدارة الاشتراك أو إلغاؤه من إعدادات متجر Play في أي وقت.",
   "premiumPlayOnly": "الاشتراك متاح على أندرويد عبر Google Play.",
   "premiumProductUnavailable": "المنتج غير متاح حالياً. تأكدي من إعداد الاشتراك في Play Console.",
@@ -248,7 +247,6 @@
   "cancel": "إلغاء",
   "navReports": "التقارير",
   "navAnalysis": "تحليل",
-  "accountUpgradePro": "الترقية إلى برو",
   "accountMenuReports": "الرسوم البيانية والتقارير",
   "accountMenuAi": "محادثة Lune",
   "accountMenuCalendar": "التنبؤ بالدورة والتقويم",
@@ -1018,14 +1016,9 @@
       "id": { "type": "String" }
     }
   },
-  "accountDeviceId": "معرّف الجهاز: {id}",
-  "@accountDeviceId": {
-    "placeholders": {
-      "id": { "type": "String" }
-    }
-  },
-  "accountTapToCopyId": "اضغطي لنسخ معرّف الحساب",
   "premiumRefreshStatus": "التحقق من حالة الاشتراك",
+  "signOutConfirmTitle": "تسجيل الخروج؟",
+  "signOutConfirmBody": "بياناتك المحلية ستبقى على هذا الجهاز. يمكنك تسجيل الدخول مجدداً في أي وقت.",
 
   "guestModeTitle": "وضع ضيف خاص",
   "guestModeLabel": "ملف محلي · بدون إيميل",
@@ -1514,5 +1507,25 @@
   "qaCatContraception": "منع الحمل",
   "qaCatMental": "الصحة النفسية",
   "qaCatNutrition": "التغذية",
-  "dailyBriefingPrompt": "أعطيني ملخص اليوم"
+  "dailyBriefingPrompt": "أعطيني ملخص اليوم",
+  "accountSectionPremium": "بريميوم",
+  "accountViewPlans": "عرض خطط الاشتراك",
+  "accountPremiumThanks": "أنتِ عضوة بريميوم — شكراً لدعمك Lune!",
+  "accountManageSubscription": "إدارة الاشتراك",
+  "accountManageSubscriptionHint": "يفتح اشتراكات Google Play",
+  "accountSectionInfo": "معلومات الحساب",
+  "accountUsernameTitle": "اسم المستخدم",
+  "accountUsernameNotSet": "غير محدد — عدّلي ملفك الشخصي لإضافته",
+  "accountEmailTitle": "البريد الإلكتروني",
+  "accountEmailVerified": "موثّق",
+  "accountEmailNotVerified": "غير موثّق",
+  "accountVerificationSent": "أُرسلت رسالة التوثيق. تفقّدي بريدك.",
+  "accountIdTitle": "معرّف الحساب",
+  "accountMemberSinceTitle": "عضوة منذ",
+  "accountTypeGuest": "حساب ضيفة",
+  "accountTypeEmail": "حساب بريد إلكتروني",
+  "accountCopied": "تم النسخ",
+  "accountUsernameLabel": "اسم المستخدم",
+  "accountUsernameHint": "مثال: luna_star",
+  "accountUsernameInvalid": "من 3 إلى 20 حرفاً: أحرف إنجليزية أو أرقام أو نقطة أو شرطة سفلية"
 }

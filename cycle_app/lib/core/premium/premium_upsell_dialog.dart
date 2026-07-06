@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../features/premium/presentation/subscription_plans_screen.dart';
 import '../../l10n/app_localizations.dart';
-import '../navigation/home_shell_actions.dart';
 import '../theme/app_design_tokens.dart';
 import '../widgets/aura_scaffold.dart';
 
@@ -83,7 +83,13 @@ Future<void> showPremiumUpsellDialog(
             AppGlassCard(
               onTap: () {
                 Navigator.pop(ctx);
-                HomeShellActions.switchTab?.call(3);
+                // Open the plans screen directly — sending users to the
+                // Account tab used to strand them with no visible plans.
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SubscriptionPlansScreen(),
+                  ),
+                );
               },
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Row(

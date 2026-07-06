@@ -70,7 +70,6 @@
   "premiumFeature1": "Unlimited Lune chat & cycle analysis",
   "premiumFeature2": "Encrypted cloud backup",
   "premiumFeature3": "Priority support",
-  "subscribePlayStore": "Subscribe with Google Play",
   "premiumPlayHint": "Payment is handled securely by Google Play. Manage or cancel your subscription anytime in Play Store settings.",
   "premiumPlayOnly": "Subscriptions are available on Android via Google Play.",
   "premiumProductUnavailable": "Product unavailable. Set up the subscription in Play Console first.",
@@ -248,7 +247,6 @@
   "cancel": "Cancel",
   "navReports": "Reports",
   "navAnalysis": "Analysis",
-  "accountUpgradePro": "Upgrade to Pro",
   "accountMenuReports": "Charts & reports",
   "accountMenuAi": "Lune chat",
   "accountMenuCalendar": "Period & calendar",
@@ -1067,14 +1065,9 @@
       "id": { "type": "String" }
     }
   },
-  "accountDeviceId": "Device ID: {id}",
-  "@accountDeviceId": {
-    "placeholders": {
-      "id": { "type": "String" }
-    }
-  },
-  "accountTapToCopyId": "Tap to copy account ID",
   "premiumRefreshStatus": "Check subscription status",
+  "signOutConfirmTitle": "Sign out?",
+  "signOutConfirmBody": "Your local data stays on this device. You can sign back in anytime.",
 
   "guestModeTitle": "Private guest mode",
   "guestModeLabel": "Local profile · no email",
@@ -1564,5 +1557,25 @@
   "qaCatContraception": "Contraception",
   "qaCatMental": "Mental Health",
   "qaCatNutrition": "Nutrition",
-  "dailyBriefingPrompt": "Give me my daily briefing for today."
+  "dailyBriefingPrompt": "Give me my daily briefing for today.",
+  "accountSectionPremium": "Premium",
+  "accountViewPlans": "View subscription plans",
+  "accountPremiumThanks": "You're a Premium member — thank you for supporting Lune!",
+  "accountManageSubscription": "Manage subscription",
+  "accountManageSubscriptionHint": "Opens Google Play subscriptions",
+  "accountSectionInfo": "Account info",
+  "accountUsernameTitle": "Username",
+  "accountUsernameNotSet": "Not set — edit your profile to add one",
+  "accountEmailTitle": "Email",
+  "accountEmailVerified": "Verified",
+  "accountEmailNotVerified": "Not verified",
+  "accountVerificationSent": "Verification email sent. Check your inbox.",
+  "accountIdTitle": "Account ID",
+  "accountMemberSinceTitle": "Member since",
+  "accountTypeGuest": "Guest account",
+  "accountTypeEmail": "Email account",
+  "accountCopied": "Copied to clipboard",
+  "accountUsernameLabel": "Username",
+  "accountUsernameHint": "e.g. luna_star",
+  "accountUsernameInvalid": "3–20 characters: letters, numbers, dot or underscore"
 }

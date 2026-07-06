@@ -8,6 +8,7 @@ class UserPrefs {
   static const _onboardingKey = 'onboarding_done';
   static const _premiumKey = 'is_premium';
   static const _profileNameKey = 'profile_name';
+  static const _profileUsernameKey = 'profile_username';
   static const _profileGoalKey = 'profile_goal';
   static const _profileBirthDateKey = 'profile_birth_date';
   static const _postpartumStartKey = 'postpartum_start_date';
@@ -73,6 +74,20 @@ class UserPrefs {
   static Future<String?> getProfileGoal() async {
     final p = await SharedPreferences.getInstance();
     return p.getString(_profileGoalKey);
+  }
+
+  static Future<String?> getProfileUsername() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getString(_profileUsernameKey);
+  }
+
+  static Future<void> setProfileUsername(String username) async {
+    final p = await SharedPreferences.getInstance();
+    if (username.trim().isEmpty) {
+      await p.remove(_profileUsernameKey);
+    } else {
+      await p.setString(_profileUsernameKey, username.trim());
+    }
   }
 
   static Future<void> setProfileBirthDate(DateTime date) async {

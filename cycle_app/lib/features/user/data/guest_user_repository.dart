@@ -70,6 +70,21 @@ class GuestUserRepository {
     await _doc(uid).update(data);
   }
 
+  /// Saves the public handle. Merge-set so it works whether or not the
+  /// profile document already exists.
+  Future<void> saveUsername({
+    required String uid,
+    required String username,
+  }) async {
+    await _doc(uid).set(
+      {
+        'username': username,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   // NOTE: daily_chat_count is incremented ONLY server-side (Cloud Functions
   // transaction in lib/chat_quota.js). Client writes to it are blocked by
   // security rules, so no client-side increment exists here.
