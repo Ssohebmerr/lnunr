@@ -16,7 +16,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
@@ -48,9 +47,7 @@ import 'core/privacy/consent_manager.dart';
 import 'core/privacy/privacy_constants.dart';
 import 'core/security/cycle_encryption_keys.dart';
 import 'core/storage/user_prefs.dart';
-import 'core/theme/app_design_tokens.dart';
 import 'core/theme/app_theme.dart';
-import 'core/widgets/aura_scaffold.dart';
 import 'core/theme/theme_controller.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/bloc/auth_event.dart';
@@ -69,6 +66,7 @@ import 'features/home/home_shell.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'features/education/presentation/anonymous_qa_screen.dart';
 import 'features/privacy/presentation/stealth_calculator_screen.dart';
+import 'features/splash/presentation/splash_screen.dart';
 import 'features/sync/data/cloud_sync_service.dart';
 import 'l10n/app_localizations.dart';
 
@@ -278,6 +276,12 @@ class LuneApp extends StatefulWidget {
 }
 
 class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
+  /// Throttle for the on-resume notification refresh. The daily-motivation
+  /// runway only needs topping up occasionally, so we skip re-laying it on
+  /// every quick app switch.
+  DateTime? _lastReminderRefresh;
+  static const _reminderRefreshEvery = Duration(hours: 4);
+
   @override
   void initState() {
     super.initState();
@@ -299,7 +303,19 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
       MenstrudelInit.watchService?.processPendingWatchLog().then((_) {
         CycleSyncService().onCycleDataChanged();
       });
+      _refreshRemindersOnResume();
     }
+  }
+
+  /// Re-lay the notification runway when returning to the app so the daily
+  /// reminders keep extending 14 days out and reflect the latest cycle data.
+  /// Throttled so rapid foreground/background cycling doesn't thrash.
+  void _refreshRemindersOnResume() {
+    final now = DateTime.now();
+    final last = _lastReminderRefresh;
+    if (last != null && now.difference(last) < _reminderRefreshEvery) return;
+    _lastReminderRefresh = now;
+    unawaited(NotificationService.scheduleFromPrefs());
   }
 
   void _handleWidgetLaunch(Uri? uri) {
@@ -427,6 +443,11 @@ final _router = GoRouter(
       }
     }
 
+    // Let the splash screen play its branded intro; it owns the decision of
+    // where to route next once the animation finishes. (Stealth mode above
+    // still intercepts '/' when the session is locked.)
+    if (path == '/') return null;
+
     // Auth + welcome screens are always reachable.
     if (path == '/login' ||
         path == '/register' ||
@@ -441,18 +462,17 @@ final _router = GoRouter(
     }
 
     if (_canEnterHome(done, user)) {
-      if (path == '/' || path == '/onboarding') return '/home';
+      if (path == '/onboarding') return '/home';
       return null;
     }
 
     if (path == '/home') return '/welcome';
 
     // First-time users land on welcome hub (not home, not forced onboarding).
-    if (path == '/') return '/welcome';
     return '/welcome';
   },
   routes: [
-    GoRoute(path: '/', builder: (_, _) => const _SplashScreen()),
+    GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
     GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
     GoRoute(path: '/stealth', builder: (_, _) => const StealthCalculatorScreen()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
@@ -470,88 +490,4 @@ final _router = GoRouter(
 
 Widget _buildHome(BuildContext context) {
   return const HomeShell();
-}
-
-class _SplashScreen extends StatefulWidget {
-  const _SplashScreen();
-
-  @override
-  State<_SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<_SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Redirect in GoRouter handles routing; splash is a brief branded moment only.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      final done = await UserPrefs.isOnboardingDone();
-      final user = FirebaseAuth.instance.currentUser;
-      if (!mounted) return;
-      context.go(_canEnterHome(done, user) ? '/home' : '/welcome');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: AppMeshBackground(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AuraDecorations.primaryGradient,
-                  boxShadow: AppShadows.softRose(opacity: 0.35),
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  size: 48,
-                  color: Colors.white,
-                ),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .scale(
-                    begin: const Offset(0.92, 0.92),
-                    end: const Offset(1.06, 1.06),
-                    duration: 1200.ms,
-                    curve: Curves.easeInOut,
-                  ),
-              const SizedBox(height: 24),
-              Text(
-                PrivacyConstants.appName,
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ).animate().fadeIn(duration: 600.ms),
-              const SizedBox(height: 8),
-              Text(
-                'Your wellness, your rhythm',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: theme.colorScheme.primary,
-                ),
-              ).animate().fadeIn(delay: 400.ms),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
