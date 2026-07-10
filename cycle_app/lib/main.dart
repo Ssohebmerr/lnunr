@@ -43,7 +43,6 @@ import 'core/ai/lune_personality.dart';
 import 'core/locale/locale_controller.dart';
 import 'core/navigation/home_shell_actions.dart';
 import 'core/notifications/notification_service.dart';
-import 'core/privacy/consent_manager.dart';
 import 'core/privacy/privacy_constants.dart';
 import 'core/security/cycle_encryption_keys.dart';
 import 'core/storage/user_prefs.dart';
@@ -99,8 +98,6 @@ void main() async {
       debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
     }
   }
-
-  await ConsentManager.migrateAiConsentIfNeeded();
 
   tz_data.initializeTimeZones();
   try {
@@ -207,9 +204,9 @@ void main() async {
   try {
     await bridge.applyLocale(localeController.locale.languageCode);
     await bridge.linkAuthenticatedUser(FirebaseAuth.instance.currentUser);
-    await CycleSyncService()
-        .onCycleDataChanged()
-        .timeout(const Duration(seconds: 10));
+    await CycleSyncService().onCycleDataChanged().timeout(
+      const Duration(seconds: 10),
+    );
   } catch (e, st) {
     debugPrint('Initial cycle sync skipped (non-fatal): $e\n$st');
   }
@@ -222,18 +219,20 @@ void main() async {
   MenstrudelInit.logsRepository ??= LogsRepository();
   MenstrudelInit.watchService ??= WatchSyncService();
 
-  runApp(MenstrudelProviders(
-    sharedPreferences: prefs,
-    settingsService: MenstrudelInit.settingsService!,
-    userService: MenstrudelInit.userService!,
-    symptomService: MenstrudelInit.symptomService!,
-    watchService: MenstrudelInit.watchService!,
-    logsRepository: MenstrudelInit.logsRepository!,
-    child: LuneApp(
-      localeController: localeController,
-      themeController: themeController,
+  runApp(
+    MenstrudelProviders(
+      sharedPreferences: prefs,
+      settingsService: MenstrudelInit.settingsService!,
+      userService: MenstrudelInit.userService!,
+      symptomService: MenstrudelInit.symptomService!,
+      watchService: MenstrudelInit.watchService!,
+      logsRepository: MenstrudelInit.logsRepository!,
+      child: LuneApp(
+        localeController: localeController,
+        themeController: themeController,
+      ),
     ),
-  ));
+  );
 }
 
 /// Registers FCM token in background — never blocks app launch.
@@ -241,20 +240,17 @@ Future<void> _registerFcmTokenIfSignedIn() async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return;
   try {
-    final fcmToken = await FirebaseMessaging.instance
-        .getToken()
-        .timeout(const Duration(seconds: 8));
+    final fcmToken = await FirebaseMessaging.instance.getToken().timeout(
+      const Duration(seconds: 8),
+    );
     if (fcmToken == null) return;
     await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
-        .set(
-          {
-            'fcmToken': fcmToken,
-            'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        )
+        .set({
+          'fcmToken': fcmToken,
+          'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
         .timeout(const Duration(seconds: 8));
   } catch (e) {
     if (kDebugMode) debugPrint('[Main] FCM token sync skipped: $e');
@@ -348,9 +344,7 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
           RepositoryProvider(create: (_) => AuthRepository()),
           RepositoryProvider(create: (_) => FirebaseAiService()),
           RepositoryProvider(create: (_) => DirectGeminiService()),
-          RepositoryProvider(
-            create: (_) => AiGateway(),
-          ),
+          RepositoryProvider(create: (_) => AiGateway()),
           RepositoryProvider(create: (_) => AiContextEngine()),
           RepositoryProvider(
             create: (c) => AiInsightsService(
@@ -370,8 +364,8 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
         child: MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (c) => AuthBloc(c.read<AuthRepository>())
-                ..add(CheckAuthStatus()),
+              create: (c) =>
+                  AuthBloc(c.read<AuthRepository>())..add(CheckAuthStatus()),
             ),
           ],
           child: ListenableBuilder(
@@ -474,7 +468,10 @@ final _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
     GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
-    GoRoute(path: '/stealth', builder: (_, _) => const StealthCalculatorScreen()),
+    GoRoute(
+      path: '/stealth',
+      builder: (_, _) => const StealthCalculatorScreen(),
+    ),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
     GoRoute(path: '/home', builder: (context, _) => _buildHome(context)),
     GoRoute(path: '/admin', builder: (_, _) => const AdminScreen()),

@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
+import '../../../core/age/age_gate.dart';
 import '../../../core/ai/firebase_ai_service.dart';
 import '../../../core/ai/direct_gemini_service.dart';
 import '../../../core/config/app_secrets.dart';
@@ -26,7 +26,6 @@ import 'models/community_inbox_item.dart';
 import 'models/blocked_user.dart';
 import 'moderation_result.dart';
 
-
 class CommunityRepository {
   CommunityRepository({
     FirebaseFirestore? firestore,
@@ -34,11 +33,11 @@ class CommunityRepository {
     FirebaseAiService? firebaseAi,
     DirectGeminiService? directGemini,
     CommunityCatalogRepository? catalog,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _firebaseAi = firebaseAi ?? FirebaseAiService(),
-        _directGemini = directGemini ?? DirectGeminiService(),
-        _catalog = catalog ?? CommunityCatalogRepository();
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _firebaseAi = firebaseAi ?? FirebaseAiService(),
+       _directGemini = directGemini ?? DirectGeminiService(),
+       _catalog = catalog ?? CommunityCatalogRepository();
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -50,11 +49,15 @@ class CommunityRepository {
 
   String? get currentUid => _auth.currentUser?.uid;
 
-  /// Throws [MinorRestrictedException] when the current profile is under 18.
-  /// Uses [resolveProfile] so that missing birth year is auto-filled.
+  /// Throws [MinorRestrictedException] when the user cannot access community UGC.
   Future<void> _ensureAdult(String uid) async {
-    final profile = await resolveProfile(uid);
-    if (profile.isMinor) throw const MinorRestrictedException();
+    if (await blocksCommunityByAgeGate()) {
+      throw const MinorRestrictedException();
+    }
+    final profile = await fetchProfile(uid);
+    if (!profile.isReady || profile.isMinor) {
+      throw const MinorRestrictedException();
+    }
   }
 
   Future<void> _ensureCanParticipate(String uid) async {
@@ -118,7 +121,10 @@ class CommunityRepository {
   }
 
   CollectionReference<Map<String, dynamic>> _membersRef(String communityId) =>
-      _firestore.collection('communities').doc(communityId).collection('members');
+      _firestore
+          .collection('communities')
+          .doc(communityId)
+          .collection('members');
 
   CollectionReference<Map<String, dynamic>> _postsRef(String communityId) =>
       _firestore.collection('communities').doc(communityId).collection('posts');
@@ -126,10 +132,20 @@ class CommunityRepository {
   CollectionReference<Map<String, dynamic>> _commentsRef(
     String communityId,
     String postId,
-  ) =>
-      _postsRef(communityId).doc(postId).collection('comments');
+  ) => _postsRef(communityId).doc(postId).collection('comments');
 
   Future<CommunityProfile> getProfile(String uid) async {
+    final profile = await fetchProfile(uid);
+    if (profile.alias.isEmpty &&
+        profile.birthYear == null &&
+        !profile.setupComplete) {
+      throw StateError('Community profile not found for $uid');
+    }
+    return profile;
+  }
+
+  /// Read-only community profile from Firestore (no auto-fill or writes).
+  Future<CommunityProfile> fetchProfile(String uid) async {
     try {
       final doc = await _firestore
           .collection('users')
@@ -138,8 +154,8 @@ class CommunityRepository {
           .timeout(const Duration(seconds: 8));
       return CommunityProfile.fromMap(doc.data());
     } catch (e, st) {
-      debugPrint('CommunityRepository.getProfile failed: $e\n$st');
-      rethrow;
+      debugPrint('CommunityRepository.fetchProfile failed: $e\n$st');
+      return const CommunityProfile(alias: '');
     }
   }
 
@@ -153,8 +169,8 @@ class CommunityRepository {
         .replaceAll(RegExp(r'_+'), '_');
   }
 
-  /// Auto-completes community profile from available data sources so the
-  /// user is never blocked by a manual setup step.
+  /// Returns the stored profile, or an in-memory draft with a suggested alias.
+  /// Never writes [communityBirthYear] — the user must confirm via setup sheet.
   Future<CommunityProfile> resolveProfile(String uid) async {
     CommunityProfile profile;
     Map<String, dynamic>? userData;
@@ -173,7 +189,6 @@ class CommunityRepository {
 
     if (profile.isReady) return profile;
 
-    // --- Auto-resolve alias from every available source ---
     final localName = (await UserPrefs.getProfileName())?.trim() ?? '';
     final remoteName = (userData?['name'] as String?)?.trim() ?? '';
     final authName = _auth.currentUser?.displayName?.trim() ?? '';
@@ -186,37 +201,26 @@ class CommunityRepository {
             localName.isNotEmpty
                 ? localName
                 : (remoteName.isNotEmpty
-                    ? remoteName
-                    : (authName.isNotEmpty
-                        ? authName
-                        : emailPrefix)),
+                      ? remoteName
+                      : (authName.isNotEmpty ? authName : emailPrefix)),
           );
     if (alias.length < 2) alias = 'User_${uid.substring(0, 4)}';
 
-    // --- Auto-set birth year to a default adult year if missing ---
-    final birthYear = profile.birthYear ?? (DateTime.now().year - 25);
-
-    final complete = CommunityProfile(
+    return CommunityProfile(
       alias: alias,
-      birthYear: birthYear,
+      birthYear: profile.birthYear,
       goal: profile.goal ?? await UserPrefs.getProfileGoal(),
-      setupComplete: true,
+      setupComplete: profile.setupComplete && profile.birthYear != null,
       avatarIndex: profile.avatarIndex,
       photoUrl: profile.photoUrl,
     );
-    try {
-      await saveProfile(uid, complete);
-    } catch (e, st) {
-      debugPrint('CommunityRepository.resolveProfile save failed: $e\n$st');
-    }
-    return complete;
   }
 
   Future<void> saveProfile(String uid, CommunityProfile profile) async {
-    await _firestore.collection('users').doc(uid).set(
-          profile.toMap(),
-          SetOptions(merge: true),
-        );
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .set(profile.toMap(), SetOptions(merge: true));
   }
 
   /// [fetchCounts] — skip remote member counts when the user cannot read
@@ -239,15 +243,12 @@ class CommunityRepository {
       return Future.wait(
         communities.map((community) async {
           try {
-            final countSnap = await _membersRef(community.id)
-                .count()
-                .get()
-                .timeout(const Duration(seconds: 3));
+            final countSnap = await _membersRef(
+              community.id,
+            ).count().get().timeout(const Duration(seconds: 3));
             return community.copyWith(memberCount: countSnap.count ?? 0);
           } catch (e) {
-            debugPrint(
-              'member count skipped for ${community.id}: $e',
-            );
+            debugPrint('member count skipped for ${community.id}: $e');
             return community;
           }
         }),
@@ -257,7 +258,10 @@ class CommunityRepository {
         'CommunityRepository.fetchCommunitiesWithCounts failed: $e\n$st',
       );
       try {
-        return await _resolvedCommunities(languageCode: languageCode, goal: goal);
+        return await _resolvedCommunities(
+          languageCode: languageCode,
+          goal: goal,
+        );
       } catch (_) {
         return CommunitySeed.defaults;
       }
@@ -271,10 +275,9 @@ class CommunityRepository {
 
   Future<int> fetchMemberCount(String communityId) async {
     try {
-      final countSnap = await _membersRef(communityId)
-          .count()
-          .get()
-          .timeout(const Duration(seconds: 5));
+      final countSnap = await _membersRef(
+        communityId,
+      ).count().get().timeout(const Duration(seconds: 5));
       return countSnap.count ?? 0;
     } catch (e) {
       debugPrint('fetchMemberCount failed for $communityId: $e');
@@ -282,23 +285,21 @@ class CommunityRepository {
     }
   }
 
-  Stream<List<CommunityMembership>> watchJoinedMemberships(String uid) =>
-      _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('communityMemberships')
-          .snapshots()
-          .map((snapshot) {
+  Stream<List<CommunityMembership>> watchJoinedMemberships(
+    String uid,
+  ) => _firestore
+      .collection('users')
+      .doc(uid)
+      .collection('communityMemberships')
+      .snapshots()
+      .map((snapshot) {
         final memberships = snapshot.docs.map((doc) {
           final joinedAt = doc.data()['joinedAt'];
           DateTime? date;
           if (joinedAt is Timestamp) {
             date = joinedAt.toDate();
           }
-          return CommunityMembership(
-            communityId: doc.id,
-            joinedAt: date,
-          );
+          return CommunityMembership(communityId: doc.id, joinedAt: date);
         }).toList();
         memberships.sort((a, b) {
           final aTime = a.joinedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -309,8 +310,9 @@ class CommunityRepository {
       });
 
   Stream<List<String>> watchJoinedCommunityIds(String uid) =>
-      watchJoinedMemberships(uid)
-          .map((m) => m.map((e) => e.communityId).toList());
+      watchJoinedMemberships(
+        uid,
+      ).map((m) => m.map((e) => e.communityId).toList());
 
   Future<void> joinCommunity({
     required String uid,
@@ -332,7 +334,11 @@ class CommunityRepository {
       'joinedAt': FieldValue.serverTimestamp(),
     });
     batch.set(
-      _firestore.collection('users').doc(uid).collection('communityMemberships').doc(communityId),
+      _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('communityMemberships')
+          .doc(communityId),
       {'joinedAt': FieldValue.serverTimestamp()},
     );
     await batch.commit();
@@ -342,7 +348,11 @@ class CommunityRepository {
     final batch = _firestore.batch();
     batch.delete(_membersRef(communityId).doc(uid));
     batch.delete(
-      _firestore.collection('users').doc(uid).collection('communityMemberships').doc(communityId),
+      _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('communityMemberships')
+          .doc(communityId),
     );
     await batch.commit();
   }
@@ -350,8 +360,7 @@ class CommunityRepository {
   CollectionReference<Map<String, dynamic>> _likesRef(
     String communityId,
     String postId,
-  ) =>
-      _postsRef(communityId).doc(postId).collection('likes');
+  ) => _postsRef(communityId).doc(postId).collection('likes');
 
   /// Merged feed from all joined communities.
   /// Maximum number of communities to subscribe to simultaneously.
@@ -384,7 +393,9 @@ class CommunityRepository {
             publish();
           },
           onError: (e, st) {
-            debugPrint('CommunityRepository.watchJoinedFeed stream error: $e\n$st');
+            debugPrint(
+              'CommunityRepository.watchJoinedFeed stream error: $e\n$st',
+            );
             publish();
           },
         ),
@@ -407,30 +418,28 @@ class CommunityRepository {
   CollectionReference<Map<String, dynamic>> _pollVotesRef(
     String communityId,
     String postId,
-  ) =>
-      _postsRef(communityId).doc(postId).collection('pollVotes');
+  ) => _postsRef(communityId).doc(postId).collection('pollVotes');
 
   /// Live poll results: vote count per option index + the viewer's own vote.
   Stream<PollResults> watchPollResults(
     String communityId,
     String postId,
     String? viewerUid,
-  ) =>
-      _pollVotesRef(communityId, postId).snapshots().map((snap) {
-        final counts = <int, int>{};
-        int? myVote;
-        for (final doc in snap.docs) {
-          final option = doc.data()['option'] as int? ?? -1;
-          if (option < 0) continue;
-          counts[option] = (counts[option] ?? 0) + 1;
-          if (doc.id == viewerUid) myVote = option;
-        }
-        return PollResults(
-          counts: counts,
-          totalVotes: snap.docs.length,
-          myVote: myVote,
-        );
-      });
+  ) => _pollVotesRef(communityId, postId).snapshots().map((snap) {
+    final counts = <int, int>{};
+    int? myVote;
+    for (final doc in snap.docs) {
+      final option = doc.data()['option'] as int? ?? -1;
+      if (option < 0) continue;
+      counts[option] = (counts[option] ?? 0) + 1;
+      if (doc.id == viewerUid) myVote = option;
+    }
+    return PollResults(
+      counts: counts,
+      totalVotes: snap.docs.length,
+      myVote: myVote,
+    );
+  });
 
   /// Casts (or changes) the member's vote — one doc per uid so re-voting
   /// simply overwrites the previous choice.
@@ -447,19 +456,10 @@ class CommunityRepository {
   }
 
   Stream<int> watchLikeCount(String communityId, String postId) =>
-      _likesRef(communityId, postId)
-          .snapshots()
-          .map((s) => s.docs.length);
+      _likesRef(communityId, postId).snapshots().map((s) => s.docs.length);
 
-  Stream<bool> watchUserLiked(
-    String communityId,
-    String postId,
-    String uid,
-  ) =>
-      _likesRef(communityId, postId)
-          .doc(uid)
-          .snapshots()
-          .map((s) => s.exists);
+  Stream<bool> watchUserLiked(String communityId, String postId, String uid) =>
+      _likesRef(communityId, postId).doc(uid).snapshots().map((s) => s.exists);
 
   Future<void> toggleLike({
     required String communityId,
@@ -487,21 +487,20 @@ class CommunityRepository {
     String communityId,
     String postId,
     String? viewerUid,
-  ) =>
-      _likesRef(communityId, postId).snapshots().map((s) {
-        final counts = <String, int>{};
-        String? mine;
-        for (final doc in s.docs) {
-          final reaction = (doc.data()['reaction'] as String?) ?? 'heart';
-          counts[reaction] = (counts[reaction] ?? 0) + 1;
-          if (doc.id == viewerUid) mine = reaction;
-        }
-        return PostReactions(
-          total: s.docs.length,
-          counts: counts,
-          myReaction: mine,
-        );
-      });
+  ) => _likesRef(communityId, postId).snapshots().map((s) {
+    final counts = <String, int>{};
+    String? mine;
+    for (final doc in s.docs) {
+      final reaction = (doc.data()['reaction'] as String?) ?? 'heart';
+      counts[reaction] = (counts[reaction] ?? 0) + 1;
+      if (doc.id == viewerUid) mine = reaction;
+    }
+    return PostReactions(
+      total: s.docs.length,
+      counts: counts,
+      myReaction: mine,
+    );
+  });
 
   /// Tapping the same reaction removes it; anything else sets/overwrites it.
   Future<void> setPostReaction({
@@ -533,22 +532,19 @@ class CommunityRepository {
     String communityId,
     String postId,
     String commentId,
-  ) =>
-      _commentsRef(communityId, postId).doc(commentId).collection('likes');
+  ) => _commentsRef(communityId, postId).doc(commentId).collection('likes');
 
   Stream<({int count, bool liked})> watchCommentLikes(
     String communityId,
     String postId,
     String commentId,
     String? viewerUid,
-  ) =>
-      _commentLikesRef(communityId, postId, commentId).snapshots().map(
-            (s) => (
-              count: s.docs.length,
-              liked: viewerUid != null &&
-                  s.docs.any((d) => d.id == viewerUid),
-            ),
-          );
+  ) => _commentLikesRef(communityId, postId, commentId).snapshots().map(
+    (s) => (
+      count: s.docs.length,
+      liked: viewerUid != null && s.docs.any((d) => d.id == viewerUid),
+    ),
+  );
 
   Future<void> toggleCommentLike({
     required String communityId,
@@ -573,10 +569,9 @@ class CommunityRepository {
     String authorUid, {
     int limit = 30,
   }) async {
-    final snap = await _postsRef(communityId)
-        .where('authorUid', isEqualTo: authorUid)
-        .limit(limit)
-        .get();
+    final snap = await _postsRef(
+      communityId,
+    ).where('authorUid', isEqualTo: authorUid).limit(limit).get();
     final viewerUid = _auth.currentUser?.uid;
     return snap.docs
         .map((d) => CommunityPost.fromMap(d.id, d.data()))
@@ -634,17 +629,14 @@ class CommunityRepository {
     await _blockedRef(uid).doc(blockedUid).delete();
   }
 
-  Stream<Set<String>> watchBlockedUids(String uid) => _blockedRef(uid)
-      .snapshots()
-      .map((s) => s.docs.map((d) => d.id).toSet());
+  Stream<Set<String>> watchBlockedUids(String uid) =>
+      _blockedRef(uid).snapshots().map((s) => s.docs.map((d) => d.id).toSet());
 
   Stream<List<BlockedUser>> watchBlockedUsers(String uid) => _blockedRef(uid)
       .orderBy('createdAt', descending: true)
       .snapshots()
       .map(
-        (s) => s.docs
-            .map((d) => BlockedUser.fromDoc(d.id, d.data()))
-            .toList(),
+        (s) => s.docs.map((d) => BlockedUser.fromDoc(d.id, d.data())).toList(),
       );
 
   Stream<List<CommunityPost>> watchPosts(String communityId) {
@@ -670,9 +662,9 @@ class CommunityRepository {
     DocumentSnapshot? lastDocument,
   }) async {
     final viewerUid = _auth.currentUser?.uid;
-    var query = _postsRef(communityId)
-        .orderBy('createdAt', descending: true)
-        .limit(postsPerPage);
+    var query = _postsRef(
+      communityId,
+    ).orderBy('createdAt', descending: true).limit(postsPerPage);
 
     if (lastDocument != null) {
       query = query.startAfterDocument(lastDocument);
@@ -691,9 +683,9 @@ class CommunityRepository {
     String communityId, {
     DocumentSnapshot? lastDocument,
   }) async {
-    var query = _postsRef(communityId)
-        .orderBy('createdAt', descending: true)
-        .limit(postsPerPage);
+    var query = _postsRef(
+      communityId,
+    ).orderBy('createdAt', descending: true).limit(postsPerPage);
 
     if (lastDocument != null) {
       query = query.startAfterDocument(lastDocument);
@@ -757,117 +749,99 @@ class CommunityRepository {
     final local = _fallbackModeration(text);
     if (!local.approved) return local;
 
-    // 1. Try Direct Gemini API (Google AI Studio key — free)
-    final direct = await _directGemini.moderateContent(text: text);
-    if (direct != null) {
-      if (direct.approved) return direct;
-      if (_isModerationUnavailable(direct.reason)) {
-        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
+    if (kDebugMode) {
+      // 1. Try Direct Gemini API (Google AI Studio key — free)
+      final direct = await _directGemini.moderateContent(text: text);
+      if (direct != null) {
+        if (direct.approved) return direct;
+        if (_isModerationUnavailable(direct.reason)) {
+          return const ModerationResult(
+            approved: false,
+            pendingReview: true,
+            reason: 'Content pending AI review.',
+          );
+        }
+        return direct;
       }
-      return direct;
+
+      // 2. Try Firebase AI Logic (direct, secure, no server)
+      final firebaseAi = await _firebaseAi.moderateContent(text: text);
+      if (firebaseAi != null) {
+        if (firebaseAi.approved) return firebaseAi;
+        if (_isModerationUnavailable(firebaseAi.reason)) {
+          return const ModerationResult(
+            approved: false,
+            pendingReview: true,
+            reason: 'Content pending AI review.',
+          );
+        }
+        return firebaseAi;
+      }
     }
 
-    // 2. Try Firebase AI Logic (direct, secure, no server)
-    final firebaseAi = await _firebaseAi.moderateContent(text: text);
-    if (firebaseAi != null) {
-      if (firebaseAi.approved) return firebaseAi;
-      if (_isModerationUnavailable(firebaseAi.reason)) {
-        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
-      }
-      return firebaseAi;
-    }
-
-    // 3. Try Cloud Function (Firebase server — GEMINI_API_KEY in Firebase Secrets)
+    // Release: Cloud Function only (keys in Firebase Secrets).
     final cloud = await _moderateViaCloud(text);
     if (cloud != null) {
       if (cloud.approved) return cloud;
       if (_isModerationUnavailable(cloud.reason)) {
-        return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
+        return const ModerationResult(
+          approved: false,
+          pendingReview: true,
+          reason: 'Content pending AI review.',
+        );
       }
       return cloud;
     }
 
     // All AI services unavailable — block until reviewed.
-    return const ModerationResult(approved: false, pendingReview: true, reason: 'Content pending AI review.');
+    return const ModerationResult(
+      approved: false,
+      pendingReview: true,
+      reason: 'Content pending AI review.',
+    );
   }
 
   /// Local safety net used when both cloud and local Gemini are unavailable.
   /// Focuses on protecting users (especially minors) from contact harvesting,
   /// external links, and harmful content.
-  // ---------------------------------------------------------------------------
-  // Rate limiting & duplicate detection
-  // ---------------------------------------------------------------------------
+  /// Sends the final community write through the trusted Cloud Function.
+  /// The client keeps local validation for fast feedback, but it cannot bypass
+  /// quotas, duplicate detection, identity fields, or the media paywall.
+  Future<Map<String, dynamic>> _submitCommunity(
+    String action,
+    Map<String, dynamic> payload,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) throw StateError('Not signed in');
+    final token = await user.getIdToken();
+    final response = await http.post(
+      Uri.parse('$_baseUrl/submitCommunity'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'action': action, ...payload}),
+    );
 
-  static const _rateLimitCollection = 'communityRateLimits';
-  static const _hashCollection = 'communityContentHashes';
+    Map<String, dynamic> body = const {};
+    if (response.body.isNotEmpty) {
+      try {
+        body = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {}
+    }
+    if (response.statusCode == 200) return body;
 
-  String _hashContent(String text) {
-    final bytes = utf8.encode(text.trim().toLowerCase());
-    return sha256.convert(bytes).toString().substring(0, 16);
-  }
-
-  Future<void> _storeContentHash(String uid, String hash) async {
-    try {
-      await _firestore.collection(_hashCollection).doc('${uid}_$hash').set({
-        'uid': uid,
-        'hash': hash,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (_) {}
-  }
-
-  Future<void> _checkDuplicate(String uid, String text) async {
-    final hash = _hashContent(text);
-    try {
-      final doc = await _firestore.collection(_hashCollection).doc('${uid}_$hash').get();
-      if (doc.exists) {
-        final data = doc.data();
-        final createdAt = (data?['createdAt'] as Timestamp?)?.toDate();
-        if (createdAt != null && DateTime.now().difference(createdAt).inMinutes < 5) {
-          throw const ModerationRejectedException(
-            'You recently posted similar content. Please wait before posting again.',
-          );
-        }
-      }
-    } on ModerationRejectedException {
-      rethrow;
-    } catch (_) {}
-  }
-
-  Future<void> _enforceRateLimit(
-    String uid,
-    String type, {
-    int maxPerHour = 10,
-  }) async {
-    try {
-      final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1));
-      final snap = await _firestore
-          .collection(_rateLimitCollection)
-          .doc(uid)
-          .collection('actions')
-          .where('type', isEqualTo: type)
-          .where('createdAt', isGreaterThan: Timestamp.fromDate(oneHourAgo))
-          .count()
-          .get();
-
-      if (snap.count != null && snap.count! >= maxPerHour) {
-        throw ModerationRejectedException(
-          'Too many ${type}s. Please wait before posting again.',
-        );
-      }
-
-      // Record this action
-      await _firestore
-          .collection(_rateLimitCollection)
-          .doc(uid)
-          .collection('actions')
-          .add({
-        'type': type,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } on ModerationRejectedException {
-      rethrow;
-    } catch (_) {}
+    final code = body['error'] as String? ?? '';
+    final message = body['message'] as String? ?? 'Could not publish now.';
+    if (code == 'community_minor') throw const MinorRestrictedException();
+    if (code == 'community_banned') throw const CommunityBannedException();
+    if (code == 'media_premium_required') {
+      throw const MediaRequiresPremiumException();
+    }
+    if (code == 'rate_limited' || code == 'duplicate_content') {
+      throw ModerationRejectedException(message);
+    }
+    throw StateError(message);
   }
 
   // ---------------------------------------------------------------------------
@@ -929,7 +903,10 @@ class CommunityRepository {
     }
 
     if (text.trim().length < 3) {
-      return const ModerationResult(approved: false, reason: 'Post is too short.');
+      return const ModerationResult(
+        approved: false,
+        reason: 'Post is too short.',
+      );
     }
     return const ModerationResult(approved: true);
   }
@@ -967,11 +944,7 @@ class CommunityRepository {
   static String savedPostDocId(String communityId, String postId) =>
       '${communityId}_$postId';
 
-  Stream<bool> watchPostSaved(
-    String uid,
-    String communityId,
-    String postId,
-  ) =>
+  Stream<bool> watchPostSaved(String uid, String communityId, String postId) =>
       _savedPostsRef(uid)
           .doc(savedPostDocId(communityId, postId))
           .snapshots()
@@ -1007,12 +980,11 @@ class CommunityRepository {
   Stream<List<CommunityPost>> watchSavedPosts(
     String uid, {
     Set<String> blockedUids = const {},
-  }) =>
-      _savedPostsRef(uid)
-          .orderBy('savedAt', descending: true)
-          .limit(50)
-          .snapshots()
-          .asyncMap((snap) async {
+  }) => _savedPostsRef(uid)
+      .orderBy('savedAt', descending: true)
+      .limit(50)
+      .snapshots()
+      .asyncMap((snap) async {
         if (snap.docs.isEmpty) return const <CommunityPost>[];
 
         // Parallel fetch all saved post references instead of sequential N+1.
@@ -1034,7 +1006,9 @@ class CommunityRepository {
             }
             return post;
           } catch (e, st) {
-            debugPrint('CommunityRepository.watchSavedPosts item failed: $e\n$st');
+            debugPrint(
+              'CommunityRepository.watchSavedPosts item failed: $e\n$st',
+            );
             return null;
           }
         });
@@ -1076,9 +1050,7 @@ class CommunityRepository {
       final data = postSnap.data();
       if (data == null) return;
       final count = (data['commentCount'] as int? ?? 1) - 1;
-      final updates = <String, dynamic>{
-        'commentCount': count < 0 ? 0 : count,
-      };
+      final updates = <String, dynamic>{'commentCount': count < 0 ? 0 : count};
       if (data['bestAnswerCommentId'] == commentId) {
         updates['bestAnswerCommentId'] = FieldValue.delete();
       }
@@ -1115,7 +1087,6 @@ class CommunityRepository {
   Future<bool> createPost({
     required String communityId,
     required String uid,
-    required String alias,
     required String text,
     PostType postType = PostType.support,
     String? communityName,
@@ -1127,55 +1098,33 @@ class CommunityRepository {
   }) async {
     await _ensureCanParticipate(uid);
     // Media uploads require a Premium subscription.
-    if ((mediaUrl != null || mediaType != null) && !await UserPrefs.isPremium()) {
+    if ((mediaUrl != null || mediaType != null) &&
+        !await UserPrefs.isPremium()) {
       throw const MediaRequiresPremiumException();
     }
     final member = await isMember(uid, communityId);
     if (!member) throw StateError('Join the community first');
 
-    // Rate limiting: max 10 posts per hour
-    await _enforceRateLimit(uid, 'post', maxPerHour: 10);
-
-    // Duplicate detection: same text within 5 minutes
-    await _checkDuplicate(uid, text);
-
     final moderation = await moderateText(text);
     if (!moderation.approved) {
-      throw ModerationRejectedException(moderation.reason ?? 'Content rejected');
+      throw ModerationRejectedException(
+        moderation.reason ?? 'Content rejected',
+      );
     }
 
-    // Firestore rules only allow clients to set pending_review; the Cloud
-    // Function (or admin) promotes to approved after AI review.
-    final displayAlias = isAnonymous ? 'Anonymous' : alias;
-    final contentHash = _hashContent(text);
-    final authorIsPremium =
-        !isAnonymous && await UserPrefs.isPremium();
-
-    await _postsRef(communityId).add({
-      ...CommunityPost(
-        id: '',
-        communityId: communityId,
-        authorUid: uid,
-        authorAlias: displayAlias,
-        text: text.trim(),
-        createdAt: DateTime.now(),
-        postType: postType,
-        communityName: communityName,
-        authorAvatarIndex: isAnonymous ? 0 : authorAvatarIndex,
-        mediaUrl: mediaUrl,
-        mediaType: mediaType,
-        isAnonymous: isAnonymous,
-        authorIsPremium: authorIsPremium,
-        pollOptions: postType == PostType.poll ? pollOptions : null,
-      ).toMap(),
-      'moderationStatus': 'pending_review',
-      'contentHash': contentHash,
+    final result = await _submitCommunity('post', {
+      'communityId': communityId,
+      'text': text,
+      'postType': postType.value,
+      'communityName': ?communityName,
+      'authorAvatarIndex': authorAvatarIndex,
+      'mediaUrl': ?mediaUrl,
+      'mediaType': ?mediaType,
+      'isAnonymous': isAnonymous,
+      if (postType == PostType.poll && pollOptions != null)
+        'pollOptions': pollOptions,
     });
-
-    // Store hash for duplicate detection
-    await _storeContentHash(uid, contentHash);
-
-    return moderation.pendingReview;
+    return result['pendingReview'] as bool? ?? moderation.pendingReview;
   }
 
   Future<void> updatePost({
@@ -1194,7 +1143,9 @@ class CommunityRepository {
 
     final moderation = await moderateText(text);
     if (!moderation.approved) {
-      throw ModerationRejectedException(moderation.reason ?? 'Content rejected');
+      throw ModerationRejectedException(
+        moderation.reason ?? 'Content rejected',
+      );
     }
 
     await ref.update({
@@ -1218,10 +1169,9 @@ class CommunityRepository {
             .toList(),
       );
 
-  Stream<int> watchUnreadInboxCount(String uid) => _inboxRef(uid)
-      .where('read', isEqualTo: false)
-      .snapshots()
-      .map((s) => s.docs.length);
+  Stream<int> watchUnreadInboxCount(String uid) => _inboxRef(
+    uid,
+  ).where('read', isEqualTo: false).snapshots().map((s) => s.docs.length);
 
   Future<void> markInboxItemRead(String uid, String inboxId) async {
     await _inboxRef(uid).doc(inboxId).update({'read': true});
@@ -1242,7 +1192,6 @@ class CommunityRepository {
     required String communityId,
     required String postId,
     required String uid,
-    required String alias,
     required String text,
     int authorAvatarIndex = 0,
     String? parentCommentId,
@@ -1251,32 +1200,21 @@ class CommunityRepository {
     final member = await isMember(uid, communityId);
     if (!member) throw StateError('Join the community first');
 
-    await _enforceRateLimit(uid, 'comment', maxPerHour: 20);
-    await _checkDuplicate(uid, text);
-
     final moderation = await moderateText(text);
     if (!moderation.approved) {
-      throw ModerationRejectedException(moderation.reason ?? 'Content rejected');
+      throw ModerationRejectedException(
+        moderation.reason ?? 'Content rejected',
+      );
     }
 
-    final postRef = _postsRef(communityId).doc(postId);
-    final authorIsPremium = await UserPrefs.isPremium();
-    await _firestore.runTransaction((tx) async {
-      tx.set(_commentsRef(communityId, postId).doc(), {
-        'authorUid': uid,
-        'authorAlias': alias,
-        'text': text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'authorAvatarIndex': authorAvatarIndex,
-        'authorIsPremium': authorIsPremium,
-        'parentCommentId': parentCommentId,
-        'moderationStatus': 'pending_review',
-      });
-      final snap = await tx.get(postRef);
-      final count = (snap.data()?['commentCount'] as int? ?? 0) + 1;
-      tx.update(postRef, {'commentCount': count});
+    final result = await _submitCommunity('comment', {
+      'communityId': communityId,
+      'postId': postId,
+      'text': text,
+      'authorAvatarIndex': authorAvatarIndex,
+      'parentCommentId': ?parentCommentId,
     });
-    return moderation.pendingReview;
+    return result['pendingReview'] as bool? ?? moderation.pendingReview;
   }
 
   Future<void> updateComment({
@@ -1294,7 +1232,9 @@ class CommunityRepository {
     }
     final moderation = await moderateText(text);
     if (!moderation.approved) {
-      throw ModerationRejectedException(moderation.reason ?? 'Content rejected');
+      throw ModerationRejectedException(
+        moderation.reason ?? 'Content rejected',
+      );
     }
     await ref.update({
       'text': text.trim(),
@@ -1303,4 +1243,3 @@ class CommunityRepository {
     });
   }
 }
-

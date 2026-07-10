@@ -250,7 +250,10 @@ class AppHubCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: theme.colorScheme.outline),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.outline,
+            ),
           ],
         ),
       ),

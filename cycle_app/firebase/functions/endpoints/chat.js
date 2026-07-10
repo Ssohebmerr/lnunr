@@ -22,7 +22,14 @@ const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
-const { callAiWithFallback, streamAiWithFallback } = require('../lib/ai_router');
+const {
+  callAiWithFallback,
+  streamAiWithFallback,
+  sanitizeHistory,
+} = require('../lib/ai_router');
+const { buildKnowledgeBlock } = require('../lib/knowledge');
+const { detectRedFlags, emergencyResponseFor } = require('../lib/red_flags');
+const { extractRememberFacts, saveUserFacts } = require('../lib/ai_memory');
 const {
   QuotaError,
   reservePremiumChatSlot,
@@ -47,6 +54,49 @@ function clampMaxTokens(clientValue, mode) {
   return Math.min(requested, ceiling);
 }
 
+const MAX_CONTEXT_CHARS = 12000;
+
+/// Accept only JSON-shaped, bounded context from the client. The server still
+/// owns memory and prompts; this prevents a modified client from inflating
+/// provider input with arbitrarily deep or large values.
+function sanitizeContextValue(value, budget, depth = 0) {
+  if (budget.remaining <= 0 || depth > 3 || value == null) return undefined;
+  if (typeof value === 'string') {
+    const text = value.substring(0, Math.min(500, budget.remaining));
+    budget.remaining -= text.length;
+    return text;
+  }
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (Array.isArray(value)) {
+    const out = [];
+    for (const item of value.slice(0, 16)) {
+      const safe = sanitizeContextValue(item, budget, depth + 1);
+      if (safe !== undefined) out.push(safe);
+      if (budget.remaining <= 0) break;
+    }
+    return out;
+  }
+  if (typeof value === 'object') {
+    const out = {};
+    for (const [key, item] of Object.entries(value).slice(0, 32)) {
+      const safeKey = String(key).substring(0, 80);
+      const safe = sanitizeContextValue(item, budget, depth + 1);
+      if (safe !== undefined) out[safeKey] = safe;
+      if (budget.remaining <= 0) break;
+    }
+    return out;
+  }
+  return undefined;
+}
+
+function sanitizeCycleContext(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  return sanitizeContextValue(raw, { remaining: MAX_CONTEXT_CHARS }) || {};
+}
+
 exports.chat = onRequest(
   {
     cors: true,
@@ -63,7 +113,7 @@ exports.chat = onRequest(
       const decoded = await admin.auth().verifyIdToken(token);
       const uid = decoded.uid;
       const message = (req.body?.message || '').trim().substring(0, 2000);
-      const cycleContext = req.body?.cycleContext || {};
+      const cycleContext = sanitizeCycleContext(req.body?.cycleContext);
       const mode = req.body?.mode || 'chat';
 
       if (!message) {
@@ -72,16 +122,46 @@ exports.chat = onRequest(
         return;
       }
 
+      // High-risk language receives an immediate, deterministic response.
+      // This is intentionally before entitlement/quota/provider calls so an
+      // outage, a quota limit, or a non-premium account never delays safety
+      // guidance. Doctor reports are generated from a canned request rather
+      // than a live symptom conversation, so they keep their normal flow.
+      const redFlag = mode === 'doctor'
+        ? null
+        : detectRedFlags(message, cycleContext);
+      if (redFlag) {
+        setCors(res);
+        res.json({
+          reply: emergencyResponseFor(redFlag, cycleContext.userLocale),
+          safetyEscalation: redFlag,
+        });
+        return;
+      }
+
       // Strict paywall + quota — throws QuotaError before any AI spend.
-      const { ref: userRef, remaining } = await reservePremiumChatSlot(uid);
+      // The same transaction read piggybacks the user's long-term AI memory.
+      const { ref: userRef, remaining, aiMemory } =
+        await reservePremiumChatSlot(uid);
+
+      // Server-truth memory injection: whatever the client sent under
+      // aiMemory is overwritten with the Firestore-stored facts.
+      cycleContext.aiMemory = aiMemory;
 
       const clientSystemPrompt = (req.body?.systemPrompt || '').trim();
       const clientTemperature = Number(req.body?.temperature) || 0;
 
+      // Multi-turn memory: prior conversation turns sent by the app,
+      // validated + capped server-side (see sanitizeHistory).
+      const history = sanitizeHistory(req.body?.history);
+
+      // RAG-lite: curated wellness notes matched to this message (may be '').
+      const knowledgeBlock = buildKnowledgeBlock(message, cycleContext, mode);
+
       const contextString = buildContextString(cycleContext, mode);
       const fallbackUserPrompt = mode === 'mood'
-        ? `=== USER JOURNAL ENTRY (analyze emotions gently) ===\n${message}\n\nCycle context:\n${contextString}`
-        : `=== APP DATA ===\n${contextString}\n\n=== USER MESSAGE ===\n${message}`;
+        ? `=== USER JOURNAL ENTRY (analyze emotions gently) ===\n${message}\n\nCycle context:\n${contextString}${knowledgeBlock}`
+        : `=== APP DATA ===\n${contextString}${knowledgeBlock}\n\n=== USER MESSAGE ===\n${message}`;
 
       // Resolve personality from request or parse from clientSystemPrompt for compatibility
       let personality = req.body?.personality || 'friend';
@@ -95,7 +175,8 @@ exports.chat = onRequest(
         }
       }
 
-      const systemPrompt = getSecureSystemPrompt(mode, cycleContext, personality);
+      let systemPrompt = getSecureSystemPrompt(mode, cycleContext, personality);
+
       const userPrompt = fallbackUserPrompt;
       const maxTokens = clampMaxTokens(req.body?.maxTokens, mode);
       const aiArgs = {
@@ -105,6 +186,7 @@ exports.chat = onRequest(
         userPrompt,
         maxTokens,
         temperature: clientTemperature,
+        history,
       };
 
       // ── Streaming path (opt-in via `stream: true`) ──────────────────────
@@ -167,8 +249,11 @@ exports.chat = onRequest(
           mode,
           provider: provider || 'unknown',
           usage,
-          messagePreview: message,
+          messageLength: message.length,
         });
+        // Long-term memory: persist any [[remember:...]] facts the model
+        // emitted in this reply (best-effort, never blocks the response).
+        await saveUserFacts(uid, extractRememberFacts(fullText));
         res.end();
         return;
       }
@@ -191,8 +276,11 @@ exports.chat = onRequest(
         mode,
         provider,
         usage,
-        messagePreview: message,
+        messageLength: message.length,
       });
+
+      // Long-term memory: persist any [[remember:...]] facts (best-effort).
+      await saveUserFacts(uid, extractRememberFacts(reply));
 
       setCors(res);
       res.json({ reply, provider, dailyRemaining: remaining });

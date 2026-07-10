@@ -32,6 +32,28 @@ const GEMINI_SAFETY_SETTINGS = [
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
 /**
+ * Builds the Gemini `contents` array: prior conversation turns
+ * ({role:'user'|'model', text}) followed by the new user prompt.
+ * Gemini requires the first content to be a user turn — the caller's
+ * sanitizer guarantees that.
+ *
+ * @param {string} userPrompt
+ * @param {Array<{role: string, text: string}>} [history]
+ * @returns {Array<{role: string, parts: Array<{text: string}>}>}
+ */
+function buildContents(userPrompt, history) {
+  const contents = [];
+  for (const turn of Array.isArray(history) ? history : []) {
+    contents.push({
+      role: turn.role === 'user' ? 'user' : 'model',
+      parts: [{ text: turn.text }],
+    });
+  }
+  contents.push({ role: 'user', parts: [{ text: userPrompt }] });
+  return contents;
+}
+
+/**
  * Run a Gemini call with model fallback and safety settings.
  *
  * @param {string} geminiApiKey Raw key from `defineSecret().value()`.
@@ -39,10 +61,12 @@ const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
  * @param {string} userPrompt The user-side prompt.
  * @param {number} [maxTokens=2000] Output budget.
  * @param {number} [temperatureOverride] Optional caller-provided temperature.
+ * @param {Array<{role: string, text: string}>} [history] Prior turns for
+ *   multi-turn memory (already sanitized by the caller).
  * @returns {Promise<{text: string, usage: {promptTokens: number, completionTokens: number}}>}
  *   Model output + token usage (zeros when the SDK omits usageMetadata).
  */
-async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride) {
+async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride, history = []) {
   // Defensive cleanup — strip BOM, zero-width chars, whitespace.
   const apiKey = (geminiApiKey || '')
     .replace(/^\uFEFF/, '')
@@ -74,7 +98,9 @@ async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTok
         safetySettings: GEMINI_SAFETY_SETTINGS,
       });
 
-      const result = await model.generateContent(userPrompt);
+      const result = await model.generateContent({
+        contents: buildContents(userPrompt, history),
+      });
       const text = result.response.text();
       const meta = result.response?.usageMetadata || {};
       const usage = {
@@ -123,9 +149,11 @@ async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens, tem
  * if a model yields no content before failing, the next is attempted (matching
  * callGeminiDetailed's fallback behaviour).
  *
+ * @param {Array<{role: string, text: string}>} [history] Prior turns for
+ *   multi-turn memory (already sanitized by the caller).
  * @yields {{delta?: string, done?: boolean, usage?: object}}
  */
-async function* streamGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride) {
+async function* streamGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride, history = []) {
   const apiKey = (geminiApiKey || '')
     .replace(/^﻿/, '')
     .replace(/[​-‌⁠]/g, '')
@@ -150,7 +178,9 @@ async function* streamGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens =
         safetySettings: GEMINI_SAFETY_SETTINGS,
       });
 
-      const result = await model.generateContentStream(userPrompt);
+      const result = await model.generateContentStream({
+        contents: buildContents(userPrompt, history),
+      });
       let emittedAny = false;
       for await (const chunk of result.stream) {
         const t = typeof chunk.text === 'function' ? chunk.text() : '';

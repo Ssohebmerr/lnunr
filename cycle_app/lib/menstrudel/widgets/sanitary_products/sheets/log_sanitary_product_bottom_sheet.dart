@@ -213,7 +213,10 @@ class _LogSanitaryProductBottomSheetState extends State<LogSanitaryProductBottom
                         ),
                       ),
                       
-                      const Icon(Icons.arrow_forward, color: Colors.grey),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
 
                       // End Time
                       Column(

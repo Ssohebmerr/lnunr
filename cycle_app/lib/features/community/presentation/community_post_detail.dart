@@ -57,7 +57,6 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         communityId: widget.community.id,
         postId: widget.post.id,
         uid: user.uid,
-        alias: widget.alias,
         text: text,
         authorAvatarIndex: profile.avatarIndex,
         parentCommentId: _replyToCommentId,
@@ -66,7 +65,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       _cancelReply();
       if (pending && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.communityPendingReview)),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.communityPendingReview),
+          ),
         );
       }
     } on ModerationRejectedException catch (e) {
@@ -81,7 +82,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
   Future<void> _editPost(CommunityPost post) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final profile = await context.read<CommunityRepository>().resolveProfile(user.uid);
+    final profile = await context.read<CommunityRepository>().resolveProfile(
+      user.uid,
+    );
     if (!mounted) return;
     final updated = await Navigator.push<bool>(
       context,
@@ -96,7 +99,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
     if (updated == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.communityPostUpdated)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.communityPostUpdated),
+        ),
       );
     }
   }
@@ -124,14 +129,14 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
     if (confirmed != true || !mounted) return;
     await context.read<CommunityRepository>().deletePost(
-          communityId: widget.community.id,
-          postId: post.id,
-          uid: user.uid,
-        );
+      communityId: widget.community.id,
+      postId: post.id,
+      uid: user.uid,
+    );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.communityPostDeleted)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.communityPostDeleted)));
       Navigator.of(context).pop();
     }
   }
@@ -159,15 +164,15 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
     if (confirmed != true || !mounted) return;
     await context.read<CommunityRepository>().deleteComment(
-          communityId: widget.community.id,
-          postId: widget.post.id,
-          commentId: comment.id,
-          uid: user.uid,
-        );
+      communityId: widget.community.id,
+      postId: widget.post.id,
+      commentId: comment.id,
+      uid: user.uid,
+    );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.communityCommentDeleted)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.communityCommentDeleted)));
     }
   }
 
@@ -175,11 +180,11 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     await context.read<CommunityRepository>().setBestAnswer(
-          communityId: widget.community.id,
-          postId: widget.post.id,
-          commentId: comment.id,
-          uid: user.uid,
-        );
+      communityId: widget.community.id,
+      postId: widget.post.id,
+      commentId: comment.id,
+      uid: user.uid,
+    );
   }
 
   Future<void> _editComment(CommunityComment comment) async {
@@ -218,19 +223,21 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     final repo = context.read<CommunityRepository>();
     try {
       await repo.updateComment(
-            communityId: widget.community.id,
-            postId: widget.post.id,
-            commentId: comment.id,
-            uid: user.uid,
-            text: newText,
-          );
+        communityId: widget.community.id,
+        postId: widget.post.id,
+        commentId: comment.id,
+        uid: user.uid,
+        text: newText,
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityCommentUpdated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityCommentUpdated)));
       }
     } on ModerationRejectedException catch (e) {
-      if (mounted) await showModerationRejectedDialog(context, reason: e.reason);
+      if (mounted) {
+        await showModerationRejectedDialog(context, reason: e.reason);
+      }
     } catch (e) {
       debugPrint('_editComment error: $e');
     }
@@ -351,7 +358,6 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
   }
 
-
   List<Widget> _buildCommentTiles(
     List<CommunityComment> comments,
     CommunityPost post,
@@ -379,10 +385,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
           title: Row(
             children: [
               Flexible(
-                child: Text(
-                  c.authorAlias,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(c.authorAlias, overflow: TextOverflow.ellipsis),
               ),
               if (c.authorIsPremium) const PremiumNameBadge(),
               Padding(
@@ -471,24 +474,25 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
               ),
             ],
           ),
-          onLongPress: () => _showCommentActions(c, post, isPostAuthor: isPostAuthor),
+          onLongPress: () =>
+              _showCommentActions(c, post, isPostAuthor: isPostAuthor),
           onTap: widget.canComment
               ? () => _showCommentActions(c, post, isPostAuthor: isPostAuthor)
               : replyCount > 0
-                  ? () => showCommentThreadSheet(
-                        context: context,
-                        root: c,
-                        allComments: comments,
-                        bestAnswerId: bestAnswerId,
-                        communityId: widget.community.id,
-                        postId: widget.post.id,
-                        onCommentTap: (comment) => _showCommentActions(
-                          comment,
-                          post,
-                          isPostAuthor: isPostAuthor,
-                        ),
-                      )
-                  : null,
+              ? () => showCommentThreadSheet(
+                  context: context,
+                  root: c,
+                  allComments: comments,
+                  bestAnswerId: bestAnswerId,
+                  communityId: widget.community.id,
+                  postId: widget.post.id,
+                  onCommentTap: (comment) => _showCommentActions(
+                    comment,
+                    post,
+                    isPostAuthor: isPostAuthor,
+                  ),
+                )
+              : null,
         ),
       );
     }
@@ -502,15 +506,17 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     final reason = await showReportReasonSheet(context);
     if (reason == null || !mounted) return;
     await context.read<CommunityRepository>().reportPost(
-          communityId: widget.community.id,
-          postId: post.id,
-          reporterUid: user.uid,
-          reason: reason.code,
-          authorUid: post.authorUid,
-          authorAlias: post.authorAlias,
-        );
+      communityId: widget.community.id,
+      postId: post.id,
+      reporterUid: user.uid,
+      reason: reason.code,
+      authorUid: post.authorUid,
+      authorAlias: post.authorAlias,
+    );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communityReported)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.communityReported)));
     }
   }
 
@@ -583,9 +589,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                         children: [
                           Text(
                             l10n.communityComments,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(width: 8),
@@ -607,14 +611,19 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                       builder: (context, blockedSnap) {
                         final blocked = blockedSnap.data ?? const <String>{};
                         return StreamBuilder<List<CommunityComment>>(
-                          stream: repo.watchComments(widget.community.id, livePost.id),
+                          stream: repo.watchComments(
+                            widget.community.id,
+                            livePost.id,
+                          ),
                           builder: (context, snap) {
                             final comments = (snap.data ?? [])
                                 .where((c) => !blocked.contains(c.authorUid))
                                 .toList();
                             if (comments.isEmpty) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
                                 child: Center(
                                   child: Text(
                                     l10n.communityNoComments,
@@ -622,9 +631,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                                         .textTheme
                                         .bodyMedium
                                         ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                         ),
                                   ),
                                 ),
@@ -681,10 +690,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
             ),
           ),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: actions,
       ),
       body: Container(
@@ -713,15 +719,21 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
             if (_replyToAlias != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.reply_rounded,
-                        size: 16, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.reply_rounded,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -794,8 +806,11 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.send_rounded,
-                                  size: 18, color: Colors.white),
+                              : const Icon(
+                                  Icons.send_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
                         ),
                       ),
                     ),
@@ -897,8 +912,11 @@ class _PostActionsMenu extends StatelessWidget {
         ] else
           PopupMenuItem(
             value: 'report',
-            child:
-                _menuRow(theme, Icons.flag_outlined, l10n.communityReportPost),
+            child: _menuRow(
+              theme,
+              Icons.flag_outlined,
+              l10n.communityReportPost,
+            ),
           ),
       ],
       child: AppGlassCard(
@@ -913,9 +931,15 @@ class _PostActionsMenu extends StatelessWidget {
     );
   }
 
-  Widget _menuRow(ThemeData theme, IconData icon, String label,
-      {bool danger = false}) {
-    final color = danger ? theme.colorScheme.error : theme.colorScheme.onSurface;
+  Widget _menuRow(
+    ThemeData theme,
+    IconData icon,
+    String label, {
+    bool danger = false,
+  }) {
+    final color = danger
+        ? theme.colorScheme.error
+        : theme.colorScheme.onSurface;
     return Row(
       children: [
         Icon(icon, size: 19, color: color),

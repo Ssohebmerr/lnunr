@@ -297,9 +297,9 @@ class GoalModeReportsSection extends StatelessWidget {
 
   Color _fertilityColor(FertilityLevel level) {
     return switch (level) {
-      FertilityLevel.high => Colors.red.shade400,
-      FertilityLevel.moderate => Colors.orange.shade400,
-      FertilityLevel.low => Colors.green.shade600,
+      FertilityLevel.high => AuraColors.danger,
+      FertilityLevel.moderate => AuraColors.warning,
+      FertilityLevel.low => AuraColors.success,
       FertilityLevel.unknown => AuraColors.plumMuted,
     };
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -323,11 +324,15 @@ class _AccountTabState extends State<AccountTab> {
                     onPressed: () async {
                       try {
                         final periodService = ctx.read<PeriodService>();
-                        await periodService.syncWatch();
+                        final synced = await periodService.syncWatch();
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.watchSyncSuccess)),
+                            SnackBar(
+                              content: Text(synced
+                                  ? l10n.watchSyncSuccess
+                                  : l10n.watchSyncFailed),
+                            ),
                           );
                         }
                       } catch (e) {
@@ -605,7 +610,8 @@ class _AccountTabState extends State<AccountTab> {
               subtitle: l10n.accountMenuFeedbackSubtitle,
               onTap: () => SupportSheet.show(context),
             ),
-            if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
+            if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled) &&
+                kDebugMode)
               AccountMenuTile(
                 femIcon: FeminineIcon.ai,
                 title: l10n.accountMenuAiDiagnostic,
@@ -1080,7 +1086,7 @@ class _EmailVerifiedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = verified ? Colors.teal : theme.colorScheme.error;
+    final color = verified ? AuraColors.success : theme.colorScheme.error;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(

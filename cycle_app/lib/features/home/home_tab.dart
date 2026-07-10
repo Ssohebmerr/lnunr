@@ -199,15 +199,15 @@ class _HomeTabState extends State<HomeTab> {
       builders.add(() => _goalSection(context, d));
     }
 
-    // ── Social & discovery (secondary) ──
-    if (_settings.communityEnabled) {
-      builders.add(() => const HomeCommunityCard());
-    }
-
-    builders.addAll([
-      () => HomeExploreRail(settings: _settings),
-      () => HomeUpdatesPanel(settings: _settings),
-    ]);
+    // Social, reading, and announcements are valuable, but they should not
+    // compete with today's health information on first load. Keep them one
+    // deliberate tap away instead of stacking three more large cards.
+    builders.add(
+      () => _HomeMoreSection(
+        settings: _settings,
+        showCommunity: _settings.communityEnabled,
+      ),
+    );
 
     // ── State indicators (loading / error / empty) ──
     if (_loading && d == null) {
@@ -284,6 +284,98 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
+/// A quiet, collapsed home section for optional discovery. It prevents the
+/// main dashboard from becoming an endless feed while preserving every card.
+class _HomeMoreSection extends StatefulWidget {
+  const _HomeMoreSection({required this.settings, required this.showCommunity});
+
+  final AppSettings settings;
+  final bool showCommunity;
+
+  @override
+  State<_HomeMoreSection> createState() => _HomeMoreSectionState();
+}
+
+class _HomeMoreSectionState extends State<_HomeMoreSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return AppGlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(4),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.homeMoreThisWeek,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+              child: Column(
+                children: [
+                  if (widget.showCommunity) ...[
+                    const HomeCommunityCard(),
+                    const SizedBox(height: 12),
+                  ],
+                  HomeExploreRail(settings: widget.settings),
+                  const SizedBox(height: 12),
+                  HomeUpdatesPanel(settings: widget.settings),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HeroHeader extends StatelessWidget {
   const _HeroHeader({
     required this.l10n,
@@ -306,10 +398,12 @@ class _HeroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final cycleData = data;
 
-    return AppGlassCard(
-      blur: false,
+    return Container(
+      decoration: AuraDecorations.heroSurface(isDark),
+      padding: const EdgeInsets.all(20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -326,8 +420,9 @@ class _HeroHeader extends StatelessWidget {
                         cycleData.pregnancyWeek.clamp(1, 42),
                         cycleData.cycleDay,
                       ),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -341,8 +436,9 @@ class _HeroHeader extends StatelessWidget {
                   ] else ...[
                     Text(
                       cycleData.phase,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -378,7 +474,7 @@ class _HeroHeader extends StatelessWidget {
             ),
           ),
           if (cycleData != null) ...[
-            const SizedBox(width: 14),
+            const SizedBox(width: 18),
             _CycleProgressRing(
               cycleDay: isPregnancyMode
                   ? cycleData.pregnancyWeek.clamp(1, 42)
@@ -386,8 +482,8 @@ class _HeroHeader extends StatelessWidget {
               total: isPregnancyMode
                   ? 42
                   : (cycleData.avgCycleLength <= 0
-                      ? 28
-                      : cycleData.avgCycleLength),
+                        ? 28
+                        : cycleData.avgCycleLength),
               label: isPregnancyMode
                   ? l10n.pregnancyWeekShort
                   : l10n.homeDayShort,
@@ -569,7 +665,7 @@ class _CycleProgressRing extends StatefulWidget {
   final String label;
   final bool isPregnancy;
 
-  static const double size = 96;
+  static const double size = 108;
 
   @override
   State<_CycleProgressRing> createState() => _CycleProgressRingState();
@@ -588,9 +684,10 @@ class _CycleProgressRingState extends State<_CycleProgressRing>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _anim = Tween<double>(begin: 0, end: _target).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-    );
+    _anim = Tween<double>(
+      begin: 0,
+      end: _target,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
     _previousTarget = _target;
     _ctrl.forward();
   }
@@ -600,9 +697,10 @@ class _CycleProgressRingState extends State<_CycleProgressRing>
     super.didUpdateWidget(oldWidget);
     final newTarget = _target;
     if ((newTarget - _previousTarget).abs() > 0.001) {
-      _anim = Tween<double>(begin: _previousTarget, end: newTarget).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-      );
+      _anim = Tween<double>(
+        begin: _previousTarget,
+        end: newTarget,
+      ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
       _previousTarget = newTarget;
       _ctrl
         ..reset()
@@ -632,49 +730,48 @@ class _CycleProgressRingState extends State<_CycleProgressRing>
           animation: _anim,
           builder: (_, _) {
             return CustomPaint(
-            painter: _RingPainter(
-              progress: _anim.value,
-              track: theme.colorScheme.primary.withValues(alpha: 0.12),
-              gradient: AuraDecorations.primaryGradient,
-            ),
-            child: Center(
-              child: Container(
-                margin: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AuraDecorations.primaryGradient,
-                  boxShadow: AppShadows.softRose(opacity: 0.3),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${widget.cycleDay}',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          height: 1,
-                          letterSpacing: -0.5,
+              painter: _RingPainter(
+                progress: _anim.value,
+                track: theme.colorScheme.primary.withValues(alpha: 0.12),
+                gradient: AuraDecorations.primaryGradient,
+              ),
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AuraDecorations.primaryGradient,
+                    boxShadow: AppShadows.softRose(opacity: 0.3),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${widget.cycleDay}',
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: Colors.white,
+                            height: 1,
+                            letterSpacing: -1,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.label,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
-                          height: 1,
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.label,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
+                            height: 1,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
         ),
       ),
     );
@@ -694,7 +791,7 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final stroke = 5.5;
+    final stroke = 6.5;
     final rect = Offset.zero & size;
     final inset = rect.deflate(stroke / 2 + 1);
     final center = inset.center;
@@ -711,7 +808,9 @@ class _RingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
-      ..shader = gradient.createShader(Rect.fromCircle(center: center, radius: radius));
+      ..shader = gradient.createShader(
+        Rect.fromCircle(center: center, radius: radius),
+      );
 
     final sweep = 2 * math.pi * progress;
     canvas.drawArc(
@@ -753,10 +852,16 @@ class _EmptyAction extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );

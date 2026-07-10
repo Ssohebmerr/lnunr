@@ -1,16 +1,21 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+
+import '../config/app_secrets.dart';
 
 /// Deletes optional cloud data when the user revokes consent (GDPR).
 class ConsentDataService {
-  ConsentDataService({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  ConsentDataService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+
+  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
 
   Future<void> purgeCloudBackups() async {
     final uid = _auth.currentUser?.uid;
@@ -25,18 +30,29 @@ class ConsentDataService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> purgeAiChats() async {
+  /// Revokes AI consent server-side. This removes nested chat messages,
+  /// long-term memory, and the separate AI usage metadata collection.
+  Future<void> purgeAiData() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
-    final userRef = _firestore.collection('users').doc(uid);
-    final chats = await userRef.collection('chats').get();
-    for (final chat in chats.docs) {
-      final messages = await chat.reference.collection('messages').get();
-      for (final message in messages.docs) {
-        await message.reference.delete();
-      }
-      await chat.reference.delete();
+    final token = await _auth.currentUser!.getIdToken();
+    final response = await http.post(
+      Uri.parse('$_baseUrl/purgeAiData'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) return;
+
+    String message = 'Failed to purge AI data';
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      message = body['error'] as String? ?? message;
+    } catch (_) {
+      // Use the safe generic message when a proxy returns non-JSON.
     }
+    throw StateError(message);
   }
 
   Future<void> purgeCommunityPresence() async {

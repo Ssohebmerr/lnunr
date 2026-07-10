@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
+import 'condition_widgets.dart';
 
 /// A short titled paragraph used in the "understanding" area.
 class ConditionEducation {
@@ -12,8 +13,13 @@ class ConditionEducation {
 }
 
 /// Shared home body for ongoing-condition goals (menopause, PCOS) that are a
-/// life stage rather than a countdown. Structure: banner → cycle context →
-/// what-to-track → understanding cards → daily tip → rituals → doctor note.
+/// life stage rather than a countdown.
+///
+/// Structure: banner → condition-specific hero cards → cycle context + tip →
+/// interactive symptom logger → understanding cards → daily ritual checklist →
+/// doctor note. The symptom chips and ritual checklist persist to
+/// [ConditionLogStore] via [ConditionTrackChips] / [ConditionRitualChecklist],
+/// so nothing here is a dead button.
 ///
 /// Content is passed in already-localized so this widget stays presentation
 /// only and each goal keeps its own copy.
@@ -26,11 +32,12 @@ class ConditionModeSection extends StatelessWidget {
     required this.gradient,
     required this.cycleContextLabel,
     required this.cycleContextValue,
-    required this.trackLabels,
+    required this.trackItems,
     required this.education,
     required this.dailyTip,
-    required this.rituals,
+    required this.ritualItems,
     required this.doctorNote,
+    this.heroExtras = const [],
     this.onOpenCalendar,
   });
 
@@ -43,11 +50,18 @@ class ConditionModeSection extends StatelessWidget {
   final String cycleContextLabel;
   final String cycleContextValue;
 
-  final List<String> trackLabels;
+  /// Loggable symptoms (key + localized label) shown as interactive chips.
+  final List<ConditionItem> trackItems;
   final List<ConditionEducation> education;
   final String dailyTip;
-  final List<String> rituals;
+
+  /// Daily rituals shown as a tick-off checklist.
+  final List<ConditionItem> ritualItems;
   final String doctorNote;
+
+  /// Condition-specific interactive cards inserted below the banner
+  /// (e.g. hot-flash counter, cycle-gap card).
+  final List<Widget> heroExtras;
   final VoidCallback? onOpenCalendar;
 
   @override
@@ -107,6 +121,12 @@ class ConditionModeSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
+        // ── Condition-specific hero cards ─────────────────────────────────
+        for (final extra in heroExtras) ...[
+          extra,
+          const SizedBox(height: 12),
+        ],
+
         // ── Cycle context + daily tip ─────────────────────────────────────
         // IntrinsicHeight gives the Row a bounded height so the two cards can
         // stretch to equal height. Without it, CrossAxisAlignment.stretch
@@ -164,17 +184,19 @@ class ConditionModeSection extends StatelessWidget {
         ),
         const SizedBox(height: 14),
 
-        // ── What to track ─────────────────────────────────────────────────
-        AppSectionHeader(title: l10n.conditionWhatToTrack),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: trackLabels
-              .map((t) => AppStatChip(icon: Icons.add_circle_outline, label: t))
-              .toList(),
+        // ── Symptom logger (interactive) ──────────────────────────────────
+        AppSectionHeader(title: l10n.conditionHowAreYouToday),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            l10n.conditionTapToLog,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
-        const SizedBox(height: 14),
+        ConditionTrackChips(items: trackItems),
+        const SizedBox(height: 16),
 
         // ── Understanding ─────────────────────────────────────────────────
         AppSectionHeader(title: l10n.conditionUnderstanding),
@@ -204,18 +226,12 @@ class ConditionModeSection extends StatelessWidget {
           ),
         ),
 
-        // ── Rituals ───────────────────────────────────────────────────────
-        if (rituals.isNotEmpty) ...[
+        // ── Rituals (interactive checklist) ───────────────────────────────
+        if (ritualItems.isNotEmpty) ...[
           const SizedBox(height: 2),
           AppSectionHeader(title: l10n.conditionDailyRituals),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: rituals
-                .map((r) => AppStatChip(icon: Icons.spa_outlined, label: r))
-                .toList(),
-          ),
+          ConditionRitualChecklist(items: ritualItems),
           const SizedBox(height: 14),
         ],
 

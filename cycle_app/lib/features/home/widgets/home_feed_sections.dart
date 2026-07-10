@@ -336,7 +336,7 @@ class _HomeLearnWatchRailState extends State<HomeLearnWatchRail> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppSectionHeader(title: l10n.homeLearnSection),
+        AppSectionHeader(title: l10n.magazineFromLune),
         SizedBox(
           height: 168,
           child: FutureBuilder<List<HomeMediaItem>>(
@@ -380,60 +380,29 @@ class _HomeLearnWatchRailState extends State<HomeLearnWatchRail> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    accent.withValues(alpha: 0.45),
-                                    accent.withValues(alpha: 0.15),
-                                  ],
-                                ),
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(AppRadius.lg),
-                                ),
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(AppRadius.lg),
                               ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Icon(
-                                    item.isVideo
-                                        ? Icons.play_circle_filled
-                                        : item.icon,
-                                    size: 44,
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                  ),
-                                  Positioned(
-                                    top: 10,
-                                    right: 10,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
+                              child: item.hasCover
+                                  ? Image.network(
+                                      item.coverImageUrl!,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) =>
+                                          _mediaGradientHeader(
+                                        accent: accent,
+                                        item: item,
+                                        l10n: l10n,
+                                        theme: theme,
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.35),
-                                        borderRadius: BorderRadius.circular(
-                                          AppRadius.pill,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        item.isVideo
-                                            ? l10n.homeVideoLabel
-                                            : l10n.homeArticleLabel,
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                                    )
+                                  : _mediaGradientHeader(
+                                      accent: accent,
+                                      item: item,
+                                      l10n: l10n,
+                                      theme: theme,
                                     ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                           Padding(
@@ -473,4 +442,53 @@ class _HomeLearnWatchRailState extends State<HomeLearnWatchRail> {
       ],
     );
   }
+}
+
+Widget _mediaGradientHeader({
+  required Color accent,
+  required HomeMediaItem item,
+  required AppLocalizations l10n,
+  required ThemeData theme,
+}) {
+  return Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          accent.withValues(alpha: 0.45),
+          accent.withValues(alpha: 0.15),
+        ],
+      ),
+    ),
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Icon(
+          item.isVideo ? Icons.play_circle_filled : item.icon,
+          size: 44,
+          color: Colors.white.withValues(alpha: 0.95),
+        ),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              item.isVideo ? l10n.homeVideoLabel : l10n.homeArticleLabel,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

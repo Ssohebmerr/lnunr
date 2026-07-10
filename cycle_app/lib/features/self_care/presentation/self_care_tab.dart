@@ -406,14 +406,14 @@ class _SelfCareTabState extends State<SelfCareTab> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.deepOrange.withValues(alpha: 0.3),
-                        Colors.deepOrange.withValues(alpha: 0.1),
+                        AuraColors.ember.withValues(alpha: 0.3),
+                        AuraColors.ember.withValues(alpha: 0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.local_fire_department,
-                      color: Colors.deepOrange),
+                      color: AuraColors.ember),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -442,7 +442,7 @@ class _SelfCareTabState extends State<SelfCareTab> {
                     child: Text(
                       l10n.challengeStreakValue(_challengeStreak),
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: Colors.deepOrange,
+                        color: AuraColors.ember,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -471,19 +471,19 @@ class _StreakPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.deepOrange.withValues(alpha: 0.12),
+        color: AuraColors.ember.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.local_fire_department,
-              size: 14, color: Colors.deepOrange),
+              size: 14, color: AuraColors.ember),
           const SizedBox(width: 4),
           Text(
             l10n.selfCareRitualStreak(days),
             style: theme.textTheme.labelSmall?.copyWith(
-              color: Colors.deepOrange,
+              color: AuraColors.ember,
               fontWeight: FontWeight.w700,
             ),
           ),

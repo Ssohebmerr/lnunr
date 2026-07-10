@@ -31,6 +31,8 @@ class HealthSnapshot {
     this.wellnessHub = const {},
     this.pregnancyTracking = const {},
     this.todayLog = const {},
+    this.cycleHistory = const {},
+    this.localTimeOfDay,
     this.userLocale = 'ar',
   });
 
@@ -77,6 +79,14 @@ class HealthSnapshot {
   /// Mood/symptoms/water logged today (home + log tab).
   final Map<String, dynamic> todayLog;
 
+  /// Real historical series (recent cycle lengths + period durations) so the
+  /// AI can spot patterns — sourced from CycleBridgeService analytics history.
+  final Map<String, dynamic> cycleHistory;
+
+  /// morning | afternoon | evening | night — lets the AI tailor tips to the
+  /// user's local time (energy in the morning, wind-down at night).
+  final String? localTimeOfDay;
+
   /// ar | en — matches UI language for snippets.
   final String userLocale;
 
@@ -120,6 +130,8 @@ class HealthSnapshot {
         if (wellnessHub.isNotEmpty) 'wellnessHub': wellnessHub,
         if (pregnancyTracking.isNotEmpty) 'pregnancyTracking': pregnancyTracking,
         if (todayLog.isNotEmpty) 'todayLog': todayLog,
+        if (cycleHistory.isNotEmpty) 'cycleHistory': cycleHistory,
+        if (localTimeOfDay != null) 'localTimeOfDay': localTimeOfDay,
         'userLocale': userLocale,
       };
 }

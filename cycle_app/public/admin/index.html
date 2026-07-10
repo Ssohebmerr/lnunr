@@ -1507,6 +1507,16 @@
         <input id="articleMinutes" type="number" min="1" max="30" placeholder="دقائق القراءة" style="flex:1" />
         <input id="articleOrder" type="number" min="0" placeholder="الترتيب" style="flex:1" />
       </div>
+      <input id="articleCoverUrl" type="url" placeholder="رابط صورة الغلاف (اختياري)" />
+      <textarea id="articleExcerptAr" rows="2" placeholder="ملخص عربي (1–2 سطر للبطاقة)"></textarea>
+      <textarea id="articleExcerptEn" rows="2" placeholder="ملخص إنجليزي (1–2 سطر للبطاقة)"></textarea>
+      <input id="articleSlug" type="text" placeholder="Slug (اختياري — يُولَّد من العنوان الإنجليزي)" />
+      <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <input id="articleFeatured" type="checkbox" style="width:auto;margin:0" />
+        مقال مميز (يظهر في أعلى المجلة والرئيسية)
+      </label>
+      <label class="muted" style="display:block;margin-bottom:6px">جدولة النشر (اختياري)</label>
+      <input id="articleScheduledAt" type="datetime-local" style="margin-bottom:12px" />
       <label class="muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
         <input id="articleAdultsOnly" type="checkbox" style="width:auto;margin:0" />
         للبالغات فقط (18+)
@@ -1982,6 +1992,7 @@ async function loadOverview() {
 
 // ---------------- articles CMS ----------------
 let _editingArticleId = null;
+let _articleHadPublishedAt = false;
 
 const CATEGORY_LABELS = {
   basics: 'أساسيات',
@@ -1990,6 +2001,28 @@ const CATEGORY_LABELS = {
   mind: 'نفسية',
   adult: '18+',
 };
+
+function slugFromTitle(title) {
+  return String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function formatDatetimeLocal(value) {
+  if (!value) return '';
+  const d = value.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatPublishDate(value) {
+  if (!value) return '';
+  const d = value.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+}
 
 $('refreshArticles').onclick = loadArticles;
 $('addArticle').onclick = () => openArticleModal(null);
@@ -2015,22 +2048,34 @@ async function loadArticles() {
     const rows = snap.docs.map((d) => {
       const a = d.data();
       const published = a.published === true;
+      const cover = (a.coverImageUrl || '').trim();
+      const thumb = cover
+        ? `<img src="${esc(cover)}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'" />`
+        : `<div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#E8A0BF,#C9B8E8);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">📄</div>`;
+      const pubDate = formatPublishDate(a.publishedAt);
       return `
         <div style="padding:12px 0;border-bottom:1px solid #F3EAEF">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <span class="pill ${published ? 'live' : 'draft'}">${published ? 'منشور' : 'مسودة'}</span>
-            <span class="pill free">${esc(CATEGORY_LABELS[a.category] || a.category || '—')}</span>
-            ${a.adultsOnly ? '<span class="pill minor">18+</span>' : ''}
-            <strong>${esc(a.titleAr || a.titleEn || d.id)}</strong>
-            <span class="muted">#${esc(String(a.order ?? '—'))} · ${esc(String(a.minutes ?? '—'))} د</span>
-          </div>
-          <div class="muted" style="margin-top:4px;word-break:break-all">${esc(d.id)}</div>
-          <div class="row-actions">
-            <button class="btn sm" data-edit-article="${esc(d.id)}">تعديل</button>
-            <button class="btn ghost sm" data-toggle-article="${esc(d.id)}" data-published="${published}">
-              ${published ? 'إلغاء النشر' : 'نشر'}
-            </button>
-            <button class="btn danger sm" data-delete-article="${esc(d.id)}">حذف</button>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            ${thumb}
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span class="pill ${published ? 'live' : 'draft'}">${published ? 'منشور' : 'مسودة'}</span>
+                ${a.featured ? '<span class="pill live">مميز</span>' : ''}
+                <span class="pill free">${esc(CATEGORY_LABELS[a.category] || a.category || '—')}</span>
+                ${a.adultsOnly ? '<span class="pill minor">18+</span>' : ''}
+                <strong>${esc(a.titleAr || a.titleEn || d.id)}</strong>
+                <span class="muted">#${esc(String(a.order ?? '—'))} · ${esc(String(a.minutes ?? '—'))} د</span>
+                ${pubDate ? `<span class="muted">· ${esc(pubDate)}</span>` : ''}
+              </div>
+              <div class="muted" style="margin-top:4px;word-break:break-all">${esc(d.id)}${a.slug && a.slug !== d.id ? ` · slug: ${esc(a.slug)}` : ''}</div>
+              <div class="row-actions">
+                <button class="btn sm" data-edit-article="${esc(d.id)}">تعديل</button>
+                <button class="btn ghost sm" data-toggle-article="${esc(d.id)}" data-published="${published}">
+                  ${published ? 'إلغاء النشر' : 'نشر'}
+                </button>
+                <button class="btn danger sm" data-delete-article="${esc(d.id)}">حذف</button>
+              </div>
+            </div>
           </div>
         </div>`;
     });
@@ -2053,6 +2098,7 @@ async function loadArticles() {
 
 function clearArticleForm() {
   _editingArticleId = null;
+  _articleHadPublishedAt = false;
   $('articleModalTitle').textContent = 'مقال جديد';
   $('articleId').value = '';
   $('articleId').disabled = false;
@@ -2062,6 +2108,12 @@ function clearArticleForm() {
   $('articleIcon').value = 'article_outlined';
   $('articleMinutes').value = '3';
   $('articleOrder').value = '99';
+  $('articleCoverUrl').value = '';
+  $('articleExcerptAr').value = '';
+  $('articleExcerptEn').value = '';
+  $('articleSlug').value = '';
+  $('articleFeatured').checked = false;
+  $('articleScheduledAt').value = '';
   $('articleAdultsOnly').checked = false;
   $('articlePublished').checked = true;
   $('articleBodyAr').value = '';
@@ -2089,6 +2141,13 @@ async function openArticleModal(id) {
       $('articleIcon').value = a.iconName || 'article_outlined';
       $('articleMinutes').value = String(a.minutes ?? 3);
       $('articleOrder').value = String(a.order ?? 0);
+      $('articleCoverUrl').value = a.coverImageUrl || '';
+      $('articleExcerptAr').value = a.excerptAr || '';
+      $('articleExcerptEn').value = a.excerptEn || '';
+      $('articleSlug').value = a.slug || '';
+      $('articleFeatured').checked = a.featured === true;
+      $('articleScheduledAt').value = formatDatetimeLocal(a.scheduledPublishAt);
+      _articleHadPublishedAt = !!a.publishedAt;
       $('articleAdultsOnly').checked = a.adultsOnly === true;
       $('articlePublished').checked = a.published !== false;
       $('articleBodyAr').value = a.bodyAr || '';
@@ -2127,10 +2186,26 @@ async function saveArticle() {
     iconName: $('articleIcon').value,
     minutes: Math.max(1, parseInt($('articleMinutes').value, 10) || 3),
     order: parseInt($('articleOrder').value, 10) || 0,
+    coverImageUrl: $('articleCoverUrl').value.trim() || null,
+    excerptAr: $('articleExcerptAr').value.trim(),
+    excerptEn: $('articleExcerptEn').value.trim(),
+    featured: $('articleFeatured').checked,
+    slug: $('articleSlug').value.trim() || slugFromTitle(titleEn) || id,
     adultsOnly: $('articleAdultsOnly').checked,
     published: $('articlePublished').checked,
     updatedAt: admin.SERVER_TS,
   };
+
+  const scheduledVal = $('articleScheduledAt').value;
+  if (scheduledVal) {
+    payload.scheduledPublishAt = new Date(scheduledVal).toISOString();
+  } else {
+    payload.scheduledPublishAt = null;
+  }
+
+  if ($('articlePublished').checked && !_articleHadPublishedAt) {
+    payload.publishedAt = admin.SERVER_TS;
+  }
 
   $('saveArticle').disabled = true;
   try {
@@ -2153,6 +2228,7 @@ async function toggleArticlePublished(btn) {
     await admin.update(['educationArticles', id], {
       published,
       updatedAt: admin.SERVER_TS,
+      ...(published ? { publishedAt: admin.SERVER_TS } : {}),
     });
     await loadArticles();
     loadOverview();

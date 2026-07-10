@@ -90,8 +90,8 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
 
     final metrics = DoctorReportAnalyzer.analyze(
       report: report,
-      dashboard: dashboard,
       snapshot: snapshot.isEmpty ? null : snapshot,
+      patientAge: patient.age,
     );
 
     final l10n = AppLocalizations.of(context)!;

@@ -1,6 +1,10 @@
-# Cycle Aura — Launch Checklist (Phase 4)
+# Lune — Launch Checklist
 
-Step-by-step guide to publish **Cycle Aura** on Google Play and prepare App Store.
+Step-by-step guide to publish **Lune** (`com.lune.app`, currently `1.0.22+23`) on Google Play and prepare App Store.
+
+> ⚠️ **New personal developer accounts** (created after Nov 2023) must run a
+> **closed test with 12 testers for 14 days** before production access is granted.
+> Plan for this before announcing a launch date.
 
 ## 1. Firebase deploy (required)
 
@@ -22,6 +26,7 @@ Verify:
 |--------|-------|---------|
 | `GEMINI_API_KEY` | Firebase Functions secrets | AI moderation (fail-closed) |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT` | Firebase Functions secrets | Verify Play Billing purchases |
+| `ADMIN_BOOTSTRAP_KEY` | Firebase Functions secrets | One-time admin bootstrap only — **rotate** if ever committed or exposed; never use defaults in scripts |
 
 ```bash
 firebase functions:secrets:set GEMINI_API_KEY
@@ -64,12 +69,15 @@ flutter build appbundle --release
 
 Upload `build/app/outputs/bundle/release/app-release.aab` to **Internal testing** first.
 
-### Subscription product & Real-Time Developer Notifications (RTDN)
+### Subscription products & Real-Time Developer Notifications (RTDN)
 
 1. **Monetize → Products → Subscriptions**
-2. Create subscription ID: `premium_monthly` (must match `play_billing_service.dart`)
-3. Set price, billing period (monthly), free trial if desired
+2. Create BOTH subscription IDs (must match `play_billing_service.dart` exactly):
+   - `premium_monthly` (monthly base plan)
+   - `premium_yearly` (yearly base plan — app shows a savings badge for it)
+3. Set price per plan, free trial if desired
 4. Activate after app is in a test track
+5. Add your Gmail under **Settings → License testing** to test purchases without real charges
 
 #### RTDN (renewals, cancellations, refunds)
 
@@ -86,24 +94,38 @@ Service account JSON (`GOOGLE_PLAY_SERVICE_ACCOUNT` secret) must have **View fin
 
 ### Store listing
 
-- [ ] App name: **Cycle Aura**
-- [ ] Short + full description (AR + EN if targeting both)
+- [ ] App name: **Lune**
+- [ ] Short + full description (AR + EN — add a Store listing per language).
+      No diagnostic/treatment claims ("diagnoses", "treats") — use "tracks",
+      "predicts", "wellness companion"
 - [ ] Screenshots (phone 6.7", 6.1", tablet if applicable)
+- [ ] **Wear OS screenshots** — the embedded watch app won't surface on watch
+      Play without them
 - [ ] Feature graphic 1024×500
 - [ ] App icon 512×512
 - [ ] Category: Health & Fitness
-- [ ] Contact email: `support@cycleaura.app`
+- [ ] Contact email: `merrsoheb@gmail.com`
 - [ ] Privacy policy URL (see above)
 
 ### App content
 
 - [ ] **Privacy policy** URL linked
-- [ ] **Data safety** — use `docs/GOOGLE_PLAY_DATA_SAFETY.md`
+- [ ] **App access** — app requires sign-in → choose "All or some functionality
+      is restricted" and provide a **test account with `isPremium: true`**
+      (grant via admin panel) + reviewer notes in English (how to log in,
+      AI features need premium)
+- [ ] **Data safety** — use `docs/GOOGLE_PLAY_DATA_SAFETY.md`; includes the
+      **account deletion URL**: `https://lune-7d956.web.app/your-data-ends.html`
+- [ ] **Health apps declaration** (mandatory for cycle trackers) — declare
+      Health & wellness → cycle/period tracking; NOT a medical device
 - [ ] **Content rating** (IARC) — answers in same doc
-- [ ] **Target audience** — not primarily children; communities 18+
-- [ ] **News app / COVID / Financial** — all No
+- [ ] **Target audience** — 18+ (never select any under-13 age band:
+      health data + UGC); communities 18+
+- [ ] **News app / COVID / Financial / Government** — all No
 - [ ] **Ads** — No ads
 - [ ] **UGC** — Yes; describe moderation (AI + report/block)
+- [ ] **AI-generated content** — if asked: users can flag any AI chat reply
+      (flag icon under each response → `aiReports` collection → admin review)
 
 ### Permissions justification
 
@@ -140,22 +162,33 @@ flutterfire configure
 
 ## 4. Pre-submission smoke test
 
-- [ ] Fresh install → onboarding → privacy consent
+- [ ] Fresh install → age gate → onboarding → privacy consent (AI **not** auto-enabled)
 - [ ] Guest mode works without account
 - [ ] Email sign-up / sign-in
 - [ ] Google sign-in (Android)
 - [ ] Apple sign-in (iOS)
-- [ ] Premium purchase in **license test** account (Play)
-- [ ] Cloud sync blocked without Premium
-- [ ] AI chat: 5 free messages/day, then paywall
-- [ ] Community: minor sees adults-only gate; adult joins after guidelines checkbox
+- [ ] Premium purchase in **license test** account (Play) + RTDN webhook log
+- [ ] Cloud sync blocked without Premium + explicit consent
+- [ ] AI chat requires Premium **and** Privacy Center AI consent
+- [ ] Community: under-13 blocked at onboarding; teen blocked from UGC; adult must enter birth year in setup sheet (no auto-fill)
 - [ ] Report + block user flow
 - [ ] Delete account removes data (check Firestore + Storage)
-- [ ] Support email opens from Account tab
+- [ ] Support email opens from Account tab (`merrsoheb@gmail.com`)
+- [ ] Privacy policy + Terms links on subscription screen
 
 ---
 
-## 5. CI
+## 5. Code compliance (release build)
+
+- [ ] `flutter analyze` clean
+- [ ] `flutter test` passes
+- [ ] `flutter build appbundle --release` with upload keystore (`android/key.properties`)
+- [ ] AI Diagnostic menu hidden in release (debug only)
+- [ ] Firebase deploy: rules, functions, hosting
+
+---
+
+## 6. CI
 
 GitHub Actions workflow: `.github/workflows/flutter_ci.yml`
 
@@ -163,14 +196,16 @@ Runs `flutter analyze` + `flutter test` on push/PR to `main`/`master`.
 
 ---
 
-## 6. After launch
+## 7. After launch
 
 - [ ] Monitor Crashlytics for release crashes
 - [ ] Monitor `communityReports` in admin dashboard
 - [ ] Respond to Play Console policy emails within 7 days
 - [ ] Update landing page Play Store link when live
 
-## 7. Store listing assets
+---
+
+## 8. Store listing assets
 
 See **`docs/STORE_LISTING.md`** for screenshot ideas, descriptions, and asset sizes.
 
@@ -191,6 +226,7 @@ Signing: copy `android/key.properties.example` → `android/key.properties` and 
 |------|-------|
 | Package (Android) | `com.lune.app` |
 | Bundle (iOS) | `com.cycleaura.cycleAura` |
-| Premium SKU | `premium_monthly` |
+| Premium SKUs | `premium_monthly`, `premium_yearly` |
 | Firebase project | `lune-7d956` |
-| Support | `support@cycleaura.app` |
+| Support | `merrsoheb@gmail.com` |
+| Account deletion URL | `https://lune-7d956.web.app/your-data-ends.html` |

@@ -4,6 +4,37 @@ const { callDeepSeekDetailed, streamDeepSeek } = require('./deepseek');
 const { callGeminiDetailed, streamGemini } = require('./gemini');
 
 /**
+ * Validates the client-supplied conversation history into the shape the
+ * providers expect: `[{role: 'user'|'model', text}]`, newest-last.
+ *
+ * - Caps turns and per-turn length (the client cannot inflate our token bill).
+ * - Drops empty / malformed entries.
+ * - Trims leading model turns — Gemini requires the first turn to be `user`.
+ *
+ * @param {*} raw `req.body.history` as sent by the app (may be anything).
+ * @param {Object} [opts]
+ * @param {number} [opts.maxTurns=8]
+ * @param {number} [opts.maxChars=800]
+ * @returns {Array<{role: 'user'|'model', text: string}>}
+ */
+function sanitizeHistory(raw, { maxTurns = 8, maxChars = 800 } = {}) {
+  if (!Array.isArray(raw)) return [];
+  const turns = [];
+  for (const item of raw.slice(-maxTurns)) {
+    let role = null;
+    if (item && item.role === 'user') role = 'user';
+    else if (item && (item.role === 'model' || item.role === 'assistant')) role = 'model';
+    const text = (item && typeof item.text === 'string')
+      ? item.text.trim().substring(0, maxChars)
+      : '';
+    if (!role || !text) continue;
+    turns.push({ role, text });
+  }
+  while (turns.length > 0 && turns[0].role !== 'user') turns.shift();
+  return turns;
+}
+
+/**
  * Primary: DeepSeek. Fallback: Google Gemini (AI Studio key on server).
  *
  * @returns {Promise<{reply: string, provider: 'deepseek'|'gemini',
@@ -16,6 +47,7 @@ async function callAiWithFallback({
   userPrompt,
   maxTokens,
   temperature,
+  history = [],
 }) {
   if (deepseekKey) {
     try {
@@ -25,6 +57,7 @@ async function callAiWithFallback({
         userPrompt,
         maxTokens,
         temperature,
+        history,
       );
       if (text) {
         return { reply: text, provider: 'deepseek', usage };
@@ -44,6 +77,7 @@ async function callAiWithFallback({
     userPrompt,
     maxTokens,
     temperature,
+    history,
   );
   return { reply: text, provider: 'gemini', usage };
 }
@@ -65,12 +99,13 @@ async function* streamAiWithFallback({
   userPrompt,
   maxTokens,
   temperature,
+  history = [],
 }) {
   if (deepseekKey) {
     let deepseekEmitted = false;
     try {
       for await (const evt of streamDeepSeek(
-        deepseekKey, systemPrompt, userPrompt, maxTokens, temperature,
+        deepseekKey, systemPrompt, userPrompt, maxTokens, temperature, history,
       )) {
         if (evt.delta) {
           deepseekEmitted = true;
@@ -95,7 +130,7 @@ async function* streamAiWithFallback({
   }
 
   for await (const evt of streamGemini(
-    geminiKey, systemPrompt, userPrompt, maxTokens, temperature,
+    geminiKey, systemPrompt, userPrompt, maxTokens, temperature, history,
   )) {
     if (evt.delta) {
       yield { delta: evt.delta };
@@ -106,6 +141,7 @@ async function* streamAiWithFallback({
 }
 
 module.exports = {
+  sanitizeHistory,
   callAiWithFallback,
   streamAiWithFallback,
 };

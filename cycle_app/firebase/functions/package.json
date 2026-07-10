@@ -2,7 +2,7 @@
   "name": "cycle-aura-functions",
   "description": "Cloud Functions for Cycle Aura — Gemini AI + Google Play",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "dependencies": {

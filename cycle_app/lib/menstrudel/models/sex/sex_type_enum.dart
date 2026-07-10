@@ -48,18 +48,20 @@ enum SexTypes {
     };
   }
 
+  /// Category colours drawn from the Lune palette — distinct per type, all
+  /// within the app's rose/lavender/peach world instead of raw accents.
   Color getColorScheme(ColorScheme colorScheme) {
     switch (this) {
       case SexTypes.vaginal:
-        return Colors.pinkAccent;
+        return const Color(0xFFD84A83); // berry
       case SexTypes.anal:
-        return Colors.purpleAccent;
+        return const Color(0xFF9B7ED4); // deep lavender
       case SexTypes.oral:
-        return Colors.blueAccent;
+        return const Color(0xFFE8A0BF); // rose
       case SexTypes.manual:
-        return Colors.greenAccent;
+        return const Color(0xFFFFB4A2); // peach
       case SexTypes.other:
-        return Colors.grey;
+        return const Color(0xFFB58AA8); // muted mauve
     }
   }
 }

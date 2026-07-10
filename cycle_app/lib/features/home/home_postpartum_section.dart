@@ -6,12 +6,18 @@ import '../../core/widgets/app_surface.dart';
 import '../../l10n/app_localizations.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../cycle/data/cycle_bridge_service.dart';
+import '../goals/data/condition_log_store.dart';
 import '../goals/data/goal_mode_content.dart';
+import '../goals/presentation/condition_widgets.dart';
 import '../postpartum/data/postpartum_recovery_content.dart';
 
 /// Postpartum-mode home: a dedicated recovery experience (the "fourth
 /// trimester") instead of the generic cycle ring. Anchored on the baby's
 /// birth date so recovery week + milestones are real, not cycle-derived.
+///
+/// Interactive parts (all saved locally via [ConditionLogStore]): a daily mood
+/// check-in with gentle escalation, tick-off symptom chips, and a daily ritual
+/// checklist. Plus a visual recovery-journey progress bar across the year.
 class HomePostpartumSection extends StatefulWidget {
   const HomePostpartumSection({
     super.key,
@@ -28,6 +34,7 @@ class HomePostpartumSection extends StatefulWidget {
 
 class _HomePostpartumSectionState extends State<HomePostpartumSection> {
   DateTime? _birthDate;
+  int _mood = 0;
   bool _loading = true;
 
   @override
@@ -38,9 +45,12 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
 
   Future<void> _load() async {
     final date = await UserPrefs.getPostpartumStartDate();
+    final mood = await ConditionLogStore.metric(
+        ConditionLogStore.metricMood, DateTime.now());
     if (mounted) {
       setState(() {
         _birthDate = date;
+        _mood = mood;
         _loading = false;
       });
     }
@@ -59,6 +69,36 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
     final normalized = DateTime(picked.year, picked.month, picked.day);
     await UserPrefs.setPostpartumStartDate(normalized);
     if (mounted) setState(() => _birthDate = normalized);
+  }
+
+  void _onMoodChanged(int value) {
+    setState(() => _mood = value);
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.postpartumMoodSaved),
+          duration: const Duration(milliseconds: 1200),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
+  /// Localized symptom chips for postpartum recovery.
+  List<ConditionItem> _symptomItems(String lang) {
+    final ar = lang.startsWith('ar');
+    List<ConditionItem> pairs(List<(String, String)> items) => items
+        .map((e) => ConditionItem.fromEn(e.$1, ar ? e.$2 : e.$1))
+        .toList();
+    return pairs(const [
+      ('Bleeding', 'نزيف'),
+      ('Cramps', 'مغص'),
+      ('Breast pain', 'ألم الثدي'),
+      ('Fatigue', 'إرهاق'),
+      ('Low mood', 'مزاج منخفض'),
+      ('Poor sleep', 'نوم متقطّع'),
+    ]);
   }
 
   @override
@@ -81,7 +121,10 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
 
     final week = PostpartumRecoveryContent.recoveryWeek(birthDate);
     final stage = PostpartumRecoveryContent.forWeek(week);
-    final rituals = GoalModeContent.rituals(UserGoalTypes.postpartum);
+    final rituals = GoalModeContent.rituals(UserGoalTypes.postpartum)
+        .map((r) => ConditionItem.fromEn(r.en, r.forLang(lang)))
+        .toList();
+    final lowMood = _mood > 0 && _mood <= 2;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,6 +188,10 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
         ),
         const SizedBox(height: 12),
 
+        // ── Recovery journey progress ─────────────────────────────────────
+        _JourneyCard(week: week),
+        const SizedBox(height: 12),
+
         // ── Today's focus ──────────────────────────────────────────────────
         AppGlassCard(
           blur: false,
@@ -176,6 +223,54 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
         ),
         const SizedBox(height: 12),
 
+        // ── Daily mood check-in ───────────────────────────────────────────
+        AppGlassCard(
+          blur: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.postpartumMoodTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              MoodCheckInRow(
+                initialValue: _mood,
+                onChanged: _onMoodChanged,
+              ),
+              if (lowMood) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.tertiaryContainer
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.favorite_outline,
+                          size: 18, color: theme.colorScheme.tertiary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.postpartumMoodLowSupport,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(height: 1.45),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
         // ── Your body / your baby this stage ──────────────────────────────
         AppGlassCard(
           blur: false,
@@ -198,21 +293,26 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
+
+        // ── Symptom check-in ──────────────────────────────────────────────
+        AppSectionHeader(title: l10n.conditionHowAreYouToday),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            l10n.conditionTapToLog,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        ConditionTrackChips(items: _symptomItems(lang)),
+        const SizedBox(height: 16),
 
         // ── Daily rituals ─────────────────────────────────────────────────
         AppSectionHeader(title: l10n.postpartumDailyRituals),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: rituals
-              .map((r) => AppStatChip(
-                    icon: Icons.spa_outlined,
-                    label: r.forLang(lang),
-                  ))
-              .toList(),
-        ),
+        ConditionRitualChecklist(items: rituals),
         const SizedBox(height: 14),
 
         // ── Wellbeing / baby-blues awareness ──────────────────────────────
@@ -262,6 +362,70 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// A visual recovery-journey progress bar. Recovery is largely complete by
+/// about a year, so progress is `week / 52`.
+class _JourneyCard extends StatelessWidget {
+  const _JourneyCard({required this.week});
+
+  final int week;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final progress = (week / 52).clamp(0.0, 1.0);
+    final percent = (progress * 100).round();
+
+    return AppGlassCard(
+      blur: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.timeline_rounded,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.postpartumJourneyTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '$percent%',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor:
+                  theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.postpartumJourneyCaption(percent),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

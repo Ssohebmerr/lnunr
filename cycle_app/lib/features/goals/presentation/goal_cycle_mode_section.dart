@@ -557,10 +557,10 @@ class _GoalStatsRow extends StatelessWidget {
     ThemeData theme,
   ) {
     return switch (level) {
-      FertilityLevel.high => (l10n.goalModeFertilityHigh, Colors.red.shade400),
+      FertilityLevel.high => (l10n.goalModeFertilityHigh, AuraColors.danger),
       FertilityLevel.moderate =>
-        (l10n.goalModeFertilityModerate, Colors.orange.shade400),
-      FertilityLevel.low => (l10n.goalModeFertilityLow, Colors.green.shade600),
+        (l10n.goalModeFertilityModerate, AuraColors.warning),
+      FertilityLevel.low => (l10n.goalModeFertilityLow, AuraColors.success),
       FertilityLevel.unknown =>
         (l10n.goalModeFertilityUnknown, theme.colorScheme.outline),
     };

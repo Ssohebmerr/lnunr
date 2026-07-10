@@ -8,7 +8,7 @@ import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/education_articles_repository.dart';
 import '../data/education_content.dart';
-import 'article_screen.dart';
+import 'widgets/magazine_article_card.dart';
 
 /// Education hub — browse articles by category + AI Q&A.
 class AiEducationScreen extends StatefulWidget {
@@ -19,9 +19,8 @@ class AiEducationScreen extends StatefulWidget {
 }
 
 class _AiEducationScreenState extends State<AiEducationScreen> {
-  List<Article> _articles = [];
+  final _repo = EducationArticlesRepository();
   ArticleCategory? _selectedCategory;
-  bool _loading = true;
   bool _showAiChat = false;
   final _questionController = TextEditingController();
   final _chatScroll = ScrollController();
@@ -31,7 +30,6 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadArticles();
   }
 
   @override
@@ -41,33 +39,29 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
     super.dispose();
   }
 
-  Future<void> _loadArticles() async {
-    try {
-      final repo = EducationArticlesRepository();
-      final articles = await repo.fetchPublished(includeAdult: false);
-      if (mounted) {
-        setState(() {
-          _articles = articles;
-          _loading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _articles = EducationContent.visible(includeAdult: false);
-          _loading = false;
-        });
-      }
+  Article? _featuredArticle(List<Article> articles) {
+    if (_selectedCategory != null) return null;
+    for (final a in articles) {
+      if (a.featured) return a;
     }
+    return null;
   }
 
-  List<Article> get _filtered {
-    if (_selectedCategory == null) return _articles;
-    return _articles.where((a) => a.category == _selectedCategory).toList();
+  List<Article> _filteredList(List<Article> articles) {
+    final hero = _featuredArticle(articles);
+    var list = _selectedCategory == null
+        ? articles
+        : articles.where((a) => a.category == _selectedCategory).toList();
+    if (hero != null) {
+      list = list.where((a) => a.id != hero.id).toList();
+    }
+    return list;
   }
 
   Future<void> _askAi(String question) async {
     if (question.trim().isEmpty || _aiLoading) return;
+
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() {
       _aiLoading = true;
@@ -78,11 +72,11 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
 
     try {
       final engine = AiContextEngine();
-      final context = await engine.buildAnonymizedContext();
+      final ctx = await engine.buildAnonymizedContext();
       final gateway = AiGateway();
       final reply = await gateway.request(
         message: question,
-        context: context,
+        context: ctx,
         mode: 'chat',
       );
 
@@ -90,7 +84,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
         setState(() {
           _aiLoading = false;
           _messages.add(_ChatMessage(
-            text: reply ?? 'عذراً، لم أتمكن من الإجابة حالياً.',
+            text: reply ?? l10n.errorGeneric,
             isUser: false,
           ));
         });
@@ -100,8 +94,8 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
       if (mounted) {
         setState(() {
           _aiLoading = false;
-          _messages.add(const _ChatMessage(
-            text: 'حدث خطأ. حاول مرة أخرى.',
+          _messages.add(_ChatMessage(
+            text: l10n.errorGeneric,
             isUser: false,
           ));
         });
@@ -134,7 +128,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(l10n.educationTitle),
+        title: Text(l10n.magazineTitle),
         actions: [
           IconButton(
             tooltip: l10n.anonymousQaTooltip,
@@ -168,13 +162,6 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
   // ---------------------------------------------------------------------------
   Widget _buildArticleHub(
       AppLocalizations l10n, ThemeData theme, String lang) {
-    if (_loading) {
-      return Padding(
-        padding: EdgeInsets.only(top: _topInset),
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
     final categories = <_CategoryItem>[
       _CategoryItem(
         icon: Icons.all_inclusive_rounded,
@@ -245,45 +232,88 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        // Article count
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Text(
-                '${_filtered.length} ${l10n.educationArticles}',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                l10n.educationPoweredByAi,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Article list
         Expanded(
-          child: _filtered.isEmpty
-              ? Center(
-                  child: Text(
-                    l10n.educationNoArticles,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.outline,
+          child: StreamBuilder<List<Article>>(
+            stream: _repo.watchPublished(includeAdult: false),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final articles = snapshot.data ??
+                  EducationContent.visible(includeAdult: false);
+              final filtered = _filteredList(articles);
+              final featured = _featuredArticle(articles);
+
+              return RefreshIndicator(
+                onRefresh: () => _repo
+                    .watchPublished(includeAdult: false)
+                    .first
+                    .then((_) {}),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${filtered.length} ${l10n.educationArticles}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              l10n.educationSubtitle,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline
+                                    .withValues(alpha: 0.6),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                  itemCount: _filtered.length,
-                  itemBuilder: (context, i) =>
-                      _ArticleCard(article: _filtered[i], lang: lang),
+                    if (featured != null)
+                      SliverToBoxAdapter(
+                        child: MagazineArticleCard(
+                          article: featured,
+                          lang: lang,
+                          hero: true,
+                        ),
+                      ),
+                    if (filtered.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            l10n.educationNoArticles,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => MagazineArticleCard(
+                            article: filtered[i],
+                            lang: lang,
+                          ),
+                          childCount: filtered.length,
+                        ),
+                      ),
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+                  ],
                 ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -416,126 +446,6 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Article card
-// ---------------------------------------------------------------------------
-class _ArticleCard extends StatelessWidget {
-  const _ArticleCard({required this.article, required this.lang});
-
-  final Article article;
-  final String lang;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-
-    final categoryColor = switch (article.category) {
-      ArticleCategory.basics => const Color(0xFF6B7FE8),
-      ArticleCategory.health => const Color(0xFFE85D75),
-      ArticleCategory.nutrition => const Color(0xFF3D9A78),
-      ArticleCategory.mind => const Color(0xFF9B59B6),
-      ArticleCategory.adult => const Color(0xFFE85D75),
-    };
-
-    final categoryLabel = switch (article.category) {
-      ArticleCategory.basics => l10n.educationCatBasics,
-      ArticleCategory.health => l10n.educationCatHealth,
-      ArticleCategory.nutrition => l10n.educationCatNutrition,
-      ArticleCategory.mind => l10n.educationCatMind,
-      ArticleCategory.adult => l10n.educationCatAdult,
-    };
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppGlassCard(
-        blur: false,
-        padding: EdgeInsets.zero,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ArticleScreen(article: article),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Icon
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(article.icon, color: categoryColor, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  // Text
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          article.title(lang),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: categoryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                categoryLabel,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: categoryColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(Icons.schedule_rounded,
-                                size: 12,
-                                color: theme.colorScheme.outline),
-                            const SizedBox(width: 3),
-                            Text(
-                              l10n.educationMinutes(article.minutes),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.outline,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios_rounded,
-                      size: 14, color: theme.colorScheme.outline),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

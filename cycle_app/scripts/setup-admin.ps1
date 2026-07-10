@@ -1,6 +1,6 @@
 # Creates Lune admin via Firebase Auth + admins/{uid} in Firestore.
 # Usage:
-#   .\scripts\setup-admin.ps1 -Email "you@gmail.com" -Password "YourPass123"
+#   .\scripts\setup-admin.ps1 -Email "you@gmail.com" -Password "YourPass123" -BootstrapKey "YOUR_SECRET"
 
 param(
   [Parameter(Mandatory = $true)]
@@ -9,7 +9,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$Password,
 
-  [string]$BootstrapKey = "Lune-Admin-2026"
+  [Parameter(Mandatory = $true)]
+  [string]$BootstrapKey
 )
 
 $body = @{

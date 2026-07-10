@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_home_refresh.dart';
@@ -149,6 +150,7 @@ class _HomeShellState extends State<HomeShell> {
 
   void _onTabSelected(int i) {
     if (i == 1 && !_communityEnabled) return;
+    if (i != _index) HapticFeedback.selectionClick();
     if (i == 0 && _index != 0) {
       HomeRefreshScope.refresh();
     }
@@ -498,7 +500,7 @@ class _LogFabButton extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: AuraDecorations.primaryGradient,
+        gradient: AuraDecorations.ctaGradient,
         boxShadow: AppShadows.softRose(opacity: 0.35),
       ),
       child: Material(
@@ -506,7 +508,10 @@ class _LogFabButton extends StatelessWidget {
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: onPressed,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            onPressed();
+          },
           customBorder: const CircleBorder(),
           child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
         ),

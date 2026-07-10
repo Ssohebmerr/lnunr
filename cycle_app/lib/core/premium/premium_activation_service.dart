@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_secrets.dart';
-import '../privacy/consent_manager.dart';
 import '../../features/sync/data/cloud_sync_service.dart';
 import '../../features/user/data/guest_user_service.dart';
 import 'premium_activation_result.dart';
@@ -53,8 +52,6 @@ class PremiumActivationService {
       if (isPremium) {
         _lastOkAt = DateTime.now();
         _lastOkUid = uid;
-        // Premium implies the user accepted AI-backed features at purchase.
-        await ConsentManager.setAiConsent(true);
       }
 
       return PremiumActivationResult(ok: isPremium);
@@ -100,7 +97,6 @@ class PremiumActivationService {
       if (response.statusCode == 200 && body['ok'] == true) {
         _lastOkAt = DateTime.now();
         _lastOkUid = uid;
-        await ConsentManager.setAiConsent(true);
         await PremiumStatusNotifier.instance.applyRemote(true);
         return const PremiumActivationResult(ok: true);
       }

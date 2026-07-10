@@ -1,4 +1,4 @@
-# Google Play — Data Safety & Policy Checklist (Cycle Aura)
+# Google Play — Data Safety & Policy Checklist (Lune)
 
 Use this when filling **Play Console → App content → Data safety** and before publishing.
 
@@ -9,8 +9,9 @@ Use this when filling **Play Console → App content → Data safety** and befor
 | Package | `com.lune.app` |
 | Privacy policy URL | `https://lune-7d956.web.app/privacy-policy.html` |
 | Terms of Service URL | `https://lune-7d956.web.app/terms-of-service.html` |
-| Support email | `support@cycleaura.app` |
-| Account deletion | In-app: **Account → Privacy & data → Delete account** (server-side via `deleteUserAccount`) |
+| Support email | `merrsoheb@gmail.com` |
+| Account deletion (in-app) | **Account → Privacy Center → Delete account** (server-side via `deleteUserAccount`) |
+| Account deletion (web URL for the form) | `https://lune-7d956.web.app/your-data-ends.html` — includes email-based deletion for users without the app |
 
 Deploy privacy policy:
 
@@ -29,18 +30,20 @@ firebase deploy --only firestore:rules,functions
 | Data type | Purpose | Shared? | Encrypted in transit | User can delete |
 |-----------|---------|---------|----------------------|-----------------|
 | Email address | Account / sign-in | Firebase only | Yes | Yes (delete account) |
-| Health & fitness (cycle logs) | App functionality | No (not sold) | Yes if cloud sync on | Yes |
-| Messages (AI chat) | App functionality | Google Gemini | Yes | Yes |
+| Health info (cycle logs, symptoms, moods, BBT) | App functionality | No (not sold) | Yes if cloud sync on | Yes |
+| Messages (AI chat) | App functionality | Google Gemini / DeepSeek (service providers) | Yes | Yes |
 | User-generated content (community posts) | App functionality | Other users (anonymous) | Yes | Yes |
 | App interactions (likes, memberships) | App functionality | No | Yes | Yes |
 | Purchase history (premium) | App functionality | Google Play | Yes | Via Google Play / account deletion |
-| Photos (profile avatar) | App functionality | Firebase Storage | Yes | Yes (account deletion) |
+| Photos (profile avatar, community stories — Premium) | App functionality | Firebase Storage | Yes | Yes (account deletion) |
+| Crash logs & diagnostics (**Crashlytics**) | Analytics / diagnostics | Firebase only | Yes | Deleted with account |
+| Device or other IDs (Firebase installation ID) | Analytics / diagnostics | Firebase only | Yes | Deleted with account |
 
 ### Not collected
 
 - Precise location
 - Contacts, SMS, call logs
-- Community post photos/videos (uploads disabled in current release)
+- Community post photos/videos for **Premium** users (stories; moderated)
 - Advertising ID for tracking
 - Financial info (card numbers) — handled by Google Play Billing
 
@@ -51,10 +54,20 @@ firebase deploy --only firestore:rules,functions
 - **Does your app collect or share user data?** → Yes (optional features)
 - **Is all data encrypted in transit?** → Yes
 - **Can users request data deletion?** → Yes (in-app account deletion)
+- **Account deletion URL** (required — app has account creation) →
+  `https://lune-7d956.web.app/your-data-ends.html`
 - **Committed to Google Play Families / health policies?** → Follow Health apps guidance; not a regulated medical device
+- **Health apps declaration** → complete it: Health & wellness → cycle/period tracking; not a medical device
 - **Ads** → No ads
 - **Data sold** → No
 - **Data used for tracking** → No
+
+### AI-generated content (Play AI content policy)
+
+Users can flag any AI chat reply in-app: flag icon under each response →
+reason picker (Medical / Inaccurate / Inappropriate) → `aiReports` collection
+→ admin dashboard review. Cite this if the review team asks how offensive AI
+output is reported.
 
 ---
 
@@ -71,14 +84,17 @@ firebase deploy --only firestore:rules,functions
 - [x] **UGC safety (communities):** in-app report with reason categories, block user with confirmation, blocked-users management screen, AI pre-moderation, admin report review dashboard
 - [x] Firestore rules: users cannot self-grant `isPremium`; community age gate enforced server-side; birth year write-once
 - [x] AI moderation fails closed (rejects when Gemini unavailable)
-- [x] Community media uploads disabled until visual moderation ships
-- [x] Firebase Storage rules (`storage.rules`) — community media writes blocked; profile photos owner-only
+- [x] Community media uploads enabled for Premium (`kCommunityMediaUploadsEnabled`); profile photos owner-only
+- [x] Firebase Storage rules (`storage.rules`) — community media read requires 18+ (`isCommunityAdult`); profile photos signed-in users
 - [x] Google Play Billing on Android (`in_app_purchase` + `verifyPlayPurchase` + `googlePlayWebhook` RTDN); PayPal fully removed
-- [x] Terms of Service hosted at `/terms-of-service.html` + linked in onboarding & Privacy Center
-- [x] Contact support (`support@cycleaura.app`) in Account & Privacy Center
+- [x] Terms of Service hosted at `/terms-of-service.html` + linked in onboarding, Privacy Center, and subscription screen
+- [x] Contact support (`merrsoheb@gmail.com`) in Account & Privacy Center
 - [x] Full account deletion Cloud Function (`deleteUserAccount`) — posts, comments, storage, partner data, Auth user
-- [x] Consent withdrawal toggles in Privacy Center (cloud / AI / communities)
-- [x] Premium gating: cloud sync, advanced AI, daily insights; free tier 5 AI messages/day
+- [x] Consent withdrawal toggles in Privacy Center (cloud / AI / communities); privacy acceptance does **not** auto-enable AI
+- [x] Premium gating: cloud sync, AI chat (30 msgs/day), communities; core tracking free
+- [x] Onboarding age gate: under-13 cannot complete setup; teens blocked from community UGC and **Lune AI**
+- [x] Community `communityBirthYear` set only via explicit setup sheet (not copied from onboarding `birthDate`)
+- [x] Firestore stories read requires `isCommunityAdult()` (aligned with posts/comments)
 
 ---
 
@@ -93,7 +109,7 @@ When declaring **Social or communication** / UGC in Play Console:
 | Manage blocks | Account → Community blocked users → unblock |
 | Community guidelines | Shown in each community's About tab |
 | Moderation | AI filter on create + admin dashboard at `/admin/` |
-| Age gate | Community join/post/comment/**read** requires 18+ (Firestore + UI) |
+| Age gate | Community join/post/comment/**read**/stories requires 18+ (Firestore + Storage + UI) |
 | Guidelines acceptance | Required dialog before joining a community |
 
 Support email must respond to abuse reports within a reasonable time (document your SLA internally).
@@ -142,4 +158,4 @@ Use these answers when completing **Play Console → App content → Content rat
 
 ## Support email
 
-Update `PrivacyConstants.supportEmail` and Play Console contact to your real support address before launch.
+`PrivacyConstants.supportEmail` is already set to `merrsoheb@gmail.com` — use the same address as the Play Console contact email so abuse reports and deletion requests land in one inbox.

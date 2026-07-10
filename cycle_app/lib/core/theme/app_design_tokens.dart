@@ -18,6 +18,27 @@ class AuraColors {
   static const plum = Color(0xFF5C3D52);
   static const plumMuted = Color(0xFF8B6B7A);
 
+  // ── 2026 refresh: a decisive accent + ink tones for hierarchy & contrast ──
+  /// Vivid berry-rose — the single colour that "pops" for primary actions.
+  static const accent = Color(0xFFD84A83);
+  /// Deeper accent placed behind white text so it clears WCAG AA (~5.4:1).
+  static const accentDeep = Color(0xFFC02E6A);
+  /// Near-black plum for high-contrast headings.
+  static const ink = Color(0xFF3A2633);
+  /// AA-safe secondary text — replaces the too-light plumMuted on tinted cards.
+  static const inkSoft = Color(0xFF6E5561);
+
+  // ── Semantic tones — the single source of truth for status colours.
+  // Raw Material greens/reds/ambers clashed with the soft palette; these are
+  // tuned to sit comfortably next to rose/lavender while staying legible.
+  static const success = Color(0xFF4CAF7D);
+  static const warning = Color(0xFFF0B429);
+  static const danger = Color(0xFFD64550);
+  /// Streak-fire accent (challenges, rituals) — warm ember, not raw orange.
+  static const ember = Color(0xFFE0764A);
+  /// Points / rewards star — soft gold, not raw amber.
+  static const gold = Color(0xFFDD9A2B);
+
   // Dark palette
   static const darkBg = Color(0xFF1E1420);
   static const darkBgMid = Color(0xFF2A1A2E);
@@ -29,6 +50,8 @@ class AuraColors {
   static const gradientRoseLavender = [rose, lavenderSoft];
   static const gradientPeachRose = [peachGold, rose];
   static const gradientPremium = [Color(0xFFFFCDB2), Color(0xFFE8A0BF), lavenderSoft];
+  static const gradientCta = [accent, accentDeep];
+  static const gradientAccent = [accent, Color(0xFFF06AA0)];
 }
 
 class AppSpacing {
@@ -192,6 +215,72 @@ class AuraDecorations {
     end: Alignment.bottomRight,
     colors: AuraColors.gradientPremium,
   );
+
+  /// Vivid call-to-action gradient (berry-rose). White text clears WCAG AA on
+  /// the darker half — use for primary buttons / FAB, the actions that must pop.
+  static const LinearGradient ctaGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: AuraColors.gradientCta,
+  );
+
+  /// 2026 focal surface — a clean, low-blur card with a soft accent wash and a
+  /// crisp lifted shadow. Replaces heavy glass for hero / headline content.
+  static BoxDecoration heroSurface(bool isDark) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [
+                AuraColors.darkCard.withValues(alpha: 0.95),
+                AuraColors.darkBgMid.withValues(alpha: 0.9),
+              ]
+            : [
+                Colors.white.withValues(alpha: 0.92),
+                AuraColors.blush.withValues(alpha: 0.55),
+              ],
+      ),
+      border: Border.all(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.9),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: (isDark ? Colors.black : AuraColors.accent)
+              .withValues(alpha: isDark ? 0.35 : 0.14),
+          blurRadius: 28,
+          offset: const Offset(0, 12),
+        ),
+      ],
+    );
+  }
+
+  /// Clean solid-ish card for 2026 — minimal blur, crisp small shadow. Use as a
+  /// lighter alternative to [glassCard] where blur costs more than it gives.
+  static BoxDecoration softCard(bool isDark, {double radius = AppRadius.lg}) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      color: isDark
+          ? AuraColors.darkCard.withValues(alpha: 0.85)
+          : Colors.white.withValues(alpha: 0.9),
+      border: Border.all(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.07)
+            : AuraColors.plum.withValues(alpha: 0.06),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: (isDark ? Colors.black : AuraColors.plum)
+              .withValues(alpha: isDark ? 0.28 : 0.06),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    );
+  }
 
   /// Glass-styled input decoration for text fields.
   static InputDecoration glassInput({

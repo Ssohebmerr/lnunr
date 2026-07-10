@@ -17,6 +17,6 @@ Write-Host ""
 Write-Host "Done. Open: https://lune-7d956.web.app/admin/"
 Write-Host ""
 Write-Host "Reset admin password (run from repo root):" -ForegroundColor Yellow
-Write-Host '  .\cycle_app\scripts\setup-admin.ps1 -Email "you@example.com" -Password "YourNewPass123"'
+Write-Host '  .\cycle_app\scripts\setup-admin.ps1 -Email "you@example.com" -Password "YourNewPass123" -BootstrapKey "YOUR_SECRET"'
 Write-Host ""
-Write-Host "Default bootstrap key in script: Lune-Admin-2026 (must match Firebase secret ADMIN_BOOTSTRAP_KEY)"
+Write-Host "BootstrapKey must match Firebase secret ADMIN_BOOTSTRAP_KEY (rotate if ever exposed)."

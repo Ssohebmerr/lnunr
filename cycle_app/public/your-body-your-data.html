@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune — Your Body, Your Data | جسدك، بياناتك</title>
+  <link rel="stylesheet" href="site.css?v=13">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="trust-hub.html" class="breadcrumb">← Trust & Privacy</a>
+    <h1 id="pageTitle">Your Body, Your Data</h1>
+    <p class="lead" id="pageSubtitle">You own your cycle data — we never sell it.</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
+
+<main class="page-main">
+<div class="content-wrap">
+    <div id="lang-en" class="lang-section active">
+      <div class="content-card">
+        <p class="intro">Your menstrual and wellness data is deeply personal. At Lune, you are in control — always. This page explains what you log, who owns it, and how optional features use it.</p>
+
+        <h2>Ownership</h2>
+        <p>You own the cycle, symptom, mood, flow, water intake, and wellness data you log. Lune is a tool to help you understand your body — not a platform that monetizes your health information or sells insights about you.</p>
+
+        <h2>Local-first design</h2>
+        <p>The app works fully offline. Your daily logs are written to an encrypted database on your device first. Nothing leaves your phone unless you choose cloud backup, AI chat, community, or other features that require a network connection.</p>
+
+        <h2>Explicit consent</h2>
+        <p>Cloud backup, AI features, community participation, and push notifications each require separate consent in Privacy Center. You can enable or disable them individually without losing your local cycle history.</p>
+
+        <h2>No hidden sharing</h2>
+        <p>We do not share your cycle data with employers, insurers, advertisers, or external social networks. Community posts and stories are visible only within Lune communities you choose to join.</p>
+
+        <h2>What you can log</h2>
+        <p>Lune lets you track periods, symptoms, moods, pain levels, water intake, and other wellness notes you choose to record. You decide how much detail to add each day. None of this is required beyond what you need for your own understanding.</p>
+
+        <h2>How AI uses your cycle context</h2>
+        <p>When you use Lune AI (Premium), relevant cycle context you approve may be sent to our servers and then to Google Gemini or DeepSeek to personalize responses. AI is optional — you can track your cycle without ever opening chat.</p>
+
+        <h2>Magazine &amp; education</h2>
+        <p>Articles in the Lune magazine are general health education content. They are separate from your private logs and are not generated from your personal cycle data. Editors publish articles through our admin tools — not by reading your diary.</p>
+
+        <h2>Portability</h2>
+        <p>You can export an encrypted backup from Privacy Center at any time. Your data belongs to you — if you leave Lune, you can take a copy with you before deleting your account.</p>
+
+        <div class="contact-box">
+          <p>Questions about your data? <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-ar" class="lang-section" dir="rtl">
+      <div class="content-card">
+        <p class="intro">بيانات دورتك وعافيتك شخصية جداً. في Lune، أنتِ المتحكمة — دائماً. توضّح هذه الصفحة ما تسجّلينه ومن يملكه وكيف تستخدمه الميزات الاختيارية.</p>
+
+        <h2>الملكية</h2>
+        <p>أنتِ تملكين بيانات الدورة والأعراض والمزاج والتدفق وشرب الماء والعافية التي تسجلينها. Lune أداة لفهم جسدك — وليست منصة تربح من معلوماتك الصحية أو تبيع رؤى عنك.</p>
+
+        <h2>تصميم محلي أولاً</h2>
+        <p>التطبيق يعمل بالكامل دون إنترنت. سجلاتك اليومية تُكتب أولاً في قاعدة بيانات مشفّرة على جهازك. لا يغادر شيء هاتفك إلا إذا اخترتِ النسخ السحابي أو الذكاء الاصطناعي أو المجتمع أو ميزات تتطلب شبكة.</p>
+
+        <h2>موافقة صريحة</h2>
+        <p>النسخ الاحتياطي السحابي وميزات الذكاء الاصطناعي والمجتمع والإشعارات تتطلب موافقة منفصلة في مركز الخصوصية. يمكنكِ تفعيلها أو تعطيلها دون فقدان سجل دورتك المحلي.</p>
+
+        <h2>لا مشاركة خفية</h2>
+        <p>لا نشارك بيانات دورتك مع جهات العمل أو التأمين أو المعلنين أو الشبكات الاجتماعية الخارجية. منشورات وقصص المجتمع تظهر فقط داخل مجتمعات Lune التي تختارين الانضمام إليها.</p>
+
+        <h2>ما يمكنكِ تسجيله</h2>
+        <p>تتيح Lune تتبع الدورة والأعراض والمزاج ومستويات الألم وشرب الماء وملاحظات عافية أخرى تختارينها. أنتِ تقررين مقدار التفاصيل كل يوم. لا شيء إلزامي سوى ما تحتاجينه لفهم جسدك.</p>
+
+        <h2>كيف يستخدم AI سياق دورتك</h2>
+        <p>عند استخدام Lune AI (Premium)، قد يُرسَل سياق الدورة ذو الصلة الذي توافقين عليه إلى خوادمنا ثم إلى Google Gemini أو DeepSeek لتخصيص الإجابات. الذكاء الاصطناعي اختياري — يمكنكِ تتبع دورتك دون فتح المحادثة أبداً.</p>
+
+        <h2>المجلة والتعليم</h2>
+        <p>مقالات مجلة Lune محتوى تعليمي صحي عام. منفصلة عن سجلاتك الخاصة ولا تُنشأ من بيانات دورتك الشخصية. المحررون ينشرون المقالات عبر أدوات الإدارة — وليس بقراءة يومياتك.</p>
+
+        <h2>قابلية النقل</h2>
+        <p>يمكنكِ تصدير نسخة احتياطية مشفّرة من مركز الخصوصية في أي وقت. بياناتك ملكك — إذا غادرتِ Lune، يمكنكِ أخذ نسخة معك قبل حذف حسابك.</p>
+
+        <div class="contact-box">
+          <p>أسئلة حول بياناتك؟ <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a><a href="security.html">Security</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a><a href="index.html">Home</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+      document.getElementById('pageTitle').textContent = lang === 'en' ? 'Your Body, Your Data' : 'جسدك، بياناتك';
+      document.getElementById('pageSubtitle').textContent = lang === 'en'
+        ? 'You own your cycle data — we never sell it.'
+        : 'بيانات دورتك ملككِ — لا نبيعها أبداً.';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+    if (navigator.language.startsWith('ar')) setLang('ar');
+  </script>
+</body>
+</html>

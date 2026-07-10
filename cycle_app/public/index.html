@@ -3,477 +3,867 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lune — رفيقتك لفهم دورتك الشهرية</title>
-<meta name="description" content="Lune — تطبيق خاص وآمن لتتبع الدورة الشهرية بالذكاء الاصطناعي. بياناتك تبقى على جهازك." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    --rose: #E8A0BF;
-    --rose-deep: #D484A8;
-    --lavender: #C9B8E8;
-    --plum: #5C3D52;
-    --plum-muted: #8B6B7A;
-    --cream: #FFFBF8;
-    --peach: #FFB4A2;
-    --danger: #C94F5E;
-    --ok: #4F9E84;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-    color: var(--plum);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ===== background ===== */
-  .bg {
-    position: fixed; inset: 0; z-index: -1;
-    background: linear-gradient(135deg, #FADADD 0%, #FFFBF8 45%, #D4C4F0 100%);
-  }
-  .bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(circle at 20% 30%, rgba(232,160,191,0.18) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(201,184,232,0.18) 0%, transparent 50%);
-  }
-
-  /* ===== nav ===== */
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(255,251,248,0.75);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(232,160,191,0.15);
-    padding: 14px 0;
-  }
-  .nav-inner {
-    max-width: 1100px; margin: 0 auto; padding: 0 20px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--plum); }
-  .nav-logo {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--rose), var(--lavender));
-    display: grid; place-items: center; color: #fff; font-size: 17px;
-    box-shadow: 0 4px 12px rgba(232,160,191,0.4);
-  }
-  .nav-title { font-weight: 800; font-size: 18px; }
-  .nav-links { display: flex; gap: 6px; align-items: center; }
-  .nav-links a {
-    text-decoration: none; color: var(--plum-muted);
-    padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    transition: all .2s;
-  }
-  .nav-links a:hover { background: rgba(232,160,191,0.15); color: var(--plum); }
-  .nav-cta {
-    background: linear-gradient(135deg, var(--rose), var(--rose-deep)) !important;
-    color: #fff !important; padding: 10px 22px !important;
-    box-shadow: 0 4px 14px rgba(212,132,168,0.35);
-  }
-  .nav-cta:hover { opacity: .92; transform: translateY(-1px); }
-
-  /* ===== hero ===== */
-  .hero {
-    max-width: 1100px; margin: 0 auto; padding: 80px 20px 60px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
-  }
-  .hero-text h1 {
-    font-size: 42px; font-weight: 800; line-height: 1.25;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, var(--plum), var(--rose-deep));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero-text p {
-    font-size: 17px; color: var(--plum-muted); line-height: 1.7;
-    margin-bottom: 28px; max-width: 480px;
-  }
-  .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn-hero {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 14px 30px; border-radius: 14px; font-size: 15px; font-weight: 700;
-    text-decoration: none; transition: all .2s;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--rose), var(--rose-deep));
-    color: #fff;
-    box-shadow: 0 6px 20px rgba(212,132,168,0.4);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(212,132,168,0.5); }
-  .btn-secondary {
-    background: rgba(255,255,255,0.7); color: var(--plum);
-    backdrop-filter: blur(10px); border: 1px solid rgba(232,160,191,0.25);
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.95); }
-  .hero-phone {
-    display: flex; justify-content: center; align-items: center;
-  }
-  .phone-mockup {
-    width: 260px; height: 520px; border-radius: 36px;
-    background: linear-gradient(135deg, var(--plum), #3D2040);
-    padding: 12px; box-shadow: 0 20px 60px rgba(92,61,82,0.3);
-    position: relative;
-    animation: float 4s ease-in-out infinite;
-  }
-  .phone-screen {
-    width: 100%; height: 100%; border-radius: 26px; overflow: hidden;
-    background: linear-gradient(135deg, #FFF0F5 0%, #FFFBF8 50%, #F5EDFF 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .phone-screen .ph-logo {
-    width: 64px; height: 64px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--rose), var(--lavender));
-    display: grid; place-items: center; font-size: 30px; color: #fff;
-    box-shadow: 0 6px 20px rgba(232,160,191,0.5);
-    margin-bottom: 14px;
-  }
-  .phone-screen .ph-title { font-size: 16px; font-weight: 800; color: var(--plum); }
-  .phone-screen .ph-sub { font-size: 11px; color: var(--plum-muted); margin-top: 4px; }
-  .phone-notch {
-    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-    width: 80px; height: 22px; border-radius: 12px;
-    background: var(--plum);
-  }
-  .phone-ring {
-    position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
-    width: 120px; height: 120px; border-radius: 50%;
-    border: 6px solid rgba(232,160,191,0.3);
-    display: grid; place-items: center;
-  }
-  .phone-ring-fill {
-    width: 100px; height: 100px; border-radius: 50%;
-    background: conic-gradient(var(--rose) 0%, var(--lavender) 70%, transparent 70%);
-    display: grid; place-items: center;
-    animation: pulse 3s ease-in-out infinite;
-  }
-  .phone-ring-inner {
-    width: 70px; height: 70px; border-radius: 50%;
-    background: #FFF0F5;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
-  .phone-ring-inner .day-num { font-size: 22px; font-weight: 800; color: var(--rose-deep); }
-  .phone-ring-inner .day-label { font-size: 8px; color: var(--plum-muted); }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.04); }
-  }
-
-  /* ===== section shared ===== */
-  section { max-width: 1100px; margin: 0 auto; padding: 80px 20px; }
-  .section-title {
-    text-align: center; font-size: 30px; font-weight: 800;
-    margin-bottom: 8px;
-  }
-  .section-sub {
-    text-align: center; color: var(--plum-muted); font-size: 16px;
-    margin-bottom: 48px; max-width: 560px; margin-left: auto; margin-right: auto;
-  }
-
-  /* ===== features ===== */
-  .features-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-  }
-  .feature-card {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 20px; padding: 28px 24px;
-    box-shadow: 0 8px 28px rgba(92,61,82,0.06);
-    transition: transform .2s, box-shadow .2s;
-  }
-  .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 36px rgba(92,61,82,0.12);
-  }
-  .feature-icon {
-    width: 48px; height: 48px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--rose), var(--lavender));
-    display: grid; place-items: center; color: #fff; font-size: 22px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 14px rgba(232,160,191,0.35);
-  }
-  .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .feature-card p { font-size: 14px; color: var(--plum-muted); line-height: 1.65; }
-
-  /* ===== how it works ===== */
-  .steps {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 28px; counter-reset: step;
-  }
-  .step {
-    text-align: center; padding: 24px 16px;
-    counter-increment: step;
-    position: relative;
-  }
-  .step-num {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--rose), var(--lavender));
-    display: grid; place-items: center;
-    color: #fff; font-size: 20px; font-weight: 800;
-    margin: 0 auto 16px;
-    box-shadow: 0 4px 14px rgba(232,160,191,0.4);
-  }
-  .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .step p { font-size: 14px; color: var(--plum-muted); line-height: 1.65; }
-
-  /* ===== privacy section ===== */
-  .privacy {
-    background: rgba(255,255,255,0.65);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 24px; padding: 40px 32px;
-    box-shadow: 0 8px 28px rgba(92,61,82,0.06);
-    text-align: center;
-  }
-  .privacy h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-  .privacy p { color: var(--plum-muted); font-size: 15px; line-height: 1.7; max-width: 600px; margin: 0 auto 20px; }
-  .privacy-badges {
-    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px;
-  }
-  .privacy-badge {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 20px; border-radius: 12px;
-    background: rgba(255,255,255,0.8); border: 1px solid rgba(232,160,191,0.2);
-    font-size: 13px; font-weight: 600; color: var(--plum);
-  }
-  .privacy-badge .icon { font-size: 18px; }
-
-  /* ===== download section ===== */
-  .download {
-    text-align: center; padding: 80px 20px;
-  }
-  .download h2 { font-size: 30px; font-weight: 800; margin-bottom: 10px; }
-  .download p { color: var(--plum-muted); font-size: 16px; margin-bottom: 28px; }
-  .download-btn {
-    display: inline-flex; align-items: center; gap: 12px;
-    padding: 16px 36px; border-radius: 16px; font-size: 16px; font-weight: 700;
-    background: linear-gradient(135deg, var(--plum), #3D2040);
-    color: #fff; text-decoration: none;
-    box-shadow: 0 8px 28px rgba(92,61,82,0.3);
-    transition: all .2s;
-  }
-  .download-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(92,61,82,0.4); }
-  .download-btn svg { width: 24px; height: 24px; fill: #fff; }
-  .download-sub { margin-top: 16px; color: var(--plum-muted); font-size: 13px; }
-
-  /* ===== footer ===== */
-  footer {
-    text-align: center; padding: 40px 20px 32px;
-    border-top: 1px solid rgba(232,160,191,0.15);
-    margin-top: 40px;
-  }
-  footer p { color: var(--plum-muted); font-size: 13px; }
-  footer a { color: var(--plum); text-decoration: none; font-weight: 600; }
-  footer a:hover { text-decoration: underline; }
-  .footer-links { display: flex; gap: 20px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
-  .footer-links a {
-    color: var(--plum-muted); font-size: 13px; font-weight: 600;
-    text-decoration: none; transition: color .2s;
-  }
-  .footer-links a:hover { color: var(--plum); }
-
-  /* ===== responsive ===== */
-  @media (max-width: 768px) {
-    .hero { grid-template-columns: 1fr; text-align: center; padding: 50px 20px 40px; }
-    .hero-text h1 { font-size: 30px; }
-    .hero-text p { margin-left: auto; margin-right: auto; }
-    .hero-btns { justify-content: center; }
-    .hero-phone { order: -1; }
-    .phone-mockup { width: 200px; height: 400px; }
-    .phone-notch { width: 60px; height: 18px; }
-    .phone-ring { width: 90px; height: 90px; }
-    .phone-ring-fill { width: 74px; height: 74px; }
-    .phone-ring-inner { width: 52px; height: 52px; }
-    .phone-ring-inner .day-num { font-size: 17px; }
-    .section-title { font-size: 24px; }
-    .nav-links { display: none; }
-    section { padding: 50px 16px; }
-  }
-</style>
+<title>Lune — دورتكِ لها أطوار، كالقمر</title>
+<meta name="description" content="Lune تعني القمر — تطبيق عربي لتتبع أطوار دورتكِ بهدوء. خصوصية أولاً، 8 أهداف، بدون إعلانات." />
+<link rel="icon" href="/images/favicon.png" type="image/png" />
+<link rel="apple-touch-icon" href="/images/logo.png" />
+<link rel="stylesheet" href="site.css?v=14" />
+<link rel="stylesheet" href="home.css?v=14" />
+<link rel="stylesheet" href="home-flo.css?v=14" />
+<link rel="stylesheet" href="home-content.css?v=14" />
+<link rel="stylesheet" href="home-pro.css?v=14" />
+<link rel="stylesheet" href="features.css?v=14" />
 </head>
-<body>
+<body class="page-home">
 
-<div class="bg"></div>
-
-<!-- ===== NAV ===== -->
-<nav>
-  <div class="nav-inner">
-    <a href="#" class="nav-brand">
-      <div class="nav-logo">🌸</div>
-      <span class="nav-title">Lune</span>
+<nav class="site-nav">
+  <div class="container">
+    <a href="/" class="nav-brand">
+      <img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" />
+      <span>Lune</span>
     </a>
     <div class="nav-links">
-      <a href="#features">الميزات</a>
-      <a href="#how">كيف يشتغل</a>
-      <a href="#privacy">الخصوصية</a>
-      <a href="/privacy-policy.html">سياسة الخصوصية</a>
-      <a href="#download" class="nav-cta">حمّلي التطبيق</a>
+      <a href="/about.html">عن التطبيق</a>
+      <a href="/contact.html">اتصل بنا</a>
+      <a href="#cando">ما يمكنك فعله</a>
+      <a href="#goals">أهدافك</a>
+      <a href="/features.html">الميزات</a>
+      <a href="#premium">Premium</a>
+      <a href="#reviews">التقييمات</a>
+      <a href="#faq">أسئلة</a>
+      <a href="#trust">الثقة</a>
+      <a href="#download" class="btn btn-primary btn-sm">حمّلي التطبيق</a>
     </div>
+    <button class="nav-toggle" id="navToggle" aria-label="القائمة">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
   </div>
 </nav>
 
-<!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="hero-text">
-    <h1>رفيقتك الذكية<br />لفهم دورتك الشهرية</h1>
-    <p>
-      تطبيق خاص وآمن لتتبع الدورة الشهرية والعناية بالصحة — مدعوم بالذكاء الاصطناعي،
-      بياناتك تبقى على جهازك بالكامل.
-    </p>
-    <div class="hero-btns">
-      <a href="#download" class="btn-hero btn-primary">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
-        حمّلي من Google Play
-      </a>
-      <a href="#features" class="btn-hero btn-secondary">اكتشفي الميزات</a>
-    </div>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="إغلاق">×</button>
+    <a href="#cando">ما يمكنك فعله</a>
+    <a href="#goals">أهدافك</a>
+    <a href="/features.html">الميزات</a>
+    <a href="#premium">Premium</a>
+    <a href="#reviews">التقييمات</a>
+    <a href="#faq">أسئلة شائعة</a>
+    <a href="#how">كيف يعمل</a>
+    <a href="#privacy">الخصوصية</a>
+    <a href="#trust">الثقة والخصوصية</a>
+    <a href="#download">حمّلي التطبيق</a>
+    <div class="drawer-label">معلومات</div>
+    <a href="/about.html">عن Lune</a>
+    <a href="/contact.html">اتصل بنا</a>
+    <a href="/partner.html">الشراكات</a>
+    <div class="drawer-label">صفحات قانونية</div>
+    <a href="/trust-hub.html">مركز الثقة</a>
+    <a href="/privacy-policy.html">سياسة الخصوصية</a>
+    <a href="/terms-of-service.html">شروط الاستخدام</a>
+    <a href="/privacy-faq.html">الأسئلة الشائعة</a>
   </div>
-  <div class="hero-phone">
-    <div class="phone-mockup">
-      <div class="phone-screen">
-        <div class="phone-notch"></div>
-        <div class="ph-logo">🌸</div>
-        <div class="ph-title">Lune</div>
-        <div class="ph-sub">يوم 14 — مرحلة التبويض</div>
-        <div class="phone-ring">
-          <div class="phone-ring-fill">
-            <div class="phone-ring-inner">
-              <div class="day-num">14</div>
-              <div class="day-label">يوم 28</div>
-            </div>
-          </div>
+</div>
+
+<!-- Hero -->
+<section class="hero hero-premium">
+  <div class="hero-ambient" aria-hidden="true">
+    <div class="hero-orbit hero-orbit--1"></div>
+    <div class="hero-orbit hero-orbit--2"></div>
+    <span class="hero-star"></span>
+    <span class="hero-star"></span>
+    <span class="hero-star"></span>
+    <span class="hero-star"></span>
+    <span class="hero-star"></span>
+  </div>
+  <div class="container hero-grid">
+    <div class="hero-copy-animate">
+      <span class="hero-eyebrow">Lune = القمر · أطوار دورتكِ · خصوصية أولاً</span>
+      <h1>دورتكِ لها أطوار —<br /><span class="text-gradient">مثل القمر</span>، رفيقة تفهمكِ</h1>
+      <p class="hero-lead">
+        <strong>Lune</strong> تعني القمر — والقمر يمرّ بأطوار كل شهر، مثل دورتكِ. منصة عربية هادئة لتتبع
+        الدورة والخصوبة والحمل وسنّ الأمل — 8 أهداف، بياناتك على جهازكِ، بدون إعلانات،
+        وPremium اختياري للذكاء الاصطناعي والمجتمع.
+      </p>
+      <div class="hero-stat-row" aria-label="أرقام سريعة">
+        <div class="hero-stat"><strong>8</strong><span>أهداف شخصية</span></div>
+        <div class="hero-stat"><strong>0</strong><span>إعلانات</span></div>
+        <div class="hero-stat"><strong>AES</strong><span>تشفير 256</span></div>
+      </div>
+      <div class="hero-phases" aria-label="أطوار الدورة كالقمر">
+        <span class="hero-phase hero-phase--active">طور محايد</span>
+        <span class="hero-phase">ما قبل الدورة</span>
+        <span class="hero-phase">أثناء الدورة</span>
+        <span class="hero-phase">ما بعد الدورة</span>
+      </div>
+      <div class="hero-badge" aria-label="قريباً على Google Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12 3.84 21.85C3.34 21.6 3 21.09 3 20.5ZM16.81 15.12L6.05 21.34L14.54 12.85 16.81 15.12ZM20.16 10.81C20.5 11.08 20.75 11.5 20.75 12 20.75 12.5 20.53 12.9 20.18 13.18L17.89 14.5L15.39 12 17.89 9.5 20.16 10.81ZM6.05 2.66L16.81 8.88 14.54 11.15 6.05 2.66Z"/></svg>
+        <span class="hero-badge-text"><strong>قريباً</strong> على Google Play</span>
+      </div>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">حمّلي من Google Play</a>
+        <a href="/trust-hub.html" class="btn btn-secondary">مركز الثقة والخصوصية</a>
+      </div>
+      <div class="hero-trust">
+        <span><span class="dot"></span> تشفير محلي</span>
+        <span><span class="dot"></span> بدون إعلانات</span>
+        <span><span class="dot"></span> حذف الحساب في أي وقت</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-moon-glow" aria-hidden="true"></div>
+      <svg class="hero-crescent" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="crescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E8A0BF" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#C9B8E8" stop-opacity="0.7"/>
+          </linearGradient>
+        </defs>
+        <path d="M70 15 A45 45 0 1 0 70 105 A32 32 0 1 1 70 15 Z" fill="url(#crescentGrad)"/>
+      </svg>
+      <div class="device-frame">
+        <div class="device-screen">
+          <img class="hero-screenshot" src="/images/screenshots/home.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/home.svg?v=12'" alt="شاشة Lune الرئيسية" width="180" height="390" />
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FEATURES ===== -->
-<section id="features">
-  <h2 class="section-title">ليش تختارين Lune؟</h2>
-  <p class="section-sub">كل ما تحتاجينه لتتبع صحتك الشهرية في مكان واحد — خاص، ذكي، وآمن.</p>
+<!-- Marquee -->
+<section class="marquee-strip marquee-premium" aria-hidden="true">
+  <div class="marquee-track">
+    <span>أطوار كالقمر</span><span>خصوصية أولاً</span><span>بدون إعلانات</span><span>تشفير AES-256</span><span>عربي RTL</span><span>8 أهداف شخصية</span><span>همسة Lune</span><span>AI اختياري Premium</span><span>مجتمع آمن 18+</span><span>تقرير للطبيب</span><span>وضع التخفي</span>
+    <span>أطوار كالقمر</span><span>خصوصية أولاً</span><span>بدون إعلانات</span><span>تشفير AES-256</span><span>عربي RTL</span><span>8 أهداف شخصية</span><span>همسة Lune</span><span>AI اختياري Premium</span><span>مجتمع آمن 18+</span><span>تقرير للطبيب</span><span>وضع التخفي</span>
+  </div>
+</section>
 
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">📅</div>
-      <h3>تتبع الدورة الشهرية</h3>
-      <p>تقويم ذكي يتابع دورتك، يتوقع مواعيد التبويض والفترة القادمة، ويعرض مراحل الدورة بوضوح.</p>
+<!-- Social proof -->
+<section class="proof-bar proof-bar-premium" aria-label="أرقام وثقة">
+  <div class="container proof-grid">
+    <div class="proof-item">
+      <span class="proof-value">قريباً</span>
+      <span class="proof-label">على Google Play</span>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">🤖</div>
-      <h3>مساعد ذكاء اصطناعي</h3>
-      <p>مساعدate AI تفهم دورتك وتعطيك نصائح مخصصة حسب مرحلتك الحالية — تغذية، مزاج، نشاط بدني.</p>
+    <div class="proof-item">
+      <span class="proof-value">100%</span>
+      <span class="proof-label">بدون إعلانات</span>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <h3>تحليلات ورسوم بيانية</h3>
-      <p>رسوم بيانية للأعراض، حرارة الجسم، النوم، الوزن، والهرمونات — تساعدك تفهمين أنماط صحتك.</p>
+    <div class="proof-item">
+      <span class="proof-value">AES-256</span>
+      <span class="proof-label">تشفير على الجهاز</span>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">🛡️</div>
-      <h3>خصوصية أولاً</h3>
-      <p>بياناتك تشفّر على جهازك. لا نبيع بياناتك ولا نستخدمها للإعلانات. تشتغل بدون حساب.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">💬</div>
-      <h3>مجتمع آمن (18+)</h3>
-      <p>انضمي لمجتمعات دعم匿名ة — اسألي، شاركي تجربتك، وتواصلي مع نساء يفهمون دورتك.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🌿</div>
-      <h3>رعاية ذاتية</h3>
-      <p>تمارين تنفس، تأكيدات إيجابية، يوميات، ونصائح مرحلية — كلها مصممة حسب دورتك.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">☁️</div>
-      <h3>مزامنة سحابية</h3>
-      <p>نسخ احتياطي مشفر للبيانات على السحابة. استعيدي بياناتك في أي وقت وعلى أي جهاز.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🌍</div>
-      <h3>متعدد اللغات</h3>
-      <p>يدعم العربية والإنجليزية + 19 لغة إضافية في تقويم الدورة. واجهة كاملة بالعربية.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🏥</div>
-      <h3>تقارير للطبيب</h3>
-      <p>动生成 تقرير صحي منسق تقدرين تعرضيه على طبيبك — يشمل ملخص الدورة والأعراض.</p>
+    <div class="proof-item">
+      <span class="proof-value">8</span>
+      <span class="proof-label">أهداف شخصية</span>
     </div>
   </div>
 </section>
 
-<!-- ===== HOW IT WORKS ===== -->
-<section id="how">
-  <h2 class="section-title">ثلاث خطوات وبسيطة</h2>
-  <p class="section-sub">ابدئي في ثواني — بدون تعقيد.</p>
 
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">١</div>
-      <h3>حمّلي التطبيق</h3>
-      <p>مجاناً من Google Play. يشتغل بدون حساب وبدون اتصال بالإنترنت.</p>
+<!-- Positioning -->
+<section class="section" id="positioning">
+  <div class="container positioning-block">
+    <div class="positioning-copy">
+      <h2>القمر يدور — ودورتكِ لها إيقاعها</h2>
+      <p>اسم <strong>Lune</strong> ليس صدفة: القمر يمرّ بأطوار منتظمة، والجسم النسائي له إيقاعه الخاص. صُمّم التطبيق من الصفر بالعربية — واجهة RTL، محتوى يحترم سياقكِ، وأدوات تتكيّف مع كل طور من أطوار حياتكِ: التتبع اليومي، الحمل، سنّ الأمل، وما بعد الولادة.</p>
+      <p>بياناتكِ تبقى على جهازكِ افتراضياً مع تشفير AES-256. لا إعلانات، لا بيع بيانات، ولا مفاجآت في الاشتراك: Premium اختياري ويفتح الذكاء الاصطناعي (30 رسالة/يوم)، المجتمع (18+)، والنسخ السحابي المشفّر.</p>
+      <ul class="positioning-points">
+        <li>8 أوضاع هدف تغيّر الشاشة الرئيسية والتقارير والرعاية الذاتية</li>
+        <li>تتبع أساسي مجاني دائماً — يعمل بدون إنترنت</li>
+        <li>مركز ثقة بـ 21 سؤالاً و7 صفحات شفافية</li>
+        <li>حذف فوري للحساب — بدون انتظار 30 يوماً</li>
+      </ul>
     </div>
-    <div class="step">
-      <div class="step-num">٢</div>
-      <h3>أدخلي دورتك</h3>
-      <p>حددي تاريخ آخر دورة ومدتها — التقويم يتوقع مواعيدك تلقائياً.</p>
+    <div class="positioning-visual"><div class="screenshot-frame"><img src="/images/screenshots/goals.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/goals.svg?v=12'" alt="أهداف Lune" loading="lazy" width="280" height="606" /></div></div>
+  </div>
+</section>
+
+<!-- What you can do -->
+<section class="section section-alt section-premium" id="cando">
+  <div class="container">
+    <div class="section-header">
+      <h2>ما الذي يمكنكِ فعله مع Lune؟</h2>
+      <p>ست مجالات — كل واحدة بأدوات مفصّلة وشرح كامل أدناه.</p>
     </div>
-    <div class="step">
-      <div class="step-num">٣</div>
-      <h3>تتبعي وافهمي</h3>
-      <p>سجلي أعراضك يومياً واحصلي على رؤى ذكية عن صحتك الشهرية.</p>
+    <div class="can-do-grid">
+      <a class="can-do-card" href="/features/calendar.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <h3>تتبّعي</h3>
+        <p>تقويم، سجل يومي، تنبؤات، وتذكيرات ذكية حسب مرحلة دورتكِ.</p>
+      </a>
+      <a class="can-do-card" href="/features/analytics.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg></div>
+        <h3>افهمي</h3>
+        <p>تحليلات، أنماط أعراض، مؤشرات هرمونية، وتقارير جاهزة للطبيب.</p>
+      </a>
+      <a class="can-do-card" href="/features/self-care.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 9-10 12C6 21 2 17 2 12A10 10 0 0 1 12 2z"/></svg></div>
+        <h3>اعتنِ بنفسكِ</h3>
+        <p>تنفس، يوميات، تأكيدات، حركة لطيفة، وتحديات يومية.</p>
+      </a>
+      <a class="can-do-card" href="/features/magazine.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3>تعلّمي</h3>
+        <p>مجلة Lune، مقالات تعليمية، وأسئلة صحية مجهولة.</p>
+      </a>
+      <a class="can-do-card" href="/features/community.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>تواصلي</h3>
+        <p>مجتمعات صغيرة آمنة للبالغات 18+ — Premium مع مراجعة محتوى.</p>
+      </a>
+      <a class="can-do-card" href="/features/privacy-stealth.html">
+        <div class="can-do-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>احمي خصوصيتكِ</h3>
+        <p>تشفير محلي، وضع تخفي، وضع ضيف، وحذف فوري للحساب.</p>
+      </a>
     </div>
   </div>
 </section>
 
-<!-- ===== PRIVACY ===== -->
-<section id="privacy">
-  <div class="privacy">
-    <h2>🔒 خصوصيتك أولويتنا</h2>
-    <p>
-      نؤمن إن بيانات الدورة الشهرية حساسة جداً. عشان كذا صممنا Lune بحيث بياناتك تبقى
-      على جهازك بالكامل — مشفّرة ومحلية. أي ميزة سحابية تحتاج موافقتك الصريحة.
-    </p>
-    <div class="privacy-badges">
-      <div class="privacy-badge"><span class="icon">🔐</span> تشفير على الجهاز</div>
-      <div class="privacy-badge"><span class="icon">🚫</span> لا إعلانات</div>
-      <div class="privacy-badge"><span class="icon">✅</span> موافقة صريحة</div>
-      <div class="privacy-badge"><span class="icon">🗑️</span> حذف في أي وقت</div>
+<!-- Goals -->
+<section class="section section-alt section-premium" id="goals">
+  <div class="container">
+    <div class="section-header">
+      <h2>اختاري هدفكِ — 8 أوضاع تغيّر التطبيق بالكامل</h2>
+      <p>من الصحة العامة إلى الحمل وسنّ الأمل — Lune يكيّف الشاشة الرئيسية، التقارير، قوائم الرعاية، والنصائح اليومية.</p>
+    </div>
+    <div class="goals-grid goals-grid--8">
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 17l-6.5 3.5 2-7L2 9h7z"/></svg></div>
+        <h3>الصحة العامة</h3>
+        <p class="goal-desc">افهمي دورتكِ، لاحظي الأنماط، واعتني بنفسكِ في كل المراحل — تقويم، تنبؤات، ورؤى يومية.</p>
+        <ul class="goal-checklist">
+          <li>تقويم وتنبؤات مبنية على سجلاتكِ</li>
+          <li>رؤى يومية حسب مرحلة الدورة</li>
+          <li>عناية شاملة لجسمكِ في كل المراحل</li>
+          <li>تقارير «نظرة على الدورة»</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21s-6-4.35-6-10a6 6 0 0 1 12 0c0 5.65-6 10-6 10z"/></svg></div>
+        <h3>الصحة الجنسية</h3>
+        <p class="goal-desc">تتبّعي العلاقة والحماية — بيانات واضحة تساعدكِ على قرارات أفضل لصحتكِ الجنسية.</p>
+        <ul class="goal-checklist">
+          <li>سجل النشاط الجنسي والحماية</li>
+          <li>ربط البيانات بمرحلة الدورة</li>
+          <li>مركز العناية: حبوب، LARC، منتجات صحية</li>
+          <li>خصوصية كاملة — بياناتكِ على جهازكِ</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V22l4-2 4 2v-7.3A7 7 0 0 0 12 2z"/></svg></div>
+        <h3>محاولة الحمل</h3>
+        <p class="goal-desc">تتبّعي نافذة الخصوبة ووقّتي العلاقة بثقة — مع نصائح يومية لدعم محاولتكِ.</p>
+        <ul class="goal-checklist">
+          <li>فيتامينات الحمل / حمض الفوليك</li>
+          <li>علامات الإباضة (إفرازات، حرارة)</li>
+          <li>توقيت العلاقة خلال نافذة الخصوبة</li>
+          <li>تقرير «نظرة على الخصوبة»</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>تجنب الحمل</h3>
+        <p class="goal-desc">اعرفي أيام الخصوبة وابقي واعية — <strong>ليس بديلاً عن وسيلة منع حمل موثوقة.</strong></p>
+        <ul class="goal-checklist">
+          <li>استخدمي وسيلة منع الحمل بانتظام</li>
+          <li>اعرفي أيام الخصوبة على التقويم</li>
+          <li>حماية إضافية في أيام الخصوبة العالية</li>
+          <li>تقرير «نظرة على الحماية»</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg></div>
+        <h3>أنا حامل</h3>
+        <p class="goal-desc">تابعي كل خطوة أسبوعياً — نمو الجنين، قوائم الثلث، عداد الركلات، ومؤقت الانقباضات.</p>
+        <ul class="goal-checklist">
+          <li>فيتامينات الحمل يومياً</li>
+          <li>الترطيب — 8 أكواب ماء على الأقل</li>
+          <li>سجّلي حركة الجنين في المساء</li>
+          <li>احجزي موعد المتابعة في وقته</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2v6M18 2v6M4 10h16M4 22h16a2 2 0 0 0 2-2V10H2v10a2 2 0 0 0 2 2z"/></svg></div>
+        <h3>تتبع سنّ الأمل</h3>
+        <p class="goal-desc">الدورات غير المنتظمة طبيعية — تتبّعي الهبّات الساخنة والنوم والمزاج ولستِ وحدكِ.</p>
+        <ul class="goal-checklist">
+          <li>سجّلي الهبّات الساخنة (الوقت، المدة، المحفّزات)</li>
+          <li>تابعي جودة النوم والتعرّق الليلي</li>
+          <li>تحرّكي بلطف — مشي، تمدّد، تقوية</li>
+          <li>ناقشي الأعراض المزعجة مع طبيبتكِ</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+        <h3>إدارة تكيّس المبايض</h3>
+        <p class="goal-desc">تابعي انتظام الدورة، البشرة الهرمونية وتقلّبات المزاج — الأنماط ترشد الرعاية.</p>
+        <ul class="goal-checklist">
+          <li>سجّلي طول الدورة والتدفق شهرياً</li>
+          <li>لاحظي تغيّرات البشرة والشعر</li>
+          <li>وجبات غنية بالألياف وقليلة السكر</li>
+          <li>ناقشي التحاليل مع طبيبة الغدد</li>
+        </ul>
+      </article>
+      <article class="goal-card goal-card--expanded">
+        <div class="goal-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/></svg></div>
+        <h3>الاستشفاء بعد الولادة</h3>
+        <p class="goal-desc">الشفاء يأخذ وقتاً — سجّلي الراحة والمزاج والرضاعة في خطوات يومية صغيرة.</p>
+        <ul class="goal-checklist">
+          <li>نامي عندما ينام طفلكِ</li>
+          <li>اشربي ماءً مع كل رضعة</li>
+          <li>كلّمي نفسكِ بلطف اليوم</li>
+          <li>تقرير «نظرة على الاستشفاء»</li>
+        </ul>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- ===== DOWNLOAD ===== -->
-<section id="download" class="download">
+
+<!-- Features overview -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <h2>كل الميزات — اختاري واقرئي بالتفصيل</h2>
+      <p>15 أداة أساسية — كل ميزة لها صفحة خاصة بشرح كامل ولقطة من التطبيق.</p>
+    </div>
+    <div class="features features--expanded">
+      <a class="feature feature-card-link" href="/features/calendar.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <h3>تقويم الدورة</h3>
+        <p>فترة، تبويض، مراحل، وتنبؤات تتحسن مع كل سجل.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/daily-log.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M12 4v16M4 4h16"/></svg></div>
+        <h3>التسجيل اليومي</h3>
+        <p>تدفق، أعراض، مزاج، ماء، وأكثر في ثوانٍ.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/ai.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V8a5 5 0 0 0-5-5z"/></svg></div>
+        <h3>Lune AI</h3>
+        <p>مساعد ذكي Premium — 30 رسالة/يوم بموافقتكِ.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/analytics.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg></div>
+        <h3>تحليلات ورؤى</h3>
+        <p>CRS، PRS، رسوم بيانية، وأنماط أعراض.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/doctor-report.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <h3>تقرير الطبيب</h3>
+        <p>PDF، QR، مشاركة — بقراركِ أنتِ.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/privacy-stealth.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>خصوصية وتخفي</h3>
+        <p>AES-256، آلة حاسبة، حذف فوري.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/community.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <h3>مجتمع 18+</h3>
+        <p>مجموعات دعم — Premium مع مراجعة.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/self-care.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 9-10 12C6 21 2 17 2 12A10 10 0 0 1 12 2z"/></svg></div>
+        <h3>رعاية ذاتية</h3>
+        <p>تنفس، يوميات، تأكيدات، تحديات.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/pregnancy.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/></svg></div>
+        <h3>متابعة الحمل</h3>
+        <p>أسبوع بأسبوع، ركلات، انقباضات.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/magazine.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3>مجلة Lune</h3>
+        <p>مقالات تعليمية بالعربية والإنجليزية.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/partner.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-2-2"/></svg></div>
+        <h3>وضع الشريك</h3>
+        <p>كود دعوة ونصائح دعم حسب المرحلة.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/wellness-hub.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 17l-6.5 3.5 2-7L2 9h7z"/></svg></div>
+        <h3>مركز العناية</h3>
+        <p>حبوب، منتجات صحية، LARC، وسجل النشاط.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/reminders.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <h3>تذكيرات ذكية</h3>
+        <p>دورة، إباضة، ونصائح حسب المرحلة.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/guest-mode.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h3>وضع الضيف</h3>
+        <p>بدون إيميل — ملف محلي خاص.</p>
+      </a>
+      <a class="feature feature-card-link" href="/features/cloud-backup.html">
+        <div class="feature-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <h3>نسخ سحابي</h3>
+        <p>نسخ احتياطي مشفّر — Premium.</p>
+      </a>
+    </div>
+    <div class="features-more-cta">
+      <a href="/features.html" class="btn btn-primary">استكشفي كل الميزات ←</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- Visual showcase -->
+<section class="section section-alt showcase">
+  <div class="container">
+    <div class="section-header">
+      <h2>صُمّم لراحتكِ وخصوصيتكِ</h2>
+      <p>تجربة عربية أنيقة — من التتبع اليومي إلى فهم جسمكِ بعمق.</p>
+    </div>
+    <div class="showcase-grid showcase-grid--15">
+      <article class="showcase-card">
+        <img src="/images/screenshots/home.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/home.svg?v=12'" alt="الشاشة الرئيسية" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>الشاشة الرئيسية</h3><p>حلقة الدورة، تواريخ مهمة، وملخص اليوم.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/calendar.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/calendar.svg?v=12'" alt="تقويم الدورة" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>تقويم ذكي</h3><p>فترة، تبويض، خصوبة — تنبؤات من سجلاتكِ.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/log.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/log.svg?v=12'" alt="التسجيل اليومي" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>تسجيل يومي</h3><p>أعراض، مزاج، تدفق — في ثوانٍ.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/goals.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/goals.svg?v=12'" alt="أهداف Lune" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>8 أهداف شخصية</h3><p>حمل، خصوبة، سنّ الأمل — التطبيق يتكيّف معكِ.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/ai.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/ai.svg?v=12'" alt="Lune AI" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>Lune AI</h3><p>مساعد Premium — 30 رسالة يومياً.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/analytics.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/analytics.svg?v=12'" alt="التحليلات" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>تحليلات ورؤى</h3><p>CRS، PRS، رسوم بيانية، وأنماط أعراض.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/reports.png?v=12" alt="التقارير" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>التقارير</h3><p>مؤشرات هرمونية، تاريخ الدورة، ورسوم تفاعلية.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/doctor-report.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/doctor-report.svg?v=12'" alt="تقرير الطبيب" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>تقرير للطبيب</h3><p>PDF، QR، ومشاركة آمنة بقراركِ.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/self-care.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/self-care.svg?v=12'" alt="رعاية ذاتية" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>رعاية ذاتية</h3><p>تنفس، يوميات، وتأكيدات يومية.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/pregnancy.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/pregnancy.svg?v=12'" alt="متابعة الحمل" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>متابعة الحمل</h3><p>أسبوع بأسبوع، نمو الجنين، وعداد الركلات.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/community.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/community.svg?v=12'" alt="المجتمع" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>مجتمع آمن</h3><p>مجموعات دعم للبالغات 18+ — Premium.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/magazine.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/magazine.svg?v=12'" alt="مجلة Lune" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>مجلة Lune</h3><p>مقالات تعليمية بالعربية والإنجليزية.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/premium.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/premium.svg?v=12'" alt="Premium" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>Lune Premium</h3><p>اشتراك شفاف — AI، سحابة، ومجتمع.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/partner.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/partner.svg?v=12'" alt="وضع الشريك" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>وضع الشريك</h3><p>كود دعوة ونصائح دعم حسب المرحلة.</p></div>
+      </article>
+      <article class="showcase-card">
+        <img src="/images/screenshots/privacy.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/privacy.svg?v=12'" alt="الخصوصية" loading="lazy" width="390" height="693" />
+        <div class="showcase-caption"><h3>خصوصية حقيقية</h3><p>تشفير، تخفي، وحذف فوري.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Premium -->
+<section class="section section-alt" id="premium">
+  <div class="container">
+    <div class="premium-wrap">
+      <div class="premium-header">
+        <span class="premium-badge">Lune Premium</span>
+        <h2>ارتقِي بتجربتكِ — بشفافية كاملة</h2>
+        <p>التتبع الأساسي مجاني دائماً: تقويم، سجل، تشفير، تخفي، ومجلة. Premium يفتح الذكاء الاصطناعي، النسخ السحابي المشفّر، والمجتمع — بدون إعلانات أبداً.</p>
+      </div>
+      <div class="premium-benefits">
+        <div class="premium-benefit-card">
+          <div class="premium-benefit-icon" aria-hidden="true">💬</div>
+          <h3>محادثة Lune وتحليل دورة</h3>
+          <p>30 رسالة يومياً، ملخص يومي، وتقرير أسبوعي — بموافقتكِ الصريحة قبل إرسال أي بيانات.</p>
+        </div>
+        <div class="premium-benefit-card">
+          <div class="premium-benefit-icon" aria-hidden="true">☁️</div>
+          <h3>نسخ احتياطي سحابي مشفّر</h3>
+          <p>مزامنة واستعادة عند تغيير الجهاز — مشفّرة ولا تُفعّل إلا بموافقتكِ.</p>
+        </div>
+        <div class="premium-benefit-card">
+          <div class="premium-benefit-icon" aria-hidden="true">✨</div>
+          <h3>مجتمع ودعم أولوية</h3>
+          <p>مجتمعات 18+، همسة اليوم في الرعاية الذاتية، ودعم أولوية عند الحاجة.</p>
+        </div>
+      </div>
+      <table class="premium-compare" aria-label="مقارنة المجاني و Premium">
+        <thead>
+          <tr>
+            <th>الميزة</th>
+            <th class="col-free">مجاني</th>
+            <th class="col-premium">Premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>تتبع الدورة والأعراض</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>تقويم وتنبؤات</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>تشفير محلي AES-256</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>وضع التخفي</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>مجلة المقالات التعليمية</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>محادثة Lune AI</td><td class="no">—</td><td class="yes">30 رسالة/يوم</td></tr>
+          <tr><td>نسخ احتياطي سحابي مشفّر</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>مجتمع آمن (18+)</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>تقرير AI في التقرير الشهري</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>ملخص يومي AI على الرئيسية</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>تقرير أسبوعي AI</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>همسة اليوم (رعاية ذاتية)</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>دعم أولوية</td><td class="no">—</td><td class="yes">✓</td></tr>
+        </tbody>
+      </table>
+      <p class="premium-why">لماذا Premium؟ لأن ميزات السحابة والذكاء الاصطناعي لها تكلفة تشغيل حقيقية — ونفضّل أن يكون الاشتراك اختياراً واضحاً بدل بيع بياناتكِ أو عرض إعلانات. يمكنكِ الإلغاء من Google Play في أي وقت.</p>
+      <p class="premium-note">الدفع عبر Google Play · إلغاء في أي وقت من إعدادات المتجر · الأسعار تظهر داخل التطبيق · Lune لا تخزّن بيانات بطاقتكِ</p>
+      <div style="text-align:center;margin-top:24px">
+        <a href="#download" class="btn btn-primary">اشتركي في Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Early feedback -->
+<section class="section section-premium" id="reviews">
+  <div class="container">
+    <div class="section-header">
+      <h2>لماذا Lune؟</h2>
+      <p>تجربة عربية خاصة — صُمّمت للوضوح والخصوصية، لا للإعلانات.</p>
+    </div>
+    <div class="reviews-grid">
+      <article class="review-card">
+        <div class="review-stars" aria-label="5 نجوم">★★★★★</div>
+        <p class="review-text">«أخيراً تطبيق عربي ما يخوّفني على بياناتي. الخصوصية واضحة والواجهة مريحة — حسّيت إني بأمان من أول يوم.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=سارة+م&background=D484A8&color=fff&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>سارة م.</strong><span>عمّان · مستخدمة مبكرة</span></div>
+        </div>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">«التقويم دقيق والتنبؤات منطقية. أحب إنه ما في إعلانات مزعجة — بس تتبع نظيف بدون ضغط.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=نور+أ&background=C9B8E8&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>نور أ.</strong><span>الرياض · مستخدمة مبكرة</span></div>
+        </div>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">«وضع التخفي فكرة عبقرية. ومركز الثقة فيه كل شيء عن بياناتي — شفافية نادرة في تطبيقات الدورة.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=ليلى+ك&background=E8A0BF&color=fff&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>ليلى ك.</strong><span>دبي · مستخدمة مبكرة</span></div>
+        </div>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">«المساعد الذكي مفيد لما أحتاج أسأل سؤال سريع عن دورتي. واضح إنه Premium ومحدود — ما في مفاجآت.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=مريم+ح&background=FFB4A2&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>مريم ح.</strong><span>القاهرة · مشتركة Premium</span></div>
+        </div>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★☆</div>
+        <p class="review-text">«التصميم جميل والألوان هادية. التتبع الأساسي يشتغل بدون نت — مهم لما أسافر.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=رنا+س&background=D4C4F0&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>رنا س.</strong><span>بيروت · مستخدمة مبكرة</span></div>
+        </div>
+      </article>
+      <article class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">«حذفت حسابي للتجربة ورجعت — الحذف فوري فعلاً. هذا اللي خلاني أثق وأكمل استخدام التطبيق.»</p>
+        <div class="review-author">
+          <img src="https://ui-avatars.com/api/?name=هبة+ع&background=FADADD&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <div><strong>هبة ع.</strong><span>الدار البيضاء · مستخدمة مبكرة</span></div>
+        </div>
+      </article>
+    </div>
+    <p class="reviews-disclaimer">* آراء من تجارب الإطلاق المبكر — التقييمات الرسمية ستظهر على Google Play بعد الإطلاق.</p>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section section-alt" id="how">
+  <div class="container">
+    <div class="section-header">
+      <h2>ابدئي في دقائق</h2>
+      <p>خمس خطوات — من التحميل إلى مشاركة تقريركِ مع طبيبتكِ.</p>
+    </div>
+    <div class="steps steps--5">
+      <div class="step">
+        <div class="step-num">١</div>
+        <h3>حمّلي التطبيق</h3>
+        <p>مجاناً من Google Play. يعمل بدون حساب وبدون إنترنت للتتبع الأساسي.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٢</div>
+        <h3>اختاري هدفكِ</h3>
+        <p>من بين 8 أوضاع — عام، حمل، تجنب، حامل، سن أمل، PCOS، والمزيد.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٣</div>
+        <h3>سجّلي دورتكِ</h3>
+        <p>أدخلي آخر فترة وسجّلي يومياً — التنبؤات تتحسن مع الوقت.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٤</div>
+        <h3>اكتشفي الرؤى</h3>
+        <p>تحليلات، ملخص يومي، وAI اختياري (Premium) — بموافقتكِ.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">٥</div>
+        <h3>شاركي بثقة</h3>
+        <p>صدّري تقريراً للطبيب أو فعّلي النسخ السحابي — قراركِ دائماً.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Magazine -->
+<section class="section" id="magazine">
+  <div class="container">
+    <div class="section-header">
+      <h2>مجلة Lune التعليمية</h2>
+      <p>مقالات موثوقة عن الدورة، الخصوبة، والعافية — بالعربية والإنجليزية.</p>
+    </div>
+    <div class="magazine-grid">
+      <article class="magazine-card">
+        <img src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600&h=400&fit=crop&q=80" alt="" loading="lazy" />
+        <div class="magazine-body">
+          <div class="cat">الدورة</div>
+          <h3>فهم مراحل دورتكِ الشهرية</h3>
+          <p>5 دقائق قراءة</p>
+        </div>
+      </article>
+      <article class="magazine-card">
+        <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=400&fit=crop&q=80" alt="" loading="lazy" />
+        <div class="magazine-body">
+          <div class="cat">الخصوبة</div>
+          <h3>نافذة الخصوبة: ماذا تعني؟</h3>
+          <p>4 دقائق قراءة</p>
+        </div>
+      </article>
+      <article class="magazine-card">
+        <img src="https://images.unsplash.com/photo-1494597564530-871f2d93d2b1?w=600&h=400&fit=crop&q=80" alt="" loading="lazy" />
+        <div class="magazine-body">
+          <div class="cat">العافية</div>
+          <h3>تغذية وعافية حسب مرحلة دورتكِ</h3>
+          <p>6 دقائق قراءة</p>
+        </div>
+      </article>
+    </div>
+    <p class="premium-note" style="margin-top:24px">المقالات متاحة داخل التطبيق — محتوى تعليمي وليس نصيحة طبية.</p>
+  </div>
+</section>
+
+<!-- Privacy -->
+<section class="section" id="privacy">
+  <div class="container privacy-block">
+    <div>
+      <div class="section-header section-header--rtl">
+        <h2>خصوصيتك أولويتنا</h2>
+        <p>بيانات الدورة حساسة. صممنا Lune لتحترم ذلك.</p>
+      </div>
+      <ul class="privacy-list">
+        <li><span class="check"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none"/></svg></span> تشفير AES-256 على الجهاز</li>
+        <li><span class="check"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none"/></svg></span> لا إعلانات ولا بيع للبيانات</li>
+        <li><span class="check"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none"/></svg></span> موافقة صريحة للمزامنة والذكاء الاصطناعي</li>
+        <li><span class="check"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none"/></svg></span> حذف فوري للحساب من مركز الخصوصية</li>
+      </ul>
+    </div>
+    <div class="privacy-visual">
+      <h3>مركز الثقة والخصوصية</h3>
+      <p>21 سؤالاً و7 صفحات تفصيلية — شفافية كاملة حول بياناتك وسياسات Google Play.</p>
+      <a href="/trust-hub.html" class="btn btn-primary">استكشفي مركز الثقة</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section section-alt" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <h2>أسئلة شائعة</h2>
+      <p>إجابات سريعة — أو اقرئي <a href="/privacy-faq.html" style="color:var(--rose-deep);font-weight:600">21 سؤالاً كاملاً</a> في مركز الثقة.</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>هل Lune مجاني؟</summary>
+        <div class="faq-answer">نعم — تتبع الدورة والأعراض والتقويم مجاني بالكامل. Premium اختياري ويفتح AI والنسخ السحابي والمجتمع.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل بياناتي آمنة؟</summary>
+        <div class="faq-answer">بياناتكِ مشفّرة محلياً بـ AES-256. لا نبيع بياناتكِ ولا نعرض إعلانات. راجعي <a href="/security.html">صفحة الأمان</a> للتفاصيل.</div>
+      </details>
+      <details class="faq-item">
+        <summary>كيف أحذف حسابي؟</summary>
+        <div class="faq-answer">من التطبيق: الحساب ← حذف الحساب. الحذف فوري — لا انتظار 30 يوماً.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل AI مجاني؟</summary>
+        <div class="faq-answer">المحادثة الذكية تتطلب Premium بحد 30 رسالة يومياً. كل رسالة تُعالَج عبر Google Gemini و/أو DeepSeek بموافقتكِ.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل Lune بديل عن الطبيب؟</summary>
+        <div class="faq-answer">لا. Lune أداة تتبع وعافية — ليست جهازاً طبياً. استشيري مختصة رعاية صحية للمخاوف الطبية.</div>
+      </details>
+      <details class="faq-item">
+        <summary>كيف ألغي اشتراك Premium؟</summary>
+        <div class="faq-answer">من Google Play ← المدفوعات والاشتراكات. Lune لا تخزّن بيانات بطاقتكِ.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل أحتاج حساباً للبدء؟</summary>
+        <div class="faq-answer">لا — وضع الضيف يتيح التتبع الأساسي محلياً بدون إيميل. الحساب اختياري للمزامنة السحابية.</div>
+      </details>
+      <details class="faq-item">
+        <summary>ما الفرق بين الأهداف الثمانية؟</summary>
+        <div class="faq-answer">كل هدف يغيّر الشاشة الرئيسية، التقارير، قوائم الرعاية، والنصائح. يمكنكِ تغيير الهدف من الإعدادات في أي وقت.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل المجتمع آمن؟</summary>
+        <div class="faq-answer">المجتمع للبالغات 18+ ويتطلب Premium. أسماء مستعارة، إبلاغ، حظر، ومراجعة محتوى — دعم جماعي وليس نصيحة طبية.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل يعمل بدون إنترنت؟</summary>
+        <div class="faq-answer">نعم للتتبع الأساسي والتسجيل والتقويم. AI والمجتمع والمزامنة تحتاج اتصالاً.</div>
+      </details>
+      <details class="faq-item">
+        <summary>هل التطبيق مناسب للمراهقات؟</summary>
+        <div class="faq-answer">Lune للمستخدمات 13+ وفق سياسة Google Play. المجتمع للبالغات 18+ فقط. يُنصح بإشراف ولي الأمر للفئات العمرية الأصغر.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Trust links -->
+<section class="section section-alt" id="trust">
+  <div class="container">
+    <div class="section-header">
+      <h2>الثقة والشفافية</h2>
+      <p>كل ما تحتاجين معرفته عن بياناتك — بالعربية والإنجليزية.</p>
+    </div>
+    <div class="trust-grid">
+      <a class="trust-item" href="/security.html"><h3>الأمان</h3><p>التشفير والبنية السحابية</p></a>
+      <a class="trust-item" href="/your-body-your-data.html"><h3>جسدك، بياناتك</h3><p>الملكية والتحكم</p></a>
+      <a class="trust-item" href="/your-data-ends.html"><h3>حذف البيانات</h3><p>ماذا يحدث عند المغادرة</p></a>
+      <a class="trust-item" href="/privacy-faq.html"><h3>أسئلة شائعة</h3><p>21 إجابة مفصلة</p></a>
+      <a class="trust-item" href="/cookies.html"><h3>التخزين</h3><p>ملفات الارتباط والجهاز</p></a>
+      <a class="trust-item" href="/ip-address.html"><h3>عنوان IP</h3><p>الاستخدام والحدود</p></a>
+      <a class="trust-item" href="/accessibility.html"><h3>إمكانية الوصول</h3><p>شمولية التجربة</p></a>
+      <a class="trust-item" href="/privacy-policy.html"><h3>سياسة الخصوصية</h3><p>الوثيقة القانونية الكاملة</p></a>
+    </div>
+    <div class="section-cta">
+      <a href="/trust-hub.html" class="btn btn-secondary">عرض جميع الصفحات</a>
+    </div>
+  </div>
+</section>
+
+<!-- Company info -->
+<section class="section" id="info">
+  <div class="container">
+    <div class="section-header">
+      <h2>معلومات عن Lune</h2>
+      <p>صفحات واضحة — من نحن، كيف تتواصلين، وفرص الشراكة.</p>
+    </div>
+    <div class="info-strip">
+      <a href="/about.html">
+        <h3>عن التطبيق</h3>
+        <p>مهمتنا، ميزاتنا، وقيم الخصوصية التي نلتزم بها.</p>
+      </a>
+      <a href="/contact.html">
+        <h3>اتصل بنا</h3>
+        <p>الدعم، الخصوصية، الفوترة عبر Google Play، والاستفسارات.</p>
+      </a>
+      <a href="/partner.html">
+        <h3>الشراكات</h3>
+        <p>تعاون تعليمي ومحتوى — دون المساس ببيانات المستخدمات.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section cta-premium" id="download">
   <h2>ابدئي رحلتك مع Lune</h2>
-  <p>مجاناً — بدون بطاقة ائتمان — بدون إعلانات</p>
-  <a href="#" class="download-btn">
-    <svg viewBox="0 0 24 24"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.61 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
-    حمّلي من Google Play
+  <p>مجاناً · بدون إعلانات · بياناتك على جهازك</p>
+  <a href="#" class="store-badge" aria-label="حمّلي من Google Play">
+    <svg viewBox="0 0 24 24"><path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12 3.84 21.85C3.34 21.6 3 21.09 3 20.5ZM16.81 15.12L6.05 21.34L14.54 12.85 16.81 15.12ZM20.16 10.81C20.5 11.08 20.75 11.5 20.75 12 20.75 12.5 20.53 12.9 20.18 13.18L17.89 14.5L15.39 12 17.89 9.5 20.16 10.81ZM6.05 2.66L16.81 8.88 14.54 11.15 6.05 2.66Z"/></svg>
+    <span><small>حمّلي من</small><strong>Google Play</strong></span>
   </a>
-  <p class="download-sub">قريبًا — سجلي اهتمامك!</p>
+  <p class="cta-note">قريباً على متجر Google Play</p>
 </section>
 
-<!-- ===== FOOTER ===== -->
-<footer>
-  <div class="footer-links">
-    <a href="/privacy-policy.html">سياسة الخصوصية</a>
-    <a href="/terms-of-service.html">شروط الاستخدام</a>
-    <a href="mailto:support@cycleaura.app">تواصل معنا</a>
-    <a href="/admin/">لوحة التحكم</a>
+<div class="medical-bar">
+  <p><strong>تنبيه طبي:</strong> Lune أداة تتبع وعافية وليست بديلاً عن الاستشارة الطبية. لا تستخدميه كوسيلة وحيدة لمنع الحمل أو تشخيص الحالات الصحية.</p>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer site-footer-premium">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>معلومات</h4>
+        <a href="/about.html">عن Lune</a>
+        <a href="/features.html">الميزات</a>
+        <a href="/contact.html">اتصل بنا</a>
+        <a href="/partner.html">الشراكات</a>
+      </div>
+      <div class="footer-col">
+        <h4>الثقة والخصوصية</h4>
+        <a href="/trust-hub.html">مركز الثقة</a>
+        <a href="/security.html">الأمان</a>
+        <a href="/your-body-your-data.html">جسدك، بياناتك</a>
+        <a href="/your-data-ends.html">حذف البيانات</a>
+        <a href="/privacy-faq.html">أسئلة شائعة</a>
+      </div>
+      <div class="footer-col">
+        <h4>قانوني</h4>
+        <a href="/privacy-policy.html">سياسة الخصوصية</a>
+        <a href="/terms-of-service.html">شروط الاستخدام</a>
+        <a href="/cookies.html">ملفات الارتباط</a>
+        <a href="/ip-address.html">عنوان IP</a>
+        <a href="/accessibility.html">إمكانية الوصول</a>
+      </div>
+      <div class="footer-col">
+        <h4>تواصل</h4>
+        <a href="/contact.html">اتصل بنا</a>
+        <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a>
+        <a href="#download">حمّلي التطبيق</a>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune. جميع الحقوق محفوظة.</div>
   </div>
-  <p>&copy; 2026 Lune. جميع الحقوق محفوظة.</p>
 </footer>
 
+<script>
+  const drawer = document.getElementById('navDrawer');
+  document.getElementById('navToggle')?.addEventListener('click', () => drawer.classList.add('open'));
+  document.getElementById('navClose')?.addEventListener('click', () => drawer.classList.remove('open'));
+  drawer?.addEventListener('click', (e) => { if (e.target === drawer) drawer.classList.remove('open'); });
+  drawer?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => drawer.classList.remove('open')));
+</script>
 </body>
 </html>

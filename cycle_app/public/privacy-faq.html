@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune — Privacy FAQ | الأسئلة الشائعة</title>
+  <link rel="stylesheet" href="site.css?v=13">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="trust-hub.html" class="breadcrumb">← Trust & Privacy</a>
+    <h1 id="pageTitle">Privacy FAQ</h1>
+    <p class="lead" id="pageSubtitle">Common questions about privacy at Lune.</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
+
+<main class="page-main">
+<div class="content-wrap">
+    <div id="lang-en" class="lang-section active">
+      <div class="content-card">
+        <p class="intro">Answers to the questions we hear most about privacy, security, and how Lune handles your cycle data. If you do not find your answer here, contact us anytime.</p>
+
+        <p class="faq-q">Who can see my cycle data?</p>
+        <p>Only you. By default, your cycle data stays on your device in an encrypted local database. If you enable Premium cloud backup, encrypted copies are stored in your private Firebase account. We do not share cycle data with other users unless you explicitly post in community features.</p>
+
+        <p class="faq-q">Does Lune sell my data?</p>
+        <p>No. We never sell your personal or health data. Lune is funded through optional Premium subscriptions processed by Google Play — not through advertising or data brokerage.</p>
+
+        <p class="faq-q">What happens when I delete my account?</p>
+        <p>When you confirm deletion in Privacy Center, we immediately remove your Firestore profile, cloud backups, chat history, and community content from our servers, then delete your Firebase Authentication account. Local data on your device remains until you uninstall the app. Technical backups at Firebase may be retained briefly per their infrastructure policies.</p>
+
+        <p class="faq-q">Is AI chat private?</p>
+        <p>AI chat requires Premium. Guest users keep chat on the device only. Registered Premium users may have messages stored in the cloud to restore conversations. Every AI message is sent to Google Gemini and/or DeepSeek for processing — see our <a href="privacy-policy.html">Privacy Policy</a>. We recommend not sharing information you would not want a third-party AI provider to process.</p>
+
+        <p class="faq-q">Can I use Lune without an account?</p>
+        <p>Yes. You can use Lune as a guest with an anonymous Firebase account linked to your device — no email required. Core cycle tracking works fully offline. Cloud backup, Premium AI, cross-device chat history, and some community features require a registered account.</p>
+
+        <p class="faq-q">Where is my data stored?</p>
+        <p>Locally on your phone by default in an AES-256 encrypted database. If you enable Premium cloud backup, encrypted backup payloads are stored in Google Firebase, which may process data in the United States and other regions.</p>
+
+        <p class="faq-q">How do I export my data?</p>
+        <p>Open Privacy Center → Export Data to copy an encrypted local backup to your clipboard. You can save it in a password manager or secure notes app. For help with portability requests, email merrsoheb@gmail.com.</p>
+
+        <p class="faq-q">How do I contact you about privacy?</p>
+        <p>Email <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a> or use Contact Support in Privacy Center. We aim to respond to privacy requests within 30 days.</p>
+
+        <p class="faq-q">Is AI chat free?</p>
+        <p>No. Lune AI is a Premium feature. Premium subscribers can send up to 30 AI messages per calendar day — enforced on our servers. If a provider fails, we do not count that message against your limit.</p>
+
+        <p class="faq-q">What does Premium unlock?</p>
+        <p>Premium includes cloud cycle backup, Lune AI chat (30 messages/day), and attaching photos or videos in community posts and stories. Core local tracking remains free for all users.</p>
+
+        <p class="faq-q">How does Stealth mode work?</p>
+        <p>Stealth mode shows a calculator screen instead of Lune until you enter your secret PIN and press equals. It protects your privacy if someone opens your phone. It is a local disguise only — enable it in Privacy Center.</p>
+
+        <p class="faq-q">Who sees my community posts?</p>
+        <p>Posts are visible to members of the Lune communities you join. You can report unsafe content; reported posts may be auto-hidden while we review them. Community participation is optional and requires consent.</p>
+
+        <p class="faq-q">Can I share a health report with my doctor?</p>
+        <p>Yes. Lune can generate a health summary report from your logged data that you can review and share yourself. We do not send reports to doctors automatically — you choose what to share and with whom.</p>
+
+        <p class="faq-q">Does the magazine use my personal data?</p>
+        <p>No. Educational articles in the Lune magazine are editorial content managed separately from your private cycle logs. Reading articles does not upload your personal health data for personalization.</p>
+
+        <p class="faq-q">What notifications does Lune send?</p>
+        <p>If you opt in, we may send cycle reminders, wellness prompts, and important app updates via Firebase Cloud Messaging. We do not send promotional ads or sell notification audiences to third parties. You can disable notifications in device settings.</p>
+
+        <p class="faq-q">What are my GDPR rights?</p>
+        <p>If you are in the EEA or UK, you may request access, correction, deletion, or export of your personal data. Delete your account in Privacy Center for immediate server removal, or email merrsoheb@gmail.com for assistance. We respond within 30 days.</p>
+
+        <p class="faq-q">What Android permissions does Lune use?</p>
+        <p>Internet for sign-in and optional online features; Notifications for reminders you enable; Google Play Billing for Premium; exact alarms and boot restart for reliable local reminders. Photos or videos are requested only when you attach media in community (Premium) or choose a profile photo. We do not access your contacts, SMS, or call logs.</p>
+
+        <p class="faq-q">How do Google Play subscriptions work?</p>
+        <p>Premium is billed through Google Play. Subscriptions auto-renew unless you cancel at least 24 hours before the period ends. Manage or cancel in Google Play → Subscriptions. Refunds follow Google Play's refund policy. Deleting your Lune account does not automatically stop billing — cancel the subscription separately.</p>
+
+        <p class="faq-q">What is the minimum age to use Lune?</p>
+        <p>You must be at least 13 years old. Users under 13 cannot continue after the age gate. Some community features are restricted to users 18 and older. Parents who believe a child under 13 used Lune should contact us to request deletion.</p>
+
+        <p class="faq-q">Is Lune a medical device or medical advice?</p>
+        <p>No. Lune is for informational wellness tracking only — not a medical device, diagnosis, or treatment. Cycle predictions, AI chat, community posts, and magazine articles are not medical advice. Always consult a qualified healthcare professional for medical decisions.</p>
+
+        <p class="faq-q">What data does Lune collect (Google Play Data Safety)?</p>
+        <p>Data you provide: cycle dates, symptoms, moods, wellness notes, and optional community posts. Account data if registered (email, name, sign-in method). Technical data: device tokens for notifications, anonymized crash reports, and approximate activity timestamps. Premium AI messages are sent to Google Gemini/DeepSeek for processing. Data is not sold. Core tracking stays on your device unless you enable Premium cloud backup.</p>
+
+        <div class="contact-box">
+          <p>More questions? <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-ar" class="lang-section" dir="rtl">
+      <div class="content-card">
+        <p class="intro">إجابات على أكثر الأسئلة شيوعاً حول الخصوصية والأمان وكيف تتعامل Lune مع بيانات دورتك. إذا لم تجدي إجابتك هنا، تواصلي معنا في أي وقت.</p>
+
+        <p class="faq-q">من يرى بيانات دورتي؟</p>
+        <p>أنتِ فقط. افتراضياً، بيانات دورتك تبقى على جهازك في قاعدة بيانات محلية مشفّرة. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُخزَّن نسخ مشفّرة في حساب Firebase الخاص بكِ. لا نشارك بيانات الدورة مع مستخدمين آخرين إلا إذا نشرتِ صراحة في ميزات المجتمع.</p>
+
+        <p class="faq-q">هل تبيع Lune بياناتي؟</p>
+        <p>لا. لا نبيع بياناتك الشخصية أو الصحية أبداً. Lune ممولة عبر اشتراكات Premium الاختيارية عبر Google Play — وليس عبر الإعلانات أو بيع البيانات.</p>
+
+        <p class="faq-q">ماذا يحدث عند حذف حسابي؟</p>
+        <p>عند تأكيد الحذف في مركز الخصوصية، نزيل فوراً ملفك في Firestore والنسخ السحابية وسجل المحادثة ومحتوى المجتمع من خوادمنا، ثم نحذف حساب Firebase Authentication. البيانات المحلية على جهازك تبقى حتى تلغي التثبيت. قد تحتفظ Firebase بنسخ تقنية مؤقتة وفق سياسات بنيتها.</p>
+
+        <p class="faq-q">هل المحادثة الذكية خاصة؟</p>
+        <p>المحادثة الذكية تتطلب Premium. الضيفات: المحادثة تبقى على الجهاز فقط. المشتركات المسجّلات: قد تُخزَّن الرسائل في السحابة لاستعادة المحادثات. تُرسَل كل رسالة إلى Google Gemini و/أو DeepSeek — راجعي <a href="privacy-policy.html">سياسة الخصوصية</a>. ننصح بعدم مشاركة معلومات لا تريدين أن يعالجها مزوّد AI خارجي.</p>
+
+        <p class="faq-q">هل يمكنني استخدام Lune بدون حساب؟</p>
+        <p>نعم. يمكنكِ الاستخدام كضيفة بحساب Firebase مجهول مرتبط بجهازك — بدون بريد. التتبع الأساسي يعمل بالكامل دون إنترنت. النسخ السحابي وAI Premium وسجل المحادثة عبر الأجهزة وبعض ميزات المجتمع تتطلب حساباً مسجّلاً.</p>
+
+        <p class="faq-q">أين تُخزَّن بياناتي؟</p>
+        <p>محلياً على هاتفك افتراضياً في قاعدة بيانات مشفّرة AES-256. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُخزَّن حمولات مشفّرة في Google Firebase (قد تُعالَج في الولايات المتحدة ومناطق أخرى).</p>
+
+        <p class="faq-q">كيف أصدّر بياناتي؟</p>
+        <p>افتحي مركز الخصوصية ← تصدير البيانات لنسخ نسخة احتياطية محلية مشفّرة إلى الحافظة. يمكنكِ حفظها في مدير كلمات مرور أو ملاحظات آمنة. للمساعدة في طلبات النقل، راسلينا على merrsoheb@gmail.com.</p>
+
+        <p class="faq-q">كيف أتواصل بخصوص الخصوصية؟</p>
+        <p>راسلينا على <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a> أو استخدمي «تواصل مع الدعم» في مركز الخصوصية. نهدف للرد على طلبات الخصوصية خلال 30 يوماً.</p>
+
+        <p class="faq-q">هل المحادثة الذكية مجانية؟</p>
+        <p>لا. Lune AI ميزة Premium. المشتركات يمكنهن إرسال حتى 30 رسالة ذكاء اصطناعي في اليوم التقويمي — يُفرض على خوادمنا. إذا فشل المزوّد، لا نحسب الرسالة ضمن حدك.</p>
+
+        <p class="faq-q">ماذا يفتح Premium؟</p>
+        <p>Premium يشمل النسخ الاحتياطي السحابي لدورتك ومحادثة Lune AI (30 رسالة/يوم) وإرفاق صور أو فيديو في منشورات وقصص المجتمع. التتبع المحلي الأساسي يبقى مجانياً للجميع.</p>
+
+        <p class="faq-q">كيف يعمل وضع التخفي؟</p>
+        <p>وضع التخفي يُظهر شاشة آلة حاسبة بدلاً من Lune حتى تُدخلي رقم PIN السري وتضغطي يساوي. يحمي خصوصيتك إذا فتح أحد هاتفك. إنه تمويه محلي فقط — فعّليه من مركز الخصوصية.</p>
+
+        <p class="faq-q">من يرى منشوراتي في المجتمع؟</p>
+        <p>المنشورات تظهر لأعضاء مجتمعات Lune التي تنضمين إليها. يمكنكِ الإبلاغ عن محتوى غير آمن؛ قد تُخفى المنشورات المبلّغ عنها تلقائياً أثناء المراجعة. المشاركة في المجتمع اختيارية وتتطلب موافقة.</p>
+
+        <p class="faq-q">هل يمكنني مشاركة تقرير صحي مع طبيبي؟</p>
+        <p>نعم. يمكن لـ Lune إنشاء ملخص صحي من بياناتك المسجّلة لمراجعته ومشاركته بنفسك. لا نرسل تقارير للأطباء تلقائياً — أنتِ تختارين ما تشاركينه ومع من.</p>
+
+        <p class="faq-q">هل تستخدم المجلة بياناتي الشخصية؟</p>
+        <p>لا. مقالات المجلة التعليمية في Lune محتوى تحريري منفصل عن سجلات دورتك الخاصة. قراءة المقالات لا ترفع بياناتك الصحية للتخصيص.</p>
+
+        <p class="faq-q">ما الإشعارات التي ترسلها Lune؟</p>
+        <p>إذا وافقتِ، قد نرسل تذكيرات الدورة وموجز العافية وتحديثات مهمة عبر Firebase Cloud Messaging. لا نرسل إعلانات ترويجية ولا نبيع جمهور الإشعارات لأطراف ثالثة. يمكنكِ إيقاف الإشعارات من إعدادات الجهاز.</p>
+
+        <p class="faq-q">ما حقوقي بموجب GDPR؟</p>
+        <p>إذا كنتِ في المنطقة الاقتصادية الأوروبية أو المملكة المتحدة، يمكنكِ طلب الوصول أو التصحيح أو الحذف أو التصدير لبياناتك. احذفي حسابك من مركز الخصوصية للحذف الفوري من الخوادم، أو راسلينا على merrsoheb@gmail.com. نرد خلال 30 يوماً.</p>
+
+        <p class="faq-q">ما أذونات Android التي يستخدمها Lune؟</p>
+        <p>الإنترنت لتسجيل الدخول والميزات الاختيارية؛ الإشعارات للتذكيرات؛ Google Play Billing لـ Premium؛ المنبهات الدقيقة وإعادة التشغيل. الصور/الفيديو عند الإرفاق أو صورة الملف الشخصي فقط. لا نصل إلى جهات الاتصال أو الرسائل أو سجل المكالمات.</p>
+
+        <p class="faq-q">كيف تعمل اشتراكات Google Play؟</p>
+        <p>Premium يُفوتر عبر Google Play. الاشتراكات تتجدد تلقائياً ما لم تلغي قبل 24 ساعة. أديري من Google Play ← الاشتراكات. الاستردادات وفق سياسة Google Play. حذف الحساب لا يوقف الفوترة — ألغي الاشتراك منفصلاً.</p>
+
+        <p class="faq-q">ما الحد الأدنى للعمر لاستخدام Lune؟</p>
+        <p>13 عاماً على الأقل. دون 13 لا يمكن المتابعة. بعض ميزات المجتمع لـ 18+. على الوالدين التواصل معنا إذا استخدم طفل دون 13 التطبيق.</p>
+
+        <p class="faq-q">هل Lune جهازاً طبياً أو نصيحة طبية؟</p>
+        <p>لا. Lune للتتبع المعلوماتي فقط — وليس تشخيصاً أو علاجاً. التوقعات وAI والمجتمع والمجلة ليست نصيحة طبية. استشيري مختصاً مؤهلاً.</p>
+
+        <p class="faq-q">ما البيانات التي تجمعها Lune (Google Play Data Safety)؟</p>
+        <p>بيانات تقدّمينها: الدورة والأعراض والمزاج والعافية ومنشورات المجتمع. بيانات الحساب إذا سجّلتِ. بيانات تقنية: رموز الإشعارات، أعطال مجهولة، نشاط تقريبي. رسائل AI Premium لـ Gemini/DeepSeek. لا نبيع البيانات. التتبع يبقى على الجهاز ما لم تفعّلي النسخ السحابي Premium.</p>
+
+        <div class="contact-box">
+          <p>المزيد من الأسئلة؟ <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a><a href="security.html">Security</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a><a href="index.html">Home</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+      document.getElementById('pageTitle').textContent = lang === 'en' ? 'Privacy FAQ' : 'الأسئلة الشائعة حول الخصوصية';
+      document.getElementById('pageSubtitle').textContent = lang === 'en'
+        ? 'Common questions about privacy at Lune.'
+        : 'أسئلة متكررة عن خصوصية Lune.';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+    if (navigator.language.startsWith('ar')) setLang('ar');
+  </script>
+</body>
+</html>

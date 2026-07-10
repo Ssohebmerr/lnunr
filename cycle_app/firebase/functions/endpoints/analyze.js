@@ -150,7 +150,7 @@ exports.analyze = onRequest(
         mode: isDoctorReport ? 'doctor' : 'analyze',
         provider,
         usage,
-        messagePreview: message,
+        messageLength: message.length,
       });
 
       setCors(res);
@@ -176,3 +176,4 @@ exports.analyze = onRequest(
     }
   },
 );
+// redeploy marker 2026-07-10 (shared libs: todayLog JSON fix + adaptive context)

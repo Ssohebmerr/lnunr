@@ -56,6 +56,7 @@ const users = require('./endpoints/users');
 const subscriptions = require('./endpoints/subscriptions');
 const broadcast = require('./endpoints/broadcast');
 const feedback = require('./endpoints/feedback');
+const community = require('./endpoints/community');
 
 exports.chat = chat.chat;
 exports.analyze = analyze.analyze;
@@ -65,6 +66,7 @@ exports.reprocessPendingModeration = reprocessModeration.reprocessPendingModerat
 exports.syncUsersFromAuth = users.syncUsersFromAuth;
 exports.bootstrapAdmin = users.bootstrapAdmin;
 exports.deleteUserAccount = users.deleteUserAccount;
+exports.purgeAiData = users.purgeAiData;
 exports.verifyPlayPurchase = subscriptions.verifyPlayPurchase;
 exports.redeemPromoCode = subscriptions.redeemPromoCode;
 exports.grantTesterPremium = subscriptions.grantTesterPremium;
@@ -72,6 +74,7 @@ exports.googlePlayWebhook = subscriptions.googlePlayWebhook;
 exports.syncExpiredPlayPremium = subscriptions.syncExpiredPlayPremium;
 exports.adminBroadcast = broadcast.adminBroadcast;
 exports.submitFeedback = feedback.submitFeedback;
+exports.submitCommunity = community.submitCommunity;
 
 // ---------------------------------------------------------------------------
 // Firestore triggers

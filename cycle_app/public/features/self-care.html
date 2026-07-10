@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.png" type="image/png" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lune — رعاية ذاتية</title>
+<meta name="description" content="تنفس، يوميات، تأكيدات، تحديات." />
+<link rel="stylesheet" href="/site.css?v=13" />
+<link rel="stylesheet" href="/features.css?v=12" />
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="/index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="/about.html">عن التطبيق</a>
+      <a href="/features.html" class="active">الميزات</a>
+      <a href="/contact.html">اتصل بنا</a>
+      <a href="/trust-hub.html">الثقة</a>
+      <a href="/index.html#download" class="btn btn-primary btn-sm">حمّلي التطبيق</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="القائمة"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="إغلاق">×</button>
+    <a href="/index.html">الرئيسية</a>
+    <a href="/features.html">كل الميزات</a>
+    <a href="/about.html">عن Lune</a>
+    <a href="/contact.html">اتصل بنا</a>
+    <a href="/trust-hub.html">مركز الثقة</a>
+    <a href="/index.html#download">حمّلي التطبيق</a>
+  </div>
+</div>
+<section class="feature-page-hero">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="مسار"><a href="/index.html">Lune</a> ← <a href="/features.html">الميزات</a> ← <span>رعاية ذاتية</span></nav>
+    <div class="feature-page-grid">
+      <div class="feature-page-copy">
+        <span class="feature-tag">رعاية ذاتية</span>
+        <h1>مساحة هادئة للعناية بنفسكِ كل يوم</h1>
+        <p>تنفس مربع، تأكيدات (مع AI شخصي Premium)، يوميات مع تأمّل AI، حركة لطيفة، وطقوس يومية.</p><p>مكتبة عناية حسب مرحلة الدورة وتحديات تحفيزية لطيفة.</p>
+        <ul class="feature-list"><li>فحص مزاج يومي</li><li>همسة اليوم (Premium)</li><li>دليل العناية حسب الدورة</li><li>سلسلة طقوس يومية</li><li>محتوى يتكيّف مع هدفكِ</li></ul>
+        <div class="feature-page-actions">
+          <a href="/index.html#download" class="btn btn-primary">جرّبي الرعاية الذاتية</a>
+          <a href="/features.html" class="btn btn-secondary">كل الميزات</a>
+        </div>
+      </div>
+      <div class="feature-page-shot"><div class="screenshot-frame"><img src="/images/screenshots/self-care.png?v=12" alt="رعاية ذاتية" loading="lazy" width="280" height="606" onerror="this.onerror=null;this.src='/images/screenshots/self-care.svg?v=12'" /></div></div>
+    </div>
+  </div>
+</section>
+<main class="page-main"><div class="content-wrap"><div class="feature-nav-prev-next"><a href="/features/community.html">← مجتمع</a><a href="/features/pregnancy.html">حمل →</a></div></div></main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>معلومات</h4><a href="/about.html">عن Lune</a><a href="/features.html">الميزات</a><a href="/contact.html">اتصل بنا</a></div>
+      <div class="footer-col"><h4>الثقة</h4><a href="/trust-hub.html">مركز الثقة</a><a href="/security.html">الأمان</a><a href="/privacy-faq.html">أسئلة شائعة</a></div>
+      <div class="footer-col"><h4>قانوني</h4><a href="/privacy-policy.html">سياسة الخصوصية</a><a href="/terms-of-service.html">الشروط</a></div>
+      <div class="footer-col"><h4>تواصل</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+<script>
+  const drawer = document.getElementById('navDrawer');
+  document.getElementById('navToggle')?.addEventListener('click', () => drawer.classList.add('open'));
+  document.getElementById('navClose')?.addEventListener('click', () => drawer.classList.remove('open'));
+  drawer?.addEventListener('click', (e) => { if (e.target === drawer) drawer.classList.remove('open'); });
+</script>
+</body>
+</html>

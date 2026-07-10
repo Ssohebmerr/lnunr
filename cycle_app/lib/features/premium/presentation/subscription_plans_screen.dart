@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
 import '../../../core/premium/premium_activation_service.dart';
@@ -336,6 +337,27 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              children: [
+                TextButton(
+                  onPressed: openPrivacyPolicy,
+                  child: Text(l10n.privacyPolicyLink),
+                ),
+                Text(
+                  '·',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                TextButton(
+                  onPressed: openTermsOfService,
+                  child: Text(l10n.termsOfServiceLink),
+                ),
+              ],
             ),
           ] else
             Text(

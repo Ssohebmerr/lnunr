@@ -3,10 +3,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Lune drop mark -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30 C40,30 30,42 30,54 C30,66 40,78 54,78 C68,78 78,66 78,54 C78,42 68,30 54,30 Z M54,36 C64,36 72,44 72,54 C72,64 64,72 54,72 C44,72 36,64 36,54 C36,44 44,36 54,36 Z"/>
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,42 C48,42 44,48 44,54 C44,60 48,66 54,66 C60,66 64,60 64,54 C64,48 60,42 54,42 Z"/>
+        android:fillColor="#FFFBF8"
+        android:pathData="M54,12 C54,12 21,49 21,71 A33,33 0 0 0 87,71 C87,49 54,12 54,12 Z"/>
 </vector>

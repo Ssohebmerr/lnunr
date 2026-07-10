@@ -25,6 +25,15 @@
       ]
     },
     {
+      "collectionGroup": "educationArticles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "published", "order": "ASCENDING" },
+        { "fieldPath": "featured", "order": "DESCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "appBanners",
       "queryScope": "COLLECTION",
       "fields": [

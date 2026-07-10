@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_design_tokens.dart';
 import '../theme/app_theme.dart';
@@ -122,14 +123,20 @@ class AppGradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onPressed = this.onPressed;
     final child = Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: loading ? null : onPressed,
+        onTap: loading || onPressed == null
+            ? null
+            : () {
+                HapticFeedback.lightImpact();
+                onPressed();
+              },
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: Ink(
           decoration: BoxDecoration(
-            gradient: AuraDecorations.primaryGradient,
+            gradient: AuraDecorations.ctaGradient,
             borderRadius: BorderRadius.circular(AppRadius.md),
             boxShadow: AppShadows.softRose(opacity: isDark ? 0.2 : 0.25),
           ),

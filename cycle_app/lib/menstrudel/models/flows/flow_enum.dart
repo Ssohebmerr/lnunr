@@ -31,18 +31,21 @@ extension FlowExtension on FlowRate {
   int get intValue {
     return index;
   }
+  /// Flow intensity as a cohesive pink→berry ramp from the Lune palette, so
+  /// the calendar day dots and flow charts read as one system. Mid-to-deep
+  /// tones keep white day-numbers legible on top.
   Color get color {
     switch (this) {
       case FlowRate.none:
-        return Colors.blue.shade300;
+        return const Color(0xFFB79BAE); // neutral mauve (logged, no flow)
       case FlowRate.spotting:
-        return Colors.pink.shade100;
+        return const Color(0xFFEBA9C4);
       case FlowRate.light:
-        return Colors.pink.shade200;
+        return const Color(0xFFE188AE);
       case FlowRate.medium:
-        return Colors.pink.shade400;
+        return const Color(0xFFD5619A);
       case FlowRate.heavy:
-        return Colors.red.shade600;
+        return const Color(0xFFC02E6A);
     }
   }
 }

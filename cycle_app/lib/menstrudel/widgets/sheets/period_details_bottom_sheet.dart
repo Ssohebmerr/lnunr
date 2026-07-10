@@ -106,7 +106,7 @@ Future<void> _showNewCustomSymptomDialog() async {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start, 
           children: [
-            _buildDragHandle(), 
+            _buildDragHandle(context), 
             const SizedBox(height: 12), 
             _buildHeader(context), 
             const Divider(height: 24), 
@@ -120,13 +120,18 @@ Future<void> _showNewCustomSymptomDialog() async {
     );
   }
 
-  Widget _buildDragHandle() {
+  Widget _buildDragHandle(BuildContext context) {
     return Center(
       child: Container(
         width: 40,
         height: 4,
         margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
+                alpha: 0.3,
+              ),
+          borderRadius: BorderRadius.circular(2),
+        ),
       ),
     );
   }

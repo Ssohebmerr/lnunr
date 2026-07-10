@@ -33,7 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAccount => 'Account';
 
   @override
-  String get welcomeTitle => 'Your private cycle companion';
+  String get welcomeTitle => 'Your cycle has phases — like the moon';
 
   @override
   String get welcomeSubtitle =>
@@ -186,10 +186,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSubtitle =>
-      'Your private cycle companion. Ask about your cycle, symptoms, or wellness — not medical advice.';
+      'Lune means moon — ask about your phases, symptoms, or self-care. Not medical advice.';
 
   @override
-  String get aiWelcome => 'Hi! I\'m Lune — your wellness companion.';
+  String get aiWelcome => 'Hi! I\'m Lune — your moon-phase wellness companion.';
 
   @override
   String get aiWelcomeHint =>
@@ -303,6 +303,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goalPcosTitle => 'PCOS management';
+
+  @override
+  String get conditionHowAreYouToday => 'How are you today?';
+
+  @override
+  String get conditionTapToLog => 'Tap what you feel — it\'s saved for today.';
+
+  @override
+  String conditionLoggedNamed(String name) {
+    return 'Logged: $name';
+  }
+
+  @override
+  String conditionRemovedNamed(String name) {
+    return 'Removed: $name';
+  }
+
+  @override
+  String conditionRitualsDoneToday(int done, int total) {
+    return '$done of $total done today';
+  }
+
+  @override
+  String conditionStreakDays(int days) {
+    return '$days-day logging streak';
+  }
+
+  @override
+  String get menopauseHotFlashesToday => 'Hot flashes today';
+
+  @override
+  String get menopauseHotFlashHint => 'Tap − / + each time one hits';
+
+  @override
+  String get menopauseDaysSincePeriodTitle => 'Since your last period';
+
+  @override
+  String conditionDaysCount(int days) {
+    return '$days days';
+  }
+
+  @override
+  String get menopauseMilestoneHint => '12 period-free months marks menopause.';
+
+  @override
+  String get menopauseMilestoneReached =>
+      '12 months period-free — you\'ve reached menopause. 🌿';
+
+  @override
+  String get menopauseNeedPeriodData =>
+      'Log a period to start counting the gap.';
+
+  @override
+  String get pcosCycleGapTitle => 'Cycle gap';
+
+  @override
+  String pcosTypicalCycle(int days) {
+    return 'Your typical cycle is about $days days.';
+  }
+
+  @override
+  String get pcosGapNormal => 'You\'re within your usual range.';
+
+  @override
+  String get pcosGapLong =>
+      'Longer than usual — common with PCOS. Keep logging every period.';
+
+  @override
+  String get pcosGapUnknown =>
+      'Log a couple of cycles so we can compare your gaps.';
+
+  @override
+  String get postpartumMoodTitle => 'How are you feeling today?';
+
+  @override
+  String get postpartumMoodSaved => 'Thanks for checking in 🤍';
+
+  @override
+  String get postpartumMoodLowSupport =>
+      'It\'s okay to not be okay. If this feeling lingers, please reach out to someone you trust or your doctor.';
+
+  @override
+  String get postpartumJourneyTitle => 'Recovery journey';
+
+  @override
+  String postpartumJourneyCaption(int percent) {
+    return 'About $percent% through your first year.';
+  }
+
+  @override
+  String get moodVeryLow => 'Very low';
+
+  @override
+  String get moodLow => 'Low';
+
+  @override
+  String get moodOkay => 'Okay';
+
+  @override
+  String get moodGood => 'Good';
+
+  @override
+  String get moodGreat => 'Great';
 
   @override
   String get activatePremiumTest => 'Activate Premium (test)';
@@ -1496,12 +1599,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String clinicalFlagShortCycle(int days) {
-    return 'Average cycle $days days — shorter than the typical 21–35 day range; worth discussing with your doctor.';
+    return 'Average cycle $days days — shorter than the 24–38 day reference range; worth discussing with your doctor.';
   }
 
   @override
   String clinicalFlagLongCycle(int days) {
-    return 'Average cycle $days days — longer than the typical 21–35 day range; worth discussing with your doctor.';
+    return 'Average cycle $days days — longer than the 24–38 day reference range; worth discussing with your doctor.';
   }
 
   @override
@@ -1511,7 +1614,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String clinicalFlagProlongedPeriod(int days) {
-    return 'Average period $days days — longer than the usual ~7 days; worth discussing with your doctor.';
+    return 'Average period $days days — longer than the 8-day reference duration; worth discussing with your doctor.';
   }
 
   @override
@@ -1635,6 +1738,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get educationTitle => 'Learn';
+
+  @override
+  String get magazineTitle => 'Lune Magazine';
+
+  @override
+  String get magazineFeatured => 'Featured';
+
+  @override
+  String get magazineFromLune => 'From the magazine';
+
+  @override
+  String get magazineReadMore => 'Read more';
 
   @override
   String get educationSubtitle =>
@@ -2074,7 +2189,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPrivacyAgree =>
-      'I agree to the Privacy Policy. Cycle data stays on my device unless I enable cloud sync.';
+      'I agree to the Privacy Policy. Cycle data stays on my device by default. Cloud backup, AI chat, and community are optional and require separate consent in Privacy Center.';
 
   @override
   String get privacyCenterTitle => 'Privacy & data';
@@ -2216,7 +2331,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'Chat messages are sent to trusted AI providers (DeepSeek / Google) through our secure server to generate responses. No ads. You can disable this anytime.';
+      'Chat messages and anonymized cycle context (symptoms, mood, phase) are sent to trusted AI providers (DeepSeek / Google) through our secure server. Not medical advice. No ads. You can disable this anytime.';
+
+  @override
+  String get aiAdultsOnly => 'Lune AI is for adults 18+ only.';
 
   @override
   String get consentCommunityTitle => 'Join communities?';
@@ -2312,7 +2430,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWelcomeSubtitle =>
-      'Your private cycle & wellness companion';
+      'Lune means moon — a private companion for every phase of your cycle';
 
   @override
   String get onboardingWelcomeHelps => 'We\'ll help you:';
@@ -2605,7 +2723,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pregnancyTrackingSubtitle =>
-      'Log weight, count kicks, and time contractions — like Flo.';
+      'Log weight, count kicks, and time contractions — week by week with Lune.';
 
   @override
   String get pregnancyWeightTitle => 'Weight';
@@ -3213,7 +3331,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutTagline =>
-      'A private, secure cycle tracker — your data stays on device. Cloud, AI, and communities are optional.';
+      'Lune means moon — your private phase-by-phase wellness companion. Data stays on device; cloud, AI, and communities are optional.';
 
   @override
   String get insightsCycleRegularityScore => 'Cycle regularity (CRS)';
@@ -3271,6 +3389,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get smartPhaseReminderSubtitle =>
       'Get a supportive daily tip that adapts to your cycle phase or pregnancy week.';
+
+  @override
+  String get latePeriodReminder => 'Late period warning';
+
+  @override
+  String get latePeriodReminderSubtitle =>
+      'Get a gentle heads-up if your period runs a couple of days past its predicted date.';
+
+  @override
+  String get sendTestNotification => 'Send a test notification';
+
+  @override
+  String get testNotificationSent => 'Sent! Check your notification shade.';
+
+  @override
+  String get testNotificationBlocked =>
+      'Notifications are off for Lune. Turn them on in system settings.';
 
   @override
   String get graphExportShared => 'Chart ready to share.';
@@ -3566,14 +3701,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyP2Body =>
-      'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: If you create an account, we collect your email address and display name via Firebase Authentication.\n• Community Content: Posts, comments, and profile information you share in community features.\n• Device Information: Basic device identifiers required for push notifications and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed to generate responses and are not permanently stored on our servers.';
+      'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed by third-party AI providers to generate responses. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.';
 
   @override
   String get privacyP3Title => '3. How We Use Your Information';
 
   @override
   String get privacyP3Body =>
-      'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance and fix bugs.\n• Ensure safety and prevent misuse of community features.';
+      'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance, diagnose crashes, and fix bugs.\n• Ensure safety and prevent misuse of community features.';
 
   @override
   String get privacyP4Title => '4. Data Storage & Security';
@@ -3587,14 +3722,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyP5Body =>
-      'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.\n• Google Gemini AI: For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.\n• Google Play Billing: For processing in-app subscriptions.\n\nEach service has its own privacy policy. We encourage you to review them.';
+      'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.\n• Google Gemini AI: AI chat and content processing. Messages are sent to Google for processing per Google\'s API terms.\n• DeepSeek AI: Alternative AI provider for chat and analysis when used by our backend. Messages are sent to DeepSeek for processing per their API terms.\n• Google Play Billing: Premium subscription payments on Android (processed by Google).\n\nEach provider has its own privacy policy. We encourage you to review them. We do not sell your personal data.';
 
   @override
   String get privacyP6Title => '6. Your Data Rights';
 
   @override
   String get privacyP6Body =>
-      'You have the right to:\n\n• Access your data: View all data stored about you within the app.\n• Export your data: Download your cycle data as a local backup file.\n• Delete your data: Delete your account and all associated data permanently from the Privacy Center.\n• Revoke consent: Withdraw consent for cloud sync, AI features, or community participation at any time.\n• Opt out of notifications: Disable any notification type from settings.\n\nTo exercise these rights, use the in-app Privacy Center or contact us at the email below.';
+      'You have the right to:\n\n• Access your data: View all data stored about you within the app.\n• Export your data: Download your cycle data as a local backup file.\n• Delete your data: Delete your account and all associated data permanently from the Privacy Center.\n• Revoke consent: Withdraw consent for cloud sync, AI features, or community participation at any time.\n• Opt out of notifications: Disable any notification type from settings.\n\nIf you are in the EU/UK, you may also have rights under GDPR/UK GDPR. To exercise these rights, use the in-app Privacy Center or contact us at the email below.';
 
   @override
   String get privacyP7Title => '7. Children\'s Privacy';
@@ -3608,14 +3743,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyP8Body =>
-      'We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, all personal data is permanently removed from our servers within 30 days. Local data on your device remains until you uninstall the app or manually delete it.';
+      'We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, we immediately remove your Firestore profile, cloud backups, chat history, and community content from our servers and delete your Firebase Authentication account. Local data on your device remains until you uninstall the app or manually delete it. Technical backups at Firebase or Google Cloud may be retained briefly per their infrastructure policies. Crash reports in Crashlytics are retained according to Firebase\'s retention settings.';
 
   @override
   String get privacyP9Title => '9. International Data Transfers';
 
   @override
   String get privacyP9Body =>
-      'Your data may be processed in countries other than your own, including the United States where Google Firebase servers are located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers.';
+      'Your data may be processed in countries other than your own, including the United States where Google Firebase and AI provider servers may be located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers. If you are in the EU/UK, you may have additional rights under GDPR/UK GDPR as described in section 6.';
 
   @override
   String get privacyP10Title => '10. Medical Disclaimer';
@@ -3653,14 +3788,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsP2Body =>
-      'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content.\n\nThe App is intended for personal, non-commercial use only.';
+      'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content and magazine articles.\n\nThe App is intended for personal, non-commercial use only.';
 
   @override
   String get termsP3Title => '3. User Accounts';
 
   @override
   String get termsP3Body =>
-      'To access certain features, you may create an account using email/password or Google Sign-In. You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. You must be at least 13 years old to create an account. We reserve the right to suspend or terminate accounts that violate these Terms.';
+      'You may use Lune as a guest with an anonymous device-based account, or create a registered account using email/password, Google Sign-In, or Sign in with Apple (where available). You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. You must be at least 13 years old to use the App. We reserve the right to suspend or terminate accounts that violate these Terms.';
 
   @override
   String get termsP4Title => '4. User Conduct';
@@ -3716,7 +3851,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsP11Body =>
-      'These Terms are governed by applicable laws without regard to conflict of law principles. Any disputes shall be resolved through good-faith negotiation first. If you have questions about these Terms, contact us at:';
+      'These Terms are governed by the laws applicable in the jurisdiction of the Lune operator, except where mandatory consumer protection laws in your country of residence provide otherwise. Disputes shall first be resolved through good-faith negotiation. If you have questions about these Terms, contact us at:';
 
   @override
   String get notifRationaleTitle => 'Stay on Track';
@@ -4131,4 +4266,602 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountUsernameInvalid =>
       '3–20 characters: letters, numbers, dot or underscore';
+
+  @override
+  String get trustHubTitle => 'Trust & Privacy';
+
+  @override
+  String get trustHubSubtitle =>
+      'Clear answers about how Lune protects your health data — security, cookies, accessibility, and more.';
+
+  @override
+  String get trustHubLink => 'Trust & Privacy Center';
+
+  @override
+  String get trustLinkSecurity => 'Security at Lune';
+
+  @override
+  String get trustLinkSecuritySub =>
+      'Encryption, authentication, and how we protect your data';
+
+  @override
+  String get trustLinkBodyData => 'Your Body, Your Data';
+
+  @override
+  String get trustLinkBodyDataSub =>
+      'You own your cycle data — we never sell it';
+
+  @override
+  String get trustLinkDataEnds => 'Your Data Ends With You';
+
+  @override
+  String get trustLinkDataEndsSub =>
+      'Delete your account and cloud data anytime';
+
+  @override
+  String get trustLinkFaq => 'Privacy FAQ';
+
+  @override
+  String get trustLinkFaqSub => 'Common questions about privacy at Lune';
+
+  @override
+  String get trustLinkCookies => 'Cookie Policy';
+
+  @override
+  String get trustLinkCookiesSub =>
+      'How we use local storage and website cookies';
+
+  @override
+  String get trustLinkIp => 'IP Address Use';
+
+  @override
+  String get trustLinkIpSub =>
+      'Why we process IP addresses and what we don\'t do';
+
+  @override
+  String get trustLinkAccessibility => 'Accessibility';
+
+  @override
+  String get trustLinkAccessibilitySub =>
+      'Our commitment to an inclusive experience';
+
+  @override
+  String get trustSecurityTitle => 'Security at Lune';
+
+  @override
+  String get trustSecurityIntro =>
+      'Your health data deserves bank-grade care. Security is built into every layer of Lune — not added as an afterthought. This page explains how we protect your cycle logs, account, and optional cloud features in plain language.';
+
+  @override
+  String get trustSecurityS1Title => 'Encryption on your device';
+
+  @override
+  String get trustSecurityS1Body =>
+      'Your cycle database is encrypted locally using AES-256 before it is stored on your phone. Symptom, mood, flow, and wellness entries live inside this protected store. Encryption keys are generated on your device and stored in Android Keystore or iOS Keychain — they never leave your device unprotected.';
+
+  @override
+  String get trustSecurityS2Title => 'Encrypted cloud sync (optional, Premium)';
+
+  @override
+  String get trustSecurityS2Body =>
+      'Cloud backup is optional and requires Premium plus your explicit consent. When enabled, your cycle backup payload is encrypted on the device before upload and stored in your private Firebase account. We do not claim every Firestore profile field uses the same AES-256 scheme — the sensitive cycle payload itself is encrypted before it leaves your phone.';
+
+  @override
+  String get trustSecurityS3Title => 'Secure connections & app integrity';
+
+  @override
+  String get trustSecurityS3Body =>
+      'All network traffic uses TLS encryption. Firebase App Check helps verify genuine app requests. You can sign in with email, Google, Apple, or continue as an anonymous guest — each method is handled through Firebase Authentication with industry-standard protections.';
+
+  @override
+  String get trustSecurityS4Title => 'No ads, no data brokers';
+
+  @override
+  String get trustSecurityS4Body =>
+      'Lune does not show third-party ads and does not sell your personal or health data. We do not share your cycle data with advertisers, data brokers, employers, or insurers. Our revenue comes from optional Premium subscriptions, not from monetizing your health information.';
+
+  @override
+  String get trustSecurityS5Title => 'You control optional features';
+
+  @override
+  String get trustSecurityS5Body =>
+      'AI chat (Google Gemini and DeepSeek), community, push notifications, and cloud sync are optional and require your consent. You can review and change these choices anytime in Privacy Center without affecting core local tracking.';
+
+  @override
+  String get trustSecurityS6Title => 'Crash reporting (Firebase Crashlytics)';
+
+  @override
+  String get trustSecurityS6Body =>
+      'Lune uses Firebase Crashlytics to collect anonymized crash reports and basic diagnostic data when the app fails unexpectedly. This helps us fix bugs quickly. Crash reports do not include your cycle logs, wellness entries, or AI chat content.';
+
+  @override
+  String get trustSecurityS7Title => 'Cloud infrastructure';
+
+  @override
+  String get trustSecurityS7Body =>
+      'Registered accounts, optional cloud backups, community content, and AI chat (for Premium users) run on Google Firebase — including Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, and Crashlytics. Access to your data is restricted by Firebase security rules and your sign-in credentials.';
+
+  @override
+  String get trustSecurityS8Title => 'Stealth mode on your device';
+
+  @override
+  String get trustSecurityS8Body =>
+      'Stealth mode disguises Lune as a calculator until you enter your PIN. This protects privacy on your phone if someone picks it up — it is a local lock only and does not encrypt data differently. You can enable or disable it in Privacy Center.';
+
+  @override
+  String get trustSecurityS9Title => 'Payment security';
+
+  @override
+  String get trustSecurityS9Body =>
+      'Premium subscriptions on Android are processed by Google Play Billing. Lune never sees or stores your card number. Manage or cancel your subscription through your Google Play account settings.';
+
+  @override
+  String get trustSecurityS10Title => 'Android app permissions';
+
+  @override
+  String get trustSecurityS10Body =>
+      'Lune requests only permissions needed for features you use: Internet (sign-in, optional cloud sync, AI, community), Notifications (optional cycle reminders), Google Play Billing (Premium), exact alarms and boot restart (reliable local reminders), and photos/media only when you choose to attach an image or set a profile photo. Android backup for app data is disabled (allowBackup=false) so cycle data is not copied to Google device backup by default.';
+
+  @override
+  String get trustCookiesTitle => 'Cookie & Storage Policy';
+
+  @override
+  String get trustCookiesIntro =>
+      'Lune is a mobile app first. This page explains what is stored on your device, what our website keeps, and what we deliberately do not track. We believe clarity about storage is part of respecting your privacy.';
+
+  @override
+  String get trustCookiesS1Title => 'App local storage';
+
+  @override
+  String get trustCookiesS1Body =>
+      'The Lune app stores your cycle logs, wellness entries, preferences, consent choices, and (if you are a guest) AI chat history on your device using encrypted local databases and secure storage. This is essential for offline tracking and fast daily logging.';
+
+  @override
+  String get trustCookiesS2Title => 'Website cookies';
+
+  @override
+  String get trustCookiesS2Body =>
+      'Our website (lune-7d956.web.app) does not use advertising or tracking cookies. We may use essential technical storage — such as remembering your language choice on legal pages — so you do not have to re-select it every visit.';
+
+  @override
+  String get trustCookiesS3Title => 'No ad tracking';
+
+  @override
+  String get trustCookiesS3Body =>
+      'We do not use third-party ad networks, cross-app trackers, or marketing pixels in the Lune app. Your health data is never used for targeted advertising, audience profiling, or retargeting campaigns.';
+
+  @override
+  String get trustCookiesS4Title => 'Managing storage';
+
+  @override
+  String get trustCookiesS4Body =>
+      'You can clear local app data by uninstalling the app or deleting your account from Privacy Center. Exported backup files you save to your clipboard or elsewhere remain under your control — delete them when you no longer need them.';
+
+  @override
+  String get trustCookiesS5Title => 'Push notification tokens';
+
+  @override
+  String get trustCookiesS5Body =>
+      'If you enable notifications, Firebase Cloud Messaging stores a device token so we can deliver cycle reminders and app updates you asked for. This token is used for delivery only — not for advertising or selling your identity to third parties.';
+
+  @override
+  String get trustCookiesS6Title => 'Community cache';
+
+  @override
+  String get trustCookiesS6Body =>
+      'When you browse communities, posts and images may be cached temporarily on your device for smoother scrolling. This cache is part of normal app performance and is cleared when you uninstall the app or clear app data.';
+
+  @override
+  String get trustCookiesS7Title => 'Language & consent preferences';
+
+  @override
+  String get trustCookiesS7Body =>
+      'Your language choice, Privacy Center consent toggles, and stealth-mode settings are saved locally so the app remembers your preferences between sessions. These settings stay on your device unless you sign in and sync account-level preferences.';
+
+  @override
+  String get trustCookiesS8Title => 'What we never store for ads';
+
+  @override
+  String get trustCookiesS8Body =>
+      'We do not place ad cookies, social pixels, or behavioral tracking SDKs in Lune. We do not build marketing profiles from your cycle data, symptoms, moods, or AI conversations.';
+
+  @override
+  String get trustIpTitle => 'How We Use IP Addresses';
+
+  @override
+  String get trustIpIntro =>
+      'When you use Lune or our website, your IP address may be processed by our infrastructure providers. This page explains why that happens, what we do not do with it, and the choices available to you.';
+
+  @override
+  String get trustIpS1Title => 'Why IP addresses are processed';
+
+  @override
+  String get trustIpS1Body =>
+      'IP addresses help Firebase and our Cloud Functions deliver requests securely, route traffic to the correct server, and keep the service available. Without basic network metadata, cloud apps cannot function reliably.';
+
+  @override
+  String get trustIpS2Title => 'What we do not do';
+
+  @override
+  String get trustIpS2Body =>
+      'We do not sell IP addresses, use them for advertising profiles, or attempt to determine your precise physical location from your IP alone. Your IP is not shared with data brokers or ad networks.';
+
+  @override
+  String get trustIpS3Title => 'Retention';
+
+  @override
+  String get trustIpS3Body =>
+      'IP addresses in server and hosting logs are kept only as long as needed for security, abuse prevention, and troubleshooting. They are then rotated or deleted according to Firebase and Google Cloud retention policies.';
+
+  @override
+  String get trustIpS4Title => 'Your choices';
+
+  @override
+  String get trustIpS4Body =>
+      'Using a VPN is your choice — we do not penalize VPN users. Deleting your account removes your profile and associated cloud content from our servers. For full details, see our Privacy Policy.';
+
+  @override
+  String get trustIpS5Title => 'Rate limits & abuse prevention';
+
+  @override
+  String get trustIpS5Body =>
+      'We apply server-side rate limits on AI chat and community actions to prevent spam and protect all users. IP addresses and authenticated account IDs may be used together to detect abusive patterns — never to profile you for marketing.';
+
+  @override
+  String get trustIpS6Title => 'Where data may be processed';
+
+  @override
+  String get trustIpS6Body =>
+      'Firebase and our AI providers may process requests in the United States and other regions where Google and DeepSeek operate data centers. This is standard for cloud-hosted health apps with optional sync.';
+
+  @override
+  String get trustIpS7Title => 'Legal requests';
+
+  @override
+  String get trustIpS7Body =>
+      'We may disclose information — which could include IP-related server logs — only when required by valid legal process and to the minimum extent the law demands. We do not voluntarily share cycle health data with authorities.';
+
+  @override
+  String get trustIpS8Title => 'VPNs and privacy tools';
+
+  @override
+  String get trustIpS8Body =>
+      'If you use a VPN, your visible IP may differ from your physical region. Lune does not block VPN connections. Some Firebase security checks may still apply to protect accounts from takeover attempts.';
+
+  @override
+  String get trustFaqTitle => 'Privacy FAQ';
+
+  @override
+  String get trustFaqIntro =>
+      'Answers to the questions we hear most about privacy, security, and how Lune handles your cycle data. If you do not find your answer here, contact us anytime.';
+
+  @override
+  String get trustFaqQ1 => 'Who can see my cycle data?';
+
+  @override
+  String get trustFaqA1 =>
+      'Only you. By default, your cycle data stays on your device in an encrypted local database. If you enable Premium cloud backup, encrypted copies are stored in your private Firebase account. We do not share cycle data with other users unless you explicitly post in community features.';
+
+  @override
+  String get trustFaqQ2 => 'Does Lune sell my data?';
+
+  @override
+  String get trustFaqA2 =>
+      'No. We never sell your personal or health data. Lune is funded through optional Premium subscriptions processed by Google Play — not through advertising or data brokerage.';
+
+  @override
+  String get trustFaqQ3 => 'What happens when I delete my account?';
+
+  @override
+  String get trustFaqA3 =>
+      'When you confirm deletion in Privacy Center, we immediately remove your Firestore profile, cloud backups, chat history, and community content from our servers, then delete your Firebase Authentication account. Local data on your device remains until you uninstall the app. Technical backups at Firebase may be retained briefly per their infrastructure policies.';
+
+  @override
+  String get trustFaqQ4 => 'Is AI chat private?';
+
+  @override
+  String get trustFaqA4 =>
+      'AI chat requires Premium. Guest users keep chat on the device only. Registered Premium users may have messages stored in the cloud to restore conversations. Every AI message is sent to Google Gemini and/or DeepSeek for processing — see our Privacy Policy. We recommend not sharing information you would not want a third-party AI provider to process.';
+
+  @override
+  String get trustFaqQ5 => 'Can I use Lune without an account?';
+
+  @override
+  String get trustFaqA5 =>
+      'Yes. You can use Lune as a guest with an anonymous Firebase account linked to your device — no email required. Core cycle tracking works fully offline. Cloud backup, Premium AI, cross-device chat history, and some community features require a registered account.';
+
+  @override
+  String get trustFaqQ6 => 'Where is my data stored?';
+
+  @override
+  String get trustFaqA6 =>
+      'Locally on your phone by default in an AES-256 encrypted database. If you enable Premium cloud backup, encrypted backup payloads are stored in Google Firebase, which may process data in the United States and other regions.';
+
+  @override
+  String get trustFaqQ7 => 'How do I export my data?';
+
+  @override
+  String get trustFaqA7 =>
+      'Open Privacy Center → Export Data to copy an encrypted local backup to your clipboard. You can save it in a password manager or secure notes app. For help with portability requests, email merrsoheb@gmail.com.';
+
+  @override
+  String get trustFaqQ8 => 'How do I contact you about privacy?';
+
+  @override
+  String get trustFaqA8 =>
+      'Email merrsoheb@gmail.com or use Contact Support in Privacy Center. We aim to respond to privacy requests within 30 days.';
+
+  @override
+  String get trustFaqQ9 => 'Is AI chat free?';
+
+  @override
+  String get trustFaqA9 =>
+      'No. Lune AI is a Premium feature. Premium subscribers can send up to 30 AI messages per calendar day — enforced on our servers. If a provider fails, we do not count that message against your limit.';
+
+  @override
+  String get trustFaqQ10 => 'What does Premium unlock?';
+
+  @override
+  String get trustFaqA10 =>
+      'Premium includes cloud cycle backup, Lune AI chat (30 messages/day), and attaching photos or videos in community posts and stories. Core local tracking remains free for all users.';
+
+  @override
+  String get trustFaqQ11 => 'How does Stealth mode work?';
+
+  @override
+  String get trustFaqA11 =>
+      'Stealth mode shows a calculator screen instead of Lune until you enter your secret PIN and press equals. It protects your privacy if someone opens your phone. It is a local disguise only — enable it in Privacy Center.';
+
+  @override
+  String get trustFaqQ12 => 'Who sees my community posts?';
+
+  @override
+  String get trustFaqA12 =>
+      'Posts are visible to members of the Lune communities you join. You can report unsafe content; reported posts may be auto-hidden while we review them. Community participation is optional and requires consent.';
+
+  @override
+  String get trustFaqQ13 => 'Can I share a health report with my doctor?';
+
+  @override
+  String get trustFaqA13 =>
+      'Yes. Lune can generate a health summary report from your logged data that you can review and share yourself. We do not send reports to doctors automatically — you choose what to share and with whom.';
+
+  @override
+  String get trustFaqQ14 => 'Does the magazine use my personal data?';
+
+  @override
+  String get trustFaqA14 =>
+      'No. Educational articles in the Lune magazine are editorial content managed separately from your private cycle logs. Reading articles does not upload your personal health data for personalization.';
+
+  @override
+  String get trustFaqQ15 => 'What notifications does Lune send?';
+
+  @override
+  String get trustFaqA15 =>
+      'If you opt in, we may send cycle reminders, wellness prompts, and important app updates via Firebase Cloud Messaging. We do not send promotional ads or sell notification audiences to third parties. You can disable notifications in device settings.';
+
+  @override
+  String get trustFaqQ16 => 'What are my GDPR rights?';
+
+  @override
+  String get trustFaqA16 =>
+      'If you are in the EEA or UK, you may request access, correction, deletion, or export of your personal data. Delete your account in Privacy Center for immediate server removal, or email merrsoheb@gmail.com for assistance. We respond within 30 days.';
+
+  @override
+  String get trustFaqQ17 => 'What Android permissions does Lune use?';
+
+  @override
+  String get trustFaqA17 =>
+      'Internet for sign-in and optional online features; Notifications for reminders you enable; Google Play Billing for Premium; exact alarms and boot restart for reliable local reminders. Photos or videos are requested only when you attach media in community (Premium) or choose a profile photo. We do not access your contacts, SMS, or call logs.';
+
+  @override
+  String get trustFaqQ18 => 'How do Google Play subscriptions work?';
+
+  @override
+  String get trustFaqA18 =>
+      'Premium is billed through Google Play. Subscriptions auto-renew unless you cancel at least 24 hours before the period ends. Manage or cancel in Google Play → Subscriptions. Refunds follow Google Play\'s refund policy. Deleting your Lune account does not automatically stop billing — cancel the subscription separately.';
+
+  @override
+  String get trustFaqQ19 => 'What is the minimum age to use Lune?';
+
+  @override
+  String get trustFaqA19 =>
+      'You must be at least 13 years old. Users under 13 cannot continue after the age gate. Some community features are restricted to users 18 and older. Parents who believe a child under 13 used Lune should contact us to request deletion.';
+
+  @override
+  String get trustFaqQ20 => 'Is Lune a medical device or medical advice?';
+
+  @override
+  String get trustFaqA20 =>
+      'No. Lune is for informational wellness tracking only — not a medical device, diagnosis, or treatment. Cycle predictions, AI chat, community posts, and magazine articles are not medical advice. Always consult a qualified healthcare professional for medical decisions.';
+
+  @override
+  String get trustFaqQ21 =>
+      'What data does Lune collect (Google Play Data Safety)?';
+
+  @override
+  String get trustFaqA21 =>
+      'Data you provide: cycle dates, symptoms, moods, wellness notes, and optional community posts. Account data if registered (email, name, sign-in method). Technical data: device tokens for notifications, anonymized crash reports, and approximate activity timestamps. Premium AI messages are sent to Google Gemini/DeepSeek for processing. Data is not sold. Core tracking stays on your device unless you enable Premium cloud backup.';
+
+  @override
+  String get trustBodyDataTitle => 'Your Body, Your Data';
+
+  @override
+  String get trustBodyDataIntro =>
+      'Your menstrual and wellness data is deeply personal. At Lune, you are in control — always. This page explains what you log, who owns it, and how optional features use it.';
+
+  @override
+  String get trustBodyDataS1Title => 'Ownership';
+
+  @override
+  String get trustBodyDataS1Body =>
+      'You own the cycle, symptom, mood, flow, water intake, and wellness data you log. Lune is a tool to help you understand your body — not a platform that monetizes your health information or sells insights about you.';
+
+  @override
+  String get trustBodyDataS2Title => 'Local-first design';
+
+  @override
+  String get trustBodyDataS2Body =>
+      'The app works fully offline. Your daily logs are written to an encrypted database on your device first. Nothing leaves your phone unless you choose cloud backup, AI chat, community, or other features that require a network connection.';
+
+  @override
+  String get trustBodyDataS3Title => 'Explicit consent';
+
+  @override
+  String get trustBodyDataS3Body =>
+      'Cloud backup, AI features, community participation, and push notifications each require separate consent in Privacy Center. You can enable or disable them individually without losing your local cycle history.';
+
+  @override
+  String get trustBodyDataS4Title => 'No hidden sharing';
+
+  @override
+  String get trustBodyDataS4Body =>
+      'We do not share your cycle data with employers, insurers, advertisers, or external social networks. Community posts and stories are visible only within Lune communities you choose to join.';
+
+  @override
+  String get trustBodyDataS5Title => 'What you can log';
+
+  @override
+  String get trustBodyDataS5Body =>
+      'Lune lets you track periods, symptoms, moods, pain levels, water intake, and other wellness notes you choose to record. You decide how much detail to add each day. None of this is required beyond what you need for your own understanding.';
+
+  @override
+  String get trustBodyDataS6Title => 'How AI uses your cycle context';
+
+  @override
+  String get trustBodyDataS6Body =>
+      'When you use Lune AI (Premium), relevant cycle context you approve may be sent to our servers and then to Google Gemini or DeepSeek to personalize responses. AI is optional — you can track your cycle without ever opening chat.';
+
+  @override
+  String get trustBodyDataS7Title => 'Magazine & education';
+
+  @override
+  String get trustBodyDataS7Body =>
+      'Articles in the Lune magazine are general health education content. They are separate from your private logs and are not generated from your personal cycle data. Editors publish articles through our admin tools — not by reading your diary.';
+
+  @override
+  String get trustBodyDataS8Title => 'Portability';
+
+  @override
+  String get trustBodyDataS8Body =>
+      'You can export an encrypted backup from Privacy Center at any time. Your data belongs to you — if you leave Lune, you can take a copy with you before deleting your account.';
+
+  @override
+  String get trustDataEndsTitle => 'Your Data Ends With You';
+
+  @override
+  String get trustDataEndsIntro =>
+      'When you decide to leave Lune, your data should leave too. This page walks through every step — server deletion, local files, subscriptions, and what cannot be undone.';
+
+  @override
+  String get trustDataEndsS1Title => 'Delete anytime';
+
+  @override
+  String get trustDataEndsS1Body =>
+      'You can delete your account from Privacy Center at any time. No phone calls, no dark patterns — just a clear confirmation step. Guest users can clear local data by uninstalling the app.';
+
+  @override
+  String get trustDataEndsS2Title => 'Immediate server deletion';
+
+  @override
+  String get trustDataEndsS2Body =>
+      'When you confirm account deletion, our servers immediately remove your Firestore profile, cloud cycle backups, chat history, and community posts, then delete your Firebase Authentication account. This is not a 30-day waiting period — deletion starts right away.';
+
+  @override
+  String get trustDataEndsS3Title => 'Local data';
+
+  @override
+  String get trustDataEndsS3Body =>
+      'Data on your device is not automatically erased when you delete your cloud account. Uninstall the app or use your phone\'s app settings to remove remaining local encrypted databases and preferences.';
+
+  @override
+  String get trustDataEndsS4Title => 'Backups you exported';
+
+  @override
+  String get trustDataEndsS4Body =>
+      'If you exported a backup file to your clipboard or saved it elsewhere, that copy is outside our control. Delete those files if you no longer need them — we cannot reach into your notes app or cloud drive.';
+
+  @override
+  String get trustDataEndsS5Title => 'Permanent action';
+
+  @override
+  String get trustDataEndsS5Body =>
+      'Account deletion cannot be undone. If you return to Lune later, you start fresh unless you restore from a local backup you saved before deleting.';
+
+  @override
+  String get trustDataEndsS6Title => 'Guest vs registered accounts';
+
+  @override
+  String get trustDataEndsS6Body =>
+      'Guest accounts exist mainly on your device with a lightweight anonymous Firebase identity. Deleting a registered account triggers full server cleanup. Guests should uninstall the app to remove all local traces.';
+
+  @override
+  String get trustDataEndsS7Title => 'Premium subscriptions';
+
+  @override
+  String get trustDataEndsS7Body =>
+      'Deleting your Lune account does not automatically cancel a Google Play subscription. Open Google Play → Subscriptions to cancel Premium billing separately so you are not charged after leaving.';
+
+  @override
+  String get trustDataEndsS8Title => 'Community content removal';
+
+  @override
+  String get trustDataEndsS8Body =>
+      'When you delete your account, we remove your posts, comments, and stories from Lune communities through automated server cleanup. Remaining copies in other users\' caches disappear as they refresh or reinstall.';
+
+  @override
+  String get trustA11yTitle => 'Accessibility at Lune';
+
+  @override
+  String get trustA11yIntro =>
+      'We believe everyone deserves access to cycle health tools — regardless of language, vision, or motor ability. Accessibility is an ongoing commitment, not a one-time feature.';
+
+  @override
+  String get trustA11yS1Title => 'Our commitment';
+
+  @override
+  String get trustA11yS1Body =>
+      'We design Lune to be usable with screen readers, system font scaling, and both left-to-right and right-to-left layouts. Arabic and English receive equal attention in navigation, labels, and reading direction.';
+
+  @override
+  String get trustA11yS2Title => 'In-app features';
+
+  @override
+  String get trustA11yS2Body =>
+      'Lune respects your device\'s text size, bold text, and contrast settings where supported by Flutter and your operating system. Navigation uses standard Material patterns for predictable screen-reader behavior across tabs and forms.';
+
+  @override
+  String get trustA11yS3Title => 'Request accommodations';
+
+  @override
+  String get trustA11yS3Body =>
+      'If you encounter a barrier while using Lune, email merrsoheb@gmail.com with a description of the issue, your device model, and your preferred language. We take accessibility feedback seriously and prioritize fixes that block core tracking.';
+
+  @override
+  String get trustA11yS4Title => 'Ongoing improvements';
+
+  @override
+  String get trustA11yS4Body =>
+      'We review new features for color contrast, touch target size, and screen reader labels before release. Past releases have improved RTL layouts, larger tap areas, and clearer error messages — and more improvements are planned.';
+
+  @override
+  String get trustA11yS5Title => 'Arabic & English parity';
+
+  @override
+  String get trustA11yS5Body =>
+      'Switching between Arabic and English flips the entire interface direction — menus, cards, and legal pages included. You should not need to fight the layout to read content in your language.';
+
+  @override
+  String get trustA11yS6Title => 'Themes & system settings';
+
+  @override
+  String get trustA11yS6Body =>
+      'Lune follows your device theme where possible and uses readable typography across light backgrounds. If system high-contrast mode is enabled, OS-level settings may further improve readability.';
+
+  @override
+  String get trustA11yS7Title => 'Roadmap';
+
+  @override
+  String get trustA11yS7Body =>
+      'We are working toward broader WCAG-aligned improvements — including richer screen reader descriptions for charts, keyboard navigation enhancements, and user-tested contrast audits. Tell us what matters most to you.';
 }

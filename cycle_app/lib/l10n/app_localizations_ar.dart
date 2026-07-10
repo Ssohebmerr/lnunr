@@ -33,7 +33,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navAccount => 'الحساب';
 
   @override
-  String get welcomeTitle => 'رفيقتك الخاصة لتتبع الدورة';
+  String get welcomeTitle => 'دورتكِ لها أطوار — كالقمر';
 
   @override
   String get welcomeSubtitle =>
@@ -186,10 +186,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aiSubtitle =>
-      'رفيقتك الخاصة للدورة. اسألي عن دورتك وأعراضك والعناية الذاتية — ليست نصيحة طبية.';
+      'Lune تعني القمر — اسألي عن أطوار دورتكِ وأعراضكِ والعناية الذاتية — ليست نصيحة طبية.';
 
   @override
-  String get aiWelcome => 'مرحباً! أنا Lune — رفيقتك للعافية.';
+  String get aiWelcome => 'مرحباً! أنا Lune — رفيقتكِ لعافية أطوار دورتكِ.';
 
   @override
   String get aiWelcomeHint =>
@@ -302,6 +302,107 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goalPcosTitle => 'إدارة تكيّس المبايض';
+
+  @override
+  String get conditionHowAreYouToday => 'كيف حالكِ اليوم؟';
+
+  @override
+  String get conditionTapToLog => 'انقري ما تشعرين به — يُحفَظ لليوم.';
+
+  @override
+  String conditionLoggedNamed(String name) {
+    return 'سُجِّل: $name';
+  }
+
+  @override
+  String conditionRemovedNamed(String name) {
+    return 'أُزيل: $name';
+  }
+
+  @override
+  String conditionRitualsDoneToday(int done, int total) {
+    return 'أنجزتِ $done من $total اليوم';
+  }
+
+  @override
+  String conditionStreakDays(int days) {
+    return '$days يوم متتالٍ من التسجيل';
+  }
+
+  @override
+  String get menopauseHotFlashesToday => 'الهبّات الساخنة اليوم';
+
+  @override
+  String get menopauseHotFlashHint => 'انقري − / + مع كل هبّة';
+
+  @override
+  String get menopauseDaysSincePeriodTitle => 'منذ آخر دورة';
+
+  @override
+  String conditionDaysCount(int days) {
+    return '$days يوم';
+  }
+
+  @override
+  String get menopauseMilestoneHint => '12 شهراً بلا دورة تُعلن انقطاع الطمث.';
+
+  @override
+  String get menopauseMilestoneReached =>
+      '12 شهراً بلا دورة — بلغتِ انقطاع الطمث. 🌿';
+
+  @override
+  String get menopauseNeedPeriodData => 'سجّلي دورة لبدء عدّ الفجوة.';
+
+  @override
+  String get pcosCycleGapTitle => 'فجوة الدورة';
+
+  @override
+  String pcosTypicalCycle(int days) {
+    return 'دورتكِ المعتادة نحو $days يوماً.';
+  }
+
+  @override
+  String get pcosGapNormal => 'أنتِ ضمن نطاقكِ المعتاد.';
+
+  @override
+  String get pcosGapLong =>
+      'أطول من المعتاد — شائع مع التكيّس. استمري بتسجيل كل دورة.';
+
+  @override
+  String get pcosGapUnknown => 'سجّلي دورتين لنقارن فجواتكِ.';
+
+  @override
+  String get postpartumMoodTitle => 'كيف تشعرين اليوم؟';
+
+  @override
+  String get postpartumMoodSaved => 'شكراً لمشاركتكِ 🤍';
+
+  @override
+  String get postpartumMoodLowSupport =>
+      'لا بأس ألّا تكوني بخير. إن استمر هذا الشعور، تواصلي مع شخص تثقين به أو مع طبيبتكِ.';
+
+  @override
+  String get postpartumJourneyTitle => 'رحلة التعافي';
+
+  @override
+  String postpartumJourneyCaption(int percent) {
+    return 'نحو $percent% من عامكِ الأول.';
+  }
+
+  @override
+  String get moodVeryLow => 'منخفض جداً';
+
+  @override
+  String get moodLow => 'منخفض';
+
+  @override
+  String get moodOkay => 'لا بأس';
+
+  @override
+  String get moodGood => 'جيد';
+
+  @override
+  String get moodGreat => 'رائع';
 
   @override
   String get activatePremiumTest => 'تفعيل Premium (تجريبي)';
@@ -1488,12 +1589,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String clinicalFlagShortCycle(int days) {
-    return 'متوسط الدورة $days يوماً — أقصر من النطاق المعتاد 21–35 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
+    return 'متوسط الدورة $days يوماً — أقصر من النطاق المرجعي 24–38 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
   }
 
   @override
   String clinicalFlagLongCycle(int days) {
-    return 'متوسط الدورة $days يوماً — أطول من النطاق المعتاد 21–35 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
+    return 'متوسط الدورة $days يوماً — أطول من النطاق المرجعي 24–38 يوماً؛ يُستحسن مناقشته مع طبيبكِ.';
   }
 
   @override
@@ -1503,7 +1604,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String clinicalFlagProlongedPeriod(int days) {
-    return 'متوسط مدة الطمث $days أيام — أطول من المعتاد (نحو 7 أيام)؛ يُستحسن مناقشته مع طبيبكِ.';
+    return 'متوسط مدة الطمث $days أيام — أطول من المدة المرجعية (8 أيام)؛ يُستحسن مناقشته مع طبيبكِ.';
   }
 
   @override
@@ -1625,6 +1726,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get educationTitle => 'تعلمي';
+
+  @override
+  String get magazineTitle => 'مجلة Lune';
+
+  @override
+  String get magazineFeatured => 'مقال مميز';
+
+  @override
+  String get magazineFromLune => 'من المجلة';
+
+  @override
+  String get magazineReadMore => 'اقرئي المزيد';
 
   @override
   String get educationSubtitle =>
@@ -2061,7 +2174,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingPrivacyAgree =>
-      'أوافق على سياسة الخصوصية. بيانات الدورة تبقى على جهازي ما لم أفعّل المزامنة السحابية.';
+      'أوافق على سياسة الخصوصية. بيانات الدورة تبقى على جهازي افتراضياً. النسخ السحابي والذكاء الاصطناعي والمجتمع اختياريان ويتطلبان موافقة منفصلة من مركز الخصوصية.';
 
   @override
   String get privacyCenterTitle => 'الخصوصية والبيانات';
@@ -2202,7 +2315,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'تُرسل رسائل المحادثة إلى مزوّدي ذكاء اصطناعي موثوقين (DeepSeek / Google) عبر خادمنا الآمن لتوليد الردود. بدون إعلانات. يمكنك الإيقاف في أي وقت.';
+      'تُرسل رسائل المحادثة وسياق الدورة المجهول (الأعراض، المزاج، الطور) إلى مزوّدي ذكاء اصطناعي موثوقين (DeepSeek / Google) عبر خادمنا الآمن. ليست نصيحة طبية. بدون إعلانات. يمكنك الإيقاف في أي وقت.';
+
+  @override
+  String get aiAdultsOnly => 'Lune AI للبالغات 18+ فقط.';
 
   @override
   String get consentCommunityTitle => 'الانضمام للمجتمعات؟';
@@ -2298,7 +2414,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingWelcomeSubtitle =>
-      'تطبيقكِ الشخصي لصحة الدورة الشهرية والعافية';
+      'Lune تعني القمر — رفيقة خاصة لكل أطوار دورتكِ وعافيتكِ';
 
   @override
   String get onboardingWelcomeHelps => 'سنساعدكِ في:';
@@ -2588,7 +2704,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pregnancyTrackingSubtitle =>
-      'سجّلي الوزن وعدّي الركلات ووقتي الانقباضات — زي Flo.';
+      'سجّلي الوزن وعدّي الركلات ووقتي الانقباضات — أسبوعاً بأسبوع مع Lune.';
 
   @override
   String get pregnancyWeightTitle => 'الوزن';
@@ -3203,7 +3319,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aboutTagline =>
-      'تطبيق خاص وآمن لتتبع الدورة — بياناتك على جهازك، والسحابة والذكاء الاصطناعي والمجتمعات اختيارية.';
+      'Lune تعني القمر — رفيقتكِ الخاصة لعافية أطوار دورتكِ. بياناتك على جهازك؛ السحابة والذكاء الاصطناعي والمجتمعات اختيارية.';
 
   @override
   String get insightsCycleRegularityScore => 'انتظام الدورة (CRS)';
@@ -3261,6 +3377,23 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get smartPhaseReminderSubtitle =>
       'نصيحة يومية داعمة تتكيف مع مرحلتك في الدورة أو أسبوع الحمل.';
+
+  @override
+  String get latePeriodReminder => 'تحذير تأخّر الدورة';
+
+  @override
+  String get latePeriodReminderSubtitle =>
+      'تنبيه لطيف إذا تأخّرت دورتك يومين عن الموعد المتوقع.';
+
+  @override
+  String get sendTestNotification => 'إرسال إشعار تجريبي';
+
+  @override
+  String get testNotificationSent => 'تم الإرسال! تحقّقي من شريط الإشعارات.';
+
+  @override
+  String get testNotificationBlocked =>
+      'الإشعارات مغلقة لتطبيق Lune. فعّليها من إعدادات النظام.';
 
   @override
   String get graphExportShared => 'الرسم جاهز للمشاركة.';
@@ -3552,14 +3685,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyP2Body =>
-      'نجمع الأنواع التالية من المعلومات:\n\n• بيانات الصحة والدورة: تواريخ الدورة الشهرية والأعراض والمزاج ومستويات النزف والبيانات الصحية الأخرى التي تسجلينها طوعاً.\n• معلومات الحساب: إذا أنشأتِ حساباً، نجمع بريدك الإلكتروني واسمك عبر Firebase Authentication.\n• محتوى المجتمع: المنشورات والتعليقات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع.\n• معلومات الجهاز: معرفات الجهاز الأساسية المطلوبة للإشعارات وعمل التطبيق.\n• بيانات المحادثة الذكية: الرسائل التي ترسلينها للمساعد الذكي تتم معالجتها لتوليد الردود ولا يتم تخزينها بشكل دائم على خوادمنا.';
+      'نجمع الأنواع التالية من المعلومات:\n\n• بيانات الصحة والدورة: تواريخ الدورة الشهرية والأعراض والمزاج ومستويات النزف والبيانات الصحية الأخرى التي تسجلينها طوعاً.\n• معلومات الحساب: البريد الإلكتروني والاسم وطريقة تسجيل الدخول عند التسجيل (بريد/كلمة مرور، Google، أو Apple). عند استخدام التطبيق كضيفة، ننشئ حساباً مجهولاً عبر Firebase مرتبطاً بجهازكِ دون جمع بريدك الإلكتروني.\n• محتوى المجتمع: المنشورات والتعليقات والتفاعلات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع (إذا اخترتِ المشاركة).\n• معلومات الجهاز: معرفات الجهاز الأساسية المطلوبة للإشعارات وأمان التطبيق (Firebase App Check) وعمل التطبيق.\n• بيانات المحادثة الذكية: الرسائل التي ترسلينها للمساعد الذكي تُعالَج عبر مزوّدي ذكاء اصطناعي من أطراف ثالثة. الضيفات: سجل المحادثة يبقى على الجهاز فقط. المسجّلات: قد يُخزَّن سجل المحادثة في حسابكِ السحابي (Firebase) لاستعادة المحادثات.\n• الاستخدام والتشخيص: وقت آخر نشاط تقريبي وتقارير الأعطال عبر Firebase Crashlytics في الإصدارات النهائية لمساعدتنا على إصلاح الأخطاء. لا نستخدم متتبعات إعلانات من أطراف ثالثة.';
 
   @override
   String get privacyP3Title => '٣. كيف نستخدم معلوماتك';
 
   @override
   String get privacyP3Body =>
-      'تُستخدم معلوماتك من أجل:\n\n• توفير تتبع الدورة والتنبؤات والرؤى الشخصية الأساسية.\n• تقديم إرشادات صحية مدعومة بالذكاء الاصطناعي وملخصات يومية.\n• تمكين ميزات المجتمع (المنشورات، التعليقات، القصص) إذا اخترتِ المشاركة.\n• معالجة النسخ الاحتياطي السحابي إذا فعلتِ النسخ الاحتياطي المشفر.\n• إرسال إشعارات اختيارية (تذكيرات الدورة، تذكيرات الحبوب).\n• تحسين أداء التطبيق وإصلاح الأخطاء.\n• ضمان السلامة ومنع سوء استخدام ميزات المجتمع.';
+      'تُستخدم معلوماتك من أجل:\n\n• توفير تتبع الدورة والتنبؤات والرؤى الشخصية الأساسية.\n• تقديم إرشادات صحية مدعومة بالذكاء الاصطناعي وملخصات يومية.\n• تمكين ميزات المجتمع (المنشورات، التعليقات، القصص) إذا اخترتِ المشاركة.\n• معالجة النسخ الاحتياطي السحابي إذا فعلتِ النسخ الاحتياطي المشفر.\n• إرسال إشعارات اختيارية (تذكيرات الدورة، تذكيرات الحبوب).\n• تحسين أداء التطبيق وتشخيص الأعطال وإصلاح الأخطاء.\n• ضمان السلامة ومنع سوء استخدام ميزات المجتمع.';
 
   @override
   String get privacyP4Title => '٤. تخزين البيانات والأمان';
@@ -3573,14 +3706,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyP5Body =>
-      'نستخدم خدمات الطرف الثالث التالية:\n\n• Google Firebase (المصادقة، Firestore، الدوال السحابية، الاستضافة): لحسابات المستخدمين وتخزين البيانات ومعالجة الواجهة الخلفية.\n• Google Gemini AI: لتشغيل مساعد المحادثة الذكي. يتم إرسال رسائلكِ إلى Google للمعالجة ولا تُستخدم لتدريب نماذج الذكاء الاصطناعي.\n• Google Play Billing: لمعالجة الاشتراكات داخل التطبيق.\n\nلكل منها سياسة خصوصية خاصة بها. نشجعكِ على مراجعتها.';
+      'نستخدم خدمات الطرف الثالث التالية:\n\n• Google Firebase (المصادقة، Firestore، الدوال السحابية، Cloud Messaging، الاستضافة، App Check، Crashlytics): الحسابات وتخزين البيانات والإشعارات والأمان وتقارير الأعطال.\n• Google Gemini AI: محادثة الذكاء الاصطناعي ومعالجة المحتوى. تُرسَل الرسائل إلى Google للمعالجة وفق شروط واجهة Google.\n• DeepSeek AI: مزوّد ذكاء اصطناعي بديل للمحادثة والتحليل عند استخدامه من الواجهة الخلفية. تُرسَل الرسائل إلى DeepSeek للمعالجة وفق شروطهم.\n• Google Play Billing: مدفوعات الاشتراك المميز على Android (تُعالَج عبر Google).\n\nلكل مزوّد سياسة خصوصية خاصة. نشجعكِ على مراجعتها. لا نبيع بياناتكِ الشخصية.';
 
   @override
   String get privacyP6Title => '٦. حقوقك في البيانات';
 
   @override
   String get privacyP6Body =>
-      'لكِ الحق في:\n\n• الوصول إلى بياناتك: عرض جميع البيانات المخزنة عنكِ داخل التطبيق.\n• تصدير بياناتك: تنزيل بيانات الدورة كملف نسخة احتياطية محلية.\n• حذف بياناتك: حذف حسابكِ وجميع البيانات المرتبطة به نهائياً من مركز الخصوصية.\n• سحب الموافقة: سحب الموافقة على المزامنة السحابية أو ميزات الذكاء الاصطناعي أو المشاركة في المجتمع في أي وقت.\n• إلغاء الاشتراك من الإشعارات: تعطيل أي نوع من الإشعارات من الإعدادات.\nلممارسة هذه الحقوق، استخدمي مركز الخصوصية في التطبيق أو تواصلي معنا عبر البريد الإلكتروني أدناه.';
+      'لكِ الحق في:\n\n• الوصول إلى بياناتك: عرض جميع البيانات المخزنة عنكِ داخل التطبيق.\n• تصدير بياناتك: تنزيل بيانات الدورة كملف نسخة احتياطية محلية.\n• حذف بياناتك: حذف حسابكِ وجميع البيانات المرتبطة به نهائياً من مركز الخصوصية.\n• سحب الموافقة: سحب الموافقة على المزامنة السحابية أو ميزات الذكاء الاصطناعي أو المشاركة في المجتمع في أي وقت.\n• إلغاء الاشتراك من الإشعارات: تعطيل أي نوع من الإشعارات من الإعدادات.\n\nإذا كنتِ في الاتحاد الأوروبي/المملكة المتحدة، قد تكون لكِ حقوق إضافية بموجب GDPR/UK GDPR. لممارسة هذه الحقوق، استخدمي مركز الخصوصية في التطبيق أو تواصلي معنا عبر البريد الإلكتروني أدناه.';
 
   @override
   String get privacyP7Title => '٧. خصوصية الأطفال';
@@ -3594,14 +3727,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyP8Body =>
-      'نحتفظ ببياناتكِ طالما تحتفظين بحساب نشط أو حسب الحاجة لتقديم الخدمات. إذا حذفتِ حسابكِ، تتم إزالة جميع البيانات الشخصية من خوادمنا نهائياً خلال 30 يوماً. تبقى البيانات المحلية على جهازكِ حتى تقومين بإلغاء تثبيت التطبيق أو حذفها يدوياً.';
+      'نحتفظ ببياناتكِ طالما تحتفظين بحساب نشط أو حسب الحاجة لتقديم الخدمات. إذا حذفتِ حسابكِ، نزيل فوراً ملفك في Firestore والنسخ السحابية وسجل المحادثة ومحتوى المجتمع من خوادمنا ونحذف حساب Firebase Authentication. تبقى البيانات المحلية على جهازكِ حتى تلغي التثبيت أو تحذفيها يدوياً. قد تحتفظ Firebase أو Google Cloud بنسخ تقنية مؤقتة وفق سياسات بنيتها. تُحفَظ تقارير الأعطال في Crashlytics وفق إعدادات الاحتفاظ في Firebase.';
 
   @override
   String get privacyP9Title => '٩. النقل الدولي للبيانات';
 
   @override
   String get privacyP9Body =>
-      'قد تتم معالجة بياناتكِ في دول غير دولتكِ، بما في ذلك الولايات المتحدة حيث تقع خوادم Google Firebase. باستخدام Lune، فإنكِ توافقين على نقل بياناتكِ إلى هذه المواقع. نضمن وجود ضمانات مناسبة للنقل الدولي.';
+      'قد تتم معالجة بياناتكِ في دول غير دولتكِ، بما في ذلك الولايات المتحدة حيث قد تقع خوادم Google Firebase ومزوّدي الذكاء الاصطناعي. باستخدام Lune، فإنكِ توافقين على نقل بياناتكِ إلى هذه المواقع. نضمن وجود ضمانات مناسبة للنقل الدولي. إذا كنتِ في الاتحاد الأوروبي/المملكة المتحدة، قد تكون لكِ حقوق إضافية بموجب GDPR/UK GDPR كما هو موضّح في القسم 6.';
 
   @override
   String get privacyP10Title => '١٠. إخلاء المسؤولية الطبية';
@@ -3639,14 +3772,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get termsP2Body =>
-      'Lune هو تطبيق لتتبع الدورة الشهرية يوفر:\n\n• أدوات تسجيل الدورة والتنبؤ.\n• رؤى صحية مدعومة بالذكاء الاصطناعي ومساعدة المحادثة.\n• محتوى العافية ذاتية الرعاية وتوصيات الصحة.\n• ميزات المجتمع لمشاركة التجارب.\n• خدمات النسخ الاحتياطي والمزامنة للبيانات.\n• محتوى تعليمي صحي.\n\nالتطبيق مخصص للاستخدام الشخصي وغير التجاري فقط.';
+      'Lune هو تطبيق لتتبع الدورة الشهرية يوفر:\n\n• أدوات تسجيل الدورة والتنبؤ.\n• رؤى صحية مدعومة بالذكاء الاصطناعي ومساعدة المحادثة.\n• محتوى العافية ذاتية الرعاية وتوصيات الصحة.\n• ميزات المجتمع لمشاركة التجارب.\n• خدمات النسخ الاحتياطي والمزامنة للبيانات.\n• محتوى تعليمي صحي ومقالات المجلة.\n\nالتطبيق مخصص للاستخدام الشخصي وغير التجاري فقط.';
 
   @override
   String get termsP3Title => '٣. حسابات المستخدمين';
 
   @override
   String get termsP3Body =>
-      'للوصول إلى ميزات معينة، يمكنكِ إنشاء حساب باستخدام البريد الإلكتروني/كلمة المرور أو تسجيل الدخول عبر Google. أنتِ مسؤولة عن الحفاظ على سرية بيانات اعتماد حسابكِ. توافقين على إخطارنا فوراً بأي استخدام غير مصرح به لحسابكِ. يجب أن تكوني بعمر 13 عاماً على الأقل لإنشاء حساب. نحتفظ بالحق في تعليق أو إنهاء الحسابات التي تنتهك هذه الشروط.';
+      'يمكنكِ استخدام Lune كضيفة بحساب مجهول مرتبط بالجهاز، أو إنشاء حساب مسجّل عبر البريد/كلمة المرور أو Google أو Sign in with Apple (حيث يتوفر). أنتِ مسؤولة عن الحفاظ على سرية بيانات اعتماد حسابكِ. توافقين على إخطارنا فوراً بأي استخدام غير مصرح به لحسابكِ. يجب أن تكوني بعمر 13 عاماً على الأقل لاستخدام التطبيق. نحتفظ بالحق في تعليق أو إنهاء الحسابات التي تنتهك هذه الشروط.';
 
   @override
   String get termsP4Title => '٤. سلوك المستخدم';
@@ -3702,7 +3835,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get termsP11Body =>
-      'تخضع هذه الشروط للقوانين المعمول بها دون اعتبار لمبادئ تعارض القوانين. يتم حل أي نزاعات أولاً من خلال التفاوض بحسن نية. إذا كانت لديكِ أسئلة حول هذه الشروط، تواصلي معنا عبر:';
+      'تخضع هذه الشروط للقوانين المعمول بها في نطاق مشغّل Lune، إلا حيث توفر قوانين حماية المستهلك الإلزامية في بلد إقامتكِ حمايةً إضافية. يُحل أي نزاع أولاً من خلال التفاوض بحسن نية. إذا كانت لديكِ أسئلة حول هذه الشروط، تواصلي معنا عبر:';
 
   @override
   String get notifRationaleTitle => 'ابقي على اطلاع';
@@ -4112,4 +4245,596 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountUsernameInvalid =>
       'من 3 إلى 20 حرفاً: أحرف إنجليزية أو أرقام أو نقطة أو شرطة سفلية';
+
+  @override
+  String get trustHubTitle => 'الثقة والخصوصية';
+
+  @override
+  String get trustHubSubtitle =>
+      'إجابات واضحة عن كيف تحمي Lune بياناتك الصحية — الأمان، ملفات الارتباط، إمكانية الوصول، والمزيد.';
+
+  @override
+  String get trustHubLink => 'مركز الثقة والخصوصية';
+
+  @override
+  String get trustLinkSecurity => 'الأمان في Lune';
+
+  @override
+  String get trustLinkSecuritySub => 'التشفير والمصادقة وكيف نحمي بياناتك';
+
+  @override
+  String get trustLinkBodyData => 'جسدك، بياناتك';
+
+  @override
+  String get trustLinkBodyDataSub => 'بيانات دورتك ملككِ — لا نبيعها أبداً';
+
+  @override
+  String get trustLinkDataEnds => 'بياناتك تنتهي معكِ';
+
+  @override
+  String get trustLinkDataEndsSub => 'احذفي حسابكِ وبياناتك السحابية في أي وقت';
+
+  @override
+  String get trustLinkFaq => 'الأسئلة الشائعة حول الخصوصية';
+
+  @override
+  String get trustLinkFaqSub => 'أسئلة متكررة عن خصوصية Lune';
+
+  @override
+  String get trustLinkCookies => 'سياسة ملفات الارتباط';
+
+  @override
+  String get trustLinkCookiesSub => 'كيف نستخدم التخزين المحلي وملفات الموقع';
+
+  @override
+  String get trustLinkIp => 'استخدام عنوان IP';
+
+  @override
+  String get trustLinkIpSub => 'لماذا نعالج عناوين IP وما لا نفعله';
+
+  @override
+  String get trustLinkAccessibility => 'إمكانية الوصول';
+
+  @override
+  String get trustLinkAccessibilitySub => 'التزامنا بتجربة شاملة للجميع';
+
+  @override
+  String get trustSecurityTitle => 'الأمان في Lune';
+
+  @override
+  String get trustSecurityIntro =>
+      'بياناتك الصحية تستحق عناية بمستوى عالٍ. الأمان مدمج في كل طبقة من Lune — وليس إضافة لاحقة. توضّح هذه الصفحة كيف نحمي سجلات دورتك وحسابك والميزات السحابية الاختيارية بلغة واضحة.';
+
+  @override
+  String get trustSecurityS1Title => 'التشفير على جهازك';
+
+  @override
+  String get trustSecurityS1Body =>
+      'قاعدة بيانات دورتك مشفّرة محلياً باستخدام AES-256 قبل تخزينها على هاتفك. الأعراض والمزاج والتدفق وسجلات العافية تُخزَّن داخل هذا المخزن المحمي. مفاتيح التشفير تُنشأ على جهازك وتُحفظ في Android Keystore أو iOS Keychain — ولا تغادر جهازك دون حماية.';
+
+  @override
+  String get trustSecurityS2Title => 'مزامنة سحابية مشفّرة (اختيارية، Premium)';
+
+  @override
+  String get trustSecurityS2Body =>
+      'النسخ الاحتياطي السحابي اختياري ويتطلب Premium وموافقتك الصريحة. عند التفعيل، تُشفَّر حمولة النسخة الاحتياطية على الجهاز قبل الرفع وتُخزَّن في حساب Firebase الخاص بكِ. لا ندّعي أن كل حقل في Firestore يستخدم نفس تشفير AES-256 — لكن حمولة الدورة الحساسة نفسها مشفّرة قبل مغادرة هاتفك.';
+
+  @override
+  String get trustSecurityS3Title => 'اتصالات آمنة وسلامة التطبيق';
+
+  @override
+  String get trustSecurityS3Body =>
+      'كل حركة الشبكة تستخدم تشفير TLS. يساعد Firebase App Check على التحقق من طلبات التطبيق الأصيلة. يمكنكِ تسجيل الدخول بالبريد أو Google أو Apple أو المتابعة كضيفة مجهولة — كل طريقة تمر عبر Firebase Authentication بحماية معيارية.';
+
+  @override
+  String get trustSecurityS4Title => 'لا إعلانات، لا وسطاء بيانات';
+
+  @override
+  String get trustSecurityS4Body =>
+      'Lune لا تعرض إعلانات طرف ثالث ولا تبيع بياناتك الشخصية أو الصحية. لا نشارك بيانات دورتك مع المعلنين أو وسطاء البيانات أو جهات العمل أو شركات التأمين. إيراداتنا من اشتراكات Premium الاختيارية — وليس من بيع معلوماتك الصحية.';
+
+  @override
+  String get trustSecurityS5Title => 'أنتِ تتحكمين بالميزات الاختيارية';
+
+  @override
+  String get trustSecurityS5Body =>
+      'المحادثة الذكية (Google Gemini وDeepSeek) والمجتمع والإشعارات والمزامنة السحابية اختيارية وتتطلب موافقتك. يمكنكِ مراجعتها وتغييرها في أي وقت من مركز الخصوصية دون التأثير على التتبع المحلي الأساسي.';
+
+  @override
+  String get trustSecurityS6Title => 'تقارير الأعطال (Firebase Crashlytics)';
+
+  @override
+  String get trustSecurityS6Body =>
+      'تستخدم Lune Firebase Crashlytics لجمع تقارير أعطال مجهولة وبيانات تشخيصية أساسية عند تعطل التطبيق بشكل غير متوقع. يساعدنا ذلك على إصلاح الأخطاء بسرعة. تقارير الأعطال لا تتضمن سجلات دورتك أو العافية أو محادثات الذكاء الاصطناعي.';
+
+  @override
+  String get trustSecurityS7Title => 'البنية التحتية السحابية';
+
+  @override
+  String get trustSecurityS7Body =>
+      'الحسابات المسجّلة والنسخ السحابية الاختيارية ومحتوى المجتمع والمحادثة الذكية (لمشتركات Premium) تعمل على Google Firebase — بما فيها المصادقة وFirestore وCloud Functions والإشعارات والاستضافة وApp Check وCrashlytics. الوصول إلى بياناتك مقيد بقواعد أمان Firebase وبيانات تسجيل دخولك.';
+
+  @override
+  String get trustSecurityS8Title => 'وضع التخفي على جهازك';
+
+  @override
+  String get trustSecurityS8Body =>
+      'وضع التخفي يُظهر آلة حاسبة بدلاً من Lune حتى تُدخلي رقم PIN السري. يحمي خصوصيتك إذا أمسك أحد هاتفك — وهو قفل محلي فقط ولا يغيّر طريقة التشفير. يمكنكِ تفعيله أو إيقافه من مركز الخصوصية.';
+
+  @override
+  String get trustSecurityS9Title => 'أمان المدفوعات';
+
+  @override
+  String get trustSecurityS9Body =>
+      'اشتراكات Premium على Android تُعالَج عبر Google Play Billing. Lune لا ترى رقم بطاقتك ولا تخزّنه. أديري أو ألغي اشتراكك من إعدادات حساب Google Play.';
+
+  @override
+  String get trustSecurityS10Title => 'أذونات تطبيق Android';
+
+  @override
+  String get trustSecurityS10Body =>
+      'تطلب Lune فقط الأذونات اللازمة للميزات التي تستخدمينها: الإنترنت (تسجيل الدخول، المزامنة الاختيارية، AI، المجتمع)، الإشعارات (تذكيرات الدورة الاختيارية)، Google Play Billing (Premium)، المنبهات الدقيقة وإعادة التشغيل (تذكيرات محلية موثوقة)، والصور/الوسائط فقط عند إرفاق صورة أو تعيين صورة ملف شخصي. النسخ الاحتياطي لبيانات التطبيق على Android معطّل (allowBackup=false) حتى لا تُنسخ بيانات الدورة تلقائياً إلى نسخ Google الاحتياطية.';
+
+  @override
+  String get trustCookiesTitle => 'سياسة ملفات الارتباط والتخزين';
+
+  @override
+  String get trustCookiesIntro =>
+      'Lune تطبيق جوال أولاً. توضّح هذه الصفحة ما يُخزَّن على جهازك وما يحتفظ به موقعنا وما لا نتتبعه عمداً. الوضوح حول التخزين جزء من احترام خصوصيتك.';
+
+  @override
+  String get trustCookiesS1Title => 'التخزين المحلي في التطبيق';
+
+  @override
+  String get trustCookiesS1Body =>
+      'يخزّن تطبيق Lune سجلات دورتك وعافيتك وتفضيلاتك وخيارات الموافقة و(إذا كنتِ ضيفة) سجل المحادثة الذكية على جهازك عبر قواعد بيانات محلية مشفّرة. هذا ضروري للتتبع دون إنترنت والتسجيل اليومي السريع.';
+
+  @override
+  String get trustCookiesS2Title => 'ملفات ارتباط الموقع';
+
+  @override
+  String get trustCookiesS2Body =>
+      'موقعنا (lune-7d956.web.app) لا يستخدم ملفات ارتباط إعلانية أو تتبع. قد نستخدم تخزيناً تقنياً أساسياً — مثل تذكّر لغتك في الصفحات القانونية — حتى لا تعيدي الاختيار في كل زيارة.';
+
+  @override
+  String get trustCookiesS3Title => 'لا تتبع إعلاني';
+
+  @override
+  String get trustCookiesS3Body =>
+      'لا نستخدم شبكات إعلانات طرف ثالث أو متتبعات عبر التطبيقات أو بكسلات تسويقية في تطبيق Lune. بياناتك الصحية لا تُستخدم للإعلان المستهدف أو بناء ملفات سلوكية أو إعادة استهداف.';
+
+  @override
+  String get trustCookiesS4Title => 'إدارة التخزين';
+
+  @override
+  String get trustCookiesS4Body =>
+      'يمكنكِ مسح بيانات التطبيق المحلية بإلغاء التثبيت أو حذف الحساب من مركز الخصوصية. ملفات النسخ الاحتياطي التي تحفظينها في الحافظة أو خارج التطبيق تبقى تحت سيطرتك — احذفيها عندما لا تحتاجينها.';
+
+  @override
+  String get trustCookiesS5Title => 'رموز الإشعارات';
+
+  @override
+  String get trustCookiesS5Body =>
+      'إذا فعّلتِ الإشعارات، يخزّن Firebase Cloud Messaging رمز جهاز لتسليم تذكيرات الدورة وتحديثات التطبيق التي طلبتِها. يُستخدم الرمز للتسليم فقط — وليس للإعلان أو بيع هويتك لأطراف ثالثة.';
+
+  @override
+  String get trustCookiesS6Title => 'ذاكرة المجتمع المؤقتة';
+
+  @override
+  String get trustCookiesS6Body =>
+      'عند تصفح المجتمعات، قد تُخزَّن المنشورات والصور مؤقتاً على جهازك لتمرير أسلس. تُمسح هذه الذاكرة عند إلغاء التثبيت أو مسح بيانات التطبيق.';
+
+  @override
+  String get trustCookiesS7Title => 'اللغة وخيارات الموافقة';
+
+  @override
+  String get trustCookiesS7Body =>
+      'يُحفظ اختيار اللغة وخيارات مركز الخصوصية وإعدادات وضع التخفي محلياً ليتذكر التطبيق تفضيلاتك بين الجلسات. تبقى على جهازك ما لم تسجّلي دخولاً وتزامني تفضيلات الحساب.';
+
+  @override
+  String get trustCookiesS8Title => 'ما لا نخزّنه للإعلانات';
+
+  @override
+  String get trustCookiesS8Body =>
+      'لا نضع ملفات ارتباط إعلانية أو بكسلات اجتماعية أو أدوات تتبع سلوكي في Lune. لا نبني ملفات تسويقية من بيانات دورتك أو أعراضك أو مزاجك أو محادثات الذكاء الاصطناعي.';
+
+  @override
+  String get trustIpTitle => 'كيف نستخدم عنوان IP';
+
+  @override
+  String get trustIpIntro =>
+      'عند استخدامك Lune أو موقعنا، قد يُعالَج عنوان IP عبر مزوّدي البنية التحتية. توضّح هذه الصفحة لماذا يحدث ذلك وما لا نفعله به والخيارات المتاحة لكِ.';
+
+  @override
+  String get trustIpS1Title => 'لماذا نعالج عناوين IP';
+
+  @override
+  String get trustIpS1Body =>
+      'تساعد عناوين IP في Firebase ودوالنا السحابية على تسليم الطلبات بأمان وتوجيه الحركة إلى الخادم الصحيح وإبقاء الخدمة متاحة. بدون بيانات شبكة أساسية، لا يمكن للتطبيقات السحابية العمل بموثوقية.';
+
+  @override
+  String get trustIpS2Title => 'ما لا نفعله';
+
+  @override
+  String get trustIpS2Body =>
+      'لا نبيع عناوين IP، ولا نستخدمها لملفات إعلانية، ولا نحاول تحديد موقعك الجغرافي الدقيق من IP وحده. لا نشارك IP مع وسطاء بيانات أو شبكات إعلانات.';
+
+  @override
+  String get trustIpS3Title => 'الاحتفاظ';
+
+  @override
+  String get trustIpS3Body =>
+      'عناوين IP في سجلات الخادم والاستضافة تُحفَظ فقط للمدة اللازمة للأمان ومنع إساءة الاستخدام واستكشاف الأخطاء، ثم تُدوَّر أو تُحذف وفق سياسات Firebase وGoogle Cloud.';
+
+  @override
+  String get trustIpS4Title => 'خياراتك';
+
+  @override
+  String get trustIpS4Body =>
+      'استخدام VPN اختيارك — لا نعاقب مستخدمات VPN. حذف حسابك يزيل ملفك ومحتواك السحابي من خوادمنا. للتفاصيل الكاملة، راجعي سياسة الخصوصية.';
+
+  @override
+  String get trustIpS5Title => 'حدود المعدل ومنع الإساءة';
+
+  @override
+  String get trustIpS5Body =>
+      'نطبّق حدود معدل على جانب الخادم للمحادثة الذكية وإجراءات المجتمع لمنع البريد المزعج وحماية الجميع. قد تُستخدم عناوين IP مع معرّفات الحساب معاً لاكتشاف أنماط إساءة — وليس لتسويقك.';
+
+  @override
+  String get trustIpS6Title => 'أين قد تُعالَج البيانات';
+
+  @override
+  String get trustIpS6Body =>
+      'قد يعالج Firebase ومزوّدو الذكاء الاصطناعي الطلبات في الولايات المتحدة ومناطق أخرى حيث تعمل مراكز بيانات Google وDeepSeek. هذا معياري لتطبيقات الصحة السحابية ذات المزامنة الاختيارية.';
+
+  @override
+  String get trustIpS7Title => 'الطلبات القانونية';
+
+  @override
+  String get trustIpS7Body =>
+      'قد نكشف معلومات — قد تشمل سجلات خادم مرتبطة بـ IP — فقط عند وجود إجراء قانوني صالح وبأقل مدى يفرضه القانون. لا نشارك طوعاً بيانات صحة الدورة مع السلطات.';
+
+  @override
+  String get trustIpS8Title => 'VPN وأدوات الخصوصية';
+
+  @override
+  String get trustIpS8Body =>
+      'إذا استخدمتِ VPN، قد يختلف IP الظاهر عن منطقتك الفعلية. Lune لا تحجب اتصالات VPN. قد تبقى بعض فحوصات أمان Firebase لحماية الحسابات من الاستيلاء.';
+
+  @override
+  String get trustFaqTitle => 'الأسئلة الشائعة حول الخصوصية';
+
+  @override
+  String get trustFaqIntro =>
+      'إجابات على أكثر الأسئلة شيوعاً حول الخصوصية والأمان وكيف تتعامل Lune مع بيانات دورتك. إذا لم تجدي إجابتك هنا، تواصلي معنا في أي وقت.';
+
+  @override
+  String get trustFaqQ1 => 'من يرى بيانات دورتي؟';
+
+  @override
+  String get trustFaqA1 =>
+      'أنتِ فقط. افتراضياً، بيانات دورتك تبقى على جهازك في قاعدة بيانات محلية مشفّرة. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُخزَّن نسخ مشفّرة في حساب Firebase الخاص بكِ. لا نشارك بيانات الدورة مع مستخدمين آخرين إلا إذا نشرتِ صراحة في ميزات المجتمع.';
+
+  @override
+  String get trustFaqQ2 => 'هل تبيع Lune بياناتي؟';
+
+  @override
+  String get trustFaqA2 =>
+      'لا. لا نبيع بياناتك الشخصية أو الصحية أبداً. Lune ممولة عبر اشتراكات Premium الاختيارية عبر Google Play — وليس عبر الإعلانات أو بيع البيانات.';
+
+  @override
+  String get trustFaqQ3 => 'ماذا يحدث عند حذف حسابي؟';
+
+  @override
+  String get trustFaqA3 =>
+      'عند تأكيد الحذف في مركز الخصوصية، نزيل فوراً ملفك في Firestore والنسخ السحابية وسجل المحادثة ومحتوى المجتمع من خوادمنا، ثم نحذف حساب Firebase Authentication. البيانات المحلية على جهازك تبقى حتى تلغي التثبيت. قد تحتفظ Firebase بنسخ تقنية مؤقتة وفق سياسات بنيتها.';
+
+  @override
+  String get trustFaqQ4 => 'هل المحادثة الذكية خاصة؟';
+
+  @override
+  String get trustFaqA4 =>
+      'المحادثة الذكية تتطلب Premium. الضيفات: المحادثة تبقى على الجهاز فقط. المشتركات المسجّلات: قد تُخزَّن الرسائل في السحابة لاستعادة المحادثات. تُرسَل كل رسالة إلى Google Gemini و/أو DeepSeek — راجعي سياسة الخصوصية. ننصح بعدم مشاركة معلومات لا تريدين أن يعالجها مزوّد AI خارجي.';
+
+  @override
+  String get trustFaqQ5 => 'هل يمكنني استخدام Lune بدون حساب؟';
+
+  @override
+  String get trustFaqA5 =>
+      'نعم. يمكنكِ الاستخدام كضيفة بحساب Firebase مجهول مرتبط بجهازك — بدون بريد. التتبع الأساسي يعمل بالكامل دون إنترنت. النسخ السحابي وAI Premium وسجل المحادثة عبر الأجهزة وبعض ميزات المجتمع تتطلب حساباً مسجّلاً.';
+
+  @override
+  String get trustFaqQ6 => 'أين تُخزَّن بياناتي؟';
+
+  @override
+  String get trustFaqA6 =>
+      'محلياً على هاتفك افتراضياً في قاعدة بيانات مشفّرة AES-256. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُخزَّن حمولات مشفّرة في Google Firebase (قد تُعالَج في الولايات المتحدة ومناطق أخرى).';
+
+  @override
+  String get trustFaqQ7 => 'كيف أصدّر بياناتي؟';
+
+  @override
+  String get trustFaqA7 =>
+      'افتحي مركز الخصوصية ← تصدير البيانات لنسخ نسخة احتياطية محلية مشفّرة إلى الحافظة. يمكنكِ حفظها في مدير كلمات مرور أو ملاحظات آمنة. للمساعدة في طلبات النقل، راسلينا على merrsoheb@gmail.com.';
+
+  @override
+  String get trustFaqQ8 => 'كيف أتواصل بخصوص الخصوصية؟';
+
+  @override
+  String get trustFaqA8 =>
+      'راسلينا على merrsoheb@gmail.com أو استخدمي «تواصل مع الدعم» في مركز الخصوصية. نهدف للرد على طلبات الخصوصية خلال 30 يوماً.';
+
+  @override
+  String get trustFaqQ9 => 'هل المحادثة الذكية مجانية؟';
+
+  @override
+  String get trustFaqA9 =>
+      'لا. Lune AI ميزة Premium. المشتركات يمكنهن إرسال حتى 30 رسالة ذكاء اصطناعي في اليوم التقويمي — يُفرض على خوادمنا. إذا فشل المزوّد، لا نحسب الرسالة ضمن حدك.';
+
+  @override
+  String get trustFaqQ10 => 'ماذا يفتح Premium؟';
+
+  @override
+  String get trustFaqA10 =>
+      'Premium يشمل النسخ الاحتياطي السحابي لدورتك ومحادثة Lune AI (30 رسالة/يوم) وإرفاق صور أو فيديو في منشورات وقصص المجتمع. التتبع المحلي الأساسي يبقى مجانياً للجميع.';
+
+  @override
+  String get trustFaqQ11 => 'كيف يعمل وضع التخفي؟';
+
+  @override
+  String get trustFaqA11 =>
+      'وضع التخفي يُظهر شاشة آلة حاسبة بدلاً من Lune حتى تُدخلي رقم PIN السري وتضغطي يساوي. يحمي خصوصيتك إذا فتح أحد هاتفك. إنه تمويه محلي فقط — فعّليه من مركز الخصوصية.';
+
+  @override
+  String get trustFaqQ12 => 'من يرى منشوراتي في المجتمع؟';
+
+  @override
+  String get trustFaqA12 =>
+      'المنشورات تظهر لأعضاء مجتمعات Lune التي تنضمين إليها. يمكنكِ الإبلاغ عن محتوى غير آمن؛ قد تُخفى المنشورات المبلّغ عنها تلقائياً أثناء المراجعة. المشاركة في المجتمع اختيارية وتتطلب موافقة.';
+
+  @override
+  String get trustFaqQ13 => 'هل يمكنني مشاركة تقرير صحي مع طبيبي؟';
+
+  @override
+  String get trustFaqA13 =>
+      'نعم. يمكن لـ Lune إنشاء ملخص صحي من بياناتك المسجّلة لمراجعته ومشاركته بنفسك. لا نرسل تقارير للأطباء تلقائياً — أنتِ تختارين ما تشاركينه ومع من.';
+
+  @override
+  String get trustFaqQ14 => 'هل تستخدم المجلة بياناتي الشخصية؟';
+
+  @override
+  String get trustFaqA14 =>
+      'لا. مقالات المجلة التعليمية في Lune محتوى تحريري منفصل عن سجلات دورتك الخاصة. قراءة المقالات لا ترفع بياناتك الصحية للتخصيص.';
+
+  @override
+  String get trustFaqQ15 => 'ما الإشعارات التي ترسلها Lune؟';
+
+  @override
+  String get trustFaqA15 =>
+      'إذا وافقتِ، قد نرسل تذكيرات الدورة وموجز العافية وتحديثات مهمة عبر Firebase Cloud Messaging. لا نرسل إعلانات ترويجية ولا نبيع جمهور الإشعارات لأطراف ثالثة. يمكنكِ إيقاف الإشعارات من إعدادات الجهاز.';
+
+  @override
+  String get trustFaqQ16 => 'ما حقوقي بموجب GDPR؟';
+
+  @override
+  String get trustFaqA16 =>
+      'إذا كنتِ في المنطقة الاقتصادية الأوروبية أو المملكة المتحدة، يمكنكِ طلب الوصول أو التصحيح أو الحذف أو التصدير لبياناتك. احذفي حسابك من مركز الخصوصية للحذف الفوري من الخوادم، أو راسلينا على merrsoheb@gmail.com. نرد خلال 30 يوماً.';
+
+  @override
+  String get trustFaqQ17 => 'ما أذونات Android التي يستخدمها Lune؟';
+
+  @override
+  String get trustFaqA17 =>
+      'الإنترنت لتسجيل الدخول والميزات الاختيارية عبر الإنترنت؛ الإشعارات للتذكيرات التي تفعّلينها؛ Google Play Billing لـ Premium؛ المنبهات الدقيقة وإعادة التشغيل لتذكيرات محلية موثوقة. الصور أو الفيديو تُطلب فقط عند إرفاق وسائط في المجتمع (Premium) أو اختيار صورة ملف شخصي. لا نصل إلى جهات الاتصال أو الرسائل أو سجل المكالمات.';
+
+  @override
+  String get trustFaqQ18 => 'كيف تعمل اشتراكات Google Play؟';
+
+  @override
+  String get trustFaqA18 =>
+      'Premium يُفوتر عبر Google Play. الاشتراكات تتجدد تلقائياً ما لم تلغي قبل 24 ساعة من نهاية الفترة. أديري أو ألغي من Google Play ← الاشتراكات. الاستردادات وفق سياسة Google Play. حذف حساب Lune لا يوقف الفوترة تلقائياً — ألغي الاشتراك بشكل منفصل.';
+
+  @override
+  String get trustFaqQ19 => 'ما الحد الأدنى للعمر لاستخدام Lune؟';
+
+  @override
+  String get trustFaqA19 =>
+      'يجب أن يكون عمرك 13 عاماً على الأقل. من دون 13 لا يمكن المتابعة بعد بوابة العمر. بعض ميزات المجتمع مقيّدة لمستخدمات 18 فما فوق. على الوالدين التواصل معنا إذا اعتقدوا أن طفلاً دون 13 استخدم Lune لطلب الحذف.';
+
+  @override
+  String get trustFaqQ20 => 'هل Lune جهازاً طبياً أو نصيحة طبية؟';
+
+  @override
+  String get trustFaqA20 =>
+      'لا. Lune للتتبع الصحي المعلوماتي فقط — وليس جهازاً طبياً أو تشخيصاً أو علاجاً. توقعات الدورة ومحادثة AI ومنشورات المجتمع ومقالات المجلة ليست نصيحة طبية. استشيري دائماً مختص رعاية صحية مؤهل للقرارات الطبية.';
+
+  @override
+  String get trustFaqQ21 =>
+      'ما البيانات التي تجمعها Lune (Google Play Data Safety)؟';
+
+  @override
+  String get trustFaqA21 =>
+      'البيانات التي تقدّمينها: تواريخ الدورة والأعراض والمزاج وملاحظات العافية ومنشورات المجتمع الاختيارية. بيانات الحساب إذا سجّلتِ (بريد، اسم، طريقة دخول). بيانات تقنية: رموز الجهاز للإشعارات، تقارير أعطال مجهولة، وطوابع نشاط تقريبية. رسائل AI Premium تُرسَل إلى Google Gemini/DeepSeek. لا نبيع البيانات. التتبع الأساسي يبقى على جهازك ما لم تفعّلي النسخ السحابي Premium.';
+
+  @override
+  String get trustBodyDataTitle => 'جسدك، بياناتك';
+
+  @override
+  String get trustBodyDataIntro =>
+      'بيانات دورتك وعافيتك شخصية جداً. في Lune، أنتِ المتحكمة — دائماً. توضّح هذه الصفحة ما تسجّلينه ومن يملكه وكيف تستخدمه الميزات الاختيارية.';
+
+  @override
+  String get trustBodyDataS1Title => 'الملكية';
+
+  @override
+  String get trustBodyDataS1Body =>
+      'أنتِ تملكين بيانات الدورة والأعراض والمزاج والتدفق وشرب الماء والعافية التي تسجلينها. Lune أداة لفهم جسدك — وليست منصة تربح من معلوماتك الصحية أو تبيع رؤى عنك.';
+
+  @override
+  String get trustBodyDataS2Title => 'تصميم محلي أولاً';
+
+  @override
+  String get trustBodyDataS2Body =>
+      'التطبيق يعمل بالكامل دون إنترنت. سجلاتك اليومية تُكتب أولاً في قاعدة بيانات مشفّرة على جهازك. لا يغادر شيء هاتفك إلا إذا اخترتِ النسخ السحابي أو الذكاء الاصطناعي أو المجتمع أو ميزات تتطلب شبكة.';
+
+  @override
+  String get trustBodyDataS3Title => 'موافقة صريحة';
+
+  @override
+  String get trustBodyDataS3Body =>
+      'النسخ الاحتياطي السحابي وميزات الذكاء الاصطناعي والمجتمع والإشعارات تتطلب موافقة منفصلة في مركز الخصوصية. يمكنكِ تفعيلها أو تعطيلها دون فقدان سجل دورتك المحلي.';
+
+  @override
+  String get trustBodyDataS4Title => 'لا مشاركة خفية';
+
+  @override
+  String get trustBodyDataS4Body =>
+      'لا نشارك بيانات دورتك مع جهات العمل أو التأمين أو المعلنين أو الشبكات الاجتماعية الخارجية. منشورات وقصص المجتمع تظهر فقط داخل مجتمعات Lune التي تختارين الانضمام إليها.';
+
+  @override
+  String get trustBodyDataS5Title => 'ما يمكنكِ تسجيله';
+
+  @override
+  String get trustBodyDataS5Body =>
+      'تتيح Lune تتبع الدورة والأعراض والمزاج ومستويات الألم وشرب الماء وملاحظات عافية أخرى تختارينها. أنتِ تقررين مقدار التفاصيل كل يوم. لا شيء إلزامي سوى ما تحتاجينه لفهم جسدك.';
+
+  @override
+  String get trustBodyDataS6Title => 'كيف يستخدم AI سياق دورتك';
+
+  @override
+  String get trustBodyDataS6Body =>
+      'عند استخدام Lune AI (Premium)، قد يُرسَل سياق الدورة ذو الصلة الذي توافقين عليه إلى خوادمنا ثم إلى Google Gemini أو DeepSeek لتخصيص الإجابات. الذكاء الاصطناعي اختياري — يمكنكِ تتبع دورتك دون فتح المحادثة أبداً.';
+
+  @override
+  String get trustBodyDataS7Title => 'المجلة والتعليم';
+
+  @override
+  String get trustBodyDataS7Body =>
+      'مقالات مجلة Lune محتوى تعليمي صحي عام. منفصلة عن سجلاتك الخاصة ولا تُنشأ من بيانات دورتك الشخصية. المحررون ينشرون المقالات عبر أدوات الإدارة — وليس بقراءة يومياتك.';
+
+  @override
+  String get trustBodyDataS8Title => 'قابلية النقل';
+
+  @override
+  String get trustBodyDataS8Body =>
+      'يمكنكِ تصدير نسخة احتياطية مشفّرة من مركز الخصوصية في أي وقت. بياناتك ملكك — إذا غادرتِ Lune، يمكنكِ أخذ نسخة معك قبل حذف حسابك.';
+
+  @override
+  String get trustDataEndsTitle => 'بياناتك تنتهي معكِ';
+
+  @override
+  String get trustDataEndsIntro =>
+      'عندما تقررين مغادرة Lune، يجب أن تغادر بياناتك أيضاً. تشرح هذه الصفحة كل خطوة — حذف الخوادم والملفات المحلية والاشتراكات وما لا يمكن التراجع عنه.';
+
+  @override
+  String get trustDataEndsS1Title => 'احذفي في أي وقت';
+
+  @override
+  String get trustDataEndsS1Body =>
+      'يمكنكِ حذف حسابك من مركز الخصوصية في أي وقت. بدون مكالمات ولا حيل — خطوة تأكيد واضحة فقط. الضيفات يمكنهن مسح البيانات المحلية بإلغاء تثبيت التطبيق.';
+
+  @override
+  String get trustDataEndsS2Title => 'حذف فوري من الخوادم';
+
+  @override
+  String get trustDataEndsS2Body =>
+      'عند تأكيد حذف الحساب، تزيل خوادمنا فوراً ملفك في Firestore والنسخ السحابية لدورتك وسجل المحادثة ومنشورات المجتمع، ثم تحذف حساب Firebase Authentication. هذا ليس فترة انتظار 30 يوماً — الحذف يبدأ مباشرة.';
+
+  @override
+  String get trustDataEndsS3Title => 'البيانات المحلية';
+
+  @override
+  String get trustDataEndsS3Body =>
+      'البيانات على جهازك لا تُمسح تلقائياً عند حذف الحساب السحابي. ألغي تثبيت التطبيق أو استخدمي إعدادات التطبيق في هاتفك لإزالة قواعد البيانات المشفّرة والتفضيلات المتبقية.';
+
+  @override
+  String get trustDataEndsS4Title => 'النسخ التي صدّرتِها';
+
+  @override
+  String get trustDataEndsS4Body =>
+      'إذا صدّرتِ ملف نسخة احتياطية وحفظتِه في الحافظة أو خارج التطبيق، فهذه النسخة خارج سيطرتنا. احذفيها إذا لم تعدِ تحتاجينها — لا نستطيع الوصول إلى تطبيق ملاحظاتك أو سحابتك.';
+
+  @override
+  String get trustDataEndsS5Title => 'إجراء دائم';
+
+  @override
+  String get trustDataEndsS5Body =>
+      'حذف الحساب لا يمكن التراجع عنه. إذا عدتِ إلى Lune لاحقاً، تبدأين من جديد إلا إذا استعدتِ من نسخة محلية حفظتِها قبل الحذف.';
+
+  @override
+  String get trustDataEndsS6Title => 'الضيفة مقابل المسجّلة';
+
+  @override
+  String get trustDataEndsS6Body =>
+      'حسابات الضيف موجودة أساساً على جهازك مع هوية Firebase مجهولة خفيفة. حذف الحساب المسجّل يُطلق تنظيفاً كاملاً للخوادم. على الضيفات إلغاء التثبيت لإزالة كل الآثار المحلية.';
+
+  @override
+  String get trustDataEndsS7Title => 'اشتراكات Premium';
+
+  @override
+  String get trustDataEndsS7Body =>
+      'حذف حساب Lune لا يلغي تلقائياً اشتراك Google Play. افتحي Google Play ← الاشتراكات لإلغاء فوترة Premium بشكل منفصل حتى لا تُخصم بعد المغادرة.';
+
+  @override
+  String get trustDataEndsS8Title => 'إزالة محتوى المجتمع';
+
+  @override
+  String get trustDataEndsS8Body =>
+      'عند حذف حسابك، نزيل منشوراتك وتعليقاتك وقصصك من مجتمعات Lune عبر تنظيف آلي على الخادم. النسخ في ذاكرة مستخدمات أخرى تختفي عند تحديثهم أو إعادة التثبيت.';
+
+  @override
+  String get trustA11yTitle => 'إمكانية الوصول في Lune';
+
+  @override
+  String get trustA11yIntro =>
+      'نؤمن بأن الجميع يستحقون أدوات صحة الدورة — بغض النظر عن اللغة أو البصر أو الحركة. إمكانية الوصول التزام مستمر وليس ميزة لمرة واحدة.';
+
+  @override
+  String get trustA11yS1Title => 'التزامنا';
+
+  @override
+  String get trustA11yS1Body =>
+      'نصمّم Lune لتكون قابلة للاستخدام مع قارئات الشاشة وتكبير خط النظام والتخطيط من اليمين لليسار والعكس. العربية والإنجليزية تحصلان على اهتمام متساوٍ في التنقل والتسميات واتجاه القراءة.';
+
+  @override
+  String get trustA11yS2Title => 'ميزات داخل التطبيق';
+
+  @override
+  String get trustA11yS2Body =>
+      'تحترم Lune حجم خط جهازك وإعدادات التباين حيث يدعمها Flutter ونظام التشغيل. التنقل يستخدم أنماط Material القياسية لسلوك متوقع مع قارئ الشاشة عبر التبويبات والنماذج.';
+
+  @override
+  String get trustA11yS3Title => 'طلبات الدعم';
+
+  @override
+  String get trustA11yS3Body =>
+      'إذا واجهتِ عائقاً أثناء استخدام Lune، راسلينا على merrsoheb@gmail.com مع وصف المشكلة وطراز جهازك ولغتك المفضلة. نأخذ ملاحظات إمكانية الوصول بجدية ونُعطي أولوية لما يعيق التتبع الأساسي.';
+
+  @override
+  String get trustA11yS4Title => 'تحسينات مستمرة';
+
+  @override
+  String get trustA11yS4Body =>
+      'نراجع الميزات الجديدة للتباين وحجم أهداف اللمس وتسميات قارئ الشاشة قبل الإصدار. إصدارات سابقة حسّنت تخطيط RTL ومناطق اللمس الأكبر ورسائل الخطأ أوضح — والمزيد مخطّط.';
+
+  @override
+  String get trustA11yS5Title => 'تكافؤ العربية والإنجليزية';
+
+  @override
+  String get trustA11yS5Body =>
+      'التبديل بين العربية والإنجليزية يقلب اتجاه الواجهة بالكامل — القوائم والبطاقات والصفحات القانونية. لا ينبغي أن تضطري لمحاربة التخطيط لقراءة المحتوى بلغتك.';
+
+  @override
+  String get trustA11yS6Title => 'السمات وإعدادات النظام';
+
+  @override
+  String get trustA11yS6Body =>
+      'تتبع Lune سمة جهازك حيث أمكن وتستخدم خطوطاً مقروءة على خلفيات فاتحة. إذا فُعّل وضع التباين العالي في النظام، قد تحسّن إعدادات OS القراءة أكثر.';
+
+  @override
+  String get trustA11yS7Title => 'خارطة الطريق';
+
+  @override
+  String get trustA11yS7Body =>
+      'نعمل على تحسينات أوسع بمحاذاة WCAG — بما فيها أوصاف أغنى لقارئ الشاشة للرسوم البيانية وتحسينات التنقل بلوحة المفاتيح ومراجعات تباين باختبار مستخدمات. أخبرينا ما يهمكِ أكثر.';
 }

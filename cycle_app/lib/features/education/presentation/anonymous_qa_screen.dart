@@ -65,7 +65,7 @@ class _AnonymousQAScreenState extends State<AnonymousQAScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(l10n.anonymousQaSubmitted),
-            backgroundColor: Colors.green,
+            backgroundColor: AuraColors.success,
           ),
         );
         context.pop();

@@ -4,8 +4,9 @@
 // Two write targets per AI request (both best-effort — a logging failure must
 // never fail the user's chat request):
 //
-//   1. ai_usage/{uid}/messages/{auto}   per-user audit trail (message preview,
-//      mode, provider, token counts). Powers the admin `aiUsageStats` action.
+//   1. ai_usage/{uid}/messages/{auto}   privacy-safe per-user usage trail
+//      (mode, provider, token counts, and character count only). Powers the
+//      admin `aiUsageStats` action without retaining health-chat content.
 //
 //   2. aiUsageDaily/{YYYY-MM-DD}        ONE document per day with atomic
 //      increments. Powers the admin `aiCostStats` action without scanning
@@ -50,9 +51,9 @@ function utcDayKey(date = new Date()) {
  * @param {string} p.mode Chat mode ('chat' | 'analyze' | 'doctor' | ...).
  * @param {string} p.provider 'deepseek' | 'gemini'.
  * @param {{promptTokens: number, completionTokens: number}} p.usage
- * @param {string} p.messagePreview First chars of the user message (audit).
+ * @param {number} p.messageLength User-message length, never its text.
  */
-async function logAiUsage({ uid, mode, provider, usage, messagePreview }) {
+async function logAiUsage({ uid, mode, provider, usage, messageLength = 0 }) {
   const db = admin.firestore();
   const promptTokens = Number(usage?.promptTokens) || 0;
   const completionTokens = Number(usage?.completionTokens) || 0;
@@ -62,7 +63,10 @@ async function logAiUsage({ uid, mode, provider, usage, messagePreview }) {
     await Promise.all([
       // 1. Per-user audit trail.
       db.collection('ai_usage').doc(uid).collection('messages').add({
-        message: (messagePreview || '').substring(0, 500),
+        // Do not persist a preview or a hash of the message. Cycle and health
+        // chat can contain highly sensitive information, while usage analytics
+        // only needs the metadata below.
+        messageChars: Math.max(0, Math.min(Number(messageLength) || 0, 2000)),
         mode,
         provider,
         promptTokens,

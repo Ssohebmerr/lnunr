@@ -40,7 +40,8 @@ class CommunityProfile {
 
   bool get isReady {
     final year = birthYear;
-    return alias.trim().length >= 2 &&
+    return setupComplete &&
+        alias.trim().length >= 2 &&
         year != null &&
         isCommunityAdultBirthYear(year);
   }

@@ -17,6 +17,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/data_deletion_service.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
+import 'trust_hub_screen.dart';
 
 class PrivacyCenterScreen extends StatefulWidget {
   const PrivacyCenterScreen({super.key});
@@ -47,14 +48,25 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
 
     try {
       final db = await MenstrualCycleDbHelper.instance.database;
-      final List<Map<String, dynamic>> allRows = await db!.query('tblDailyLogs');
-      
+      final List<Map<String, dynamic>> allRows = await db!.query(
+        'tblDailyLogs',
+      );
+
       final p = await SharedPreferences.getInstance();
       final Map<String, dynamic> prefsMap = {};
       for (final key in p.getKeys()) {
-        if (key == 'uid' || key.contains('token') || key.contains('fcm') || key.contains('key')) continue;
+        if (key == 'uid' ||
+            key.contains('token') ||
+            key.contains('fcm') ||
+            key.contains('key')) {
+          continue;
+        }
         final val = p.get(key);
-        if (val is String || val is int || val is double || val is bool || val is List<String>) {
+        if (val is String ||
+            val is int ||
+            val is double ||
+            val is bool ||
+            val is List<String>) {
           prefsMap[key] = val;
         }
       }
@@ -77,23 +89,31 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(isAr
-                      ? 'تم نسخ رمز النسخة الاحتياطية بنجاح إلى الحافظة. يمكنك حفظه في مكان آمن لاستعادته لاحقاً.'
-                      : 'Backup code copied to clipboard successfully. You can save it somewhere safe to restore later.'),
+                  Text(
+                    isAr
+                        ? 'تم نسخ رمز النسخة الاحتياطية بنجاح إلى الحافظة. يمكنك حفظه في مكان آمن لاستعادته لاحقاً.'
+                        : 'Backup code copied to clipboard successfully. You can save it somewhere safe to restore later.',
+                  ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(10),
                     constraints: const BoxConstraints(maxHeight: 120),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                      ),
                     ),
                     child: SingleChildScrollView(
                       child: Text(
                         jsonStr,
-                        style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
                       ),
                     ),
                   ),
@@ -112,7 +132,11 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
     } catch (e) {
       if (mounted) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text(isAr ? 'فشل تصدير البيانات: $e' : 'Export failed: $e')),
+          SnackBar(
+            content: Text(
+              isAr ? 'فشل تصدير البيانات: $e' : 'Export failed: $e',
+            ),
+          ),
         );
       }
     }
@@ -130,15 +154,19 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(isAr
-                ? 'ألصق رمز النسخة الاحتياطية الذي قمت بتصديره سابقاً لتتم استعادتها.'
-                : 'Paste the backup code you exported earlier to restore your data.'),
+            Text(
+              isAr
+                  ? 'ألصق رمز النسخة الاحتياطية الذي قمت بتصديره سابقاً لتتم استعادتها.'
+                  : 'Paste the backup code you exported earlier to restore your data.',
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: inputController,
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: isAr ? 'ألصق الرمز هنا...' : 'Paste backup code here...',
+                hintText: isAr
+                    ? 'ألصق الرمز هنا...'
+                    : 'Paste backup code here...',
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -204,9 +232,11 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             title: Text(isAr ? 'تم استيراد البيانات' : 'Data Imported'),
-            content: Text(isAr
-                ? 'تمت استعادة البيانات والخيارات بنجاح. يرجى إعادة تشغيل التطبيق لتطبيق كافة التغييرات.'
-                : 'Data and preferences successfully restored. Please restart the app to apply all changes.'),
+            content: Text(
+              isAr
+                  ? 'تمت استعادة البيانات والخيارات بنجاح. يرجى إعادة تشغيل التطبيق لتطبيق كافة التغييرات.'
+                  : 'Data and preferences successfully restored. Please restart the app to apply all changes.',
+            ),
             actions: [
               FilledButton(
                 onPressed: () {
@@ -225,9 +255,11 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(isAr ? 'خطأ في الاستيراد' : 'Import Error'),
-            content: Text(isAr
-                ? 'رمز النسخة الاحتياطية غير صالح أو تالف. يرجى التأكد من نسخ الرمز بالكامل.'
-                : 'The backup code is invalid or corrupted. Please make sure you copied the entire code.'),
+            content: Text(
+              isAr
+                  ? 'رمز النسخة الاحتياطية غير صالح أو تالف. يرجى التأكد من نسخ الرمز بالكامل.'
+                  : 'The backup code is invalid or corrupted. Please make sure you copied the entire code.',
+            ),
             actions: [
               FilledButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -302,9 +334,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
 
   void _showPurgedSnackBar() {
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.consentDataPurged)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.consentDataPurged)));
   }
 
   Future<String?> _showPinDialog() async {
@@ -376,7 +408,10 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
         title: Text(l10n.deleteAccountTitle),
         content: Text(l10n.deleteAccountWarning),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.deleteAccountConfirm),
@@ -389,9 +424,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
     try {
       await DataDeletionService().deleteAccount();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.deleteAccountDone)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.deleteAccountDone)));
         Navigator.pop(context);
       }
     } catch (e) {
@@ -399,9 +434,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
         final message = e is AccountDeletionReauthRequired
             ? l10n.deleteAccountReauth
             : l10n.deleteAccountFailed;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }
@@ -434,13 +469,22 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.shield_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
-                      Text(l10n.privacyTitle, style: theme.textTheme.titleMedium),
+                      Text(
+                        l10n.privacyTitle,
+                        style: theme.textTheme.titleMedium,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(l10n.privacyCenterIntro, style: theme.textTheme.bodyMedium),
+                  Text(
+                    l10n.privacyCenterIntro,
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -459,17 +503,25 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
             _Bullet(l10n.privacyBulletNoTrack),
             const SizedBox(height: 16),
             if (_loading)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else
               AppGlassCard(
                 child: Column(
                   children: [
-                    Text(l10n.consentManageTitle, style: theme.textTheme.titleSmall),
+                    Text(
+                      l10n.consentManageTitle,
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 4),
-                    Text(l10n.consentManageBody, style: theme.textTheme.bodySmall),
+                    Text(
+                      l10n.consentManageBody,
+                      style: theme.textTheme.bodySmall,
+                    ),
                     const SizedBox(height: 8),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -490,7 +542,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                                 if (!ok) return;
                                 setState(() => _purging = true);
                                 try {
-                                  await _consentData.purgeAiChats();
+                                  await _consentData.purgeAiData();
                                 } finally {
                                   if (mounted) setState(() => _purging = false);
                                 }
@@ -538,17 +590,25 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calculate_outlined, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.calculate_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
-                      Text(l10n.stealthTitle,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700)),
+                      Text(
+                        l10n.stealthTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     l10n.stealthDescription,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SwitchListTile(
@@ -615,18 +675,26 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
             // Local Backup & Restore
             Builder(
               builder: (context) {
-                final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                final isAr =
+                    Localizations.localeOf(context).languageCode == 'ar';
                 return AppGlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.backup_outlined, color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.backup_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            isAr ? 'النسخ الاحتياطي المحلي' : 'Local Backup & Restore',
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                            isAr
+                                ? 'النسخ الاحتياطي المحلي'
+                                : 'Local Backup & Restore',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -635,7 +703,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                         isAr
                             ? 'قم بتصدير أو استيراد بيانات دورتك وعافيتك محلياً بشكل آمن وبخصوصية تامة.'
                             : 'Export or import your cycle and wellness data locally. Your data remains fully private.',
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -643,12 +713,21 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: _exportLocalData,
-                              icon: const Icon(Icons.download_rounded, size: 18),
-                              label: Text(isAr ? 'تصدير البيانات' : 'Export Data'),
+                              icon: const Icon(
+                                Icons.download_rounded,
+                                size: 18,
+                              ),
+                              label: Text(
+                                isAr ? 'تصدير البيانات' : 'Export Data',
+                              ),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
                                 ),
                               ),
                             ),
@@ -658,11 +737,17 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                             child: OutlinedButton.icon(
                               onPressed: _importLocalData,
                               icon: const Icon(Icons.upload_rounded, size: 18),
-                              label: Text(isAr ? 'استيراد البيانات' : 'Import Data'),
+                              label: Text(
+                                isAr ? 'استيراد البيانات' : 'Import Data',
+                              ),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
                                 ),
                               ),
                             ),
@@ -673,6 +758,28 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            AppGlassCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.verified_user_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(l10n.trustHubLink),
+                subtitle: Text(
+                  l10n.trustHubSubtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const TrustHubScreen(),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             AppGlassCard(
@@ -713,7 +820,10 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                   const Divider(height: 1),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.delete_forever_outlined, color: theme.colorScheme.error),
+                    leading: Icon(
+                      Icons.delete_forever_outlined,
+                      color: theme.colorScheme.error,
+                    ),
                     title: Text(l10n.deleteAccountTitle),
                     subtitle: Text(l10n.deleteAccountSubtitle),
                     onTap: () => _deleteAccount(context),
@@ -724,7 +834,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
             const SizedBox(height: 16),
             Text(
               l10n.privacyMedicalDisclaimer,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),
@@ -758,7 +870,9 @@ class _Bullet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('• '),
-          Expanded(child: Text(text, style: Theme.of(context).textTheme.bodySmall)),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+          ),
         ],
       ),
     );

@@ -41,7 +41,6 @@ class GuestUserProfile {
     return {
       'name': name,
       'birthDate': Timestamp.fromDate(birthDate),
-      'communityBirthYear': birthDate.year,
       'deviceId': deviceId,
       'isPremium': false,
       'daily_chat_count': 0,

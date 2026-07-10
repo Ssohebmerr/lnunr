@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune — Your Data Ends With You | بياناتك تنتهي معكِ</title>
+  <link rel="stylesheet" href="site.css?v=13">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="trust-hub.html" class="breadcrumb">← Trust & Privacy</a>
+    <h1 id="pageTitle">Your Data Ends With You</h1>
+    <p class="lead" id="pageSubtitle">Delete your account and cloud data anytime.</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
+
+<main class="page-main">
+<div class="content-wrap">
+    <div id="lang-en" class="lang-section active">
+      <div class="content-card">
+        <p class="intro">When you decide to leave Lune, your data should leave too. This page walks through every step — server deletion, local files, subscriptions, and what cannot be undone.</p>
+
+        <h2>Delete anytime</h2>
+        <p>You can delete your account from Privacy Center at any time. No phone calls, no dark patterns — just a clear confirmation step. Guest users can clear local data by uninstalling the app.</p>
+
+        <h2 id="request-deletion">Don't have the app? Request deletion by email</h2>
+        <p>You do not need to reinstall Lune to delete your account. To request full deletion of your account and all associated cloud data:</p>
+        <ol>
+          <li>Send an email to <a href="mailto:merrsoheb@gmail.com?subject=Delete%20my%20Lune%20account">merrsoheb@gmail.com</a> with the subject <strong>"Delete my Lune account"</strong>, from the email address linked to your Lune account.</li>
+          <li>We verify that the request comes from the account owner — replying from the registered email address is enough.</li>
+          <li>We permanently delete your Firebase Authentication account, Firestore profile, cloud cycle backups, chat history, and community content — normally within 7 days of verification.</li>
+          <li>You receive a confirmation email once deletion is complete.</li>
+        </ol>
+        <p>After deletion we retain no personal data. Subscription billing records are held by Google Play under Google's own policies, not by Lune.</p>
+
+        <h2>Immediate server deletion</h2>
+        <p>When you confirm account deletion, our servers immediately remove your Firestore profile, cloud cycle backups, chat history, and community posts, then delete your Firebase Authentication account. This is not a 30-day waiting period — deletion starts right away.</p>
+
+        <h2>Local data</h2>
+        <p>Data on your device is not automatically erased when you delete your cloud account. Uninstall the app or use your phone's app settings to remove remaining local encrypted databases and preferences.</p>
+
+        <h2>Backups you exported</h2>
+        <p>If you exported a backup file to your clipboard or saved it elsewhere, that copy is outside our control. Delete those files if you no longer need them — we cannot reach into your notes app or cloud drive.</p>
+
+        <h2>Permanent action</h2>
+        <p>Account deletion cannot be undone. If you return to Lune later, you start fresh unless you restore from a local backup you saved before deleting.</p>
+
+        <h2>Guest vs registered accounts</h2>
+        <p>Guest accounts exist mainly on your device with a lightweight anonymous Firebase identity. Deleting a registered account triggers full server cleanup. Guests should uninstall the app to remove all local traces.</p>
+
+        <h2>Premium subscriptions</h2>
+        <p>Deleting your Lune account does not automatically cancel a Google Play subscription. Open Google Play → Subscriptions to cancel Premium billing separately so you are not charged after leaving.</p>
+
+        <h2>Community content removal</h2>
+        <p>When you delete your account, we remove your posts, comments, and stories from Lune communities through automated server cleanup. Remaining copies in other users' caches disappear as they refresh or reinstall.</p>
+
+        <div class="contact-box">
+          <p>Need help deleting your account? <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-ar" class="lang-section" dir="rtl">
+      <div class="content-card">
+        <p class="intro">عندما تقررين مغادرة Lune، يجب أن تغادر بياناتك أيضاً. تشرح هذه الصفحة كل خطوة — حذف الخوادم والملفات المحلية والاشتراكات وما لا يمكن التراجع عنه.</p>
+
+        <h2>احذفي في أي وقت</h2>
+        <p>يمكنكِ حذف حسابك من مركز الخصوصية في أي وقت. بدون مكالمات ولا حيل — خطوة تأكيد واضحة فقط. الضيفات يمكنهن مسح البيانات المحلية بإلغاء تثبيت التطبيق.</p>
+
+        <h2 id="request-deletion-ar">ليس لديكِ التطبيق؟ اطلبي الحذف عبر البريد</h2>
+        <p>لا تحتاجين إلى إعادة تثبيت Lune لحذف حسابك. لطلب الحذف الكامل لحسابك وكل بياناتك السحابية:</p>
+        <ol>
+          <li>أرسلي بريداً إلى <a href="mailto:merrsoheb@gmail.com?subject=Delete%20my%20Lune%20account">merrsoheb@gmail.com</a> بعنوان <strong>"حذف حسابي في Lune"</strong>، من نفس البريد المرتبط بحسابك.</li>
+          <li>نتحقق أن الطلب من صاحبة الحساب — يكفي أن يصل الطلب من البريد المسجّل.</li>
+          <li>نحذف نهائياً حساب Firebase Authentication وملفك في Firestore والنسخ السحابية لدورتك وسجل المحادثة ومحتوى المجتمع — عادةً خلال 7 أيام من التحقق.</li>
+          <li>يصلكِ بريد تأكيد فور اكتمال الحذف.</li>
+        </ol>
+        <p>بعد الحذف لا نحتفظ بأي بيانات شخصية. سجلات فوترة الاشتراك تبقى لدى Google Play وفق سياسات جوجل، وليست لدينا.</p>
+
+        <h2>حذف فوري من الخوادم</h2>
+        <p>عند تأكيد حذف الحساب، تزيل خوادمنا فوراً ملفك في Firestore والنسخ السحابية لدورتك وسجل المحادثة ومنشورات المجتمع، ثم تحذف حساب Firebase Authentication. هذا ليس فترة انتظار 30 يوماً — الحذف يبدأ مباشرة.</p>
+
+        <h2>البيانات المحلية</h2>
+        <p>البيانات على جهازك لا تُمسح تلقائياً عند حذف الحساب السحابي. ألغي تثبيت التطبيق أو استخدمي إعدادات التطبيق في هاتفك لإزالة قواعد البيانات المشفّرة والتفضيلات المتبقية.</p>
+
+        <h2>النسخ التي صدّرتِها</h2>
+        <p>إذا صدّرتِ ملف نسخة احتياطية وحفظتِه في الحافظة أو خارج التطبيق، فهذه النسخة خارج سيطرتنا. احذفيها إذا لم تعدِ تحتاجينها — لا نستطيع الوصول إلى تطبيق ملاحظاتك أو سحابتك.</p>
+
+        <h2>إجراء دائم</h2>
+        <p>حذف الحساب لا يمكن التراجع عنه. إذا عدتِ إلى Lune لاحقاً، تبدأين من جديد إلا إذا استعدتِ من نسخة محلية حفظتِها قبل الحذف.</p>
+
+        <h2>الضيفة مقابل المسجّلة</h2>
+        <p>حسابات الضيف موجودة أساساً على جهازك مع هوية Firebase مجهولة خفيفة. حذف الحساب المسجّل يُطلق تنظيفاً كاملاً للخوادم. على الضيفات إلغاء التثبيت لإزالة كل الآثار المحلية.</p>
+
+        <h2>اشتراكات Premium</h2>
+        <p>حذف حساب Lune لا يلغي تلقائياً اشتراك Google Play. افتحي Google Play ← الاشتراكات لإلغاء فوترة Premium بشكل منفصل حتى لا تُخصم بعد المغادرة.</p>
+
+        <h2>إزالة محتوى المجتمع</h2>
+        <p>عند حذف حسابك، نزيل منشوراتك وتعليقاتك وقصصك من مجتمعات Lune عبر تنظيف آلي على الخادم. النسخ في ذاكرة مستخدمات أخرى تختفي عند تحديثهم أو إعادة التثبيت.</p>
+
+        <div class="contact-box">
+          <p>تحتاجين مساعدة في حذف حسابك؟ <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a><a href="security.html">Security</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a><a href="index.html">Home</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+      document.getElementById('pageTitle').textContent = lang === 'en' ? 'Your Data Ends With You' : 'بياناتك تنتهي معكِ';
+      document.getElementById('pageSubtitle').textContent = lang === 'en'
+        ? 'Delete your account and cloud data anytime.'
+        : 'احذفي حسابكِ وبياناتك السحابية في أي وقت.';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+    if (navigator.language.startsWith('ar')) setLang('ar');
+  </script>
+</body>
+</html>
