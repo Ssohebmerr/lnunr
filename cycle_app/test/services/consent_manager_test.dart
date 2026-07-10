@@ -20,6 +20,11 @@ void main() {
         final result = await ConsentManager.hasAcceptedPrivacyPolicy();
         expect(result, isTrue);
       });
+
+      test('acceptPrivacyPolicy does not enable AI consent', () async {
+        await ConsentManager.acceptPrivacyPolicy();
+        expect(await ConsentManager.hasAiConsent(), isFalse);
+      });
     });
 
     group('Cloud Sync Consent', () {

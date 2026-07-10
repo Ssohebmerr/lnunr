@@ -7,6 +7,8 @@ import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:cycle_aura/menstrudel/models/flows/flow_enum.dart';
 import 'package:cycle_aura/menstrudel/services/log_service.dart';
 import 'package:cycle_aura/menstrudel/services/period_service.dart';
+import 'package:cycle_aura/core/theme/app_design_tokens.dart';
+import 'package:cycle_aura/core/widgets/app_surface.dart';
 import 'package:provider/provider.dart';
 
 class PeriodListView extends StatelessWidget {
@@ -36,13 +38,27 @@ class PeriodListView extends StatelessWidget {
     }
 
     if (periodEntries.isEmpty && periodLogEntries.isEmpty) {
+      final theme = Theme.of(context);
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
-          child: Text(
-            l10n.listViewWidget_noPeriodsLogged, //TODO: change to 'Log your first entry' no longer period specific.
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.water_drop_outlined,
+                size: 44,
+                color: theme.colorScheme.primary.withValues(alpha: 0.7),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.listViewWidget_noPeriodsLogged,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -51,6 +67,7 @@ class PeriodListView extends StatelessWidget {
     final items = periodService.timelineItems;
 
     return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -72,10 +89,13 @@ class PeriodListView extends StatelessWidget {
   Widget _buildMonthHeader(DateTime month, BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
       child: Text(
         DateFormat('MMMM yyyy').format(month),
-        style: textTheme.titleLarge,
+        style: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
+        ),
       ),
     );
   }
@@ -83,20 +103,45 @@ class PeriodListView extends StatelessWidget {
   Widget _buildPeriodHeader(Period period, BuildContext context) {
     final duration = period.endDate.difference(period.startDate).inDays + 1;
     final isOngoing = DateUtils.isSameDay(period.endDate, DateTime.now());
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.only(left: 4, right: 4, top: 4, bottom: 10),
+      child: Row(
         children: [
-          Text(
-            '${DateFormat('d MMM').format(period.startDate)} - ${isOngoing ? l10n.ongoing : DateFormat('d MMM').format(period.endDate)} (${l10n.dayCount(duration)})',
-            style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
+          Container(
+            width: 9,
+            height: 9,
+            decoration: const BoxDecoration(
+              color: AuraColors.roseDeep,
+              shape: BoxShape.circle,
+            ),
           ),
-          const Divider(height: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${DateFormat('d MMM').format(period.startDate)} – ${isOngoing ? l10n.ongoing : DateFormat('d MMM').format(period.endDate)}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AuraColors.rose.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              l10n.dayCount(duration),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -106,12 +151,14 @@ class PeriodListView extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
-      onTap: () => onLogTapped(entry),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppGlassCard(
+        blur: false,
+        onTap: () => onLogTapped(entry),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
               width: 40,
@@ -119,21 +166,25 @@ class PeriodListView extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat('d').format(entry.date),
-                    style: textTheme.titleMedium,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   Text(
                     DateFormat('EEE').format(entry.date).toUpperCase(),
-                    style: textTheme.bodySmall?.copyWith(
+                    style: textTheme.labelSmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (entry.flow.intValue > 0)
                     Row(
@@ -169,8 +220,20 @@ class PeriodListView extends StatelessWidget {
                         );
                       }).toList(),
                     ),
+                  if (entry.flow.intValue == 0 && entry.symptoms.isEmpty)
+                    Text(
+                      DateFormat('d MMM').format(entry.date),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                 ],
               ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           ],
         ),

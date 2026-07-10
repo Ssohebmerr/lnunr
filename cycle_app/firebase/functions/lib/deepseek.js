@@ -6,6 +6,27 @@ const DEEPSEEK_MODEL = 'deepseek-chat';
 const DEEPSEEK_DEFAULT_TEMPERATURE = 0.88;
 
 /**
+ * Builds the OpenAI-style messages array: system prompt, then prior
+ * conversation turns ({role:'user'|'model', text}), then the new user prompt.
+ *
+ * @param {string} systemPrompt
+ * @param {string} userPrompt
+ * @param {Array<{role: string, text: string}>} [history]
+ * @returns {Array<{role: string, content: string}>}
+ */
+function buildMessages(systemPrompt, userPrompt, history) {
+  const messages = [{ role: 'system', content: systemPrompt }];
+  for (const turn of Array.isArray(history) ? history : []) {
+    messages.push({
+      role: turn.role === 'user' ? 'user' : 'assistant',
+      content: turn.text,
+    });
+  }
+  messages.push({ role: 'user', content: userPrompt });
+  return messages;
+}
+
+/**
  * Call DeepSeek Chat Completions API and return text + token usage.
  *
  * @param {string} apiKey DeepSeek API key from Firebase Secret.
@@ -13,6 +34,8 @@ const DEEPSEEK_DEFAULT_TEMPERATURE = 0.88;
  * @param {string} userPrompt
  * @param {number} [maxTokens=2000]
  * @param {number} [temperature=0.7]
+ * @param {Array<{role: string, text: string}>} [history] Prior turns for
+ *   multi-turn memory (already sanitized by the caller).
  * @returns {Promise<{text: string, usage: {promptTokens: number, completionTokens: number}}>}
  */
 async function callDeepSeekDetailed(
@@ -21,6 +44,7 @@ async function callDeepSeekDetailed(
   userPrompt,
   maxTokens = 2000,
   temperature = 0.7,
+  history = [],
 ) {
   const key = (apiKey || '').replace(/^\uFEFF/, '').trim();
   if (!key) {
@@ -35,10 +59,7 @@ async function callDeepSeekDetailed(
     },
     body: JSON.stringify({
       model: DEEPSEEK_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+      messages: buildMessages(systemPrompt, userPrompt, history),
       max_tokens: maxTokens || 2000,
       temperature: typeof temperature === 'number' && temperature > 0
         ? temperature
@@ -91,6 +112,8 @@ async function callDeepSeek(apiKey, systemPrompt, userPrompt, maxTokens, tempera
  * @param {string} userPrompt
  * @param {number} [maxTokens=2000]
  * @param {number} [temperature=0.7]
+ * @param {Array<{role: string, text: string}>} [history] Prior turns for
+ *   multi-turn memory (already sanitized by the caller).
  * @yields {{delta?: string, done?: boolean, usage?: object}}
  */
 async function* streamDeepSeek(
@@ -99,6 +122,7 @@ async function* streamDeepSeek(
   userPrompt,
   maxTokens = 2000,
   temperature = 0.7,
+  history = [],
 ) {
   const key = (apiKey || '').replace(/^﻿/, '').trim();
   if (!key) {
@@ -113,10 +137,7 @@ async function* streamDeepSeek(
     },
     body: JSON.stringify({
       model: DEEPSEEK_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+      messages: buildMessages(systemPrompt, userPrompt, history),
       max_tokens: maxTokens || 2000,
       temperature: typeof temperature === 'number' && temperature > 0
         ? temperature

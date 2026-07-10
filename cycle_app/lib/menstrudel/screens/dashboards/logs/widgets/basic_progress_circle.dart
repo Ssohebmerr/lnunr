@@ -16,8 +16,8 @@ class BasicProgressCircle extends StatefulWidget {
     required this.maxValue,
     this.circleSize = 200.0,
     this.strokeWidth = 15.0,
-    this.progressColor = Colors.red,
-    this.trackColor = Colors.grey,
+    this.progressColor = const Color(0xFFD84A83),
+    this.trackColor = const Color(0x1AD484A8),
     this.animationDuration = const Duration(milliseconds: 700),
   });
 

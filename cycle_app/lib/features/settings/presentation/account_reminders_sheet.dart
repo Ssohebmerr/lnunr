@@ -18,6 +18,7 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
   bool _periodReminder = true;
   bool _dailyReminder = true;
   bool _ovulationReminder = true;
+  bool _latePeriodReminder = true;
   bool _smartPhaseReminder = true;
   bool _loading = true;
 
@@ -35,6 +36,8 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
         _periodReminder = prefs.getBool('period_reminder_enabled') ?? true;
         _dailyReminder = prefs.getBool('daily_log_reminder_enabled') ?? true;
         _ovulationReminder = prefs.getBool('ovulation_reminder_enabled') ?? true;
+        _latePeriodReminder =
+            prefs.getBool(NotificationPrefs.latePeriodKey) ?? true;
         _smartPhaseReminder =
             prefs.getBool(NotificationPrefs.smartPhaseKey) ?? true;
         _loading = false;
@@ -46,6 +49,20 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
     await NotificationService.scheduleFromPrefs();
+  }
+
+  Future<void> _sendTest() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final granted = await NotificationService.sendTestNotification();
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          granted ? l10n.testNotificationSent : l10n.testNotificationBlocked,
+        ),
+      ),
+    );
   }
 
   @override
@@ -114,6 +131,23 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
+              title: Text(l10n.latePeriodReminder),
+              subtitle: Text(
+                l10n.latePeriodReminderSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              value: _latePeriodReminder,
+              onChanged: _notifications
+                  ? (v) async {
+                      setState(() => _latePeriodReminder = v);
+                      await _savePref(NotificationPrefs.latePeriodKey, v);
+                    }
+                  : null,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
               title: Text(l10n.smartPhaseReminder),
               subtitle: Text(
                 l10n.smartPhaseReminderSubtitle,
@@ -134,6 +168,12 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.outline,
               ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _sendTest,
+              icon: const Icon(Icons.notifications_active_outlined),
+              label: Text(l10n.sendTestNotification),
             ),
           ],
         ],

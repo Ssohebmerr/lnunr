@@ -44,18 +44,20 @@ extension FlowExtension on PainLevel {
     }
   }
 
+  /// A clean well-being→severity ramp (calm green → red). Pain is a semantic
+  /// scale, so it intentionally sits outside the rose/lavender brand accent.
   Color get color {
     switch (this) {
       case PainLevel.none:
-        return Colors.blue.shade500;
+        return const Color(0xFF4CAF7D); // calm green
       case PainLevel.mild:
-        return Colors.teal.shade500;
+        return const Color(0xFF9CCC65); // light green
       case PainLevel.moderate:
-        return Colors.amber.shade600;
+        return const Color(0xFFF0B429); // amber
       case PainLevel.severe:
-        return Colors.red.shade600;
+        return const Color(0xFFEF7A54); // orange
       case PainLevel.unbearable:
-        return Colors.purple.shade500;
+        return const Color(0xFFD64550); // red
     }
   }
 }

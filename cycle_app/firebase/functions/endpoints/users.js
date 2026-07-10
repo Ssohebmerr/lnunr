@@ -28,14 +28,74 @@ const { verifyCallerIsAdmin } = require('../lib/adminAuth');
 
 const ADMIN_BOOTSTRAP_KEY = defineSecret('ADMIN_BOOTSTRAP_KEY');
 
-// Per-user subcollections covered by deleteUserAccount.
-// Keep in sync with `firestore.rules` user subcollection allow-lists.
+// Per-user subcollections covered by deleteUserAccount. Keep in sync with
+// `firestore.rules` user subcollection allow-lists.
 const USER_SUBCOLLECTIONS_FOR_DELETE = [
   'chats', 'cycle_logs', 'wellness_logs',
   'community_reports', 'community_comments', 'community_likes',
   'backups', 'communityMemberships', 'blockedUsers',
   'savedPosts', 'communityInbox',
 ];
+
+const DELETE_BATCH_SIZE = 400;
+
+/// Deletes every direct document in a collection in bounded batches. Firestore
+/// document deletion does not cascade to subcollections, so callers that own
+/// nested data must clear it explicitly before deleting their parent document.
+async function deleteDirectDocuments(collectionRef) {
+  while (true) {
+    const snap = await collectionRef.limit(DELETE_BATCH_SIZE).get();
+    if (snap.empty) return;
+    const batch = admin.firestore().batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    if (snap.size < DELETE_BATCH_SIZE) return;
+  }
+}
+
+async function deleteUserChats(db, uid) {
+  const chatsRef = db.collection('users').doc(uid).collection('chats');
+  const chats = await chatsRef.get();
+  for (const chat of chats.docs) {
+    await deleteDirectDocuments(chat.ref.collection('messages'));
+    await chat.ref.delete();
+  }
+}
+
+async function deleteAiUsageData(db, uid) {
+  const usageRef = db.collection('ai_usage').doc(uid);
+  await deleteDirectDocuments(usageRef.collection('messages'));
+  await usageRef.delete().catch((error) => {
+    if (error.code !== 5) throw error;
+  });
+}
+
+async function deleteUserAiData(db, uid) {
+  const userRef = db.collection('users').doc(uid);
+  await Promise.all([
+    deleteUserChats(db, uid),
+    deleteAiUsageData(db, uid),
+  ]);
+  await userRef.set({
+    aiMemory: admin.firestore.FieldValue.delete(),
+  }, { merge: true });
+}
+
+function handleOptions(req, res) {
+  if (req.method !== 'OPTIONS') return false;
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST');
+  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.status(204).send('');
+  return true;
+}
+
+function authToken(req, res) {
+  const header = req.headers.authorization || '';
+  if (header.startsWith('Bearer ')) return header.substring('Bearer '.length);
+  res.status(401).json({ error: 'Auth required.' });
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // syncUsersFromAuth — backfill users/ from Firebase Auth (admin only).
@@ -176,41 +236,30 @@ exports.bootstrapAdmin = onCall({ secrets: [ADMIN_BOOTSTRAP_KEY] }, async (reque
 // ---------------------------------------------------------------------------
 
 exports.deleteUserAccount = onRequest(
-  { cors: true, timeoutSeconds: 30 },
+  { cors: true, timeoutSeconds: 120 },
   async (req, res) => {
-    if (req.method === 'OPTIONS') {
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'POST');
-      res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-      res.status(204).send('');
-      return;
-    }
-
-    const authHeader = req.headers.authorization || '';
-    if (!authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Auth required.' });
-      return;
-    }
+    if (handleOptions(req, res)) return;
+    const token = authToken(req, res);
+    if (!token) return;
 
     try {
-      const decoded = await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
+      const decoded = await admin.auth().verifyIdToken(token);
       const uid = decoded.uid;
       const db = admin.firestore();
+      const userRef = db.collection('users').doc(uid);
 
-      // 1. Delete every known per-user subcollection. This list must stay in
-      //    sync with the subcollections referenced in firestore.rules so a
-      //    "delete my data" request actually removes everything (Play / GDPR).
-      const batch = db.batch();
+      // 1. Remove AI data first. Chats contain a nested `messages`
+      //    collection and audit data is deliberately outside users/{uid}.
+      await deleteUserAiData(db, uid);
+
+      // 2. Delete every other known direct user subcollection in batches.
       for (const col of USER_SUBCOLLECTIONS_FOR_DELETE) {
-        try {
-          const snap = await db.collection('users').doc(uid).collection(col).get();
-          snap.docs.forEach(doc => batch.delete(doc.ref));
-        } catch (_) {}
+        if (col === 'chats') continue;
+        await deleteDirectDocuments(userRef.collection(col));
       }
-      batch.delete(db.collection('users').doc(uid));
-      await batch.commit();
+      await userRef.delete();
 
-      // 2. Best-effort removal of content this user authored across all
+      // 3. Best-effort removal of content this user authored across all
       //    communities (posts, comments, stories) via collection-group queries.
       for (const group of ['posts', 'comments', 'stories']) {
         try {
@@ -233,7 +282,7 @@ exports.deleteUserAccount = onRequest(
         }
       }
 
-      // 3. Delete the Auth user last.
+      // 4. Delete the Auth user last.
       await admin.auth().deleteUser(uid);
 
       res.set('Access-Control-Allow-Origin', '*');
@@ -246,6 +295,35 @@ exports.deleteUserAccount = onRequest(
         return;
       }
       res.status(500).json({ error: 'Failed to delete account.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// purgeAiData — revoke optional AI consent without deleting the account.
+// Clears chat history, long-term AI memory, and metadata-only usage records.
+// ---------------------------------------------------------------------------
+
+exports.purgeAiData = onRequest(
+  { cors: true, timeoutSeconds: 120 },
+  async (req, res) => {
+    if (handleOptions(req, res)) return;
+    const token = authToken(req, res);
+    if (!token) return;
+
+    try {
+      const decoded = await admin.auth().verifyIdToken(token);
+      await deleteUserAiData(admin.firestore(), decoded.uid);
+      res.set('Access-Control-Allow-Origin', '*');
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Purge AI data error:', error);
+      res.set('Access-Control-Allow-Origin', '*');
+      if (error.code === 'auth/id-token-expired') {
+        res.status(401).json({ error: 'Token expired. Please re-authenticate.' });
+        return;
+      }
+      res.status(500).json({ error: 'Failed to purge AI data.' });
     }
   },
 );

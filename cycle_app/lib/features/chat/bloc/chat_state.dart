@@ -7,7 +7,7 @@ class ChatInitial extends ChatState {}
 class ChatLoading extends ChatState {}
 
 /// Transient UI notice — never replaces the message list.
-enum ChatNoticeType { consent, limit, dailyLimit, premiumRequired }
+enum ChatNoticeType { consent, limit, dailyLimit, premiumRequired, adultRequired }
 
 class ChatLoaded extends ChatState {
   final List<ChatMessage> messages;

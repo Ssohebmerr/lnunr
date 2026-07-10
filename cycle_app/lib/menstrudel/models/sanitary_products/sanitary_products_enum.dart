@@ -54,16 +54,18 @@ extension LarcTypeDisplay on SanitaryProducts {
     }
   }
 
+  /// Category colours drawn from the Lune palette — distinct per product,
+  /// but all within the app's rose/lavender/peach world.
   Color getColorScheme(ColorScheme colorScheme) {
     switch (this) {
       case SanitaryProducts.tampon:
-        return Colors.orangeAccent;
+        return const Color(0xFFE8A0BF); // rose
       case SanitaryProducts.pad:
-        return Colors.indigoAccent;
+        return const Color(0xFFC9B8E8); // lavender
       case SanitaryProducts.menstrualCup:
-        return Colors.teal;
+        return const Color(0xFFFFB4A2); // peach
       case SanitaryProducts.periodUnderwear:
-        return Colors.pinkAccent;
+        return const Color(0xFF9B7ED4); // deep lavender
     }
   }
 }

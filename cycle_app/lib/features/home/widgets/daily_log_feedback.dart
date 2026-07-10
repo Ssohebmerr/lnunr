@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Floating snackbars for the daily log save / cancel flow.
@@ -27,7 +28,7 @@ class DailyLogFeedback {
     messengerClearAndShow(
       ScaffoldMessenger.of(context),
       icon: Icons.error_outline,
-      iconColor: Colors.red.shade700,
+      iconColor: AuraColors.danger,
       title: l10n.errorGeneric,
       subtitle: l10n.logSaveFailedHint,
       theme: theme,
@@ -44,7 +45,7 @@ class DailyLogFeedback {
     messengerClearAndShow(
       messenger,
       icon: saved ? Icons.check_circle_outline : Icons.restart_alt_rounded,
-      iconColor: saved ? Colors.green.shade700 : Colors.orange.shade800,
+      iconColor: saved ? AuraColors.success : AuraColors.warning,
       title: saved ? l10n.logSaved : l10n.logChangesDiscarded,
       subtitle: saved ? l10n.logSavedHint : l10n.logChangesDiscardedHint,
       theme: theme,

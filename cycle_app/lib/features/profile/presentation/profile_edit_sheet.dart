@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/media/media_upload_service.dart';
 import '../../../core/profile/local_profile.dart';
@@ -8,6 +9,7 @@ import '../../../core/widgets/aura_scaffold.dart';
 import '../../../core/widgets/avatar_picker_row.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel_integration/menstrudel_init.dart';
+import '../../user/data/guest_user_service.dart';
 
 class ProfileEditSheet extends StatefulWidget {
   const ProfileEditSheet({super.key});
@@ -18,27 +20,32 @@ class ProfileEditSheet extends StatefulWidget {
 
 class _ProfileEditSheetState extends State<ProfileEditSheet> {
   late final TextEditingController _nameController;
+  late final TextEditingController _usernameController;
   final _media = MediaUploadService();
   int _avatarIndex = 0;
   String? _photoPath;
   String? _photoUrl;
   bool _uploading = false;
+  String? _usernameError;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
+    _usernameController = TextEditingController();
     _load();
   }
 
   Future<void> _load() async {
     final name = await LocalProfile.displayName();
+    final username = await LocalProfile.username();
     final avatar = await LocalProfile.avatarIndex();
     final path = await LocalProfile.customPhotoPath();
     final url = await LocalProfile.customPhotoUrl();
     if (mounted) {
       setState(() {
         _nameController.text = name == 'Guest' ? '' : name;
+        _usernameController.text = username ?? '';
         _avatarIndex = avatar;
         _photoPath = path;
         _photoUrl = url;
@@ -49,6 +56,7 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -74,9 +82,20 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
+    final username = LocalProfile.normalizeUsername(_usernameController.text);
+
+    if (username.isNotEmpty && !LocalProfile.isValidUsername(username)) {
+      setState(() => _usernameError = l10n.accountUsernameInvalid);
+      return;
+    }
+
     await LocalProfile.saveDisplayName(name);
     await LocalProfile.saveAvatarIndex(_avatarIndex);
+    if (username.isNotEmpty) {
+      await GuestUserService().saveUsername(username);
+    }
     final userService = MenstrudelInit.userService;
     if (userService?.user != null) {
       await userService!.setName(name.isEmpty ? 'Guest' : name);
@@ -138,6 +157,26 @@ class _ProfileEditSheetState extends State<ProfileEditSheet> {
             decoration: InputDecoration(
               labelText: l10n.onboardingNameLabel,
               hintText: l10n.onboardingNameHint,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _usernameController,
+            textDirection: TextDirection.ltr,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._]')),
+              LengthLimitingTextInputFormatter(20),
+            ],
+            onChanged: (_) {
+              if (_usernameError != null) {
+                setState(() => _usernameError = null);
+              }
+            },
+            decoration: InputDecoration(
+              labelText: l10n.accountUsernameLabel,
+              hintText: l10n.accountUsernameHint,
+              prefixText: '@',
+              errorText: _usernameError,
             ),
           ),
           const SizedBox(height: 16),

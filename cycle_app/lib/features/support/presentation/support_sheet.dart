@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/theme/app_design_tokens.dart';
 import '../data/support_service.dart';
 
 /// Sheet with two actions: send feedback, redeem promo code.
@@ -239,7 +240,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
             ),
             if (_err != null) ...[
               const SizedBox(height: 8),
-              Text(_err!, style: const TextStyle(color: Colors.red)),
+              Text(_err!, style: const TextStyle(color: AuraColors.danger)),
             ],
           ],
         ),
@@ -344,7 +345,7 @@ class _PromoDialogState extends State<_PromoDialog> {
           ),
           if (_err != null) ...[
             const SizedBox(height: 8),
-            Text(_err!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+            Text(_err!, style: const TextStyle(color: AuraColors.danger, fontSize: 13)),
           ],
         ],
       ),

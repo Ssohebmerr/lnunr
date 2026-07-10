@@ -35,6 +35,7 @@ class _ChatMessageRow extends StatelessWidget {
     final isUser = message.isUser;
     final maxW = MediaQuery.of(context).size.width * 0.78;
     final isDark = theme.brightness == Brightness.dark;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final timeText = DateFormat.Hm().format(message.timestamp);
     final bubbleSpacing = showAvatar ? 10.0 : 4.0;
 
@@ -221,7 +222,9 @@ class _ChatMessageRow extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isSpeaking ? 'إيقاف' : 'استمع',
+                              isSpeaking
+                                  ? (isArabic ? 'إيقاف' : 'Stop')
+                                  : (isArabic ? 'استمع' : 'Listen'),
                               style: theme.textTheme.labelSmall?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

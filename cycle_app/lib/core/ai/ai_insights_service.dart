@@ -156,14 +156,13 @@ class AiInsightsService {
         '  "clinical_summary": "2-3 concise professional sentences for a physician",\n'
         '  "patterns": ["observed pattern 1", "observed pattern 2"],\n'
         '  "discussion_points": ["question the patient could ask the doctor", "..."],\n'
-        '  "red_flags": ["observation worth raising with a clinician sooner", "..."],\n'
         '  "data_quality_note": "optional single sentence or null"\n'
         '}\n'
         '${isPregnant ? "Context: prenatal tracking." : "Context: menstrual cycle tracking."}\n'
         'Base every statement on the provided cycleContext and clinicalMetrics '
         '(cycle length range, variability, period duration, average pain, flags). '
-        'Reference the actual figures. Leave "red_flags" as an empty array if '
-        'nothing clearly stands out — never invent concerns.\n'
+        'Reference the actual figures and never invent concerns. The app '
+        'renders urgent discussion flags only from its deterministic metrics.\n'
         '$limitedHint\n'
         'Never diagnose or prescribe. Write for a doctor reading a clean visit report.';
 
@@ -207,7 +206,6 @@ class AiInsightsService {
       final summary = decoded['clinical_summary']?.toString().trim();
       final patterns = listOf(decoded['patterns']);
       final points = listOf(decoded['discussion_points']);
-      final redFlags = listOf(decoded['red_flags']);
       var note = decoded['data_quality_note']?.toString().trim();
       if (note == null || note.isEmpty || note.toLowerCase() == 'null') {
         note = limitedData
@@ -221,7 +219,10 @@ class AiInsightsService {
         clinicalSummary: summary,
         patterns: patterns,
         discussionPoints: points,
-        redFlags: redFlags,
+        // Clinical flags are rendered only from DoctorReportAnalyzer's
+        // deterministic calculations. Do not let a generative response turn
+        // an unsupported concern into a medical-looking warning.
+        redFlags: const [],
         dataQualityNote: note,
       );
       return enrichment.isEmpty ? null : enrichment;

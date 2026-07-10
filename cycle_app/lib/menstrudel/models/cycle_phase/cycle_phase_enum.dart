@@ -76,22 +76,25 @@ extension FlowExtension on CyclePhase {
     }
   }
 
+  /// Phase colours aligned to the Lune (Aura) palette. Each phase stays
+  /// visually distinct, but all now live in the app's rose/lavender/peach
+  /// world instead of raw blue/teal/red so the calendar reads as one brand.
   Color get color {
     switch (this) {
       case CyclePhase.menstruation:
-        return Colors.red;
+        return const Color(0xFFD84A83); // berry — the flow phase
       case CyclePhase.follicular:
-        return Colors.blue;
+        return const Color(0xFFFFB4A2); // warm peach — rising energy
       case CyclePhase.fertileWindow:
-        return Colors.teal.shade100;
+        return const Color(0xFFD4C4F0); // soft lavender
       case CyclePhase.ovulation:
-        return Colors.teal.shade300;
+        return const Color(0xFF9B7ED4); // deeper lavender — peak fertility
       case CyclePhase.luteal:
-        return Colors.purple;
+        return const Color(0xFFB58AA8); // muted mauve — winding down
       case CyclePhase.late:
-        return Colors.orange;
+        return const Color(0xFFE8A06A); // warm amber — attention
       case CyclePhase.unknown:
-        return Colors.grey;
+        return const Color(0xFFBBAEB6); // neutral
     }
   }
 }

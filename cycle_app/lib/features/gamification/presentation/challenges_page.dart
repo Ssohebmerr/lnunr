@@ -88,7 +88,7 @@ class _ChallengesPageState extends State<ChallengesPage> {
                       Expanded(
                         child: _HeaderStat(
                           icon: Icons.local_fire_department,
-                          color: Colors.deepOrange,
+                          color: AuraColors.ember,
                           value: '${state.streak}',
                           label: l10n.challengeStreakLabel,
                         ),
@@ -101,7 +101,7 @@ class _ChallengesPageState extends State<ChallengesPage> {
                       Expanded(
                         child: _HeaderStat(
                           icon: Icons.star_rounded,
-                          color: Colors.amber,
+                          color: AuraColors.gold,
                           value: '${state.points}',
                           label: l10n.challengePointsLabel,
                         ),
@@ -151,7 +151,7 @@ class _ChallengesPageState extends State<ChallengesPage> {
                           Text(
                             '+${c.points}',
                             style: theme.textTheme.labelMedium?.copyWith(
-                              color: Colors.amber.shade700,
+                              color: AuraColors.gold,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -161,7 +161,7 @@ class _ChallengesPageState extends State<ChallengesPage> {
                                 ? Icons.check_circle
                                 : Icons.radio_button_unchecked,
                             color: done
-                                ? Colors.green
+                                ? AuraColors.success
                                 : theme.colorScheme.outline,
                           ),
                         ],

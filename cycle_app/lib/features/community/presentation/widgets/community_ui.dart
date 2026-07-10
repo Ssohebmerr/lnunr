@@ -11,24 +11,24 @@ class CommunityTopicPalette {
   CommunityTopicPalette._();
 
   static List<Color> gradient(String topic) => switch (topic) {
-        'conception' => const [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
-        'contraception' => const [Color(0xFFA18CD1), Color(0xFFFBC2EB)],
-        'condition' => const [Color(0xFF84FAB0), Color(0xFF8FD3F4)],
-        'support' => const [AuraColors.rose, AuraColors.peachGold],
-        'culture' => const [Color(0xFF667EEA), Color(0xFF764BA2)],
-        'age' => const [Color(0xFFF093FB), Color(0xFFF5576C)],
-        _ => AuraColors.gradientRoseLavender,
-      };
+    'conception' => const [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
+    'contraception' => const [Color(0xFFA18CD1), Color(0xFFFBC2EB)],
+    'condition' => const [Color(0xFF84FAB0), Color(0xFF8FD3F4)],
+    'support' => const [AuraColors.rose, AuraColors.peachGold],
+    'culture' => const [Color(0xFF667EEA), Color(0xFF764BA2)],
+    'age' => const [Color(0xFFF093FB), Color(0xFFF5576C)],
+    _ => AuraColors.gradientRoseLavender,
+  };
 
   static Color iconColor(String topic) => switch (topic) {
-        'conception' => const Color(0xFFE85D75),
-        'contraception' => const Color(0xFF7B5EA7),
-        'condition' => const Color(0xFF3D9A78),
-        'support' => AuraColors.roseDeep,
-        'culture' => const Color(0xFF5C6BC0),
-        'age' => const Color(0xFFD94F8A),
-        _ => AuraColors.roseDeep,
-      };
+    'conception' => const Color(0xFFE85D75),
+    'contraception' => const Color(0xFF7B5EA7),
+    'condition' => const Color(0xFF3D9A78),
+    'support' => AuraColors.roseDeep,
+    'culture' => const Color(0xFF5C6BC0),
+    'age' => const Color(0xFFD94F8A),
+    _ => AuraColors.roseDeep,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -66,152 +66,104 @@ class CommunityHeroHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // The app shell already provides the page title and account avatar. Keep
+    // this area to actions and identity only, rather than repeating a second
+    // oversized title card above another tab bar.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF2A1520).withValues(alpha: 0.85),
-                    const Color(0xFF1E1A2E).withValues(alpha: 0.9),
-                  ]
-                : [
-                    Colors.white.withValues(alpha: 0.72),
-                    const Color(0xFFFFF0F3).withValues(alpha: 0.55),
-                  ],
-          ),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.white.withValues(alpha: 0.8),
-            width: 1.2,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Title row
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: AuraDecorations.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.groups_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.communityTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        l10n.communityPrivacyNote,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                if (onGuidelinesTap != null)
-                  _HeaderIconBtn(
-                    icon: Icons.menu_book_outlined,
-                    tooltip: l10n.communityGuidelinesShort,
-                    onTap: onGuidelinesTap!,
-                  ),
-                if (onActivityTap != null)
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      _HeaderIconBtn(
-                        icon: Icons.notifications_outlined,
-                        tooltip: l10n.communityActivityTitle,
-                        onTap: onActivityTap!,
-                      ),
-                      if (unreadCount > 0)
-                        Positioned(
-                          right: 2,
-                          top: 2,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF2A1520)
-                                    : Colors.white,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                unreadCount > 9 ? '9+' : '$unreadCount',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 7,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            // Stats + profile row
-            Row(
-              children: [
-                _GlassChip(
-                  icon: Icons.check_circle_rounded,
-                  label: '$joinedCount',
-                  sub: l10n.communityTabMine,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          if (alias != null && alias!.isNotEmpty)
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: _ProfileChip(
+                  alias: alias!,
+                  avatarIndex: avatarIndex,
+                  photoUrl: photoUrl,
+                  uidSeed: uidSeed,
+                  onTap: onEditProfile,
                   isDark: isDark,
+                  aliasLabel: l10n.communityYourAlias,
                 ),
-                const SizedBox(width: 8),
-                if (alias != null && alias!.isNotEmpty)
-                  Expanded(
-                    child: _ProfileChip(
-                      alias: alias!,
-                      avatarIndex: avatarIndex,
-                      photoUrl: photoUrl,
-                      uidSeed: uidSeed,
-                      onTap: onEditProfile,
-                      isDark: isDark,
-                      aliasLabel: l10n.communityYourAlias,
-                    ),
+              ),
+            )
+          else
+            Expanded(
+              child: Text(
+                l10n.communityPrivacyNote,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          const SizedBox(width: 8),
+          _GlassChip(
+            icon: Icons.groups_rounded,
+            label: '$joinedCount',
+            sub: l10n.communityTabMine,
+            isDark: isDark,
+          ),
+          if (onGuidelinesTap != null)
+            _HeaderIconBtn(
+              icon: Icons.menu_book_outlined,
+              tooltip: l10n.communityGuidelinesShort,
+              onTap: onGuidelinesTap!,
+            ),
+          if (onActivityTap != null)
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _HeaderIconBtn(
+                  icon: Icons.notifications_outlined,
+                  tooltip: l10n.communityActivityTitle,
+                  onTap: onActivityTap!,
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 2,
+                    top: 2,
+                    child: _UnreadBadge(count: unreadCount, isDark: isDark),
                   ),
               ],
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count, required this.isDark});
+
+  final int count;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 14,
+    height: 14,
+    decoration: BoxDecoration(
+      color: AuraColors.danger,
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: isDark ? const Color(0xFF2A1520) : Colors.white,
+        width: 1.5,
+      ),
+    ),
+    child: Center(
+      child: Text(
+        count > 9 ? '9+' : '$count',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 7,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    ),
+  );
 }
 
 class _GlassChip extends StatelessWidget {
@@ -376,8 +328,9 @@ class _HeaderIconBtn extends StatelessWidget {
       height: 36,
       margin: const EdgeInsetsDirectional.only(start: 4),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.white : theme.colorScheme.surface)
-            .withValues(alpha: isDark ? 0.08 : 0.65),
+        color: (isDark ? Colors.white : theme.colorScheme.surface).withValues(
+          alpha: isDark ? 0.08 : 0.65,
+        ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDark
@@ -424,12 +377,14 @@ class CommunityHubTabBar extends StatelessWidget {
           child: Container(
             height: 46,
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isDark ? 0.06 : 0.04),
+              color: (isDark ? Colors.white : Colors.black).withValues(
+                alpha: isDark ? 0.06 : 0.04,
+              ),
               borderRadius: BorderRadius.circular(AppRadius.pill),
               border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: isDark ? 0.08 : 0.05),
+                color: (isDark ? Colors.white : Colors.black).withValues(
+                  alpha: isDark ? 0.08 : 0.05,
+                ),
               ),
             ),
             child: TabBar(
@@ -552,13 +507,13 @@ class CommunityChoiceChip extends StatelessWidget {
               color: selected
                   ? null
                   : (isDark ? Colors.white : theme.colorScheme.surface)
-                      .withValues(alpha: isDark ? 0.06 : 0.85),
+                        .withValues(alpha: isDark ? 0.06 : 0.85),
               borderRadius: BorderRadius.circular(AppRadius.pill),
               border: Border.all(
                 color: selected
                     ? Colors.transparent
                     : (isDark ? Colors.white : theme.colorScheme.outline)
-                        .withValues(alpha: isDark ? 0.08 : 0.1),
+                          .withValues(alpha: isDark ? 0.08 : 0.1),
               ),
               boxShadow: selected
                   ? [
@@ -658,7 +613,10 @@ class CommunitySearchField extends StatelessWidget {
               color: theme.colorScheme.primary.withValues(alpha: 0.7),
             ),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 44,
+            minHeight: 44,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.lg),
             borderSide: BorderSide(
@@ -678,7 +636,10 @@ class CommunitySearchField extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.lg),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );

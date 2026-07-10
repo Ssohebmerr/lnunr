@@ -149,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your private cycle companion'**
+  /// **'Your cycle has phases — like the moon'**
   String get welcomeTitle;
 
   /// No description provided for @welcomeSubtitle.
@@ -437,13 +437,13 @@ abstract class AppLocalizations {
   /// No description provided for @aiSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your private cycle companion. Ask about your cycle, symptoms, or wellness — not medical advice.'**
+  /// **'Lune means moon — ask about your phases, symptoms, or self-care. Not medical advice.'**
   String get aiSubtitle;
 
   /// No description provided for @aiWelcome.
   ///
   /// In en, this message translates to:
-  /// **'Hi! I\'m Lune — your wellness companion.'**
+  /// **'Hi! I\'m Lune — your moon-phase wellness companion.'**
   String get aiWelcome;
 
   /// No description provided for @aiWelcomeHint.
@@ -517,12 +517,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Priority support'**
   String get premiumFeature3;
-
-  /// No description provided for @subscribePlayStore.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribe with Google Play'**
-  String get subscribePlayStore;
 
   /// No description provided for @premiumPlayHint.
   ///
@@ -661,6 +655,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'PCOS management'**
   String get goalPcosTitle;
+
+  /// No description provided for @conditionHowAreYouToday.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you today?'**
+  String get conditionHowAreYouToday;
+
+  /// No description provided for @conditionTapToLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap what you feel — it\'s saved for today.'**
+  String get conditionTapToLog;
+
+  /// No description provided for @conditionLoggedNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged: {name}'**
+  String conditionLoggedNamed(String name);
+
+  /// No description provided for @conditionRemovedNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed: {name}'**
+  String conditionRemovedNamed(String name);
+
+  /// No description provided for @conditionRitualsDoneToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done today'**
+  String conditionRitualsDoneToday(int done, int total);
+
+  /// No description provided for @conditionStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day logging streak'**
+  String conditionStreakDays(int days);
+
+  /// No description provided for @menopauseHotFlashesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot flashes today'**
+  String get menopauseHotFlashesToday;
+
+  /// No description provided for @menopauseHotFlashHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap − / + each time one hits'**
+  String get menopauseHotFlashHint;
+
+  /// No description provided for @menopauseDaysSincePeriodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Since your last period'**
+  String get menopauseDaysSincePeriodTitle;
+
+  /// No description provided for @conditionDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String conditionDaysCount(int days);
+
+  /// No description provided for @menopauseMilestoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'12 period-free months marks menopause.'**
+  String get menopauseMilestoneHint;
+
+  /// No description provided for @menopauseMilestoneReached.
+  ///
+  /// In en, this message translates to:
+  /// **'12 months period-free — you\'ve reached menopause. 🌿'**
+  String get menopauseMilestoneReached;
+
+  /// No description provided for @menopauseNeedPeriodData.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a period to start counting the gap.'**
+  String get menopauseNeedPeriodData;
+
+  /// No description provided for @pcosCycleGapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle gap'**
+  String get pcosCycleGapTitle;
+
+  /// No description provided for @pcosTypicalCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your typical cycle is about {days} days.'**
+  String pcosTypicalCycle(int days);
+
+  /// No description provided for @pcosGapNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re within your usual range.'**
+  String get pcosGapNormal;
+
+  /// No description provided for @pcosGapLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Longer than usual — common with PCOS. Keep logging every period.'**
+  String get pcosGapLong;
+
+  /// No description provided for @pcosGapUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a couple of cycles so we can compare your gaps.'**
+  String get pcosGapUnknown;
+
+  /// No description provided for @postpartumMoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling today?'**
+  String get postpartumMoodTitle;
+
+  /// No description provided for @postpartumMoodSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for checking in 🤍'**
+  String get postpartumMoodSaved;
+
+  /// No description provided for @postpartumMoodLowSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s okay to not be okay. If this feeling lingers, please reach out to someone you trust or your doctor.'**
+  String get postpartumMoodLowSupport;
+
+  /// No description provided for @postpartumJourneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery journey'**
+  String get postpartumJourneyTitle;
+
+  /// No description provided for @postpartumJourneyCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'About {percent}% through your first year.'**
+  String postpartumJourneyCaption(int percent);
+
+  /// No description provided for @moodVeryLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Very low'**
+  String get moodVeryLow;
+
+  /// No description provided for @moodLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get moodLow;
+
+  /// No description provided for @moodOkay.
+  ///
+  /// In en, this message translates to:
+  /// **'Okay'**
+  String get moodOkay;
+
+  /// No description provided for @moodGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get moodGood;
+
+  /// No description provided for @moodGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great'**
+  String get moodGreat;
 
   /// No description provided for @activatePremiumTest.
   ///
@@ -1495,12 +1657,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis'**
   String get navAnalysis;
-
-  /// No description provided for @accountUpgradePro.
-  ///
-  /// In en, this message translates to:
-  /// **'Upgrade to Pro'**
-  String get accountUpgradePro;
 
   /// No description provided for @accountMenuReports.
   ///
@@ -2927,13 +3083,13 @@ abstract class AppLocalizations {
   /// No description provided for @clinicalFlagShortCycle.
   ///
   /// In en, this message translates to:
-  /// **'Average cycle {days} days — shorter than the typical 21–35 day range; worth discussing with your doctor.'**
+  /// **'Average cycle {days} days — shorter than the 24–38 day reference range; worth discussing with your doctor.'**
   String clinicalFlagShortCycle(int days);
 
   /// No description provided for @clinicalFlagLongCycle.
   ///
   /// In en, this message translates to:
-  /// **'Average cycle {days} days — longer than the typical 21–35 day range; worth discussing with your doctor.'**
+  /// **'Average cycle {days} days — longer than the 24–38 day reference range; worth discussing with your doctor.'**
   String clinicalFlagLongCycle(int days);
 
   /// No description provided for @clinicalFlagIrregularCycle.
@@ -2945,7 +3101,7 @@ abstract class AppLocalizations {
   /// No description provided for @clinicalFlagProlongedPeriod.
   ///
   /// In en, this message translates to:
-  /// **'Average period {days} days — longer than the usual ~7 days; worth discussing with your doctor.'**
+  /// **'Average period {days} days — longer than the 8-day reference duration; worth discussing with your doctor.'**
   String clinicalFlagProlongedPeriod(int days);
 
   /// No description provided for @clinicalFlagHighPain.
@@ -3175,6 +3331,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Learn'**
   String get educationTitle;
+
+  /// No description provided for @magazineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune Magazine'**
+  String get magazineTitle;
+
+  /// No description provided for @magazineFeatured.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get magazineFeatured;
+
+  /// No description provided for @magazineFromLune.
+  ///
+  /// In en, this message translates to:
+  /// **'From the magazine'**
+  String get magazineFromLune;
+
+  /// No description provided for @magazineReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get magazineReadMore;
 
   /// No description provided for @educationSubtitle.
   ///
@@ -3959,7 +4139,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPrivacyAgree.
   ///
   /// In en, this message translates to:
-  /// **'I agree to the Privacy Policy. Cycle data stays on my device unless I enable cloud sync.'**
+  /// **'I agree to the Privacy Policy. Cycle data stays on my device by default. Cloud backup, AI chat, and community are optional and require separate consent in Privacy Center.'**
   String get onboardingPrivacyAgree;
 
   /// No description provided for @privacyCenterTitle.
@@ -4199,8 +4379,14 @@ abstract class AppLocalizations {
   /// No description provided for @consentAiBody.
   ///
   /// In en, this message translates to:
-  /// **'Chat messages are sent to trusted AI providers (DeepSeek / Google) through our secure server to generate responses. No ads. You can disable this anytime.'**
+  /// **'Chat messages and anonymized cycle context (symptoms, mood, phase) are sent to trusted AI providers (DeepSeek / Google) through our secure server. Not medical advice. No ads. You can disable this anytime.'**
   String get consentAiBody;
+
+  /// No description provided for @aiAdultsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune AI is for adults 18+ only.'**
+  String get aiAdultsOnly;
 
   /// No description provided for @consentCommunityTitle.
   ///
@@ -4367,7 +4553,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your private cycle & wellness companion'**
+  /// **'Lune means moon — a private companion for every phase of your cycle'**
   String get onboardingWelcomeSubtitle;
 
   /// No description provided for @onboardingWelcomeHelps.
@@ -4895,7 +5081,7 @@ abstract class AppLocalizations {
   /// No description provided for @pregnancyTrackingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Log weight, count kicks, and time contractions — like Flo.'**
+  /// **'Log weight, count kicks, and time contractions — week by week with Lune.'**
   String get pregnancyTrackingSubtitle;
 
   /// No description provided for @pregnancyWeightTitle.
@@ -5126,23 +5312,23 @@ abstract class AppLocalizations {
   /// **'Account ID: {id}'**
   String accountUserId(String id);
 
-  /// No description provided for @accountDeviceId.
-  ///
-  /// In en, this message translates to:
-  /// **'Device ID: {id}'**
-  String accountDeviceId(String id);
-
-  /// No description provided for @accountTapToCopyId.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to copy account ID'**
-  String get accountTapToCopyId;
-
   /// No description provided for @premiumRefreshStatus.
   ///
   /// In en, this message translates to:
   /// **'Check subscription status'**
   String get premiumRefreshStatus;
+
+  /// No description provided for @signOutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get signOutConfirmTitle;
+
+  /// No description provided for @signOutConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your local data stays on this device. You can sign back in anytime.'**
+  String get signOutConfirmBody;
 
   /// No description provided for @guestModeTitle.
   ///
@@ -5921,7 +6107,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutTagline.
   ///
   /// In en, this message translates to:
-  /// **'A private, secure cycle tracker — your data stays on device. Cloud, AI, and communities are optional.'**
+  /// **'Lune means moon — your private phase-by-phase wellness companion. Data stays on device; cloud, AI, and communities are optional.'**
   String get aboutTagline;
 
   /// No description provided for @insightsCycleRegularityScore.
@@ -6025,6 +6211,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get a supportive daily tip that adapts to your cycle phase or pregnancy week.'**
   String get smartPhaseReminderSubtitle;
+
+  /// No description provided for @latePeriodReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Late period warning'**
+  String get latePeriodReminder;
+
+  /// No description provided for @latePeriodReminderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a gentle heads-up if your period runs a couple of days past its predicted date.'**
+  String get latePeriodReminderSubtitle;
+
+  /// No description provided for @sendTestNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test notification'**
+  String get sendTestNotification;
+
+  /// No description provided for @testNotificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent! Check your notification shade.'**
+  String get testNotificationSent;
+
+  /// No description provided for @testNotificationBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for Lune. Turn them on in system settings.'**
+  String get testNotificationBlocked;
 
   /// No description provided for @graphExportShared.
   ///
@@ -6593,7 +6809,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: If you create an account, we collect your email address and display name via Firebase Authentication.\n• Community Content: Posts, comments, and profile information you share in community features.\n• Device Information: Basic device identifiers required for push notifications and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed to generate responses and are not permanently stored on our servers.'**
+  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed by third-party AI providers to generate responses. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.'**
   String get privacyP2Body;
 
   /// No description provided for @privacyP3Title.
@@ -6605,7 +6821,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP3Body.
   ///
   /// In en, this message translates to:
-  /// **'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance and fix bugs.\n• Ensure safety and prevent misuse of community features.'**
+  /// **'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance, diagnose crashes, and fix bugs.\n• Ensure safety and prevent misuse of community features.'**
   String get privacyP3Body;
 
   /// No description provided for @privacyP4Title.
@@ -6629,7 +6845,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP5Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Hosting): For user accounts, data storage, and backend processing.\n• Google Gemini AI: For powering our AI chat assistant. Your messages are sent to Google for processing but are not used to train AI models.\n• Google Play Billing: For processing in-app subscriptions.\n\nEach service has its own privacy policy. We encourage you to review them.'**
+  /// **'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.\n• Google Gemini AI: AI chat and content processing. Messages are sent to Google for processing per Google\'s API terms.\n• DeepSeek AI: Alternative AI provider for chat and analysis when used by our backend. Messages are sent to DeepSeek for processing per their API terms.\n• Google Play Billing: Premium subscription payments on Android (processed by Google).\n\nEach provider has its own privacy policy. We encourage you to review them. We do not sell your personal data.'**
   String get privacyP5Body;
 
   /// No description provided for @privacyP6Title.
@@ -6641,7 +6857,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP6Body.
   ///
   /// In en, this message translates to:
-  /// **'You have the right to:\n\n• Access your data: View all data stored about you within the app.\n• Export your data: Download your cycle data as a local backup file.\n• Delete your data: Delete your account and all associated data permanently from the Privacy Center.\n• Revoke consent: Withdraw consent for cloud sync, AI features, or community participation at any time.\n• Opt out of notifications: Disable any notification type from settings.\n\nTo exercise these rights, use the in-app Privacy Center or contact us at the email below.'**
+  /// **'You have the right to:\n\n• Access your data: View all data stored about you within the app.\n• Export your data: Download your cycle data as a local backup file.\n• Delete your data: Delete your account and all associated data permanently from the Privacy Center.\n• Revoke consent: Withdraw consent for cloud sync, AI features, or community participation at any time.\n• Opt out of notifications: Disable any notification type from settings.\n\nIf you are in the EU/UK, you may also have rights under GDPR/UK GDPR. To exercise these rights, use the in-app Privacy Center or contact us at the email below.'**
   String get privacyP6Body;
 
   /// No description provided for @privacyP7Title.
@@ -6665,7 +6881,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP8Body.
   ///
   /// In en, this message translates to:
-  /// **'We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, all personal data is permanently removed from our servers within 30 days. Local data on your device remains until you uninstall the app or manually delete it.'**
+  /// **'We retain your data for as long as you maintain an active account or as needed to provide services. If you delete your account, we immediately remove your Firestore profile, cloud backups, chat history, and community content from our servers and delete your Firebase Authentication account. Local data on your device remains until you uninstall the app or manually delete it. Technical backups at Firebase or Google Cloud may be retained briefly per their infrastructure policies. Crash reports in Crashlytics are retained according to Firebase\'s retention settings.'**
   String get privacyP8Body;
 
   /// No description provided for @privacyP9Title.
@@ -6677,7 +6893,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP9Body.
   ///
   /// In en, this message translates to:
-  /// **'Your data may be processed in countries other than your own, including the United States where Google Firebase servers are located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers.'**
+  /// **'Your data may be processed in countries other than your own, including the United States where Google Firebase and AI provider servers may be located. By using Lune, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place for international transfers. If you are in the EU/UK, you may have additional rights under GDPR/UK GDPR as described in section 6.'**
   String get privacyP9Body;
 
   /// No description provided for @privacyP10Title.
@@ -6743,7 +6959,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsP2Body.
   ///
   /// In en, this message translates to:
-  /// **'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content.\n\nThe App is intended for personal, non-commercial use only.'**
+  /// **'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content and magazine articles.\n\nThe App is intended for personal, non-commercial use only.'**
   String get termsP2Body;
 
   /// No description provided for @termsP3Title.
@@ -6755,7 +6971,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsP3Body.
   ///
   /// In en, this message translates to:
-  /// **'To access certain features, you may create an account using email/password or Google Sign-In. You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. You must be at least 13 years old to create an account. We reserve the right to suspend or terminate accounts that violate these Terms.'**
+  /// **'You may use Lune as a guest with an anonymous device-based account, or create a registered account using email/password, Google Sign-In, or Sign in with Apple (where available). You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. You must be at least 13 years old to use the App. We reserve the right to suspend or terminate accounts that violate these Terms.'**
   String get termsP3Body;
 
   /// No description provided for @termsP4Title.
@@ -6851,7 +7067,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsP11Body.
   ///
   /// In en, this message translates to:
-  /// **'These Terms are governed by applicable laws without regard to conflict of law principles. Any disputes shall be resolved through good-faith negotiation first. If you have questions about these Terms, contact us at:'**
+  /// **'These Terms are governed by the laws applicable in the jurisdiction of the Lune operator, except where mandatory consumer protection laws in your country of residence provide otherwise. Disputes shall first be resolved through good-faith negotiation. If you have questions about these Terms, contact us at:'**
   String get termsP11Body;
 
   /// No description provided for @notifRationaleTitle.
@@ -7501,6 +7717,1152 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Give me my daily briefing for today.'**
   String get dailyBriefingPrompt;
+
+  /// No description provided for @accountSectionPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get accountSectionPremium;
+
+  /// No description provided for @accountViewPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View subscription plans'**
+  String get accountViewPlans;
+
+  /// No description provided for @accountPremiumThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re a Premium member — thank you for supporting Lune!'**
+  String get accountPremiumThanks;
+
+  /// No description provided for @accountManageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get accountManageSubscription;
+
+  /// No description provided for @accountManageSubscriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Google Play subscriptions'**
+  String get accountManageSubscriptionHint;
+
+  /// No description provided for @accountSectionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Account info'**
+  String get accountSectionInfo;
+
+  /// No description provided for @accountUsernameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get accountUsernameTitle;
+
+  /// No description provided for @accountUsernameNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — edit your profile to add one'**
+  String get accountUsernameNotSet;
+
+  /// No description provided for @accountEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get accountEmailTitle;
+
+  /// No description provided for @accountEmailVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get accountEmailVerified;
+
+  /// No description provided for @accountEmailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get accountEmailNotVerified;
+
+  /// No description provided for @accountVerificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent. Check your inbox.'**
+  String get accountVerificationSent;
+
+  /// No description provided for @accountIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account ID'**
+  String get accountIdTitle;
+
+  /// No description provided for @accountMemberSinceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since'**
+  String get accountMemberSinceTitle;
+
+  /// No description provided for @accountTypeGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest account'**
+  String get accountTypeGuest;
+
+  /// No description provided for @accountTypeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email account'**
+  String get accountTypeEmail;
+
+  /// No description provided for @accountCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get accountCopied;
+
+  /// No description provided for @accountUsernameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get accountUsernameLabel;
+
+  /// No description provided for @accountUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. luna_star'**
+  String get accountUsernameHint;
+
+  /// No description provided for @accountUsernameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'3–20 characters: letters, numbers, dot or underscore'**
+  String get accountUsernameInvalid;
+
+  /// No description provided for @trustHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust & Privacy'**
+  String get trustHubTitle;
+
+  /// No description provided for @trustHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear answers about how Lune protects your health data — security, cookies, accessibility, and more.'**
+  String get trustHubSubtitle;
+
+  /// No description provided for @trustHubLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust & Privacy Center'**
+  String get trustHubLink;
+
+  /// No description provided for @trustLinkSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security at Lune'**
+  String get trustLinkSecurity;
+
+  /// No description provided for @trustLinkSecuritySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption, authentication, and how we protect your data'**
+  String get trustLinkSecuritySub;
+
+  /// No description provided for @trustLinkBodyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Body, Your Data'**
+  String get trustLinkBodyData;
+
+  /// No description provided for @trustLinkBodyDataSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You own your cycle data — we never sell it'**
+  String get trustLinkBodyDataSub;
+
+  /// No description provided for @trustLinkDataEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Data Ends With You'**
+  String get trustLinkDataEnds;
+
+  /// No description provided for @trustLinkDataEndsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account and cloud data anytime'**
+  String get trustLinkDataEndsSub;
+
+  /// No description provided for @trustLinkFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy FAQ'**
+  String get trustLinkFaq;
+
+  /// No description provided for @trustLinkFaqSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Common questions about privacy at Lune'**
+  String get trustLinkFaqSub;
+
+  /// No description provided for @trustLinkCookies.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookie Policy'**
+  String get trustLinkCookies;
+
+  /// No description provided for @trustLinkCookiesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'How we use local storage and website cookies'**
+  String get trustLinkCookiesSub;
+
+  /// No description provided for @trustLinkIp.
+  ///
+  /// In en, this message translates to:
+  /// **'IP Address Use'**
+  String get trustLinkIp;
+
+  /// No description provided for @trustLinkIpSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Why we process IP addresses and what we don\'t do'**
+  String get trustLinkIpSub;
+
+  /// No description provided for @trustLinkAccessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility'**
+  String get trustLinkAccessibility;
+
+  /// No description provided for @trustLinkAccessibilitySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Our commitment to an inclusive experience'**
+  String get trustLinkAccessibilitySub;
+
+  /// No description provided for @trustSecurityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security at Lune'**
+  String get trustSecurityTitle;
+
+  /// No description provided for @trustSecurityIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health data deserves bank-grade care. Security is built into every layer of Lune — not added as an afterthought. This page explains how we protect your cycle logs, account, and optional cloud features in plain language.'**
+  String get trustSecurityIntro;
+
+  /// No description provided for @trustSecurityS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption on your device'**
+  String get trustSecurityS1Title;
+
+  /// No description provided for @trustSecurityS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle database is encrypted locally using AES-256 before it is stored on your phone. Symptom, mood, flow, and wellness entries live inside this protected store. Encryption keys are generated on your device and stored in Android Keystore or iOS Keychain — they never leave your device unprotected.'**
+  String get trustSecurityS1Body;
+
+  /// No description provided for @trustSecurityS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted cloud sync (optional, Premium)'**
+  String get trustSecurityS2Title;
+
+  /// No description provided for @trustSecurityS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup is optional and requires Premium plus your explicit consent. When enabled, your cycle backup payload is encrypted on the device before upload and stored in your private Firebase account. We do not claim every Firestore profile field uses the same AES-256 scheme — the sensitive cycle payload itself is encrypted before it leaves your phone.'**
+  String get trustSecurityS2Body;
+
+  /// No description provided for @trustSecurityS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure connections & app integrity'**
+  String get trustSecurityS3Title;
+
+  /// No description provided for @trustSecurityS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'All network traffic uses TLS encryption. Firebase App Check helps verify genuine app requests. You can sign in with email, Google, Apple, or continue as an anonymous guest — each method is handled through Firebase Authentication with industry-standard protections.'**
+  String get trustSecurityS3Body;
+
+  /// No description provided for @trustSecurityS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, no data brokers'**
+  String get trustSecurityS4Title;
+
+  /// No description provided for @trustSecurityS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune does not show third-party ads and does not sell your personal or health data. We do not share your cycle data with advertisers, data brokers, employers, or insurers. Our revenue comes from optional Premium subscriptions, not from monetizing your health information.'**
+  String get trustSecurityS4Body;
+
+  /// No description provided for @trustSecurityS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'You control optional features'**
+  String get trustSecurityS5Title;
+
+  /// No description provided for @trustSecurityS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat (Google Gemini and DeepSeek), community, push notifications, and cloud sync are optional and require your consent. You can review and change these choices anytime in Privacy Center without affecting core local tracking.'**
+  String get trustSecurityS5Body;
+
+  /// No description provided for @trustSecurityS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reporting (Firebase Crashlytics)'**
+  String get trustSecurityS6Title;
+
+  /// No description provided for @trustSecurityS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune uses Firebase Crashlytics to collect anonymized crash reports and basic diagnostic data when the app fails unexpectedly. This helps us fix bugs quickly. Crash reports do not include your cycle logs, wellness entries, or AI chat content.'**
+  String get trustSecurityS6Body;
+
+  /// No description provided for @trustSecurityS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud infrastructure'**
+  String get trustSecurityS7Title;
+
+  /// No description provided for @trustSecurityS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered accounts, optional cloud backups, community content, and AI chat (for Premium users) run on Google Firebase — including Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, and Crashlytics. Access to your data is restricted by Firebase security rules and your sign-in credentials.'**
+  String get trustSecurityS7Body;
+
+  /// No description provided for @trustSecurityS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stealth mode on your device'**
+  String get trustSecurityS8Title;
+
+  /// No description provided for @trustSecurityS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Stealth mode disguises Lune as a calculator until you enter your PIN. This protects privacy on your phone if someone picks it up — it is a local lock only and does not encrypt data differently. You can enable or disable it in Privacy Center.'**
+  String get trustSecurityS8Body;
+
+  /// No description provided for @trustSecurityS9Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment security'**
+  String get trustSecurityS9Title;
+
+  /// No description provided for @trustSecurityS9Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium subscriptions on Android are processed by Google Play Billing. Lune never sees or stores your card number. Manage or cancel your subscription through your Google Play account settings.'**
+  String get trustSecurityS9Body;
+
+  /// No description provided for @trustSecurityS10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Android app permissions'**
+  String get trustSecurityS10Title;
+
+  /// No description provided for @trustSecurityS10Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune requests only permissions needed for features you use: Internet (sign-in, optional cloud sync, AI, community), Notifications (optional cycle reminders), Google Play Billing (Premium), exact alarms and boot restart (reliable local reminders), and photos/media only when you choose to attach an image or set a profile photo. Android backup for app data is disabled (allowBackup=false) so cycle data is not copied to Google device backup by default.'**
+  String get trustSecurityS10Body;
+
+  /// No description provided for @trustCookiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookie & Storage Policy'**
+  String get trustCookiesTitle;
+
+  /// No description provided for @trustCookiesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune is a mobile app first. This page explains what is stored on your device, what our website keeps, and what we deliberately do not track. We believe clarity about storage is part of respecting your privacy.'**
+  String get trustCookiesIntro;
+
+  /// No description provided for @trustCookiesS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'App local storage'**
+  String get trustCookiesS1Title;
+
+  /// No description provided for @trustCookiesS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The Lune app stores your cycle logs, wellness entries, preferences, consent choices, and (if you are a guest) AI chat history on your device using encrypted local databases and secure storage. This is essential for offline tracking and fast daily logging.'**
+  String get trustCookiesS1Body;
+
+  /// No description provided for @trustCookiesS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Website cookies'**
+  String get trustCookiesS2Title;
+
+  /// No description provided for @trustCookiesS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Our website (lune-7d956.web.app) does not use advertising or tracking cookies. We may use essential technical storage — such as remembering your language choice on legal pages — so you do not have to re-select it every visit.'**
+  String get trustCookiesS2Body;
+
+  /// No description provided for @trustCookiesS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'No ad tracking'**
+  String get trustCookiesS3Title;
+
+  /// No description provided for @trustCookiesS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not use third-party ad networks, cross-app trackers, or marketing pixels in the Lune app. Your health data is never used for targeted advertising, audience profiling, or retargeting campaigns.'**
+  String get trustCookiesS3Body;
+
+  /// No description provided for @trustCookiesS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Managing storage'**
+  String get trustCookiesS4Title;
+
+  /// No description provided for @trustCookiesS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can clear local app data by uninstalling the app or deleting your account from Privacy Center. Exported backup files you save to your clipboard or elsewhere remain under your control — delete them when you no longer need them.'**
+  String get trustCookiesS4Body;
+
+  /// No description provided for @trustCookiesS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notification tokens'**
+  String get trustCookiesS5Title;
+
+  /// No description provided for @trustCookiesS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'If you enable notifications, Firebase Cloud Messaging stores a device token so we can deliver cycle reminders and app updates you asked for. This token is used for delivery only — not for advertising or selling your identity to third parties.'**
+  String get trustCookiesS5Body;
+
+  /// No description provided for @trustCookiesS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Community cache'**
+  String get trustCookiesS6Title;
+
+  /// No description provided for @trustCookiesS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'When you browse communities, posts and images may be cached temporarily on your device for smoother scrolling. This cache is part of normal app performance and is cleared when you uninstall the app or clear app data.'**
+  String get trustCookiesS6Body;
+
+  /// No description provided for @trustCookiesS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Language & consent preferences'**
+  String get trustCookiesS7Title;
+
+  /// No description provided for @trustCookiesS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your language choice, Privacy Center consent toggles, and stealth-mode settings are saved locally so the app remembers your preferences between sessions. These settings stay on your device unless you sign in and sync account-level preferences.'**
+  String get trustCookiesS7Body;
+
+  /// No description provided for @trustCookiesS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'What we never store for ads'**
+  String get trustCookiesS8Title;
+
+  /// No description provided for @trustCookiesS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not place ad cookies, social pixels, or behavioral tracking SDKs in Lune. We do not build marketing profiles from your cycle data, symptoms, moods, or AI conversations.'**
+  String get trustCookiesS8Body;
+
+  /// No description provided for @trustIpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How We Use IP Addresses'**
+  String get trustIpTitle;
+
+  /// No description provided for @trustIpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When you use Lune or our website, your IP address may be processed by our infrastructure providers. This page explains why that happens, what we do not do with it, and the choices available to you.'**
+  String get trustIpIntro;
+
+  /// No description provided for @trustIpS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Why IP addresses are processed'**
+  String get trustIpS1Title;
+
+  /// No description provided for @trustIpS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'IP addresses help Firebase and our Cloud Functions deliver requests securely, route traffic to the correct server, and keep the service available. Without basic network metadata, cloud apps cannot function reliably.'**
+  String get trustIpS1Body;
+
+  /// No description provided for @trustIpS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'What we do not do'**
+  String get trustIpS2Title;
+
+  /// No description provided for @trustIpS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell IP addresses, use them for advertising profiles, or attempt to determine your precise physical location from your IP alone. Your IP is not shared with data brokers or ad networks.'**
+  String get trustIpS2Body;
+
+  /// No description provided for @trustIpS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Retention'**
+  String get trustIpS3Title;
+
+  /// No description provided for @trustIpS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'IP addresses in server and hosting logs are kept only as long as needed for security, abuse prevention, and troubleshooting. They are then rotated or deleted according to Firebase and Google Cloud retention policies.'**
+  String get trustIpS3Body;
+
+  /// No description provided for @trustIpS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your choices'**
+  String get trustIpS4Title;
+
+  /// No description provided for @trustIpS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Using a VPN is your choice — we do not penalize VPN users. Deleting your account removes your profile and associated cloud content from our servers. For full details, see our Privacy Policy.'**
+  String get trustIpS4Body;
+
+  /// No description provided for @trustIpS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limits & abuse prevention'**
+  String get trustIpS5Title;
+
+  /// No description provided for @trustIpS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We apply server-side rate limits on AI chat and community actions to prevent spam and protect all users. IP addresses and authenticated account IDs may be used together to detect abusive patterns — never to profile you for marketing.'**
+  String get trustIpS5Body;
+
+  /// No description provided for @trustIpS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Where data may be processed'**
+  String get trustIpS6Title;
+
+  /// No description provided for @trustIpS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase and our AI providers may process requests in the United States and other regions where Google and DeepSeek operate data centers. This is standard for cloud-hosted health apps with optional sync.'**
+  String get trustIpS6Body;
+
+  /// No description provided for @trustIpS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal requests'**
+  String get trustIpS7Title;
+
+  /// No description provided for @trustIpS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We may disclose information — which could include IP-related server logs — only when required by valid legal process and to the minimum extent the law demands. We do not voluntarily share cycle health data with authorities.'**
+  String get trustIpS7Body;
+
+  /// No description provided for @trustIpS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'VPNs and privacy tools'**
+  String get trustIpS8Title;
+
+  /// No description provided for @trustIpS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'If you use a VPN, your visible IP may differ from your physical region. Lune does not block VPN connections. Some Firebase security checks may still apply to protect accounts from takeover attempts.'**
+  String get trustIpS8Body;
+
+  /// No description provided for @trustFaqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy FAQ'**
+  String get trustFaqTitle;
+
+  /// No description provided for @trustFaqIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers to the questions we hear most about privacy, security, and how Lune handles your cycle data. If you do not find your answer here, contact us anytime.'**
+  String get trustFaqIntro;
+
+  /// No description provided for @trustFaqQ1.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see my cycle data?'**
+  String get trustFaqQ1;
+
+  /// No description provided for @trustFaqA1.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you. By default, your cycle data stays on your device in an encrypted local database. If you enable Premium cloud backup, encrypted copies are stored in your private Firebase account. We do not share cycle data with other users unless you explicitly post in community features.'**
+  String get trustFaqA1;
+
+  /// No description provided for @trustFaqQ2.
+  ///
+  /// In en, this message translates to:
+  /// **'Does Lune sell my data?'**
+  String get trustFaqQ2;
+
+  /// No description provided for @trustFaqA2.
+  ///
+  /// In en, this message translates to:
+  /// **'No. We never sell your personal or health data. Lune is funded through optional Premium subscriptions processed by Google Play — not through advertising or data brokerage.'**
+  String get trustFaqA2;
+
+  /// No description provided for @trustFaqQ3.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens when I delete my account?'**
+  String get trustFaqQ3;
+
+  /// No description provided for @trustFaqA3.
+  ///
+  /// In en, this message translates to:
+  /// **'When you confirm deletion in Privacy Center, we immediately remove your Firestore profile, cloud backups, chat history, and community content from our servers, then delete your Firebase Authentication account. Local data on your device remains until you uninstall the app. Technical backups at Firebase may be retained briefly per their infrastructure policies.'**
+  String get trustFaqA3;
+
+  /// No description provided for @trustFaqQ4.
+  ///
+  /// In en, this message translates to:
+  /// **'Is AI chat private?'**
+  String get trustFaqQ4;
+
+  /// No description provided for @trustFaqA4.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat requires Premium. Guest users keep chat on the device only. Registered Premium users may have messages stored in the cloud to restore conversations. Every AI message is sent to Google Gemini and/or DeepSeek for processing — see our Privacy Policy. We recommend not sharing information you would not want a third-party AI provider to process.'**
+  String get trustFaqA4;
+
+  /// No description provided for @trustFaqQ5.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I use Lune without an account?'**
+  String get trustFaqQ5;
+
+  /// No description provided for @trustFaqA5.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. You can use Lune as a guest with an anonymous Firebase account linked to your device — no email required. Core cycle tracking works fully offline. Cloud backup, Premium AI, cross-device chat history, and some community features require a registered account.'**
+  String get trustFaqA5;
+
+  /// No description provided for @trustFaqQ6.
+  ///
+  /// In en, this message translates to:
+  /// **'Where is my data stored?'**
+  String get trustFaqQ6;
+
+  /// No description provided for @trustFaqA6.
+  ///
+  /// In en, this message translates to:
+  /// **'Locally on your phone by default in an AES-256 encrypted database. If you enable Premium cloud backup, encrypted backup payloads are stored in Google Firebase, which may process data in the United States and other regions.'**
+  String get trustFaqA6;
+
+  /// No description provided for @trustFaqQ7.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I export my data?'**
+  String get trustFaqQ7;
+
+  /// No description provided for @trustFaqA7.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Privacy Center → Export Data to copy an encrypted local backup to your clipboard. You can save it in a password manager or secure notes app. For help with portability requests, email merrsoheb@gmail.com.'**
+  String get trustFaqA7;
+
+  /// No description provided for @trustFaqQ8.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I contact you about privacy?'**
+  String get trustFaqQ8;
+
+  /// No description provided for @trustFaqA8.
+  ///
+  /// In en, this message translates to:
+  /// **'Email merrsoheb@gmail.com or use Contact Support in Privacy Center. We aim to respond to privacy requests within 30 days.'**
+  String get trustFaqA8;
+
+  /// No description provided for @trustFaqQ9.
+  ///
+  /// In en, this message translates to:
+  /// **'Is AI chat free?'**
+  String get trustFaqQ9;
+
+  /// No description provided for @trustFaqA9.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Lune AI is a Premium feature. Premium subscribers can send up to 30 AI messages per calendar day — enforced on our servers. If a provider fails, we do not count that message against your limit.'**
+  String get trustFaqA9;
+
+  /// No description provided for @trustFaqQ10.
+  ///
+  /// In en, this message translates to:
+  /// **'What does Premium unlock?'**
+  String get trustFaqQ10;
+
+  /// No description provided for @trustFaqA10.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium includes cloud cycle backup, Lune AI chat (30 messages/day), and attaching photos or videos in community posts and stories. Core local tracking remains free for all users.'**
+  String get trustFaqA10;
+
+  /// No description provided for @trustFaqQ11.
+  ///
+  /// In en, this message translates to:
+  /// **'How does Stealth mode work?'**
+  String get trustFaqQ11;
+
+  /// No description provided for @trustFaqA11.
+  ///
+  /// In en, this message translates to:
+  /// **'Stealth mode shows a calculator screen instead of Lune until you enter your secret PIN and press equals. It protects your privacy if someone opens your phone. It is a local disguise only — enable it in Privacy Center.'**
+  String get trustFaqA11;
+
+  /// No description provided for @trustFaqQ12.
+  ///
+  /// In en, this message translates to:
+  /// **'Who sees my community posts?'**
+  String get trustFaqQ12;
+
+  /// No description provided for @trustFaqA12.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts are visible to members of the Lune communities you join. You can report unsafe content; reported posts may be auto-hidden while we review them. Community participation is optional and requires consent.'**
+  String get trustFaqA12;
+
+  /// No description provided for @trustFaqQ13.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I share a health report with my doctor?'**
+  String get trustFaqQ13;
+
+  /// No description provided for @trustFaqA13.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes. Lune can generate a health summary report from your logged data that you can review and share yourself. We do not send reports to doctors automatically — you choose what to share and with whom.'**
+  String get trustFaqA13;
+
+  /// No description provided for @trustFaqQ14.
+  ///
+  /// In en, this message translates to:
+  /// **'Does the magazine use my personal data?'**
+  String get trustFaqQ14;
+
+  /// No description provided for @trustFaqA14.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Educational articles in the Lune magazine are editorial content managed separately from your private cycle logs. Reading articles does not upload your personal health data for personalization.'**
+  String get trustFaqA14;
+
+  /// No description provided for @trustFaqQ15.
+  ///
+  /// In en, this message translates to:
+  /// **'What notifications does Lune send?'**
+  String get trustFaqQ15;
+
+  /// No description provided for @trustFaqA15.
+  ///
+  /// In en, this message translates to:
+  /// **'If you opt in, we may send cycle reminders, wellness prompts, and important app updates via Firebase Cloud Messaging. We do not send promotional ads or sell notification audiences to third parties. You can disable notifications in device settings.'**
+  String get trustFaqA15;
+
+  /// No description provided for @trustFaqQ16.
+  ///
+  /// In en, this message translates to:
+  /// **'What are my GDPR rights?'**
+  String get trustFaqQ16;
+
+  /// No description provided for @trustFaqA16.
+  ///
+  /// In en, this message translates to:
+  /// **'If you are in the EEA or UK, you may request access, correction, deletion, or export of your personal data. Delete your account in Privacy Center for immediate server removal, or email merrsoheb@gmail.com for assistance. We respond within 30 days.'**
+  String get trustFaqA16;
+
+  /// No description provided for @trustFaqQ17.
+  ///
+  /// In en, this message translates to:
+  /// **'What Android permissions does Lune use?'**
+  String get trustFaqQ17;
+
+  /// No description provided for @trustFaqA17.
+  ///
+  /// In en, this message translates to:
+  /// **'Internet for sign-in and optional online features; Notifications for reminders you enable; Google Play Billing for Premium; exact alarms and boot restart for reliable local reminders. Photos or videos are requested only when you attach media in community (Premium) or choose a profile photo. We do not access your contacts, SMS, or call logs.'**
+  String get trustFaqA17;
+
+  /// No description provided for @trustFaqQ18.
+  ///
+  /// In en, this message translates to:
+  /// **'How do Google Play subscriptions work?'**
+  String get trustFaqQ18;
+
+  /// No description provided for @trustFaqA18.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium is billed through Google Play. Subscriptions auto-renew unless you cancel at least 24 hours before the period ends. Manage or cancel in Google Play → Subscriptions. Refunds follow Google Play\'s refund policy. Deleting your Lune account does not automatically stop billing — cancel the subscription separately.'**
+  String get trustFaqA18;
+
+  /// No description provided for @trustFaqQ19.
+  ///
+  /// In en, this message translates to:
+  /// **'What is the minimum age to use Lune?'**
+  String get trustFaqQ19;
+
+  /// No description provided for @trustFaqA19.
+  ///
+  /// In en, this message translates to:
+  /// **'You must be at least 13 years old. Users under 13 cannot continue after the age gate. Some community features are restricted to users 18 and older. Parents who believe a child under 13 used Lune should contact us to request deletion.'**
+  String get trustFaqA19;
+
+  /// No description provided for @trustFaqQ20.
+  ///
+  /// In en, this message translates to:
+  /// **'Is Lune a medical device or medical advice?'**
+  String get trustFaqQ20;
+
+  /// No description provided for @trustFaqA20.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Lune is for informational wellness tracking only — not a medical device, diagnosis, or treatment. Cycle predictions, AI chat, community posts, and magazine articles are not medical advice. Always consult a qualified healthcare professional for medical decisions.'**
+  String get trustFaqA20;
+
+  /// No description provided for @trustFaqQ21.
+  ///
+  /// In en, this message translates to:
+  /// **'What data does Lune collect (Google Play Data Safety)?'**
+  String get trustFaqQ21;
+
+  /// No description provided for @trustFaqA21.
+  ///
+  /// In en, this message translates to:
+  /// **'Data you provide: cycle dates, symptoms, moods, wellness notes, and optional community posts. Account data if registered (email, name, sign-in method). Technical data: device tokens for notifications, anonymized crash reports, and approximate activity timestamps. Premium AI messages are sent to Google Gemini/DeepSeek for processing. Data is not sold. Core tracking stays on your device unless you enable Premium cloud backup.'**
+  String get trustFaqA21;
+
+  /// No description provided for @trustBodyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Body, Your Data'**
+  String get trustBodyDataTitle;
+
+  /// No description provided for @trustBodyDataIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your menstrual and wellness data is deeply personal. At Lune, you are in control — always. This page explains what you log, who owns it, and how optional features use it.'**
+  String get trustBodyDataIntro;
+
+  /// No description provided for @trustBodyDataS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership'**
+  String get trustBodyDataS1Title;
+
+  /// No description provided for @trustBodyDataS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You own the cycle, symptom, mood, flow, water intake, and wellness data you log. Lune is a tool to help you understand your body — not a platform that monetizes your health information or sells insights about you.'**
+  String get trustBodyDataS1Body;
+
+  /// No description provided for @trustBodyDataS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-first design'**
+  String get trustBodyDataS2Title;
+
+  /// No description provided for @trustBodyDataS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The app works fully offline. Your daily logs are written to an encrypted database on your device first. Nothing leaves your phone unless you choose cloud backup, AI chat, community, or other features that require a network connection.'**
+  String get trustBodyDataS2Body;
+
+  /// No description provided for @trustBodyDataS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Explicit consent'**
+  String get trustBodyDataS3Title;
+
+  /// No description provided for @trustBodyDataS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup, AI features, community participation, and push notifications each require separate consent in Privacy Center. You can enable or disable them individually without losing your local cycle history.'**
+  String get trustBodyDataS3Body;
+
+  /// No description provided for @trustBodyDataS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'No hidden sharing'**
+  String get trustBodyDataS4Title;
+
+  /// No description provided for @trustBodyDataS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not share your cycle data with employers, insurers, advertisers, or external social networks. Community posts and stories are visible only within Lune communities you choose to join.'**
+  String get trustBodyDataS4Body;
+
+  /// No description provided for @trustBodyDataS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can log'**
+  String get trustBodyDataS5Title;
+
+  /// No description provided for @trustBodyDataS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune lets you track periods, symptoms, moods, pain levels, water intake, and other wellness notes you choose to record. You decide how much detail to add each day. None of this is required beyond what you need for your own understanding.'**
+  String get trustBodyDataS5Body;
+
+  /// No description provided for @trustBodyDataS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'How AI uses your cycle context'**
+  String get trustBodyDataS6Title;
+
+  /// No description provided for @trustBodyDataS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'When you use Lune AI (Premium), relevant cycle context you approve may be sent to our servers and then to Google Gemini or DeepSeek to personalize responses. AI is optional — you can track your cycle without ever opening chat.'**
+  String get trustBodyDataS6Body;
+
+  /// No description provided for @trustBodyDataS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Magazine & education'**
+  String get trustBodyDataS7Title;
+
+  /// No description provided for @trustBodyDataS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles in the Lune magazine are general health education content. They are separate from your private logs and are not generated from your personal cycle data. Editors publish articles through our admin tools — not by reading your diary.'**
+  String get trustBodyDataS7Body;
+
+  /// No description provided for @trustBodyDataS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Portability'**
+  String get trustBodyDataS8Title;
+
+  /// No description provided for @trustBodyDataS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can export an encrypted backup from Privacy Center at any time. Your data belongs to you — if you leave Lune, you can take a copy with you before deleting your account.'**
+  String get trustBodyDataS8Body;
+
+  /// No description provided for @trustDataEndsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Data Ends With You'**
+  String get trustDataEndsTitle;
+
+  /// No description provided for @trustDataEndsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When you decide to leave Lune, your data should leave too. This page walks through every step — server deletion, local files, subscriptions, and what cannot be undone.'**
+  String get trustDataEndsIntro;
+
+  /// No description provided for @trustDataEndsS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete anytime'**
+  String get trustDataEndsS1Title;
+
+  /// No description provided for @trustDataEndsS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can delete your account from Privacy Center at any time. No phone calls, no dark patterns — just a clear confirmation step. Guest users can clear local data by uninstalling the app.'**
+  String get trustDataEndsS1Body;
+
+  /// No description provided for @trustDataEndsS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate server deletion'**
+  String get trustDataEndsS2Title;
+
+  /// No description provided for @trustDataEndsS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'When you confirm account deletion, our servers immediately remove your Firestore profile, cloud cycle backups, chat history, and community posts, then delete your Firebase Authentication account. This is not a 30-day waiting period — deletion starts right away.'**
+  String get trustDataEndsS2Body;
+
+  /// No description provided for @trustDataEndsS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data'**
+  String get trustDataEndsS3Title;
+
+  /// No description provided for @trustDataEndsS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Data on your device is not automatically erased when you delete your cloud account. Uninstall the app or use your phone\'s app settings to remove remaining local encrypted databases and preferences.'**
+  String get trustDataEndsS3Body;
+
+  /// No description provided for @trustDataEndsS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups you exported'**
+  String get trustDataEndsS4Title;
+
+  /// No description provided for @trustDataEndsS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'If you exported a backup file to your clipboard or saved it elsewhere, that copy is outside our control. Delete those files if you no longer need them — we cannot reach into your notes app or cloud drive.'**
+  String get trustDataEndsS4Body;
+
+  /// No description provided for @trustDataEndsS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent action'**
+  String get trustDataEndsS5Title;
+
+  /// No description provided for @trustDataEndsS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion cannot be undone. If you return to Lune later, you start fresh unless you restore from a local backup you saved before deleting.'**
+  String get trustDataEndsS5Body;
+
+  /// No description provided for @trustDataEndsS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest vs registered accounts'**
+  String get trustDataEndsS6Title;
+
+  /// No description provided for @trustDataEndsS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest accounts exist mainly on your device with a lightweight anonymous Firebase identity. Deleting a registered account triggers full server cleanup. Guests should uninstall the app to remove all local traces.'**
+  String get trustDataEndsS6Body;
+
+  /// No description provided for @trustDataEndsS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium subscriptions'**
+  String get trustDataEndsS7Title;
+
+  /// No description provided for @trustDataEndsS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your Lune account does not automatically cancel a Google Play subscription. Open Google Play → Subscriptions to cancel Premium billing separately so you are not charged after leaving.'**
+  String get trustDataEndsS7Body;
+
+  /// No description provided for @trustDataEndsS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Community content removal'**
+  String get trustDataEndsS8Title;
+
+  /// No description provided for @trustDataEndsS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'When you delete your account, we remove your posts, comments, and stories from Lune communities through automated server cleanup. Remaining copies in other users\' caches disappear as they refresh or reinstall.'**
+  String get trustDataEndsS8Body;
+
+  /// No description provided for @trustA11yTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility at Lune'**
+  String get trustA11yTitle;
+
+  /// No description provided for @trustA11yIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'We believe everyone deserves access to cycle health tools — regardless of language, vision, or motor ability. Accessibility is an ongoing commitment, not a one-time feature.'**
+  String get trustA11yIntro;
+
+  /// No description provided for @trustA11yS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Our commitment'**
+  String get trustA11yS1Title;
+
+  /// No description provided for @trustA11yS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We design Lune to be usable with screen readers, system font scaling, and both left-to-right and right-to-left layouts. Arabic and English receive equal attention in navigation, labels, and reading direction.'**
+  String get trustA11yS1Body;
+
+  /// No description provided for @trustA11yS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app features'**
+  String get trustA11yS2Title;
+
+  /// No description provided for @trustA11yS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune respects your device\'s text size, bold text, and contrast settings where supported by Flutter and your operating system. Navigation uses standard Material patterns for predictable screen-reader behavior across tabs and forms.'**
+  String get trustA11yS2Body;
+
+  /// No description provided for @trustA11yS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accommodations'**
+  String get trustA11yS3Title;
+
+  /// No description provided for @trustA11yS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'If you encounter a barrier while using Lune, email merrsoheb@gmail.com with a description of the issue, your device model, and your preferred language. We take accessibility feedback seriously and prioritize fixes that block core tracking.'**
+  String get trustA11yS3Body;
+
+  /// No description provided for @trustA11yS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ongoing improvements'**
+  String get trustA11yS4Title;
+
+  /// No description provided for @trustA11yS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We review new features for color contrast, touch target size, and screen reader labels before release. Past releases have improved RTL layouts, larger tap areas, and clearer error messages — and more improvements are planned.'**
+  String get trustA11yS4Body;
+
+  /// No description provided for @trustA11yS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic & English parity'**
+  String get trustA11yS5Title;
+
+  /// No description provided for @trustA11yS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching between Arabic and English flips the entire interface direction — menus, cards, and legal pages included. You should not need to fight the layout to read content in your language.'**
+  String get trustA11yS5Body;
+
+  /// No description provided for @trustA11yS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes & system settings'**
+  String get trustA11yS6Title;
+
+  /// No description provided for @trustA11yS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lune follows your device theme where possible and uses readable typography across light backgrounds. If system high-contrast mode is enabled, OS-level settings may further improve readability.'**
+  String get trustA11yS6Body;
+
+  /// No description provided for @trustA11yS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Roadmap'**
+  String get trustA11yS7Title;
+
+  /// No description provided for @trustA11yS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We are working toward broader WCAG-aligned improvements — including richer screen reader descriptions for charts, keyboard navigation enhancements, and user-tested contrast audits. Tell us what matters most to you.'**
+  String get trustA11yS7Body;
 }
 
 class _AppLocalizationsDelegate

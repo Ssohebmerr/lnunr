@@ -8,6 +8,7 @@ class NotificationPrefs {
   static const periodKey = 'period_reminder_enabled';
   static const dailyLogKey = 'daily_log_reminder_enabled';
   static const ovulationKey = 'ovulation_reminder_enabled';
+  static const latePeriodKey = 'late_period_reminder_enabled';
   static const communityKey = 'community_notifications_enabled';
   static const permissionPromptedKey = 'notification_permission_prompted';
 
@@ -46,6 +47,14 @@ class NotificationPrefs {
     if (!await masterEnabled()) return false;
     final p = await SharedPreferences.getInstance();
     return p.getBool(ovulationKey) ?? true;
+  }
+
+  /// Late/overdue-period warning. ON by default so users are gently told when
+  /// a period is running behind — the most-requested "warning" notification.
+  static Future<bool> latePeriodEnabled() async {
+    if (!await masterEnabled()) return false;
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(latePeriodKey) ?? true;
   }
 
   /// Smart-phase reminder — follows the master toggle. ON by default so the

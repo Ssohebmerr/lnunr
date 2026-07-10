@@ -13,6 +13,7 @@ import 'package:cycle_aura/menstrudel/services/period_service.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/models/period_logs/log_day.dart';
 import 'package:cycle_aura/menstrudel/models/prefrences/day_of_week_enum.dart';
+import 'package:cycle_aura/core/theme/app_design_tokens.dart';
 
 class PeriodJournalView extends StatefulWidget {
   final Function(DateTime) onLogRequested;
@@ -164,7 +165,7 @@ class _PeriodJournalViewState extends State<PeriodJournalView> {
     final hasSymptoms = log.symptoms.isNotEmpty;
     final hasPain = log.painLevel != null;
 
-    final symptomColor = Colors.teal.shade200;
+    final symptomColor = AuraColors.plum;
 
     return GestureDetector(
       onTap: () => widget.onLogTapped(log),
@@ -251,7 +252,7 @@ class _PeriodJournalViewState extends State<PeriodJournalView> {
         child: Text(
           '${day.day}',
           style: TextStyle(
-            color: isOvulation ? Colors.teal.shade900 : Colors.teal.shade700, // Not an issue for now as teal is the only colour used. But this needs sorting...
+            color: colorScheme.onSurface,
             fontWeight: isOvulation ? FontWeight.bold : FontWeight.normal,
           ),
         ),

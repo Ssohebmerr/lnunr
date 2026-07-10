@@ -126,7 +126,25 @@ class _AgeOption extends StatelessWidget {
   }
 }
 
-/// Stores the user's age group in SharedPreferences.
+/// Returns true if the user is under 18.
+Future<bool> isMinor() async {
+  final prefs = await SharedPreferences.getInstance();
+  final group = prefs.getString('user_age_group');
+  return group == 'under13' || group == 'teen';
+}
+
+/// True when onboarding age gate blocks community (under 13 or 13–17).
+Future<bool> blocksCommunityByAgeGate() async {
+  return isMinor();
+}
+
+/// True when onboarding age gate blocks completing the app (under 13 only).
+Future<bool> blocksAppByAgeGate() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('user_age_group') == 'under13';
+}
+
+/// Persist age gate outcome. [under13] still marks gate done so we don't re-prompt.
 Future<void> saveAgeGroup(AgeGroup group) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('user_age_group', group.name);
@@ -137,11 +155,4 @@ Future<void> saveAgeGroup(AgeGroup group) async {
 Future<bool> isAgeGateDone() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('age_gate_done') ?? false;
-}
-
-/// Returns true if the user is under 18.
-Future<bool> isMinor() async {
-  final prefs = await SharedPreferences.getInstance();
-  final group = prefs.getString('user_age_group');
-  return group == 'under13' || group == 'teen';
 }

@@ -103,6 +103,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onSend(SendChatMessage event, Emitter<ChatState> emit) async {
     final access = await PremiumGate.checkAiChat();
+    if (access == PremiumAiAccess.needsAdult) {
+      _emitNotice(emit, ChatNoticeType.adultRequired);
+      return;
+    }
     if (access == PremiumAiAccess.needsPremium) {
       _emitNotice(emit, ChatNoticeType.premiumRequired);
       return;
@@ -264,6 +268,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     final access = await PremiumGate.checkAiChat();
+    if (access == PremiumAiAccess.needsAdult) {
+      _emitNotice(emit, ChatNoticeType.adultRequired);
+      return;
+    }
     if (access == PremiumAiAccess.needsPremium) {
       _emitNotice(emit, ChatNoticeType.premiumRequired);
       return;

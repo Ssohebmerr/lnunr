@@ -8,6 +8,7 @@ import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../privacy/presentation/privacy_policy_screen.dart';
 import '../../privacy/presentation/terms_of_service_screen.dart';
+import '../../privacy/presentation/trust_hub_screen.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -76,6 +77,18 @@ class _AboutScreenState extends State<AboutScreen> {
             AppGlassCard(
               child: Column(
                 children: [
+                  ListTile(
+                    leading: Icon(Icons.verified_user_outlined, color: theme.colorScheme.primary),
+                    title: Text(l10n.trustHubLink),
+                    subtitle: Text(l10n.trustHubSubtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TrustHubScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.privacy_tip_outlined),
                     title: Text(l10n.privacyPolicyLink),

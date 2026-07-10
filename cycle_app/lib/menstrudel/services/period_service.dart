@@ -304,7 +304,10 @@ class PeriodService extends ChangeNotifier {
   }
 
   /// Syncs circle data with the watch (Apple Watch + Wear OS).
-  Future<void> _syncWatchData() async {
+  ///
+  /// Returns `true` when data was delivered to a paired watch, `false` when
+  /// there was no watch to sync with.
+  Future<bool> _syncWatchData() async {
     // Determine current phase
     String phase = 'Unknown';
     if (_isPeriodOngoing) {
@@ -327,7 +330,7 @@ class PeriodService extends ChangeNotifier {
 
     final daysUntil = _circleCurrentValue;
 
-    await _watchSyncService.sendCircleData(
+    return _watchSyncService.sendCircleData(
       circleMaxValue: _circleMaxValue,
       circleCurrentValue: _circleCurrentValue,
       phase: phase,
@@ -336,7 +339,8 @@ class PeriodService extends ChangeNotifier {
   }
 
   /// Exposes the private sync method to trigger smartwatch sync manually.
-  Future<void> syncWatch() => _syncWatchData();
+  /// Returns `true` when a paired watch actually received the data.
+  Future<bool> syncWatch() => _syncWatchData();
 
   /// Populates the [_timelineItems] list for the list view.
   void _buildTimelineItems({required List<LogDay> currentLogs}) {

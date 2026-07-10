@@ -210,7 +210,9 @@ class _BirthControlSettingsScreenState extends State<BirthControlSettingsScreen>
                             
                             leading: Icon(
                               isActive ? Icons.check_circle : Icons.circle_outlined,
-                              color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey,
+                              color: isActive
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
                               size: 28,
                             ),
                             title: Text(

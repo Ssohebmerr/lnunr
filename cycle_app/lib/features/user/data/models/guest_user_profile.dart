@@ -5,6 +5,7 @@ class GuestUserProfile {
   const GuestUserProfile({
     required this.uid,
     required this.name,
+    this.username,
     this.birthDate,
     this.deviceId,
     this.isPremium = false,
@@ -13,6 +14,7 @@ class GuestUserProfile {
 
   final String uid;
   final String name;
+  final String? username;
   final DateTime? birthDate;
   final String? deviceId;
   final bool isPremium;
@@ -23,6 +25,7 @@ class GuestUserProfile {
     return GuestUserProfile(
       uid: uid,
       name: (data['name'] as String?)?.trim() ?? '',
+      username: (data['username'] as String?)?.trim(),
       birthDate: birth is Timestamp ? birth.toDate() : null,
       deviceId: data['deviceId'] as String?,
       isPremium: data['isPremium'] == true,
@@ -38,7 +41,6 @@ class GuestUserProfile {
     return {
       'name': name,
       'birthDate': Timestamp.fromDate(birthDate),
-      'communityBirthYear': birthDate.year,
       'deviceId': deviceId,
       'isPremium': false,
       'daily_chat_count': 0,

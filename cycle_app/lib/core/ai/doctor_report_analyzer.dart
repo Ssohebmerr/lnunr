@@ -5,16 +5,16 @@ import 'models/health_snapshot.dart';
 /// diagnoses — they are neutral observations derived from on-device data and
 /// always surfaced with "discuss with your doctor" framing.
 enum ClinicalFlagType {
-  /// Average cycle shorter than the typical 21–35 day range.
+  /// Average cycle shorter than the FIGO reference range (24–38 days).
   shortCycle,
 
-  /// Average cycle longer than the typical 21–35 day range.
+  /// Average cycle longer than the FIGO reference range (24–38 days).
   longCycle,
 
   /// Large cycle-to-cycle variation (irregular cycles).
   irregularCycle,
 
-  /// Bleeding longer than ~7 days on average.
+  /// Bleeding longer than 8 days on average.
   prolongedPeriod,
 
   /// Average logged pain in the severe range.
@@ -119,42 +119,45 @@ class DoctorReportMetrics {
 class DoctorReportAnalyzer {
   DoctorReportAnalyzer._();
 
-  // Clinical reference thresholds (framed as discussion prompts, not diagnoses).
-  static const _shortCycleDays = 21;
-  static const _longCycleDays = 35;
-  static const _irregularSpreadDays = 9;
-  static const _prolongedPeriodDays = 7;
+  // FIGO clinical reference thresholds for people aged 18–45. Flags remain
+  // discussion prompts, never diagnoses. See: Munro et al., 2018.
+  static const _shortCycleDays = 24;
+  static const _longCycleDays = 38;
+  static const _prolongedPeriodDays = 8;
   static const _severePain = 3.0; // on the 0–4 PainLevel scale
 
   static DoctorReportMetrics analyze({
     required CycleReportData report,
-    CycleDashboardData? dashboard,
     HealthSnapshot? snapshot,
+    int? patientAge,
   }) {
     final cycles = report.cycles;
 
+    // The widget returns newest → oldest and deliberately includes the
+    // current, unfinished cycle first. Its length is only days elapsed so far
+    // and must never influence clinical averages or flags.
+    final completedCycles = cycles
+        .where((c) => (c.cycleEndDate ?? '').trim().isNotEmpty)
+        .toList();
+
     final cycleLengths = <int>[];
     final periodDurations = <int>[];
-    for (final c in cycles) {
+    for (final c in completedCycles) {
       final cl = c.cycleLength ?? 0;
-      if (cl > 0) cycleLengths.add(cl);
+      if (cl > 0 && cl < 120) cycleLengths.add(cl);
       final pd = c.periodDuration ?? 0;
-      if (pd > 0) periodDurations.add(pd);
+      if (pd > 0 && pd < 30) periodDurations.add(pd);
     }
 
-    final dashCycle =
-        (dashboard?.avgCycleLength ?? 0) > 0 ? dashboard!.avgCycleLength : null;
-    final dashPeriod = (dashboard?.avgPeriodDuration ?? 0) > 0
-        ? dashboard!.avgPeriodDuration
-        : null;
-
-    final avgCycle = _avg(cycleLengths) ?? dashCycle;
+    // Dashboard averages are produced by the same widget and include the
+    // unfinished cycle too, so they are intentionally not used as a fallback.
+    final avgCycle = _avg(cycleLengths);
     final minCycle = _min(cycleLengths);
     final maxCycle = _max(cycleLengths);
     final variability =
         (minCycle != null && maxCycle != null) ? maxCycle - minCycle : null;
 
-    final avgPeriod = _avg(periodDurations) ?? dashPeriod;
+    final avgPeriod = _avg(periodDurations);
     final minPeriod = _min(periodDurations);
     final maxPeriod = _max(periodDurations);
 
@@ -162,16 +165,16 @@ class DoctorReportAnalyzer {
     DateTime? lmp;
     for (final c in cycles) {
       final d = _parse(c.periodStartDate ?? c.cycleStartDate);
-      if (d != null) {
+      if (d != null && (lmp == null || d.isAfter(lmp))) {
         lmp = d;
-        break;
       }
     }
 
-    // Analyzed window bounds.
+    // Analyzed window bounds contain completed cycles only, just like the
+    // metrics. LMP above intentionally still includes the current cycle.
     DateTime? first;
     DateTime? last;
-    for (final c in cycles) {
+    for (final c in completedCycles) {
       final d = _parse(c.cycleStartDate ?? c.periodStartDate);
       if (d == null) continue;
       if (first == null || d.isBefore(first)) first = d;
@@ -190,7 +193,7 @@ class DoctorReportAnalyzer {
     }
     if (variability != null &&
         cycleLengths.length >= 3 &&
-        variability >= _irregularSpreadDays) {
+        variability > _regularityLimitDays(patientAge)) {
       flags.add(ClinicalFlag(ClinicalFlagType.irregularCycle, value: variability));
     }
     if (avgPeriod != null && avgPeriod > _prolongedPeriodDays) {
@@ -226,6 +229,12 @@ class DoctorReportAnalyzer {
 
   static int? _max(List<int> xs) =>
       xs.isEmpty ? null : xs.reduce((a, b) => a > b ? a : b);
+
+  /// FIGO uses a 7-day maximum shortest-to-longest variation for ages 26–41
+  /// and 9 days for ages 18–25 and 42–45. When age is unavailable, use the
+  /// less alarming 9-day limit rather than producing a false warning.
+  static int _regularityLimitDays(int? age) =>
+      age != null && age >= 26 && age <= 41 ? 7 : 9;
 
   static DateTime? _parse(String? raw) {
     if (raw == null || raw.trim().isEmpty) return null;

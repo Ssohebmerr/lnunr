@@ -106,9 +106,19 @@ void main() {
       expect(profile.isReady, isFalse);
     });
 
-    test('ready with valid alias and adult birth year', () {
+    test('not ready without setupComplete', () {
       final year = DateTime.now().year - 25;
       final profile = CommunityProfile(alias: 'Luna', birthYear: year);
+      expect(profile.isReady, isFalse);
+    });
+
+    test('ready with valid alias, adult birth year, and setupComplete', () {
+      final year = DateTime.now().year - 25;
+      final profile = CommunityProfile(
+        alias: 'Luna',
+        birthYear: year,
+        setupComplete: true,
+      );
       expect(profile.isReady, isTrue);
     });
   });

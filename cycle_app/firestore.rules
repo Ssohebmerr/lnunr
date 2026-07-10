@@ -100,7 +100,9 @@ service cloud.firestore {
 
         || !('communityBirthYear' in resource.data)
 
-        || request.resource.data.communityBirthYear == resource.data.communityBirthYear;
+        || request.resource.data.communityBirthYear == resource.data.communityBirthYear
+
+        || resource.data.get('communitySetupComplete', false) != true;
 
     }
 
@@ -392,11 +394,13 @@ service cloud.firestore {
 
     match /communityRateLimits/{uid} {
 
-      allow read, write: if isOwner(uid);
+      // Server-only limiter state. Letting the owner see or edit its own
+      // counters would make the throttle bypassable from a modified client.
+      allow read, create, update, delete: if false;
 
       match /actions/{actionId} {
 
-        allow read, write: if isOwner(uid);
+        allow read, create, update, delete: if false;
 
       }
 
@@ -406,9 +410,8 @@ service cloud.firestore {
 
     match /communityContentHashes/{docId} {
 
-      allow read, write: if request.auth != null
-
-        && docId.matches('^' + request.auth.uid + '_.*');
+      // Duplicate history belongs to the server-side submission path.
+      allow read, write: if false;
 
     }
 
@@ -611,33 +614,10 @@ service cloud.firestore {
 
         allow read: if request.auth != null && isCommunityAdult() && postReadable();
 
-        allow create: if request.auth != null
-
-          && request.resource.data.authorUid == request.auth.uid
-
-          && request.resource.data.text is string
-
-          && request.resource.data.text.size() >= 3
-
-          && request.resource.data.text.size() <= 2000
-
-          && postMediaAllowed(request.resource.data)
-
-          && (!('isAnonymous' in request.resource.data)
-
-              || request.resource.data.isAnonymous is bool)
-
-          && clientModerationStatusOk()
-
-          && noProtectedPostFieldsOnCreate()
-
-          && pollOptionsValid(request.resource.data)
-
-          && isCommunityAdult()
-
-          && isCommunityNotBanned()
-
-          && isCommunityMember(communityId);
+        // Creation is server-authoritative: the Function applies rate limits,
+        // duplicate checks, profile identity, Premium media checks, and the
+        // pending-moderation state in one trusted operation.
+        allow create: if false;
 
         allow update: if request.auth != null
 
@@ -746,23 +726,8 @@ service cloud.firestore {
 
           allow read: if request.auth != null && isCommunityAdult() && commentReadable();
 
-          allow create: if request.auth != null
-
-            && request.resource.data.authorUid == request.auth.uid
-
-            && request.resource.data.text is string
-
-            && request.resource.data.text.size() >= 1
-
-            && request.resource.data.text.size() <= 1000
-
-            && clientModerationStatusOk()
-
-            && isCommunityAdult()
-
-            && isCommunityNotBanned()
-
-            && isCommunityMember(communityId);
+          // Comments use the same trusted submission path as posts.
+          allow create: if false;
 
           allow update: if request.auth != null
 
@@ -906,7 +871,7 @@ service cloud.firestore {
 
       match /stories/{storyId} {
 
-        allow read: if request.auth != null;
+        allow read: if request.auth != null && isCommunityAdult();
 
         allow create: if request.auth != null
 

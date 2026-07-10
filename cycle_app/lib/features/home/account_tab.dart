@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +35,7 @@ import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_event.dart';
 import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
+import '../premium/presentation/subscription_plans_screen.dart';
 import '../user/data/guest_user_service.dart';
 import '../user/data/guest_user_repository.dart';
 import '../education/presentation/education_hub_page.dart';
@@ -66,11 +69,12 @@ class _AccountTabState extends State<AccountTab> {
   bool _premium = false;
   bool _notifications = true;
   String _localName = 'Guest';
+  String? _username;
   int _avatarIndex = 0;
   String? _photoPath;
   String? _photoUrl;
   String? _accountUid;
-  String? _deviceId;
+  DateTime? _memberSince;
   bool _isAdmin = false;
 
   @override
@@ -123,38 +127,38 @@ class _AccountTabState extends State<AccountTab> {
 
     final sessionUser = FirebaseAuth.instance.currentUser ?? user;
     final uid = sessionUser?.uid;
-    String? deviceId;
-    if (uid != null) {
-      try {
-        final profile = await GuestUserRepository().fetch(uid);
-        deviceId = profile?.deviceId;
-      } catch (_) {}
-      deviceId ??= await GuestUserService().getDeviceId();
-    }
 
     localName = await _resolveDisplayName(localName, sessionUser);
+
+    String? username;
+    try {
+      username = await GuestUserService().resolveUsername();
+    } catch (e) {
+      debugPrint('AccountTab resolveUsername: $e');
+    }
 
     if (mounted) {
       setState(() {
         _localName = localName;
+        _username = username;
         _avatarIndex = avatar;
         _photoPath = path;
         _photoUrl = url;
         _accountUid = uid;
-        _deviceId = deviceId;
+        _memberSince = sessionUser?.metadata.creationTime;
         _premium = p;
         _notifications = prefs.getBool('notifications_enabled') ?? true;
       });
     }
   }
 
-  void _copyAccountId(String id) {
-    Clipboard.setData(ClipboardData(text: id));
+  void _copyText(String value) {
+    Clipboard.setData(ClipboardData(text: value));
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        content: Text(l10n.accountTapToCopyId),
+        content: Text(l10n.accountCopied),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -205,45 +209,47 @@ class _AccountTabState extends State<AccountTab> {
     await NotificationService.scheduleFromPrefs();
   }
 
-  Future<void> _subscribe() async {
-    final l10n = AppLocalizations.of(context)!;
+  /// Root path to the plans: the full-screen paywall with monthly + yearly
+  /// cards. This is the ONLY premium entry point from the account hub, so the
+  /// plans are always reachable (the old bottom sheet hid them entirely).
+  void _openPlans() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const SubscriptionPlansScreen(),
+      ),
+    );
+  }
 
+  /// Opens Google Play's subscription management for the current account.
+  Future<void> _manageSubscription() async {
+    final uri =
+        Uri.parse('https://play.google.com/store/account/subscriptions');
     try {
-      await GuestUserService().ensureSession();
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorGeneric)),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendEmailVerification(User user) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await user.sendEmailVerification();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.accountVerificationSent)),
+        );
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.errorGeneric)),
         );
       }
-      return;
-    }
-
-    if (!Platform.isAndroid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumPlayOnly)),
-        );
-      }
-      return;
-    }
-
-    final billing = PlayBillingCoordinator.instance.billing;
-    final product = await billing.loadProduct();
-    if (product == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumProductUnavailable)),
-        );
-      }
-      return;
-    }
-
-    final started = await billing.subscribe(product);
-    if (!started && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric)),
-      );
     }
   }
 
@@ -272,23 +278,6 @@ class _AccountTabState extends State<AccountTab> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.notPremium)),
-      );
-    }
-  }
-
-  /// DEBUG builds only — grants premium via the QA-gated server endpoint.
-  Future<void> _activateTestPremium() async {
-    final l10n = AppLocalizations.of(context)!;
-    final result = await PremiumActivationService.activateTesterPremium();
-    if (!mounted) return;
-    if (result.ok) {
-      setState(() => _premium = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumActivated)),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric)),
       );
     }
   }
@@ -335,11 +324,15 @@ class _AccountTabState extends State<AccountTab> {
                     onPressed: () async {
                       try {
                         final periodService = ctx.read<PeriodService>();
-                        await periodService.syncWatch();
+                        final synced = await periodService.syncWatch();
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.watchSyncSuccess)),
+                            SnackBar(
+                              content: Text(synced
+                                  ? l10n.watchSyncSuccess
+                                  : l10n.watchSyncFailed),
+                            ),
                           );
                         }
                       } catch (e) {
@@ -364,30 +357,6 @@ class _AccountTabState extends State<AccountTab> {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showPremiumSheet() {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: _PremiumCard(
-          l10n: l10n,
-          theme: theme,
-          premium: _premium,
-          onSubscribePlayStore: Platform.isAndroid ? _subscribe : null,
-          onRestore: Platform.isAndroid ? _restorePurchases : null,
-          onRefreshStatus: !_premium ? _refreshPremiumStatus : null,
-          onActivateTest: (kDebugMode && !_premium) ? _activateTestPremium : null,
         ),
       ),
     );
@@ -425,15 +394,15 @@ class _AccountTabState extends State<AccountTab> {
           user: user,
           premium: _premium,
           localName: _localName,
+          username: _username,
           accountUid: _accountUid,
-          deviceId: _deviceId,
           avatarIndex: _avatarIndex,
           photoPath: _photoPath,
           photoUrl: _photoUrl,
           l10n: l10n,
           theme: theme,
-          centered: true,
-          onCopyAccountId: _accountUid != null ? () => _copyAccountId(_accountUid!) : null,
+          onCopyAccountId:
+              _accountUid != null ? () => _copyText(_accountUid!) : null,
           onLinkEmail: !hasEmail ? () => context.push('/register') : null,
           onEditProfile: () async {
             final updated = await showModalBottomSheet<bool>(
@@ -455,16 +424,85 @@ class _AccountTabState extends State<AccountTab> {
             ),
           ),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
+        AppSectionHeader(title: l10n.accountSectionPremium),
+        _PremiumStatusCard(
+          premium: _premium,
+          l10n: l10n,
+          theme: theme,
+          onViewPlans: _openPlans,
+          onManage: Platform.isAndroid ? _manageSubscription : null,
+          onRestore: Platform.isAndroid ? _restorePurchases : null,
+          onRefreshStatus: _refreshPremiumStatus,
+        ),
+        const SizedBox(height: 16),
+        AppSectionHeader(title: l10n.accountSectionInfo),
+        AccountMenuCard(
+          children: [
+            AccountMenuTile(
+              icon: Icons.alternate_email_rounded,
+              title: l10n.accountUsernameTitle,
+              subtitle: (_username == null || _username!.isEmpty)
+                  ? l10n.accountUsernameNotSet
+                  : '@$_username',
+              trailing: (_username == null || _username!.isEmpty)
+                  ? null
+                  : Icon(
+                      Icons.copy_rounded,
+                      size: 18,
+                      color: theme.colorScheme.outline,
+                    ),
+              onTap: (_username == null || _username!.isEmpty)
+                  ? null
+                  : () => _copyText('@$_username'),
+            ),
+            AccountMenuTile(
+              icon: Icons.email_outlined,
+              title: l10n.accountEmailTitle,
+              subtitle: hasEmail
+                  ? user!.email!.trim()
+                  : l10n.accountEmailNotLinked,
+              trailing: hasEmail
+                  ? _EmailVerifiedBadge(
+                      verified: user!.emailVerified,
+                      l10n: l10n,
+                      theme: theme,
+                    )
+                  : null,
+              onTap: hasEmail
+                  ? (user!.emailVerified
+                      ? null
+                      : () => _sendEmailVerification(user))
+                  : () => context.push('/register'),
+            ),
+            if (_accountUid != null && _accountUid!.isNotEmpty)
+              AccountMenuTile(
+                icon: Icons.badge_outlined,
+                title: l10n.accountIdTitle,
+                subtitle: _accountUid,
+                trailing: Icon(
+                  Icons.copy_rounded,
+                  size: 18,
+                  color: theme.colorScheme.outline,
+                ),
+                onTap: () => _copyText(_accountUid!),
+              ),
+            AccountMenuTile(
+              icon: Icons.verified_user_outlined,
+              title: hasEmail ? l10n.accountTypeEmail : l10n.accountTypeGuest,
+              subtitle: _memberSince != null
+                  ? '${l10n.accountMemberSinceTitle} '
+                      '${DateFormat.yMMMM(Localizations.localeOf(context).toString()).format(_memberSince!)}'
+                  : null,
+              showDivider: false,
+              trailing: const SizedBox.shrink(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         AppSectionHeader(title: l10n.accountSectionTools),
         AccountMenuCard(
           children: [
-            if (!_premium)
-              AccountMenuTile(
-                femIcon: FeminineIcon.premium,
-                title: l10n.accountUpgradePro,
-                onTap: _showPremiumSheet,
-              ),
             AccountMenuTile(
               femIcon: FeminineIcon.insights,
               title: l10n.accountMenuInsights,
@@ -572,7 +610,8 @@ class _AccountTabState extends State<AccountTab> {
               subtitle: l10n.accountMenuFeedbackSubtitle,
               onTap: () => SupportSheet.show(context),
             ),
-            if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
+            if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled) &&
+                kDebugMode)
               AccountMenuTile(
                 femIcon: FeminineIcon.ai,
                 title: l10n.accountMenuAiDiagnostic,
@@ -601,9 +640,29 @@ class _AccountTabState extends State<AccountTab> {
                 icon: Icons.logout_rounded,
                 title: l10n.signOut,
                 showDivider: false,
-                onTap: () {
-                  context.read<AuthBloc>().add(SignOutRequested());
-                  context.go('/welcome');
+                onTap: () async {
+                  final router = GoRouter.of(context);
+                  final authBloc = context.read<AuthBloc>();
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.signOutConfirmTitle),
+                      content: Text(l10n.signOutConfirmBody),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(l10n.cancel),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: Text(l10n.signOut),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed != true) return;
+                  authBloc.add(SignOutRequested());
+                  router.go('/welcome');
                 },
               ),
           ],
@@ -633,8 +692,8 @@ class _ProfileCard extends StatelessWidget {
     required this.user,
     required this.premium,
     required this.localName,
+    this.username,
     this.accountUid,
-    this.deviceId,
     required this.avatarIndex,
     this.photoPath,
     this.photoUrl,
@@ -643,14 +702,13 @@ class _ProfileCard extends StatelessWidget {
     required this.onEditProfile,
     this.onCopyAccountId,
     this.onLinkEmail,
-    this.centered = false,
   });
 
   final User? user;
   final bool premium;
   final String localName;
+  final String? username;
   final String? accountUid;
-  final String? deviceId;
   final int avatarIndex;
   final String? photoPath;
   final String? photoUrl;
@@ -659,7 +717,6 @@ class _ProfileCard extends StatelessWidget {
   final VoidCallback onEditProfile;
   final VoidCallback? onCopyAccountId;
   final VoidCallback? onLinkEmail;
-  final bool centered;
 
   bool get _hasEmail {
     final email = user?.email?.trim();
@@ -676,92 +733,50 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (centered) {
-      return _AccountHeroCard(
-        avatar: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AppAvatar(
-              radius: 44,
-              avatarIndex: avatarIndex,
-              photoPath: photoPath,
-              networkUrl: photoUrl,
-              isPremium: premium,
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Material(
-                color: theme.colorScheme.primaryContainer,
-                shape: const CircleBorder(),
-                elevation: 1,
-                child: InkWell(
-                  onTap: onEditProfile,
-                  customBorder: const CircleBorder(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        name: localName,
-        subtitle: _subtitleLine(),
-        premium: premium,
-        l10n: l10n,
-        theme: theme,
-        accountUid: accountUid,
-        shortId: accountUid != null ? _shortId(accountUid!) : null,
-        onCopyAccountId: onCopyAccountId,
-        onLinkEmail: (!_hasEmail && onLinkEmail != null) ? onLinkEmail : null,
-      );
-    }
-
-    return AppGlassCard(
-      onTap: onEditProfile,
-      child: Row(
+    return _AccountHeroCard(
+      avatar: Stack(
+        clipBehavior: Clip.none,
         children: [
           AppAvatar(
-            radius: 28,
+            radius: 44,
             avatarIndex: avatarIndex,
             photoPath: photoPath,
             networkUrl: photoUrl,
             isPremium: premium,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(localName, style: theme.textTheme.titleMedium),
-                Text(_subtitleLine(), style: theme.textTheme.bodySmall),
-                if (accountUid != null && accountUid!.isNotEmpty)
-                  Text(
-                    l10n.accountUserId(_shortId(accountUid!)),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                    ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Material(
+              color: theme.colorScheme.primaryContainer,
+              shape: const CircleBorder(),
+              elevation: 1,
+              child: InkWell(
+                onTap: onEditProfile,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.edit_outlined,
+                    size: 18,
+                    color: theme.colorScheme.primary,
                   ),
-                if (deviceId != null && deviceId!.isNotEmpty)
-                  Text(
-                    l10n.accountDeviceId(_shortId(deviceId!)),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                    ),
-                  ),
-                Text(premium ? l10n.premiumActive : l10n.notPremium),
-              ],
+                ),
+              ),
             ),
           ),
-          Icon(Icons.edit_outlined, color: theme.colorScheme.outline),
         ],
       ),
+      name: localName,
+      username: username,
+      subtitle: _subtitleLine(),
+      premium: premium,
+      l10n: l10n,
+      theme: theme,
+      accountUid: accountUid,
+      shortId: accountUid != null ? _shortId(accountUid!) : null,
+      onCopyAccountId: onCopyAccountId,
+      onLinkEmail: (!_hasEmail && onLinkEmail != null) ? onLinkEmail : null,
     );
   }
 }
@@ -773,6 +788,7 @@ class _AccountHeroCard extends StatelessWidget {
   const _AccountHeroCard({
     required this.avatar,
     required this.name,
+    this.username,
     required this.subtitle,
     required this.premium,
     required this.l10n,
@@ -785,6 +801,7 @@ class _AccountHeroCard extends StatelessWidget {
 
   final Widget avatar;
   final String name;
+  final String? username;
   final String subtitle;
   final bool premium;
   final AppLocalizations l10n;
@@ -824,6 +841,18 @@ class _AccountHeroCard extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            if (username != null && username!.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                '@$username',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+                textDirection: TextDirection.ltr,
+              ),
+            ],
             const SizedBox(height: 4),
             Text(
               subtitle,
@@ -932,135 +961,154 @@ class _AccountHeroCard extends StatelessWidget {
   }
 }
 
-class _PremiumCard extends StatelessWidget {
-  const _PremiumCard({
+/// Premium status card in the account hub.
+///
+/// Free users get a gradient upsell whose CTA opens [SubscriptionPlansScreen]
+/// (monthly + yearly plans). Premium users get their active status with
+/// "manage subscription" and a server-side status refresh.
+class _PremiumStatusCard extends StatelessWidget {
+  const _PremiumStatusCard({
+    required this.premium,
     required this.l10n,
     required this.theme,
-    required this.premium,
-    this.onSubscribePlayStore,
+    required this.onViewPlans,
+    this.onManage,
     this.onRestore,
     this.onRefreshStatus,
-    this.onActivateTest,
   });
 
+  final bool premium;
   final AppLocalizations l10n;
   final ThemeData theme;
-  final bool premium;
-  final VoidCallback? onSubscribePlayStore;
+  final VoidCallback onViewPlans;
+  final VoidCallback? onManage;
   final VoidCallback? onRestore;
   final VoidCallback? onRefreshStatus;
-  final VoidCallback? onActivateTest;
 
   @override
   Widget build(BuildContext context) {
     return AppGlassCard(
+      padding: EdgeInsets.zero,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.lg),
           gradient: LinearGradient(
+            begin: AlignmentDirectional.topStart,
+            end: AlignmentDirectional.bottomEnd,
             colors: [
-              AuraColors.peachGold.withValues(alpha: 0.2),
-              AuraColors.rose.withValues(alpha: 0.15),
-              AuraColors.lavenderSoft.withValues(alpha: 0.12),
+              AuraColors.peachGold.withValues(alpha: premium ? 0.12 : 0.2),
+              AuraColors.rose.withValues(alpha: premium ? 0.08 : 0.15),
+              AuraColors.lavenderSoft.withValues(alpha: 0.1),
             ],
           ),
         ),
         padding: const EdgeInsets.all(20),
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const PremiumBadge(size: 28),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.premiumTitle,
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (premium)
-                Text(l10n.premiumActive, style: theme.textTheme.titleSmall)
-              else ...[
-                Text(l10n.premiumSubtitle),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.premiumPlayHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const PremiumBadge(size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    premium ? l10n.premiumActive : l10n.premiumTitle,
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 12),
-                _FeatureRow(text: l10n.premiumFeature1),
-                _FeatureRow(text: l10n.premiumFeature2),
-                _FeatureRow(text: l10n.premiumFeature3),
-                const SizedBox(height: 16),
-                if (onSubscribePlayStore != null)
-                  AppGradientButton(
-                    label: l10n.subscribePlayStore,
-                    icon: Icons.shop_rounded,
-                    onPressed: onSubscribePlayStore,
-                  )
-                else
-                  Text(
-                    l10n.premiumPlayOnly,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                if (onRestore != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: onRestore,
-                    child: Text(l10n.restorePurchases),
-                  ),
-                ],
-                if (onRefreshStatus != null) ...[
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: onRefreshStatus,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: Text(l10n.premiumRefreshStatus),
-                  ),
-                ],
-                // Debug-only tester activation (never shown in release builds).
-                if (onActivateTest != null) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: onActivateTest,
-                    icon: const Icon(Icons.bug_report_outlined),
-                    label: Text(l10n.activatePremiumTest),
-                  ),
-                ],
               ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              premium ? l10n.accountPremiumThanks : l10n.premiumSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (premium) ...[
+              if (onManage != null)
+                OutlinedButton.icon(
+                  onPressed: onManage,
+                  icon: const Icon(Icons.manage_accounts_outlined, size: 20),
+                  label: Text(l10n.accountManageSubscription),
+                ),
+              if (onRefreshStatus != null)
+                TextButton.icon(
+                  onPressed: onRefreshStatus,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(l10n.premiumRefreshStatus),
+                ),
+            ] else ...[
+              AppGradientButton(
+                label: l10n.accountViewPlans,
+                icon: Icons.diamond_rounded,
+                onPressed: onViewPlans,
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 4,
+                children: [
+                  if (onRestore != null)
+                    TextButton(
+                      onPressed: onRestore,
+                      child: Text(l10n.restorePurchases),
+                    ),
+                  if (onRefreshStatus != null)
+                    TextButton(
+                      onPressed: onRefreshStatus,
+                      child: Text(l10n.premiumRefreshStatus),
+                    ),
+                ],
+              ),
             ],
+          ],
         ),
       ),
     );
   }
 }
 
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({required this.text});
-  final String text;
+/// Small "verified / not verified" pill next to the email row.
+class _EmailVerifiedBadge extends StatelessWidget {
+  const _EmailVerifiedBadge({
+    required this.verified,
+    required this.l10n,
+    required this.theme,
+  });
+
+  final bool verified;
+  final AppLocalizations l10n;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    final color = verified ? AuraColors.success : theme.colorScheme.error;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle,
-              size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text)),
+          Icon(
+            verified ? Icons.verified_rounded : Icons.error_outline_rounded,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            verified ? l10n.accountEmailVerified : l10n.accountEmailNotVerified,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

@@ -1,3 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#111" fill-rule="evenodd">
-  <path fill-rule="evenodd" d="M7.75 2.5c.55 0 1 .45 1 1V4h6.5v-.5a1 1 0 1 1 2 0V4h.25A2.75 2.75 0 0 1 20.25 6.75v10.5A2.75 2.75 0 0 1 17.5 20H6.5a2.75 2.75 0 0 1-2.75-2.75V6.75A2.75 2.75 0 0 1 6.5 4h.25v-.5c0-.55.45-1 1-1ZM5.75 10v7.25c0 .41.34.75.75.75h11c.41 0 .75-.34.75-.75V10H5.75Zm2.5 2.2a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Zm3.75 0a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Zm3.75 0a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path fill="none" stroke="#111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4.6 7.3a2 2 0 0 1 2-2h10.8a2 2 0 0 1 2 2v10.2a2 2 0 0 1-2 2H6.6a2 2 0 0 1-2-2z"/>
+  <path fill="none" stroke="#111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4.6 9.6h14.8"/>
+  <path fill="none" stroke="#111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8.3 3.6v3"/>
+  <path fill="none" stroke="#111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M15.7 3.6v3"/>
+  <circle cx="9" cy="13.4" r="1.05" fill="#111"/>
+  <circle cx="13.4" cy="13.4" r="1.05" fill="#111"/>
+  <circle cx="9" cy="16.6" r="1.05" fill="#111"/>
 </svg>

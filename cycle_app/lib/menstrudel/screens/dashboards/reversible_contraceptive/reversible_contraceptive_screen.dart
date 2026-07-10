@@ -9,6 +9,7 @@ import 'package:cycle_aura/menstrudel/models/birth_control/reversible_contracept
 import 'package:cycle_aura/menstrudel/services/notification_service.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/controllers/log_reversible_contraceptive_ui_controller.dart';
+import 'package:cycle_aura/core/widgets/app_surface.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class ReversibleContraceptiveScreen extends StatefulWidget {
@@ -166,10 +167,10 @@ class _ReversibleContraceptiveScreenState extends State<ReversibleContraceptiveS
     );
   }
 
-  Widget _buildHeader(String title, ColorScheme colorScheme) => Text(title, 
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSurface));
+  Widget _buildHeader(String title, ColorScheme colorScheme) =>
+      AppSectionHeader(title: title);
 
   Widget _buildNoRecordsText(String text, ColorScheme colorScheme) => Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Text(text, style: TextStyle(color: colorScheme.outline)));
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(text, style: TextStyle(color: colorScheme.onSurfaceVariant)));
 }

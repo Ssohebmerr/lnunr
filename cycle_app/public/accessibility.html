@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune — Accessibility | إمكانية الوصول</title>
+  <link rel="stylesheet" href="site.css?v=13">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="trust-hub.html" class="breadcrumb">← Trust & Privacy</a>
+    <h1 id="pageTitle">Accessibility at Lune</h1>
+    <p class="lead" id="pageSubtitle">Our commitment to an inclusive experience.</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
+
+<main class="page-main">
+<div class="content-wrap">
+    <div id="lang-en" class="lang-section active">
+      <div class="content-card">
+        <p class="intro">We believe everyone deserves access to cycle health tools — regardless of language, vision, or motor ability. Accessibility is an ongoing commitment, not a one-time feature.</p>
+
+        <h2>Our commitment</h2>
+        <p>We design Lune to be usable with screen readers, system font scaling, and both left-to-right and right-to-left layouts. Arabic and English receive equal attention in navigation, labels, and reading direction.</p>
+
+        <h2>In-app features</h2>
+        <p>Lune respects your device's text size, bold text, and contrast settings where supported by Flutter and your operating system. Navigation uses standard Material patterns for predictable screen-reader behavior across tabs and forms.</p>
+
+        <h2>Request accommodations</h2>
+        <p>If you encounter a barrier while using Lune, email merrsoheb@gmail.com with a description of the issue, your device model, and your preferred language. We take accessibility feedback seriously and prioritize fixes that block core tracking.</p>
+
+        <h2>Ongoing improvements</h2>
+        <p>We review new features for color contrast, touch target size, and screen reader labels before release. Past releases have improved RTL layouts, larger tap areas, and clearer error messages — and more improvements are planned.</p>
+
+        <h2>Arabic &amp; English parity</h2>
+        <p>Switching between Arabic and English flips the entire interface direction — menus, cards, and legal pages included. You should not need to fight the layout to read content in your language.</p>
+
+        <h2>Themes &amp; system settings</h2>
+        <p>Lune follows your device theme where possible and uses readable typography across light backgrounds. If system high-contrast mode is enabled, OS-level settings may further improve readability.</p>
+
+        <h2>Roadmap</h2>
+        <p>We are working toward broader WCAG-aligned improvements — including richer screen reader descriptions for charts, keyboard navigation enhancements, and user-tested contrast audits. Tell us what matters most to you.</p>
+
+        <div class="contact-box">
+          <p>Accessibility feedback? <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-ar" class="lang-section" dir="rtl">
+      <div class="content-card">
+        <p class="intro">نؤمن بأن الجميع يستحقون أدوات صحة الدورة — بغض النظر عن اللغة أو البصر أو الحركة. إمكانية الوصول التزام مستمر وليس ميزة لمرة واحدة.</p>
+
+        <h2>التزامنا</h2>
+        <p>نصمّم Lune لتكون قابلة للاستخدام مع قارئات الشاشة وتكبير خط النظام والتخطيط من اليمين لليسار والعكس. العربية والإنجليزية تحصلان على اهتمام متساوٍ في التنقل والتسميات واتجاه القراءة.</p>
+
+        <h2>ميزات داخل التطبيق</h2>
+        <p>تحترم Lune حجم خط جهازك وإعدادات التباين حيث يدعمها Flutter ونظام التشغيل. التنقل يستخدم أنماط Material القياسية لسلوك متوقع مع قارئ الشاشة عبر التبويبات والنماذج.</p>
+
+        <h2>طلبات الدعم</h2>
+        <p>إذا واجهتِ عائقاً أثناء استخدام Lune، راسلينا على merrsoheb@gmail.com مع وصف المشكلة وطراز جهازك ولغتك المفضلة. نأخذ ملاحظات إمكانية الوصول بجدية ونُعطي أولوية لما يعيق التتبع الأساسي.</p>
+
+        <h2>تحسينات مستمرة</h2>
+        <p>نراجع الميزات الجديدة للتباين وحجم أهداف اللمس وتسميات قارئ الشاشة قبل الإصدار. إصدارات سابقة حسّنت تخطيط RTL ومناطق اللمس الأكبر ورسائل الخطأ أوضح — والمزيد مخطّط.</p>
+
+        <h2>تكافؤ العربية والإنجليزية</h2>
+        <p>التبديل بين العربية والإنجليزية يقلب اتجاه الواجهة بالكامل — القوائم والبطاقات والصفحات القانونية. لا ينبغي أن تضطري لمحاربة التخطيط لقراءة المحتوى بلغتك.</p>
+
+        <h2>السمات وإعدادات النظام</h2>
+        <p>تتبع Lune سمة جهازك حيث أمكن وتستخدم خطوطاً مقروءة على خلفيات فاتحة. إذا فُعّل وضع التباين العالي في النظام، قد تحسّن إعدادات OS القراءة أكثر.</p>
+
+        <h2>خارطة الطريق</h2>
+        <p>نعمل على تحسينات أوسع بمحاذاة WCAG — بما فيها أوصاف أغنى لقارئ الشاشة للرسوم البيانية وتحسينات التنقل بلوحة المفاتيح ومراجعات تباين باختبار مستخدمات. أخبرينا ما يهمكِ أكثر.</p>
+
+        <div class="contact-box">
+          <p>ملاحظات إمكانية الوصول؟ <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a><a href="security.html">Security</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a><a href="index.html">Home</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+      document.getElementById('pageTitle').textContent = lang === 'en' ? 'Accessibility at Lune' : 'إمكانية الوصول في Lune';
+      document.getElementById('pageSubtitle').textContent = lang === 'en'
+        ? 'Our commitment to an inclusive experience.'
+        : 'التزامنا بتجربة شاملة للجميع.';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+    if (navigator.language.startsWith('ar')) setLang('ar');
+  </script>
+</body>
+</html>

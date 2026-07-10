@@ -46,6 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   DateFormats _dateFormat = DateFormats.dmy;
   bool _privacyAccepted = false;
   bool _saving = false;
+  bool _blockedUnder13 = false;
 
   @override
   void dispose() {
@@ -57,7 +58,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showAgeGateIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (await blocksAppByAgeGate()) {
+        if (mounted) setState(() => _blockedUnder13 = true);
+        return;
+      }
+      await _showAgeGateIfNeeded();
+    });
   }
 
   Future<void> _showAgeGateIfNeeded() async {
@@ -68,23 +75,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (group == null) return;
 
     if (group == AgeGroup.under13) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: Text(l10n.ageGateTitle),
-            content: Text(l10n.ageGateUnder13Message),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(l10n.continueBtn),
-              ),
-            ],
-          ),
-        );
-      }
+      await saveAgeGroup(group);
+      if (mounted) setState(() => _blockedUnder13 = true);
       return;
     }
 
@@ -160,12 +152,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _finish() async {
     if (!_privacyAccepted || _saving) return;
-    setState(() => _saving = true);
-
     final lang = context.read<LocaleController>().locale.languageCode;
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    if (_blockedUnder13 || await blocksAppByAgeGate()) return;
+    if (!mounted) return;
+    setState(() => _saving = true);
 
     var enteredHome = false;
     try {
@@ -220,6 +213,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final l10n = AppLocalizations.of(context)!;
     final mdL10n = md.AppLocalizations.of(context);
     final theme = Theme.of(context);
+
+    if (_blockedUnder13) {
+      return Scaffold(
+        body: Container(
+          decoration: AppTheme.gradientBackground(context),
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.block_outlined,
+                      size: 56,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.ageGateTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.ageGateUnder13Message,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -340,6 +375,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   bool _canContinue() {
+    if (_blockedUnder13) return false;
     if (_step == 1) {
       return _nameController.text.trim().isNotEmpty &&
           _birthDate != null &&

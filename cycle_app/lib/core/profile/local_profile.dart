@@ -74,4 +74,44 @@ class LocalProfile {
       goal: goal ?? 'general',
     );
   }
+
+  /// Valid handle: 3–20 chars of lowercase letters, digits, dot, underscore.
+  static final usernamePattern = RegExp(r'^[a-z0-9._]{3,20}$');
+
+  static String normalizeUsername(String raw) =>
+      raw.trim().toLowerCase().replaceAll('@', '');
+
+  static bool isValidUsername(String raw) =>
+      usernamePattern.hasMatch(normalizeUsername(raw));
+
+  static Future<String?> username() => UserPrefs.getProfileUsername();
+
+  static Future<void> saveUsername(String username) =>
+      UserPrefs.setProfileUsername(normalizeUsername(username));
+
+  /// Returns the stored handle, generating a stable default from the display
+  /// name + uid suffix on first use (e.g. `sara_4f2a` / `lune_4f2a`).
+  static Future<String> ensureUsername({String? uid}) async {
+    final existing = await UserPrefs.getProfileUsername();
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final name = await displayName();
+    var base = name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9._]'), '')
+        .replaceAll(RegExp(r'^[._]+|[._]+$'), '');
+    if (base.length > 12) base = base.substring(0, 12);
+    if (base.length < 3) base = 'lune';
+
+    final suffixSource = (uid == null || uid.isEmpty)
+        ? DateTime.now().millisecondsSinceEpoch.toRadixString(36)
+        : uid.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final suffix = suffixSource.length >= 4
+        ? suffixSource.substring(0, 4)
+        : suffixSource.padRight(4, '0');
+
+    final generated = '${base}_$suffix';
+    await UserPrefs.setProfileUsername(generated);
+    return generated;
+  }
 }

@@ -156,12 +156,7 @@ class AnalyticsMetricsGrid extends StatelessWidget {
           crossAxisSpacing: 10,
           childAspectRatio: 1.05,
           children: metrics
-              .map(
-                (m) => AnalyticsMetricCard(
-                  metric: m,
-                  accent: accent,
-                ),
-              )
+              .map((m) => AnalyticsMetricCard(metric: m, accent: accent))
               .toList(),
         );
       },
@@ -217,14 +212,14 @@ class AnalyticsMetricCard extends StatelessWidget {
                   metric.trend! > 0
                       ? Icons.trending_up
                       : metric.trend! < 0
-                          ? Icons.trending_down
-                          : Icons.trending_flat,
+                      ? Icons.trending_down
+                      : Icons.trending_flat,
                   size: 16,
                   color: metric.trend! > 0
-                      ? Colors.green.shade600
+                      ? AuraColors.success
                       : metric.trend! < 0
-                          ? Colors.red.shade400
-                          : theme.colorScheme.outline,
+                      ? AuraColors.danger
+                      : theme.colorScheme.outline,
                 ),
             ],
           ),
@@ -241,9 +236,7 @@ class AnalyticsMetricCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            metric.value is num
-                ? metric.displayValue(lang)
-                : '${metric.value}',
+            metric.value is num ? metric.displayValue(lang) : '${metric.value}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -261,13 +254,13 @@ class AnalyticsMetricCard extends StatelessWidget {
     switch (status) {
       case 'good':
       case 'excellent':
-        return Colors.green.shade600;
+        return AuraColors.success;
       case 'warning':
       case 'fair':
-        return Colors.orange.shade400;
+        return AuraColors.warning;
       case 'bad':
       case 'poor':
-        return Colors.red.shade400;
+        return AuraColors.danger;
       default:
         return accent;
     }
@@ -317,7 +310,7 @@ class AnalyticsBarChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 110,
+            height: 124,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: values.map((v) {
@@ -330,15 +323,12 @@ class AnalyticsBarChart extends StatelessWidget {
                       children: [
                         Container(
                           width: double.infinity,
-                          height: 6 + 90 * h,
+                          height: 8 + 96 * h,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                color,
-                                color.withValues(alpha: 0.55),
-                              ],
+                              colors: [color, color.withValues(alpha: 0.55)],
                             ),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -347,9 +337,9 @@ class AnalyticsBarChart extends StatelessWidget {
                         Text(
                           '$v$suffix',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color: theme.colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
-                            fontSize: 9,
+                            fontSize: 11,
                           ),
                         ),
                       ],
@@ -518,11 +508,7 @@ class _TemperatureLinePainter extends CustomPainter {
 
     // Single sample: just a labelled dot in the middle.
     if (pts.length == 1) {
-      canvas.drawCircle(
-        pts.first,
-        4,
-        Paint()..color = color,
-      );
+      canvas.drawCircle(pts.first, 4, Paint()..color = color);
       return;
     }
 
@@ -689,7 +675,7 @@ class AnalyticsPhaseRing extends StatelessWidget {
                 Text(
                   lang.startsWith('ar') ? titleAr : titleEn,
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

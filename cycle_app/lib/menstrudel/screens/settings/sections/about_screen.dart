@@ -63,7 +63,7 @@ Widget build(BuildContext context) {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Image.asset(
-              'assets/icon/menstrudel.png',
+              'assets/icon/app_icon.png',
               width: 100,
               height: 100,
               fit: BoxFit.cover,
@@ -73,7 +73,7 @@ Widget build(BuildContext context) {
         const SizedBox(height: 16),
         Center(
           child: Text(
-            "Menstrudel", 
+            "Lune",
             style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),

@@ -185,9 +185,9 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     if (_type == PostType.poll &&
         !widget.isEditing &&
         _pollOptions.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.communityPollNeedsOptions)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.communityPollNeedsOptions)));
       return;
     }
 
@@ -213,7 +213,6 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         final pending = await repo.createPost(
           communityId: widget.community.id,
           uid: user.uid,
-          alias: widget.alias,
           text: text,
           postType: _type,
           communityName: widget.community.nameForLocale(lang),
@@ -227,7 +226,9 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                pending ? l10n.communityPendingReview : l10n.communityPostPublished,
+                pending
+                    ? l10n.communityPendingReview
+                    : l10n.communityPostPublished,
               ),
             ),
           );
@@ -240,24 +241,24 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
       }
     } on CommunityBannedException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityBannedMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityBannedMessage)));
       }
     } on MediaRequiresPremiumException {
       if (mounted) _showPremiumGate();
     } on MinorRestrictedException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityMinorRestricted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityMinorRestricted)));
       }
     } catch (e, st) {
       debugPrint('ComposePostScreen._submit failed: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -289,8 +290,11 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.poll_rounded,
-                  size: 18, color: theme.colorScheme.primary),
+              Icon(
+                Icons.poll_rounded,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n.postTypePoll,
@@ -432,7 +436,11 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(widget.isEditing ? l10n.continueBtn : l10n.communityPublish),
+                  : Text(
+                      widget.isEditing
+                          ? l10n.continueBtn
+                          : l10n.communityPublish,
+                    ),
             ),
           ),
         ],
@@ -448,174 +456,185 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: gradient,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                  ),
-                  child: Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.22),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: gradient,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
                         ),
-                        child: Icon(widget.community.icon, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              communityName,
-                              style: theme.textTheme.titleSmall?.copyWith(
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.22),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.md,
+                                ),
+                              ),
+                              child: Icon(
+                                widget.community.icon,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                            Text(
-                              l10n.communityPostHint,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.88),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    communityName,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n.communityPostHint,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.88,
+                                      ),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.communityPostType,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: PostType.values.map((t) {
-                      final label = switch (t) {
-                        PostType.support => l10n.postTypeSupport,
-                        PostType.question => l10n.postTypeQuestion,
-                        PostType.tip => l10n.postTypeTip,
-                        PostType.vent => l10n.postTypeVent,
-                        PostType.milestone => l10n.postTypeMilestone,
-                        PostType.poll => l10n.postTypePoll,
-                      };
-                      final icon = switch (t) {
-                        PostType.support => Icons.favorite_rounded,
-                        PostType.question => Icons.help_outline_rounded,
-                        PostType.tip => Icons.lightbulb_outline_rounded,
-                        PostType.vent => Icons.whatshot_rounded,
-                        PostType.milestone => Icons.emoji_events_rounded,
-                        PostType.poll => Icons.poll_rounded,
-                      };
-                      return Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: CommunityChoiceChip(
-                          label: label,
-                          icon: icon,
-                          selected: _type == t,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _type = t);
-                          },
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.communityPostType,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AuraColors.darkCard.withValues(alpha: 0.85)
-                        : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.04),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _controller,
-                    maxLines: 10,
-                    minLines: 6,
-                    maxLength: 500,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: l10n.communityPostHint,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.all(16),
-                      counterStyle: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.outline,
                       ),
-                    ),
-                  ),
-                ),
-                if (_type == PostType.poll && !widget.isEditing) ...[
-                  const SizedBox(height: 16),
-                  _buildPollEditor(context, l10n, theme, isDark),
-                ],
-                if (_pickedFile != null) ...[
-                  const SizedBox(height: 14),
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        child: Image.file(
+                      const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: PostType.values.map((t) {
+                            final label = switch (t) {
+                              PostType.support => l10n.postTypeSupport,
+                              PostType.question => l10n.postTypeQuestion,
+                              PostType.tip => l10n.postTypeTip,
+                              PostType.vent => l10n.postTypeVent,
+                              PostType.milestone => l10n.postTypeMilestone,
+                              PostType.poll => l10n.postTypePoll,
+                            };
+                            final icon = switch (t) {
+                              PostType.support => Icons.favorite_rounded,
+                              PostType.question => Icons.help_outline_rounded,
+                              PostType.tip => Icons.lightbulb_outline_rounded,
+                              PostType.vent => Icons.whatshot_rounded,
+                              PostType.milestone => Icons.emoji_events_rounded,
+                              PostType.poll => Icons.poll_rounded,
+                            };
+                            return Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 8),
+                              child: CommunityChoiceChip(
+                                label: label,
+                                icon: icon,
+                                selected: _type == t,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _type = t);
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AuraColors.darkCard.withValues(alpha: 0.85)
+                              : Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.black.withValues(alpha: 0.04),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _controller,
+                          maxLines: 10,
+                          minLines: 6,
+                          maxLength: 500,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: l10n.communityPostHint,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.all(16),
+                            counterStyle: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_type == PostType.poll && !widget.isEditing) ...[
+                        const SizedBox(height: 16),
+                        _buildPollEditor(context, l10n, theme, isDark),
+                      ],
+                      if (_pickedFile != null) ...[
+                        const SizedBox(height: 14),
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                              child: Image.file(
                                 File(_pickedFile!.path),
                                 height: 160,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                               ),
-                      ),
-                      PositionedDirectional(
-                        top: 8,
-                        end: 8,
-                        child: Material(
-                          color: Colors.black54,
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            onTap: () => setState(() {
-                              _pickedFile = null;
-                            }),
-                            customBorder: const CircleBorder(),
-                            child: const Padding(
-                              padding: EdgeInsets.all(6),
-                              child: Icon(Icons.close_rounded,
-                                  color: Colors.white, size: 18),
                             ),
-                          ),
+                            PositionedDirectional(
+                              top: 8,
+                              end: 8,
+                              child: Material(
+                                color: Colors.black54,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  onTap: () => setState(() {
+                                    _pickedFile = null;
+                                  }),
+                                  customBorder: const CircleBorder(),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.close_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                ],
-              ],
-            ),
-          ),
+                ),
                 Container(
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.3),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                     ),
                   ),
@@ -633,18 +652,22 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                 IconButton.filledTonal(
                                   tooltip: l10n.communityAddMedia,
                                   icon: const Icon(
-                                      Icons.add_photo_alternate_outlined),
-                                  onPressed:
-                                      isBusy ? null : _showMediaPickerSheet,
+                                    Icons.add_photo_alternate_outlined,
+                                  ),
+                                  onPressed: isBusy
+                                      ? null
+                                      : _showMediaPickerSheet,
                                 ),
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: GestureDetector(
                                     onTap: () => setState(
-                                        () => _isAnonymous = !_isAnonymous),
+                                      () => _isAnonymous = !_isAnonymous,
+                                    ),
                                     child: AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 200),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 8,
@@ -652,14 +675,16 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                       decoration: BoxDecoration(
                                         color: _isAnonymous
                                             ? theme.colorScheme.primaryContainer
-                                            : theme.colorScheme
-                                                .surfaceContainerHighest,
+                                            : theme
+                                                  .colorScheme
+                                                  .surfaceContainerHighest,
                                         borderRadius: BorderRadius.circular(
-                                            AppRadius.pill),
+                                          AppRadius.pill,
+                                        ),
                                         border: Border.all(
                                           color: _isAnonymous
                                               ? theme.colorScheme.primary
-                                                  .withValues(alpha: 0.3)
+                                                    .withValues(alpha: 0.3)
                                               : Colors.transparent,
                                         ),
                                       ),
@@ -672,10 +697,12 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                                 : Icons.person_outline_rounded,
                                             size: 16,
                                             color: _isAnonymous
-                                                ? theme.colorScheme
-                                                    .onPrimaryContainer
-                                                : theme.colorScheme
-                                                    .onSurfaceVariant,
+                                                ? theme
+                                                      .colorScheme
+                                                      .onPrimaryContainer
+                                                : theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
                                           ),
                                           const SizedBox(width: 6),
                                           Flexible(
@@ -685,13 +712,15 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                               overflow: TextOverflow.ellipsis,
                                               style: theme.textTheme.labelSmall
                                                   ?.copyWith(
-                                                color: _isAnonymous
-                                                    ? theme.colorScheme
-                                                        .onPrimaryContainer
-                                                    : theme.colorScheme
-                                                        .onSurfaceVariant,
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                                    color: _isAnonymous
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onPrimaryContainer
+                                                        : theme
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                             ),
                                           ),
                                         ],

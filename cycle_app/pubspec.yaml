@@ -1,5 +1,5 @@
 name: cycle_aura
-description: "Lune — private menstrual cycle tracker with AI wellness assistant."
+description: "Lune — your cycle has phases, like the moon. Private Arabic cycle tracker with AI wellness."
 publish_to: 'none'
 version: 1.0.22+23
 
@@ -79,18 +79,48 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
   sqflite_common_ffi: ^2.3.3
 
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/icon/app_icon.png
-  adaptive_icon_background: "#E8A0BF"
+  adaptive_icon_background: "#211521"
   adaptive_icon_foreground: assets/icon/app_icon.png
   remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: assets/icon/app_icon.png
+    background_color: "#211521"
+    theme_color: "#E8A0BF"
+  windows:
+    generate: true
+    image_path: assets/icon/app_icon.png
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: assets/icon/app_icon.png
+
+# Launch screen: app icon (drop) centred on its own dark-plum field.
+# Regenerate: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#211521"
+  image: assets/icon/app_icon.png
+  color_dark: "#211521"
+  image_dark: assets/icon/app_icon.png
+  android_12:
+    image: assets/icon/app_icon.png
+    icon_background_color: "#211521"
+    image_dark: assets/icon/app_icon.png
+    icon_background_color_dark: "#211521"
+  android: true
+  ios: true
+  web: false
 
 flutter:
   generate: true
   uses-material-design: true
   assets:
     - assets/icons/feminine/
+    - assets/icon/app_icon.png

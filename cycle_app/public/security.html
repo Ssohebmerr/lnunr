@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune — Security at Lune | الأمان في Lune</title>
+  <link rel="stylesheet" href="site.css?v=13">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="trust-hub.html" class="breadcrumb">← Trust & Privacy</a>
+    <h1 id="pageTitle">Security at Lune</h1>
+    <p class="lead" id="pageSubtitle">Encryption, authentication, and how we protect your data.</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
+
+<main class="page-main">
+<div class="content-wrap">
+    <div id="lang-en" class="lang-section active">
+      <div class="content-card">
+        <p class="intro">Your health data deserves bank-grade care. Security is built into every layer of Lune — not added as an afterthought. This page explains how we protect your cycle logs, account, and optional cloud features in plain language.</p>
+
+        <nav class="toc" aria-label="On this page">
+          <div class="toc-title">On this page</div>
+          <ul>
+            <li><a href="#en-s1">Encryption on your device</a></li>
+            <li><a href="#en-s2">Encrypted cloud sync</a></li>
+            <li><a href="#en-s3">Secure connections</a></li>
+            <li><a href="#en-s4">No ads, no data brokers</a></li>
+            <li><a href="#en-s5">Optional features</a></li>
+            <li><a href="#en-s6">Crash reporting</a></li>
+            <li><a href="#en-s7">Cloud infrastructure</a></li>
+            <li><a href="#en-s8">Stealth mode</a></li>
+            <li><a href="#en-s9">Payment security</a></li>
+            <li><a href="#en-s10">App permissions</a></li>
+          </ul>
+        </nav>
+
+        <h2 id="en-s1">Encryption on your device</h2>
+        <p>Your cycle database is encrypted locally using AES-256 before it is stored on your phone. Symptom, mood, flow, and wellness entries live inside this protected store. Encryption keys are generated on your device and stored in Android Keystore or iOS Keychain — they never leave your device unprotected.</p>
+
+        <h2 id="en-s2">Encrypted cloud sync (optional, Premium)</h2>
+        <p>Cloud backup is optional and requires Premium plus your explicit consent. When enabled, your cycle backup payload is encrypted on the device before upload and stored in your private Firebase account. We do not claim every Firestore profile field uses the same AES-256 scheme — the sensitive cycle payload itself is encrypted before it leaves your phone.</p>
+
+        <h2 id="en-s3">Secure connections &amp; app integrity</h2>
+        <p>All network traffic uses TLS encryption. Firebase App Check helps verify genuine app requests. You can sign in with email, Google, Apple, or continue as an anonymous guest — each method is handled through Firebase Authentication with industry-standard protections.</p>
+
+        <h2 id="en-s4">No ads, no data brokers</h2>
+        <p>Lune does not show third-party ads and does not sell your personal or health data. We do not share your cycle data with advertisers, data brokers, employers, or insurers. Our revenue comes from optional Premium subscriptions, not from monetizing your health information.</p>
+
+        <h2 id="en-s5">You control optional features</h2>
+        <p>AI chat (Google Gemini and DeepSeek), community, push notifications, and cloud sync are optional and require your consent. You can review and change these choices anytime in Privacy Center without affecting core local tracking.</p>
+
+        <h2 id="en-s6">Crash reporting (Firebase Crashlytics)</h2>
+        <p>Lune uses Firebase Crashlytics to collect anonymized crash reports and basic diagnostic data when the app fails unexpectedly. This helps us fix bugs quickly. Crash reports do not include your cycle logs, wellness entries, or AI chat content.</p>
+
+        <h2 id="en-s7">Cloud infrastructure</h2>
+        <p>Registered accounts, optional cloud backups, community content, and AI chat (for Premium users) run on Google Firebase — including Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, and Crashlytics. Access to your data is restricted by Firebase security rules and your sign-in credentials.</p>
+
+        <h2 id="en-s8">Stealth mode on your device</h2>
+        <p>Stealth mode disguises Lune as a calculator until you enter your PIN. This protects privacy on your phone if someone picks it up — it is a local lock only and does not encrypt data differently. You can enable or disable it in Privacy Center.</p>
+
+        <h2 id="en-s9">Payment security</h2>
+        <p>Premium subscriptions on Android are processed by Google Play Billing. Lune never sees or stores your card number. Manage or cancel your subscription through your Google Play account settings.</p>
+
+        <h2 id="en-s10">Android app permissions</h2>
+        <p>Lune requests only permissions needed for features you use: Internet (sign-in, optional cloud sync, AI, community), Notifications (optional cycle reminders), Google Play Billing (Premium), exact alarms and boot restart (reliable local reminders), and photos/media only when you choose to attach an image or set a profile photo. Android backup for app data is disabled (allowBackup=false) so cycle data is not copied to Google device backup by default.</p>
+
+        <div class="contact-box">
+          <p>Questions about security? <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="lang-ar" class="lang-section" dir="rtl">
+      <div class="content-card">
+        <p class="intro">بياناتك الصحية تستحق عناية بمستوى عالٍ. الأمان مدمج في كل طبقة من Lune — وليس إضافة لاحقة. توضّح هذه الصفحة كيف نحمي سجلات دورتك وحسابك والميزات السحابية الاختيارية بلغة واضحة.</p>
+
+        <nav class="toc" aria-label="في هذه الصفحة">
+          <div class="toc-title">في هذه الصفحة</div>
+          <ul>
+            <li><a href="#ar-s1">التشفير على جهازك</a></li>
+            <li><a href="#ar-s2">المزامنة السحابية</a></li>
+            <li><a href="#ar-s3">الاتصالات الآمنة</a></li>
+            <li><a href="#ar-s4">لا إعلانات</a></li>
+            <li><a href="#ar-s5">الميزات الاختيارية</a></li>
+            <li><a href="#ar-s6">تقارير الأعطال</a></li>
+            <li><a href="#ar-s7">البنية السحابية</a></li>
+            <li><a href="#ar-s8">وضع التخفي</a></li>
+            <li><a href="#ar-s9">أمان المدفوعات</a></li>
+            <li><a href="#ar-s10">أذونات التطبيق</a></li>
+          </ul>
+        </nav>
+
+        <h2 id="ar-s1">التشفير على جهازك</h2>
+        <p>قاعدة بيانات دورتك مشفّرة محلياً باستخدام AES-256 قبل تخزينها على هاتفك. الأعراض والمزاج والتدفق وسجلات العافية تُخزَّن داخل هذا المخزن المحمي. مفاتيح التشفير تُنشأ على جهازك وتُحفظ في Android Keystore أو iOS Keychain — ولا تغادر جهازك دون حماية.</p>
+
+        <h2 id="ar-s2">مزامنة سحابية مشفّرة (اختيارية، Premium)</h2>
+        <p>النسخ الاحتياطي السحابي اختياري ويتطلب Premium وموافقتك الصريحة. عند التفعيل، تُشفَّر حمولة النسخة الاحتياطية على الجهاز قبل الرفع وتُخزَّن في حساب Firebase الخاص بكِ. لا ندّعي أن كل حقل في Firestore يستخدم نفس تشفير AES-256 — لكن حمولة الدورة الحساسة نفسها مشفّرة قبل مغادرة هاتفك.</p>
+
+        <h2 id="ar-s3">اتصالات آمنة وسلامة التطبيق</h2>
+        <p>كل حركة الشبكة تستخدم تشفير TLS. يساعد Firebase App Check على التحقق من طلبات التطبيق الأصيلة. يمكنكِ تسجيل الدخول بالبريد أو Google أو Apple أو المتابعة كضيفة مجهولة — كل طريقة تمر عبر Firebase Authentication بحماية معيارية.</p>
+
+        <h2 id="ar-s4">لا إعلانات، لا وسطاء بيانات</h2>
+        <p>Lune لا تعرض إعلانات طرف ثالث ولا تبيع بياناتك الشخصية أو الصحية. لا نشارك بيانات دورتك مع المعلنين أو وسطاء البيانات أو جهات العمل أو شركات التأمين. إيراداتنا من اشتراكات Premium الاختيارية — وليس من بيع معلوماتك الصحية.</p>
+
+        <h2 id="ar-s5">أنتِ تتحكمين بالميزات الاختيارية</h2>
+        <p>المحادثة الذكية (Google Gemini وDeepSeek) والمجتمع والإشعارات والمزامنة السحابية اختيارية وتتطلب موافقتك. يمكنكِ مراجعتها وتغييرها في أي وقت من مركز الخصوصية دون التأثير على التتبع المحلي الأساسي.</p>
+
+        <h2 id="ar-s6">تقارير الأعطال (Firebase Crashlytics)</h2>
+        <p>تستخدم Lune Firebase Crashlytics لجمع تقارير أعطال مجهولة وبيانات تشخيصية أساسية عند تعطل التطبيق بشكل غير متوقع. يساعدنا ذلك على إصلاح الأخطاء بسرعة. تقارير الأعطال لا تتضمن سجلات دورتك أو العافية أو محادثات الذكاء الاصطناعي.</p>
+
+        <h2 id="ar-s7">البنية التحتية السحابية</h2>
+        <p>الحسابات المسجّلة والنسخ السحابية الاختيارية ومحتوى المجتمع والمحادثة الذكية (لمشتركات Premium) تعمل على Google Firebase — بما فيها المصادقة وFirestore وCloud Functions والإشعارات والاستضافة وApp Check وCrashlytics. الوصول إلى بياناتك مقيد بقواعد أمان Firebase وبيانات تسجيل دخولك.</p>
+
+        <h2 id="ar-s8">وضع التخفي على جهازك</h2>
+        <p>وضع التخفي يُظهر آلة حاسبة بدلاً من Lune حتى تُدخلي رقم PIN السري. يحمي خصوصيتك إذا أمسك أحد هاتفك — وهو قفل محلي فقط ولا يغيّر طريقة التشفير. يمكنكِ تفعيله أو إيقافه من مركز الخصوصية.</p>
+
+        <h2 id="ar-s9">أمان المدفوعات</h2>
+        <p>اشتراكات Premium على Android تُعالَج عبر Google Play Billing. Lune لا ترى رقم بطاقتك ولا تخزّنه. أديري أو ألغي اشتراكك من إعدادات حساب Google Play.</p>
+
+        <h2 id="ar-s10">أذونات تطبيق Android</h2>
+        <p>تطلب Lune فقط الأذونات اللازمة للميزات التي تستخدمينها: الإنترنت، الإشعارات، Google Play Billing، المنبهات الدقيقة وإعادة التشغيل، والصور/الوسائط عند الإرفاق أو تعيين صورة ملف شخصي. النسخ الاحتياطي لبيانات التطبيق على Android معطّل (allowBackup=false).</p>
+
+        <div class="contact-box">
+          <p>أسئلة حول الأمان؟ <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a><a href="security.html">Security</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a><a href="index.html">Home</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+    function setLang(lang) {
+      document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+      document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+      document.getElementById('pageTitle').textContent = lang === 'en' ? 'Security at Lune' : 'الأمان في Lune';
+      document.getElementById('pageSubtitle').textContent = lang === 'en'
+        ? 'Encryption, authentication, and how we protect your data.'
+        : 'التشفير والمصادقة وكيف نحمي بياناتك.';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+    if (navigator.language.startsWith('ar')) setLang('ar');
+  </script>
+</body>
+</html>

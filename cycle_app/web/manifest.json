@@ -1,11 +1,11 @@
 {
-    "name": "cycle_aura",
-    "short_name": "cycle_aura",
+    "name": "Lune",
+    "short_name": "Lune",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#211521",
+    "theme_color": "#E8A0BF",
+    "description": "Lune — private menstrual cycle tracker with AI wellness assistant.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

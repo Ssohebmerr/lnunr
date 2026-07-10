@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart'; 
 import 'package:cycle_aura/menstrudel/models/sanitary_products/sanitary_products_entry.dart';
 import 'package:cycle_aura/menstrudel/models/sanitary_products/sanitary_products_enum.dart';
+import 'package:cycle_aura/core/widgets/app_surface.dart';
 
 class CountdownCard extends StatelessWidget {
   const CountdownCard({
@@ -29,9 +30,11 @@ class CountdownCard extends StatelessWidget {
     final minutes = displayDuration.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = displayDuration.inSeconds.remainder(60).toString().padLeft(2, '0');
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(15),
+      child: AppGlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
@@ -89,6 +92,7 @@ class CountdownCard extends StatelessWidget {
             ],
           )
         ],
+      ),
       ),
     );
   }

@@ -30,7 +30,7 @@ class AppNotifications {
 
     onTapCallback = onTap ?? NotificationRouter.handleTap;
 
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('ic_stat_lune');
     const ios = DarwinInitializationSettings();
     await plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
@@ -46,6 +46,12 @@ class AppNotifications {
         'Cycle Reminders',
         description: 'Period and daily log reminders',
         importance: Importance.high,
+      ),
+      AndroidNotificationChannel(
+        'cycle_aura_smart_phase',
+        'Lune — Smart phase',
+        description: 'Daily phase-aware motivation and wellness tips',
+        importance: Importance.defaultImportance,
       ),
       AndroidNotificationChannel(
         periodNotificationChannelId,
@@ -100,6 +106,19 @@ class AppNotifications {
     } catch (e, st) {
       debugPrint('[AppNotifications] tap callback failed: $e\n$st');
     }
+  }
+
+  /// Whether the per-app notification switch is currently ON at the OS level.
+  /// Returns true on platforms without an explicit query so we don't warn
+  /// spuriously.
+  static Future<bool> areEnabled() async {
+    await initialize();
+    final android = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? true;
+    }
+    return true;
   }
 
   static Future<bool> requestPermission() async {

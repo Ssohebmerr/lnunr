@@ -55,6 +55,14 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- FCM background/killed-state notifications: branded status-bar icon + accent -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_lune" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
+
         <!-- Receives "log period" requests from the Wear OS app -->
         <service
             android:name=".WearLogRequestListenerService"

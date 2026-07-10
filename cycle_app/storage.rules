@@ -20,12 +20,47 @@ service firebase.storage {
 
 
 
+    function approximateAge(birthYear) {
+
+      let yearNow = 1970 + int(request.time.toMillis() / 31557600000);
+
+      return yearNow - birthYear;
+
+    }
+
+
+
+    function isCommunityAdult() {
+
+      let userDoc = firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+
+      let birthYear = int(userDoc.data.get('communityBirthYear', 0));
+
+      return birthYear > 0 && approximateAge(birthYear) >= 18;
+
+    }
+
+    function isCommunityPremium() {
+
+      let userDoc = firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+
+      return userDoc.data.get('isPremium', false) == true;
+
+    }
+
+
+
     // Community post media uploads are enabled for premium users.
     match /community_media/{communityId}/{uid}/{fileName} {
-      allow read: if isSignedIn();
-      allow write: if isOwner(uid)
+      allow read: if isCommunityAdult();
+      allow create, update: if isOwner(uid)
+        && isCommunityAdult()
+        && isCommunityPremium()
         && request.resource.size < 15 * 1024 * 1024
         && (request.resource.contentType == 'image/jpeg' || request.resource.contentType == 'video/mp4');
+      // request.resource does not exist for deletes, so keep the delete rule
+      // separate from uploads instead of accidentally blocking cleanup.
+      allow delete: if isOwner(uid) && isCommunityAdult();
     }
 
 
@@ -49,5 +84,3 @@ service firebase.storage {
   }
 
 }
-
-

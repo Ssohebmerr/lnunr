@@ -45,6 +45,45 @@ AnalyticsBarChart? realCycleLengthChart(
   );
 }
 
+/// Builds a bar chart of the user's real period durations per completed cycle.
+/// Returns null when there isn't enough real history.
+AnalyticsBarChart? realPeriodDurationChart(
+  AnalyticsHistory? history,
+  Color accent,
+) {
+  if (history == null || !history.hasPeriodHistory) return null;
+  final n = history.periodDurations.length;
+  return AnalyticsBarChart(
+    titleAr: 'مدة الحيض الفعلية (آخر $n دورات)',
+    titleEn: 'Actual period length (last $n)',
+    values: history.periodDurations,
+    accent: accent,
+    suffix: 'd',
+  );
+}
+
+/// Cycle-progress ring shown for cycle-oriented goals. Uses the real current
+/// phase and cycle day, so it renders meaningfully even before any history
+/// builds up.
+AnalyticsPhaseRing cycleProgressRing(
+  CycleDashboardData data,
+  Color accent,
+  String lang,
+) {
+  final percent = data.avgCycleLength > 0
+      ? (data.cycleDay / data.avgCycleLength).clamp(0.0, 1.0)
+      : 0.0;
+  final phase = data.phase.isEmpty ? '—' : data.phase;
+  return AnalyticsPhaseRing(
+    titleAr: 'تقدّم الدورة',
+    titleEn: 'Cycle progress',
+    phaseAr: 'مرحلة $phase · يوم ${data.cycleDay}',
+    phaseEn: '$phase · day ${data.cycleDay}',
+    percent: percent,
+    accent: accent,
+  );
+}
+
 /// Analytics page sections for the **General / Wellness / Sexual** goal.
 class AnalyticsGeneralSection extends StatelessWidget {
   const AnalyticsGeneralSection({
@@ -60,6 +99,7 @@ class AnalyticsGeneralSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
     final accent = AnalyticsData.accentFor(goal);
     final metrics = AnalyticsData.metricsFor(goal, data, history: history);
     final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
@@ -79,6 +119,7 @@ class AnalyticsGeneralSection extends StatelessWidget {
     ];
 
     final realChart = realCycleLengthChart(history, accent);
+    final periodChart = realPeriodDurationChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
@@ -90,6 +131,7 @@ class AnalyticsGeneralSection extends StatelessWidget {
           'نظرة شاملة على انتظام دورتكِ، الأعراض، والرفاهية العامة.',
       subtitleEn: 'A full view of your cycle regularity, symptoms, and wellness.',
       scores: scores,
+      ring: cycleProgressRing(data, accent, lang),
       charts: [
         realChart ??
             AnalyticsBarChart(
@@ -99,6 +141,7 @@ class AnalyticsGeneralSection extends StatelessWidget {
               accent: accent,
               suffix: '%',
             ),
+        ?periodChart,
       ],
       metrics: metrics,
     );
@@ -131,6 +174,7 @@ class AnalyticsConceiveSection extends StatelessWidget {
         : 0.0;
 
     final realChart = realCycleLengthChart(history, accent);
+    final periodChart = realPeriodDurationChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
@@ -152,6 +196,7 @@ class AnalyticsConceiveSection extends StatelessWidget {
           suffix: '%',
         ),
         ?realChart,
+        ?periodChart,
       ],
       ring: AnalyticsPhaseRing(
         titleAr: 'تقدّم الدورة',
@@ -181,11 +226,13 @@ class AnalyticsAvoidSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
     final accent = AnalyticsData.accentFor(goal);
     final metrics = AnalyticsData.metricsFor(goal, data, history: history);
     final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final realChart = realCycleLengthChart(history, accent);
+    final periodChart = realPeriodDurationChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
@@ -198,6 +245,7 @@ class AnalyticsAvoidSection extends StatelessWidget {
       subtitleEn:
           'Track fertility, protection, and contraception consistency.',
       scores: scores,
+      ring: cycleProgressRing(data, accent, lang),
       charts: [
         AnalyticsBarChart(
           titleAr: 'مستوى الخصوبة اليومي',
@@ -207,6 +255,7 @@ class AnalyticsAvoidSection extends StatelessWidget {
           suffix: '%',
         ),
         ?realChart,
+        ?periodChart,
       ],
       metrics: metrics,
     );
@@ -283,11 +332,13 @@ class AnalyticsMenopauseSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
     final accent = AnalyticsData.accentFor(goal);
     final metrics = AnalyticsData.metricsFor(goal, data, history: history);
     final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final realChart = realCycleLengthChart(history, accent);
+    final periodChart = realPeriodDurationChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
@@ -300,6 +351,7 @@ class AnalyticsMenopauseSection extends StatelessWidget {
       subtitleEn:
           'Hot flashes, sleep, cycle irregularity, and wellness signals.',
       scores: scores,
+      ring: cycleProgressRing(data, accent, lang),
       charts: [
         realChart ??
             AnalyticsBarChart(
@@ -309,6 +361,7 @@ class AnalyticsMenopauseSection extends StatelessWidget {
               accent: accent,
               suffix: 'd',
             ),
+        ?periodChart,
       ],
       metrics: metrics,
     );
@@ -330,11 +383,13 @@ class AnalyticsPcosSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
     final accent = AnalyticsData.accentFor(goal);
     final metrics = AnalyticsData.metricsFor(goal, data, history: history);
     final scores = AnalyticsData.scoreCardsFor(goal, data, history: history);
 
     final realChart = realCycleLengthChart(history, accent);
+    final periodChart = realPeriodDurationChart(history, accent);
 
     return AnalyticsSectionShell(
       goal: goal,
@@ -347,6 +402,7 @@ class AnalyticsPcosSection extends StatelessWidget {
       subtitleEn:
           'Cycle regularity, hormonal signs, and metabolic indicators.',
       scores: scores,
+      ring: cycleProgressRing(data, accent, lang),
       charts: [
         realChart ??
             AnalyticsBarChart(
@@ -356,6 +412,7 @@ class AnalyticsPcosSection extends StatelessWidget {
               accent: accent,
               suffix: 'd',
             ),
+        ?periodChart,
       ],
       metrics: metrics,
     );

@@ -72,6 +72,18 @@ function buildContextString(cycleContext, mode) {
   parts.push('User locale: ' + (cycleContext.userLocale || 'ar'));
   parts.push('User goal: ' + goal);
 
+  if (cycleContext.localTimeOfDay) {
+    parts.push('Local time of day: ' + cycleContext.localTimeOfDay);
+  }
+
+  if (Array.isArray(cycleContext.aiMemory) && cycleContext.aiMemory.length > 0) {
+    const facts = cycleContext.aiMemory
+      .slice(0, 15)
+      .map((f) => String(f).substring(0, 140))
+      .join(' | ');
+    parts.push('Known about the user (long-term memory): ' + facts.substring(0, 1200));
+  }
+
   if (goal === 'pregnant') {
     parts.push('Pregnancy week: ' + (cycleContext.pregnancyWeek || 'unknown'));
     parts.push('Trimester: ' + (cycleContext.trimester || 'unknown'));
@@ -91,7 +103,12 @@ function buildContextString(cycleContext, mode) {
     parts.push('Ovulation: ' + (cycleContext.ovulationDate || 'unknown'));
   }
 
-  parts.push('Today\'s log (home screen): ' + (cycleContext.todayLog || 'nothing yet'));
+  // todayLog is an object (symptoms/mood/water/...) — stringify it, otherwise
+  // it reaches the model as the useless literal "[object Object]".
+  const todayLog = cycleContext.todayLog && typeof cycleContext.todayLog === 'object'
+    ? JSON.stringify(cycleContext.todayLog).substring(0, 1200)
+    : (cycleContext.todayLog || 'nothing yet');
+  parts.push('Today\'s log (home screen): ' + todayLog);
 
   if (cycleContext.recentSymptoms) {
     const sym = JSON.stringify(cycleContext.recentSymptoms);

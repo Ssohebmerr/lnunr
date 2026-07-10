@@ -46,8 +46,11 @@ class CommunityDiscoverTab extends StatelessWidget {
       ('general', l10n.communityCatGeneral, Icons.spa_rounded),
       ('conception', l10n.communityCatConception, Icons.favorite_rounded),
       ('contraception', l10n.communityCatContraception, Icons.shield_rounded),
-      ('condition', l10n.communityCatCondition,
-          Icons.medical_information_rounded),
+      (
+        'condition',
+        l10n.communityCatCondition,
+        Icons.medical_information_rounded,
+      ),
       ('support', l10n.communityCatSupport, Icons.volunteer_activism_rounded),
       ('culture', l10n.communityCatCulture, Icons.public_rounded),
       ('age', l10n.communityCatAge, Icons.cake_rounded),
@@ -60,6 +63,10 @@ class CommunityDiscoverTab extends StatelessWidget {
       goal: userGoal,
       joinedIds: joinedIds,
     );
+    final selectedCategory = categories.firstWhere(
+      (item) => item.$1 == category,
+      orElse: () => categories.first,
+    );
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -71,18 +78,26 @@ class CommunityDiscoverTab extends StatelessWidget {
             hint: l10n.communitySearchHint,
             onChanged: onSearchChanged,
           ),
-          const SizedBox(height: 12),
-          CommunityFilterChips(
-            items: categories
-                .map((c) => (id: c.$1, label: c.$2, icon: null))
-                .toList(),
-            selected: category,
-            onSelected: onCategoryChanged,
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              onPressed: () => _pickCategory(context, categories),
+              icon: const Icon(Icons.tune_rounded, size: 18),
+              label: Text(selectedCategory.$2),
+              style: OutlinedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           if (category == 'all' && searchController.text.trim().isEmpty)
             CommunityRecommendedRow(
-              communities: recommended,
+              communities: recommended.take(2).toList(),
               languageCode: lang,
               joinedIds: joinedIds,
               onOpen: onOpen,
@@ -91,18 +106,17 @@ class CommunityDiscoverTab extends StatelessWidget {
             children: [
               Text(
                 l10n.communityBrowse,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const Spacer(),
               Text(
                 '${communities.length}',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -118,5 +132,35 @@ class CommunityDiscoverTab extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _pickCategory(
+    BuildContext context,
+    List<(String, String, IconData)> categories,
+  ) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final item in categories)
+              ListTile(
+                leading: Icon(item.$3),
+                title: Text(item.$2),
+                trailing: item.$1 == category
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: Theme.of(sheetContext).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, item.$1),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null && selected != category) onCategoryChanged(selected);
   }
 }

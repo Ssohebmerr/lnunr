@@ -38,15 +38,18 @@ class QuotaError extends Error {
  * Atomically verifies premium entitlement and reserves one daily chat slot.
  *
  * @param {string} uid Authenticated Firebase uid (from a verified ID token).
- * @returns {Promise<{ref: FirebaseFirestore.DocumentReference, remaining: number}>}
+ * @returns {Promise<{ref: FirebaseFirestore.DocumentReference,
+ *   remaining: number, aiMemory: string[]}>}
  *   `remaining` = slots left AFTER this reservation (for the client counter).
+ *   `aiMemory` = long-term facts stored by lib/ai_memory.js (piggybacked on
+ *   this transaction's read so the chat endpoint needs no extra Firestore hit).
  * @throws {QuotaError} 403 premium_required | 429 daily_limit_reached
  */
 async function reservePremiumChatSlot(uid) {
   const db = admin.firestore();
   const ref = db.collection('users').doc(uid);
 
-  const remaining = await db.runTransaction(async (tx) => {
+  const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const data = snap.exists ? (snap.data() || {}) : {};
 
@@ -72,10 +75,13 @@ async function reservePremiumChatSlot(uid) {
       lastChatAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return DAILY_PREMIUM_CHAT_LIMIT - (count + 1);
+    return {
+      remaining: DAILY_PREMIUM_CHAT_LIMIT - (count + 1),
+      aiMemory: Array.isArray(data.aiMemory) ? data.aiMemory.map(String) : [],
+    };
   });
 
-  return { ref, remaining };
+  return { ref, remaining: result.remaining, aiMemory: result.aiMemory };
 }
 
 /**

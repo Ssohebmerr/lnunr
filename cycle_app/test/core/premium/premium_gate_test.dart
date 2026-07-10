@@ -1,3 +1,4 @@
+import 'package:cycle_aura/core/age/age_gate.dart';
 import 'package:cycle_aura/core/premium/premium_gate.dart';
 import 'package:cycle_aura/core/privacy/consent_manager.dart';
 import 'package:cycle_aura/core/storage/user_prefs.dart';
@@ -32,6 +33,13 @@ void main() {
       await UserPrefs.setPremium(true);
       await ConsentManager.setAiConsent(true);
       expect(await PremiumGate.checkAiChat(), PremiumAiAccess.allowed);
+    });
+
+    test('blocks teens from AI chat', () async {
+      await UserPrefs.setPremium(true);
+      await ConsentManager.setAiConsent(true);
+      await saveAgeGroup(AgeGroup.teen);
+      expect(await PremiumGate.checkAiChat(), PremiumAiAccess.needsAdult);
     });
   });
 

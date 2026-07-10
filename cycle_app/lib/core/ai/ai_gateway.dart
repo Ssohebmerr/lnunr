@@ -12,6 +12,10 @@ import 'models/ai_turn.dart';
 import '../config/app_secrets.dart';
 import '../../features/user/data/guest_user_service.dart';
 
+void _aiLog(String message) {
+  if (kDebugMode) debugPrint(message);
+}
+
 /// Single entry point for AI — all keys live on Firebase Functions.
 ///
 /// Resolution order:
@@ -44,11 +48,11 @@ class AiGateway {
     try {
       await GuestUserService().ensureSession();
     } catch (e) {
-      debugPrint('[AiGateway] session prepare failed: $e');
+  _aiLog('[AiGateway] session prepare failed: $e');
     }
 
     final user = _auth.currentUser;
-    debugPrint(
+_aiLog(
       '[AiGateway] mode=$effectiveMode, signedIn=${user != null}, '
       'uid=${user?.uid}, historyLen=${history.length}',
     );
@@ -76,13 +80,13 @@ class AiGateway {
     String? personality,
     List<AiTurn> history = const [],
   }) async* {
-    debugPrint('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
+_aiLog('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
 
     // Bind the Firebase session before AI (entitlement is server-enforced).
     try {
       await GuestUserService().ensureSession();
     } catch (e) {
-      debugPrint('[AiGateway.stream] session prepare failed: $e');
+  _aiLog('[AiGateway.stream] session prepare failed: $e');
     }
     if (_auth.currentUser == null) {
       throw const AiGatewayException('auth_required');
@@ -171,7 +175,7 @@ class AiGateway {
     final endpoint = (mode == 'analyze' || mode == 'doctor')
         ? '$_baseUrl/analyze'
         : '$_baseUrl/chat';
-    debugPrint('[AiGateway] Calling $endpoint');
+_aiLog('[AiGateway] Calling $endpoint');
 
     final safeContext =
         Map<String, dynamic>.from(jsonSafe(context) as Map? ?? {});
@@ -187,7 +191,7 @@ class AiGateway {
     try {
       body = jsonEncode(payload);
     } catch (e, st) {
-      debugPrint('[AiGateway] jsonEncode failed: $e\n$st');
+  _aiLog('[AiGateway] jsonEncode failed: $e\n$st');
       // Last resort: minimal payload so AI still works.
       body = jsonEncode({
         'message': message,
@@ -213,11 +217,11 @@ class AiGateway {
           )
           .timeout(const Duration(seconds: 90));
     } catch (e, st) {
-      debugPrint('[AiGateway] Network error: $e\n$st');
+  _aiLog('[AiGateway] Network error: $e\n$st');
       throw const AiGatewayException('network_error');
     }
 
-    debugPrint('[AiGateway] Cloud Function status: ${response.statusCode}');
+_aiLog('[AiGateway] Cloud Function status: ${response.statusCode}');
 
     Map<String, dynamic> data = {};
     if (response.body.isNotEmpty) {
@@ -227,7 +231,7 @@ class AiGateway {
         final preview = response.body.length > 200
             ? response.body.substring(0, 200)
             : response.body;
-        debugPrint('[AiGateway] Bad JSON: $e body=$preview');
+    _aiLog('[AiGateway] Bad JSON: $e body=$preview');
         throw const AiGatewayException('server_error');
       }
     }
@@ -254,7 +258,7 @@ class AiGateway {
     if (reply != null &&
         reply.isNotEmpty &&
         !_isFailedPlaceholderReply(reply)) {
-      debugPrint(
+  _aiLog(
         '[AiGateway] Cloud Function reply: '
         '${reply.substring(0, reply.length.clamp(0, 100))}',
       );
@@ -262,7 +266,7 @@ class AiGateway {
     }
 
     if (errorCode != null) {
-      debugPrint('[AiGateway] Cloud Function error: $errorCode');
+  _aiLog('[AiGateway] Cloud Function error: $errorCode');
     }
 
     throw AiGatewayException(
@@ -287,13 +291,18 @@ class AiGateway {
     final cfg = AiPromptStyle.configForMode(mode);
 
     // Keep history small and skip prior error bubbles (old + new wording).
-    final safeHistory = history
+    final filteredHistory = history
         .where((t) => t.text.trim().isNotEmpty && !_isFailedPlaceholderReply(t.text))
         .where((t) => !t.text.contains('المساعد مش متاح'))
         .where((t) => !t.text.contains('المساعد غير متاح'))
         .where((t) => !t.text.contains('المساعدة الذكية غير متاحة'))
         .where((t) => !t.text.contains('Firebase AI Logic'))
-        .take(8)
+        .toList();
+    // Keep the MOST RECENT 8 turns (take(8) would keep the oldest ones).
+    final recentHistory = filteredHistory.length > 8
+        ? filteredHistory.sublist(filteredHistory.length - 8)
+        : filteredHistory;
+    final safeHistory = recentHistory
         .map((t) => {
               'role': t.role.name,
               'text': t.text.length > 800 ? t.text.substring(0, 800) : t.text,
@@ -363,11 +372,11 @@ class AiGateway {
         response =
             await client.send(request).timeout(const Duration(seconds: 90));
       } catch (e, st) {
-        debugPrint('[AiGateway.stream] network error: $e\n$st');
+    _aiLog('[AiGateway.stream] network error: $e\n$st');
         throw const AiGatewayException('network_error');
       }
 
-      debugPrint('[AiGateway.stream] status: ${response.statusCode}');
+  _aiLog('[AiGateway.stream] status: ${response.statusCode}');
 
       if (response.statusCode != 200) {
         final errBody = await response.stream.bytesToString();

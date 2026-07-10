@@ -2,196 +2,202 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lune - Terms of Service</title>
-    <style>
-        :root {
-            --primary: #D4618C;
-            --primary-light: #F5B8D0;
-            --bg: #FAFAFA;
-            --card: #FFFFFF;
-            --text: #1A1A2E;
-            --text-secondary: #555;
-            --border: #E8E8E8;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-        }
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            text-align: center;
-            padding: 48px 20px 40px;
-        }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 0.95rem;
-        }
-        .container {
-            max-width: 800px;
-            margin: -20px auto 40px;
-            padding: 0 16px;
-        }
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: var(--primary);
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            margin-top: 28px;
-        }
-        h2:first-child { margin-top: 0; }
-        p, li {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-        }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 6px; }
-        .highlight {
-            background: #FFF5F8;
-            border-left: 3px solid var(--primary);
-            padding: 16px 20px;
-            border-radius: 0 8px 8px 0;
-            margin: 16px 0;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-        .contact-box {
-            background: #F8F0F4;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 24px;
-        }
-        .contact-box h3 {
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: var(--primary);
-        }
-        .contact-box a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .contact-box a:hover { text-decoration: underline; }
-        .footer {
-            text-align: center;
-            padding: 24px;
-            color: #999;
-            font-size: 0.85rem;
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-            text-decoration: none;
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 12px;
-        }
-        .back-link:hover { opacity: 1; }
-    </style>
+    <title>Lune - Terms of Service | شروط الخدمة</title>
+    <link rel="stylesheet" href="site.css?v=13">
 </head>
 <body>
-    <div class="header">
-        <a href="index.html" class="back-link">&larr; Back to Lune</a>
-        <h1>Terms of Service</h1>
-        <p>Effective Date: June 21, 2026</p>
+<nav class="site-nav">
+  <div class="container">
+    <a href="index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+    <div class="nav-links">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="trust-hub.html">Trust</a>
+      <a href="index.html#download" class="btn btn-primary btn-sm">Get the app</a>
     </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-panel">
+    <button class="nav-drawer-close" id="navClose" aria-label="Close">×</button>
+    <a href="index.html">Home</a>
+    <div class="drawer-label">Company</div>
+    <a href="about.html">About Lune</a>
+    <a href="contact.html">Contact</a>
+    <a href="partner.html">Partners</a>
+    <div class="drawer-label">Trust & Legal</div>
+    <a href="trust-hub.html">Trust hub</a>
+    <a href="privacy-policy.html">Privacy Policy</a>
+    <a href="terms-of-service.html">Terms</a>
+  </div>
+</div>
+<section class="page-hero">
+  <div class="container">
+    <a href="index.html" class="breadcrumb">← Lune</a>
+    <h1 id="pageTitle">Terms of Service</h1>
+    <p class="lead" id="pageDate">Effective Date: July 7, 2026</p>
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en')">English</button>
+      <button class="lang-btn" onclick="setLang('ar')">العربية</button>
+    </div>
+  </div>
+</section>
 
-    <div class="container">
-        <div class="card">
-            <h2>1. Acceptance of Terms</h2>
-            <p>By downloading, installing, or using Lune (the "App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App. These Terms constitute a legally binding agreement between you and Lune.</p>
+<main class="page-main">
+<div class="content-wrap">
+        <!-- ENGLISH -->
+        <div id="lang-en" class="lang-section active">
+            <div class="content-card">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By downloading, installing, or using Lune (the "App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App. These Terms constitute a legally binding agreement between you and Lune.</p>
 
-            <h2>2. Description of Service</h2>
-            <p>Lune is a menstrual cycle tracking application that provides:</p>
-            <ul>
-                <li>Cycle logging and prediction tools.</li>
-                <li>AI-powered health insights and chat assistance.</li>
-                <li>Self-care content and wellness recommendations.</li>
-                <li>Community features for sharing experiences.</li>
-                <li>Data backup and synchronization services.</li>
-                <li>Educational health content.</li>
-            </ul>
-            <p>The App is intended for personal, non-commercial use only.</p>
+                <h2>2. Description of Service</h2>
+                <p>Lune is a menstrual cycle tracking application that provides:</p>
+                <ul>
+                    <li>Cycle logging and prediction tools.</li>
+                    <li>AI-powered health insights and chat assistance.</li>
+                    <li>Self-care content and wellness recommendations.</li>
+                    <li>Community features for sharing experiences.</li>
+                    <li>Data backup and synchronization services.</li>
+                    <li>Educational health content and magazine articles.</li>
+                </ul>
+                <p>The App is intended for personal, non-commercial use only.</p>
 
-            <h2>3. User Accounts</h2>
-            <p>To access certain features, you may create an account using email/password or Google Sign-In. You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.</p>
-            <p>You must be at least 13 years old to create an account. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
+                <h2>3. User Accounts</h2>
+                <p>You may use Lune as a guest with an anonymous device-based account, or create a registered account using email/password, Google Sign-In, or Sign in with Apple (where available). You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.</p>
+                <p>You must be at least 13 years old to use the App. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
 
-            <h2>4. User Conduct</h2>
-            <p>You agree NOT to:</p>
-            <ul>
-                <li>Use the App for any unlawful purpose.</li>
-                <li>Post harmful, abusive, or misleading content in community features.</li>
-                <li>Impersonate another person or entity.</li>
-                <li>Attempt to access other users' accounts or data.</li>
-                <li>Upload viruses or malicious code.</li>
-                <li>Scrape, reverse-engineer, or decompile the App.</li>
-                <li>Use automated tools to interact with the App.</li>
-                <li>Spam or harass other community members.</li>
-            </ul>
-            <p>Violation of these rules may result in immediate account termination.</p>
+                <h2>4. User Conduct</h2>
+                <p>You agree NOT to:</p>
+                <ul>
+                    <li>Use the App for any unlawful purpose.</li>
+                    <li>Post harmful, abusive, or misleading content in community features.</li>
+                    <li>Impersonate another person or entity.</li>
+                    <li>Attempt to access other users' accounts or data.</li>
+                    <li>Upload viruses or malicious code.</li>
+                    <li>Scrape, reverse-engineer, or decompile the App.</li>
+                    <li>Use automated tools to interact with the App.</li>
+                    <li>Spam or harass other community members.</li>
+                </ul>
+                <p>Violation of these rules may result in immediate account termination.</p>
 
-            <h2>5. Community Features</h2>
-            <p>Lune offers optional community features where users can share posts, comments, and stories. By posting content, you grant Lune a non-exclusive, royalty-free license to display, distribute, and store your content within the App. You retain ownership of your content.</p>
-            <p>We reserve the right to remove content that violates these Terms or is reported by other users. You may block other users and manage your community privacy settings at any time.</p>
+                <h2>5. Community Features</h2>
+                <p>Lune offers optional community features where users can share posts, comments, and stories. By posting content, you grant Lune a non-exclusive, royalty-free license to display, distribute, and store your content within the App. You retain ownership of your content.</p>
+                <p>We reserve the right to remove content that violates these Terms or is reported by other users. You may block other users and manage your community privacy settings at any time.</p>
 
-            <h2>6. Subscriptions &amp; Payments</h2>
-            <p>Lune offers premium features through in-app subscriptions processed via Google Play Billing on Android.</p>
-            <ul>
-                <li>Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period.</li>
-                <li>You can manage subscriptions through your Google Play account settings.</li>
-                <li>Refunds are handled according to Google Play's refund policy.</li>
-                <li>Free features remain available without a subscription.</li>
-            </ul>
+                <h2>6. Subscriptions &amp; Payments</h2>
+                <p>Lune offers premium features through in-app subscriptions processed via Google Play Billing on Android.</p>
+                <ul>
+                    <li>Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period.</li>
+                    <li>You can manage subscriptions through your Google Play account settings.</li>
+                    <li>Refunds are handled according to Google Play's refund policy.</li>
+                    <li>Free features remain available without a subscription.</li>
+                </ul>
 
-            <h2>7. Intellectual Property</h2>
-            <p>The App, including its design, code, graphics, logos, and content, is the intellectual property of Lune and is protected by copyright, trademark, and other laws. You may not copy, modify, distribute, or create derivative works based on the App without our express written permission.</p>
+                <h2>7. Intellectual Property</h2>
+                <p>The App, including its design, code, graphics, logos, and content, is the intellectual property of Lune and is protected by copyright, trademark, and other laws. You may not copy, modify, distribute, or create derivative works based on the App without our express written permission.</p>
 
-            <h2>8. Disclaimer of Warranties</h2>
-            <div class="highlight">
-                THE APP IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE APP WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. THE APP IS NOT A MEDICAL DEVICE AND SHOULD NOT BE USED AS A SUBSTITUTE FOR PROFESSIONAL MEDICAL ADVICE, DIAGNOSIS, OR TREATMENT. CYCLE PREDICTIONS ARE ESTIMATES AND MAY NOT BE ACCURATE.
+                <h2>8. Disclaimer of Warranties</h2>
+                <div class="highlight">
+                    THE APP IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE APP WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. THE APP IS NOT A MEDICAL DEVICE AND SHOULD NOT BE USED AS A SUBSTITUTE FOR PROFESSIONAL MEDICAL ADVICE, DIAGNOSIS, OR TREATMENT. CYCLE PREDICTIONS ARE ESTIMATES AND MAY NOT BE ACCURATE.
+                </div>
+
+                <h2>9. Limitation of Liability</h2>
+                <div class="highlight">
+                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUNE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE APP IN THE 12 MONTHS PRECEDING THE CLAIM.
+                </div>
+
+                <h2>10. Termination</h2>
+                <p>You may stop using the App at any time and delete your account through the Privacy Center. We may suspend or terminate your access if you violate these Terms or engage in harmful behavior. Upon termination, your right to use the App ceases immediately.</p>
+                <p>Sections regarding intellectual property, disclaimers, and liability limitations survive termination.</p>
+
+                <h2>11. Governing Law &amp; Contact</h2>
+                <p>These Terms are governed by the laws applicable in the jurisdiction of the Lune operator, except where mandatory consumer protection laws in your country of residence provide otherwise. Disputes shall first be resolved through good-faith negotiation.</p>
+                <p>If you have questions about these Terms, contact us at:</p>
+                <div class="contact-box">
+                    <h3>Lune Support</h3>
+                    <p>Email: <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+                </div>
             </div>
+        </div>
 
-            <h2>9. Limitation of Liability</h2>
-            <div class="highlight">
-                TO THE MAXIMUM EXTENT PERMITTED BY LAW, LUNE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE APP IN THE 12 MONTHS PRECEDING THE CLAIM.
-            </div>
+        <!-- ARABIC -->
+        <div id="lang-ar" class="lang-section" dir="rtl">
+            <div class="content-card">
+                <h2>١. قبول الشروط</h2>
+                <p>بتنزيل أو تثبيت أو استخدام Lune («التطبيق»)، فإنكِ توافقين على الالتزام بشروط الخدمة هذه («الشروط»). إذا لم توافقين، لا تستخدمي التطبيق. تشكل هذه الشروط اتفاقية ملزمة قانونياً بينكِ وبين Lune.</p>
 
-            <h2>10. Termination</h2>
-            <p>You may stop using the App at any time and delete your account through the Privacy Center. We may suspend or terminate your access if you violate these Terms or engage in harmful behavior. Upon termination, your right to use the App ceases immediately.</p>
-            <p>Sections regarding intellectual property, disclaimers, and liability limitations survive termination.</p>
+                <h2>٢. وصف الخدمة</h2>
+                <p>Lune هو تطبيق لتتبع الدورة الشهرية يوفر أدوات التسجيل والتنبؤ، رؤى صحية مدعومة بالذكاء الاصطناعي، محتوى العافية، ميزات المجتمع، النسخ الاحتياطي والمزامنة، ومحتوى تعليمي ومجلة. التطبيق مخصص للاستخدام الشخصي وغير التجاري فقط.</p>
 
-            <h2>11. Governing Law &amp; Contact</h2>
-            <p>These Terms are governed by applicable laws without regard to conflict of law principles. Any disputes shall be resolved through good-faith negotiation first.</p>
-            <p>If you have questions about these Terms, contact us at:</p>
-            <div class="contact-box">
-                <h3>Lune Support</h3>
-                <p>Email: <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+                <h2>٣. حسابات المستخدمين</h2>
+                <p>يمكنكِ استخدام Lune كضيفة بحساب مجهول مرتبط بالجهاز، أو إنشاء حساب مسجّل عبر البريد/كلمة المرور أو Google أو Sign in with Apple (حيث يتوفر). أنتِ مسؤولة عن سرية بيانات اعتماد حسابكِ. يجب أن تكوني بعمر 13 عاماً على الأقل لاستخدام التطبيق.</p>
+
+                <h2>٤. سلوك المستخدم</h2>
+                <p>توافقين على عدم استخدام التطبيق لأغراض غير قانونية، أو نشر محتوى ضار أو مسيء، أو انتحال شخصية الآخرين، أو محاولة الوصول لحسابات مستخدمين آخرين، أو رفع برمجيات خبيثة، أو هندسة عكسية للتطبيق.</p>
+
+                <h2>٥. ميزات المجتمع</h2>
+                <p>يقدم Lune ميزات مجتمع اختيارية. بنشر المحتوى، تمنحين Lune ترخيصاً غير حصري لعرض وتوزيع وتخزين محتواكِ داخل التطبيق. تحتفظين بملكية محتواكِ.</p>
+
+                <h2>٦. الاشتراكات والمدفوعات</h2>
+                <p>يقدم Lune ميزات مميزة عبر اشتراكات داخل التطبيق المعالجة عبر Google Play Billing. تتجدد الاشتراكات تلقائياً ما لم يُلغَ قبل 24 ساعة من نهاية الفترة الحالية.</p>
+
+                <h2>٧. الملكية الفكرية</h2>
+                <p>التطبيق ومحتواه هو ملكية فكرية لـ Lune ومحمي بموجب حقوق النشر والعلامة التجارية.</p>
+
+                <h2>٨. إخلاء ضمانات</h2>
+                <div class="highlight">
+                    يُقدم التطبيق «كما هو» دون ضمانات. التطبيق ليس جهازاً طبياً ولا يجب استخدامه كبديل عن النصيحة الطبية المهنية. تنبؤات الدورة هي تقديرات وقد لا تكون دقيقة.
+                </div>
+
+                <h2>٩. تحديد المسؤولية</h2>
+                <div class="highlight">
+                    إلى أقصى حد يسمح به القانون، لا تتحمل Lune المسؤولية عن أضرار غير مباشرة أو تبعية. لا تتجاوز مسؤوليتنا الإجمالية المبلغ المدفوع للتطبيق في الاثني عشر شهراً السابقة للمطالبة.
+                </div>
+
+                <h2>١٠. الإنهاء</h2>
+                <p>يمكنكِ التوقف عن استخدام التطبيق وحذف حسابكِ من مركز الخصوصية. قد نعلق أو ننهي وصولكِ عند انتهاك هذه الشروط.</p>
+
+                <h2>١١. القانون الحاكم والتواصل</h2>
+                <p>تخضع هذه الشروط للقوانين المعمول بها في نطاق مشغّل Lune، إلا حيث توفر قوانين حماية المستهلك في بلد إقامتكِ حمايةً إضافية. يُحل النزاع أولاً بالتفاوض بحسن نية.</p>
+                <div class="contact-box">
+                    <h3>دعم Lune</h3>
+                    <p>البريد: <a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></p>
+                </div>
             </div>
         </div>
     </div>
+</main>
 
-    <div class="footer">
-        &copy; 2026 Lune. All rights reserved.
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="contact.html">Contact</a><a href="partner.html">Partners</a></div>
+      <div class="footer-col"><h4>Trust</h4><a href="trust-hub.html">Trust hub</a><a href="privacy-faq.html">FAQ</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy-policy.html">Privacy Policy</a><a href="terms-of-service.html">Terms</a></div>
+      <div class="footer-col"><h4>Contact</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></div>
     </div>
+    <div class="footer-bottom">&copy; 2026 Lune</div>
+  </div>
+</footer>
+
+<script>
+        function setLang(lang) {
+            document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('lang-' + lang).classList.add('active');
+            document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
+            document.getElementById('pageTitle').textContent = lang === 'en' ? 'Terms of Service' : 'شروط الخدمة';
+            document.getElementById('pageDate').textContent = lang === 'en'
+                ? 'Effective Date: July 7, 2026'
+                : 'تاريخ السريان: ٧ يوليو ٢٠٢٦';
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+        if (navigator.language.startsWith('ar')) setLang('ar');
+    </script>
 </body>
 </html>

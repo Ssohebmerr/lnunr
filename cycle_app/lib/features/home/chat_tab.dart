@@ -227,9 +227,16 @@ class _ChatTabState extends State<ChatTab> {
     final text = (preset ?? _controller.text).trim();
     if (text.isEmpty) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final access = await PremiumGate.checkAiChat();
     if (!mounted) return;
 
+    if (access == PremiumAiAccess.needsAdult) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiAdultsOnly)),
+      );
+      return;
+    }
     if (access == PremiumAiAccess.needsConsent) {
       final ok = await showAiConsentDialog(context);
       if (!ok || !mounted) return;
@@ -271,6 +278,10 @@ class _ChatTabState extends State<ChatTab> {
         ).then((_) {
           if (mounted) _checkConsent();
         });
+      case ChatNoticeType.adultRequired:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.aiAdultsOnly)),
+        );
     }
     bloc.add(ClearChatNotice());
   }
@@ -411,13 +422,26 @@ class _ChatTabState extends State<ChatTab> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          child: Text(
-            l10n.homeAiCardSubtitlePremium,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.outline,
-              fontSize: 10,
-            ),
-            textAlign: TextAlign.center,
+          child: Column(
+            children: [
+              Text(
+                l10n.privacyMedicalDisclaimer,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                  fontSize: 10,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.homeAiCardSubtitlePremium,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                  fontSize: 10,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
         SafeArea(
@@ -620,7 +644,7 @@ class _ChatInputBar extends StatelessWidget {
                       Icons.medical_services_outlined,
                       color: sending
                           ? theme.colorScheme.outline
-                          : Colors.red.shade300,
+                          : AuraColors.danger,
                       size: 19,
                     ),
                   ),

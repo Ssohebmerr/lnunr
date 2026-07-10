@@ -126,7 +126,12 @@ class WatchSyncService {
   /// Send cycle data to the watch.
   /// [phase] should be one of: "Menstruation", "Follicular", "Ovulation", "Luteal"
   /// [daysUntilPeriod] is the number of days until the next period starts.
-  Future<void> sendCircleData({
+  ///
+  /// Returns `true` when the data was actually dispatched to a paired watch,
+  /// and `false` when there is nothing to sync (platform unsupported or no
+  /// watch paired) so callers can give honest feedback instead of a blanket
+  /// "sync succeeded".
+  Future<bool> sendCircleData({
     required int circleMaxValue,
     required int circleCurrentValue,
     String phase = 'Unknown',
@@ -134,12 +139,12 @@ class WatchSyncService {
   }) async {
     if (!await _watch.isSupported) {
       if (kDebugMode) debugPrint('[WatchSync] Not supported');
-      return;
+      return false;
     }
 
     if (!await _watch.isPaired) {
       if (kDebugMode) debugPrint('[WatchSync] No watch paired');
-      return;
+      return false;
     }
 
     // Cache for Wear OS Data Layer
@@ -182,6 +187,8 @@ class WatchSyncService {
         if (kDebugMode) debugPrint('[WatchSync] Wear Data Layer channel failed: $e');
       }
     }
+
+    return true;
   }
 
   /// Get the last cached cycle data (for UI display or Wear OS Data Layer).

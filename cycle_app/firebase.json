@@ -15,6 +15,18 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [
       {
+        "source": "**/*.@(png|jpg|jpeg|webp|svg)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+        ]
+      },
+      {
+        "source": "**/*.@(css|html)",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+        ]
+      },
+      {
         "source": "/admin/**/*.@(html|js|css|json)",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },

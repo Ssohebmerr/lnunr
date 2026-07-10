@@ -17,15 +17,50 @@ class NotificationService {
   static const _dailyId = 1002;
   static const _ovulationId = 1003;
   static const _periodTodayId = 1004;
+  static const _lateId = 1006;
+  static const _fertileId = 1007;
+  static const _testId = 1999;
 
   static Future<bool> _isArabic() async {
     final prefs = await SharedPreferences.getInstance();
     return (prefs.getString('app_locale') ?? 'ar') == 'ar';
   }
 
+  static Future<bool> _isPregnant() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getString('user_goal') ?? '') == 'pregnancy';
+  }
+
   static Future<void> initialize() => AppNotifications.initialize();
 
   static Future<bool> requestPermission() => AppNotifications.requestPermission();
+
+  /// Whether the OS will actually surface our notifications right now (i.e. the
+  /// per-app notification switch is on). Lets the UI warn when everything is
+  /// scheduled but the system is silently dropping it.
+  static Future<bool> areNotificationsEnabled() =>
+      AppNotifications.areEnabled();
+
+  /// Fire an immediate notification so the user can confirm the whole delivery
+  /// pipeline (permission → channel → display) works — decoupled from the
+  /// scheduled 9 AM / 8 PM slots, which is why "nothing shows right after
+  /// install" is usually just timing, not a failure. Returns whether the OS
+  /// granted permission to show it.
+  static Future<bool> sendTestNotification() async {
+    await initialize();
+    final granted = await requestPermission();
+    final ar = await _isArabic();
+    await _plugin.show(
+      _testId,
+      'Lune',
+      ar
+          ? 'إشعار تجريبي — الإشعارات تعمل بنجاح! 🌙'
+          : 'Test notification — everything works! 🌙',
+      _details(high: true),
+      payload: NotificationPayload.home(),
+    );
+    return granted;
+  }
 
   /// System permission prompt once after install (onboarding or first home open).
   /// When a [BuildContext] is supplied we show the friendly in-app rationale
@@ -74,10 +109,18 @@ class NotificationService {
 
       if (await NotificationPrefs.ovulationEnabled()) {
         await _scheduleOvulationReminder();
+        await _scheduleFertileWindowHeadsUp();
       } else {
         await _plugin.cancel(_ovulationId);
+        await _plugin.cancel(_fertileId);
         await md.NotificationService.cancelFertileWindowNotification();
         await md.NotificationService.cancelOvulationNotification();
+      }
+
+      if (await NotificationPrefs.latePeriodEnabled()) {
+        await _scheduleLatePeriodWarning();
+      } else {
+        await _plugin.cancel(_lateId);
       }
 
       if (await NotificationPrefs.smartPhaseEnabled() &&
@@ -190,6 +233,96 @@ class NotificationService {
     }
   }
 
+  /// Warning notification when a period is running behind the prediction.
+  /// Fires a couple of days after the predicted start if no new period has been
+  /// logged — the cycle data (and thus the predicted date) advances the moment
+  /// the user logs, and re-scheduling on foreground moves this slot with it.
+  static Future<void> _scheduleLatePeriodWarning() async {
+    final api = MenstrualCycleWidget.instance;
+    if (api == null) return;
+    // Pregnancy mode has no "late period" concept — suppress the warning.
+    if (await _isPregnant()) {
+      await _plugin.cancel(_lateId);
+      return;
+    }
+
+    try {
+      final nextDateStr = await api.getNextPredictedPeriodDate();
+      if (nextDateStr.isEmpty) {
+        await _plugin.cancel(_lateId);
+        return;
+      }
+
+      final predicted = DateTime.parse(nextDateStr);
+      // Grace of 2 days before we call it "late", at 9:00 AM.
+      final at = DateTime(predicted.year, predicted.month, predicted.day, 9, 0)
+          .add(const Duration(days: 2));
+      if (at.isBefore(DateTime.now())) {
+        await _plugin.cancel(_lateId);
+        return;
+      }
+
+      final ar = await _isArabic();
+      await _plugin.zonedSchedule(
+        _lateId,
+        'Lune',
+        ar
+            ? 'دورتك متأخرة عن الموعد المتوقع. غالبًا هذا طبيعي — سجّلي أعراضك أو حدّثي تاريخ دورتك.'
+            : 'Your period is running late. This is often normal — log how you feel or update your dates.',
+        tz.TZDateTime.from(at, tz.local),
+        _details(high: true),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: NotificationPayload.home(action: 'open_log'),
+      );
+    } catch (e, st) {
+      debugPrint('_scheduleLatePeriodWarning failed: $e\n$st');
+    }
+  }
+
+  /// Heads-up a few days before ovulation so fertility-aware users know the
+  /// fertile window is opening. Gated by the same toggle as the ovulation
+  /// reminder.
+  static Future<void> _scheduleFertileWindowHeadsUp() async {
+    final api = MenstrualCycleWidget.instance;
+    if (api == null) return;
+    if (await _isPregnant()) {
+      await _plugin.cancel(_fertileId);
+      return;
+    }
+
+    try {
+      final dateStr = await api.getNextOvulationDate();
+      if (dateStr.isEmpty) {
+        await _plugin.cancel(_fertileId);
+        return;
+      }
+
+      final ovulation = DateTime.parse(dateStr);
+      // Fertile window opens ~4 days before ovulation; nudge at 9:00 AM.
+      final at = DateTime(ovulation.year, ovulation.month, ovulation.day, 9, 0)
+          .subtract(const Duration(days: 4));
+      if (at.isBefore(DateTime.now())) {
+        await _plugin.cancel(_fertileId);
+        return;
+      }
+
+      final ar = await _isArabic();
+      await _plugin.zonedSchedule(
+        _fertileId,
+        'Lune',
+        ar
+            ? 'نافذتك الخصبة تبدأ قريبًا. إن كنتِ تخططين للحمل، هذه أيامك الأهم.'
+            : "Your fertile window is opening soon. If you're trying to conceive, these are your key days.",
+        tz.TZDateTime.from(at, tz.local),
+        _details(),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: NotificationPayload.home(),
+      );
+    } catch (e, st) {
+      debugPrint('_scheduleFertileWindowHeadsUp failed: $e\n$st');
+    }
+  }
+
   static Future<void> _scheduleDailyLogReminder() async {
     final now = DateTime.now();
     var scheduled = DateTime(now.year, now.month, now.day, 20, 0);
@@ -238,6 +371,8 @@ class NotificationService {
     await _plugin.cancel(_dailyId);
     await _plugin.cancel(_ovulationId);
     await _plugin.cancel(_periodTodayId);
+    await _plugin.cancel(_lateId);
+    await _plugin.cancel(_fertileId);
     await SmartPhaseNotifier.cancel();
   }
 }

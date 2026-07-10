@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../auth/presentation/auth_navigation.dart';
 import '../../cycle/data/cycle_sync_service.dart';
+import '../../../core/age/age_gate.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../l10n/app_localizations.dart';
@@ -53,6 +54,7 @@ class _CommunityTabState extends State<CommunityTab>
   StreamSubscription<User?>? _authSub;
   bool _loadInProgress = false;
   bool _initialTabPicked = false;
+  bool _ageGateBlocksCommunity = false;
 
   @override
   void initState() {
@@ -101,6 +103,16 @@ class _CommunityTabState extends State<CommunityTab>
         return;
       }
 
+      if (await blocksCommunityByAgeGate()) {
+        if (mounted) {
+          setState(() {
+            _communityConsent = true;
+            _ageGateBlocksCommunity = true;
+          });
+        }
+        return;
+      }
+
       final profile = await repo.resolveProfile(user.uid);
       final canReadMemberCounts = profile.isReady && !profile.isMinor;
       final goal = await CycleSyncService().getUserGoal();
@@ -119,6 +131,7 @@ class _CommunityTabState extends State<CommunityTab>
       if (mounted) {
         setState(() {
           _communityConsent = true;
+          _ageGateBlocksCommunity = false;
           _profile = profile;
           _alias = profile.alias;
           _userGoal = goal;
@@ -418,6 +431,10 @@ class _CommunityTabState extends State<CommunityTab>
           }
         },
       );
+    }
+
+    if (_ageGateBlocksCommunity) {
+      return CommunityAdultsOnlyGate(l10n: l10n, theme: theme);
     }
 
     final profile = _profile;

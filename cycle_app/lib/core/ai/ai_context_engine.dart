@@ -65,6 +65,7 @@ class AiContextEngine {
     final hub = await WellnessHubCollector.collect();
     final goal = await _sync.getUserGoal();
     final locale = await _userLocale();
+    final cycleHistory = await _collectCycleHistory();
     Map<String, dynamic> pregnancyTracking = const {};
     Map<String, dynamic> todayLog = const {};
 
@@ -131,8 +132,40 @@ class AiContextEngine {
       wellnessHub: hub,
       pregnancyTracking: pregnancyTracking,
       todayLog: todayLog,
+      cycleHistory: cycleHistory,
+      localTimeOfDay: _localTimeOfDay(),
       userLocale: locale,
     );
+  }
+
+  /// Coarse local-time bucket so the AI can tailor tips (energy in the
+  /// morning, wind-down in the evening) without knowing the exact clock.
+  String _localTimeOfDay() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 22) return 'evening';
+    return 'night';
+  }
+
+  /// Recent completed-cycle history (lengths + period durations, last 6) for
+  /// AI pattern spotting. Sourced from the same real data the Analytics
+  /// charts use; failures degrade to an empty map, never break the snapshot.
+  Future<Map<String, dynamic>> _collectCycleHistory() async {
+    try {
+      final history = await CycleBridgeService().tryLoadAnalyticsHistory();
+      List<int> lastSix(List<int> list) =>
+          list.length > 6 ? list.sublist(list.length - 6) : list;
+      final lengths = lastSix(history.cycleLengths);
+      final durations = lastSix(history.periodDurations);
+      if (lengths.isEmpty && durations.isEmpty) return const {};
+      return {
+        if (lengths.isNotEmpty) 'recentCycleLengths': lengths,
+        if (durations.isNotEmpty) 'recentPeriodDurations': durations,
+      };
+    } catch (_) {
+      return const {};
+    }
   }
 
   Future<String> _userLocale() async {

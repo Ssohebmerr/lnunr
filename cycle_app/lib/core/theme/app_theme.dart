@@ -31,6 +31,17 @@ class AppTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: Colors.transparent,
+      // 2026 motion: soft fade + slight upward settle on every route push.
+      // iOS keeps the native Cupertino transition so swipe-back still works.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _AuraPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: _AuraPageTransitionsBuilder(),
+          TargetPlatform.macOS: _AuraPageTransitionsBuilder(),
+          TargetPlatform.linux: _AuraPageTransitionsBuilder(),
+        },
+      ),
       textTheme: _textTheme(base.textTheme, scheme),
       appBarTheme: AppBarTheme(
         centerTitle: true,
@@ -85,7 +96,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: scheme.primary,
+          backgroundColor: isDark ? scheme.primary : AuraColors.accentDeep,
           foregroundColor: isDark ? AuraColors.darkBg : Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -114,7 +125,7 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: scheme.primary,
+        backgroundColor: isDark ? scheme.primary : AuraColors.accentDeep,
         foregroundColor: isDark ? AuraColors.darkBg : Colors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -152,6 +163,41 @@ class AppTheme {
         labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 13),
         unselectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w500, fontSize: 13),
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: isDark ? AuraColors.darkCard : AuraColors.cream,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: isDark ? AuraColors.darkCard : AuraColors.cream,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor:
+            isDark ? AuraColors.darkBgMid : AuraColors.accentDeep,
+        headerForegroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        todayBorder: const BorderSide(color: AuraColors.accent, width: 1.4),
+        dayBackgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AuraColors.accentDeep
+              : null,
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? Colors.white : null,
+        ),
+        todayForegroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : AuraColors.accentDeep,
+        ),
+      ),
     );
   }
 
@@ -167,7 +213,7 @@ class AppTheme {
         onTertiary: AuraColors.plum,
         surface: AuraColors.cream,
         onSurface: AuraColors.plum,
-        onSurfaceVariant: AuraColors.plumMuted,
+        onSurfaceVariant: AuraColors.inkSoft,
         outline: AuraColors.rose.withValues(alpha: 0.3),
         outlineVariant: AuraColors.lavender.withValues(alpha: 0.4),
       );
@@ -191,6 +237,20 @@ class AppTheme {
 
   static TextTheme _textTheme(TextTheme base, ColorScheme scheme) {
     return GoogleFonts.cairoTextTheme(base).copyWith(
+      displayLarge: GoogleFonts.cairo(
+        fontSize: 42,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurface,
+        letterSpacing: -1,
+        height: 1.05,
+      ),
+      displayMedium: GoogleFonts.cairo(
+        fontSize: 34,
+        fontWeight: FontWeight.w800,
+        color: scheme.onSurface,
+        letterSpacing: -0.8,
+        height: 1.05,
+      ),
       displaySmall: GoogleFonts.cairo(
         fontSize: 28,
         fontWeight: FontWeight.w800,
@@ -238,5 +298,40 @@ class AppTheme {
     final isDark = context != null &&
         Theme.of(context).brightness == Brightness.dark;
     return AuraDecorations.meshBackground(isDark);
+  }
+}
+
+/// 2026-feel route transition: the incoming page fades in while settling
+/// up from a few pixels below — quicker and softer than the stock zoom.
+class _AuraPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _AuraPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    // Comfort: honour the OS "reduce motion" accessibility setting.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return child;
+    }
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.035),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
   }
 }

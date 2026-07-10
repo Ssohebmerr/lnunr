@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 
 class PillStatusCard extends StatelessWidget {
@@ -71,7 +72,7 @@ class PillStatusCard extends StatelessWidget {
                     Text(
                       l10n.pillStatus_pillsOfTotal(totalPills),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -94,7 +95,7 @@ class PillStatusCard extends StatelessWidget {
                     l10n.pillStatus_packStartInFuture(packStartDateOnly),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey.shade700,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -104,11 +105,16 @@ class PillStatusCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: undoTakePill,
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  undoTakePill();
+                },
                 icon: const Icon(Icons.undo),
                 label: Text(l10n.pillStatus_undo),
                 style: buttonStyle.copyWith(
-                  backgroundColor: WidgetStateProperty.all(Colors.grey[600]),
+                  backgroundColor: WidgetStateProperty.all(
+                    Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             )
@@ -117,7 +123,10 @@ class PillStatusCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: onSkipPill,
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      onSkipPill();
+                    },
                     icon: const Icon(Icons.skip_next_rounded),
                     label: Text(l10n.pillStatus_skip),
                     style: buttonStyle.copyWith(
@@ -129,7 +138,10 @@ class PillStatusCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: onTakePill,
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      onTakePill();
+                    },
                     icon: const Icon(Icons.medical_services_rounded),
                     label: Text(l10n.pillStatus_markAsTaken),
                     style: buttonStyle.copyWith(

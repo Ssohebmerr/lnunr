@@ -1,9 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../age/age_gate.dart';
 import '../privacy/consent_manager.dart';
 import '../storage/user_prefs.dart';
 
-enum PremiumAiAccess { allowed, needsConsent, needsPremium, limitReached }
+enum PremiumAiAccess { allowed, needsConsent, needsPremium, needsAdult, limitReached }
 
 /// Central checks for Premium-gated features (Play Console / honest pricing).
 class PremiumGate {
@@ -20,6 +21,9 @@ class PremiumGate {
       await hasPremium() && await ConsentManager.hasAiConsent();
 
   static Future<PremiumAiAccess> checkAiChat() async {
+    if (await blocksCommunityByAgeGate()) {
+      return PremiumAiAccess.needsAdult;
+    }
     if (!await hasPremium()) {
       return PremiumAiAccess.needsPremium;
     }
