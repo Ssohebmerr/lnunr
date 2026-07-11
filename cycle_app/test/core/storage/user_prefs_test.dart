@@ -6,6 +6,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     UserPrefs.setSessionUnlocked(false);
+    UserPrefs.resetStealthCacheForTest();
   });
 
   group('UserPrefs onboarding', () {
@@ -35,11 +36,13 @@ void main() {
   });
 
   group('UserPrefs stealth', () {
-    test('pin and enabled flag persist', () async {
+    test('pin hash persists and matches buffer suffix', () async {
       await UserPrefs.setStealthModeEnabled(true);
       await UserPrefs.setStealthModePin('1234');
       expect(await UserPrefs.isStealthModeEnabled(), isTrue);
-      expect(await UserPrefs.getStealthModePin(), '1234');
+      expect(await UserPrefs.hasStealthPin(), isTrue);
+      expect(await UserPrefs.stealthPinMatchesBuffer('991234'), isTrue);
+      expect(await UserPrefs.stealthPinMatchesBuffer('991235'), isFalse);
     });
   });
 }

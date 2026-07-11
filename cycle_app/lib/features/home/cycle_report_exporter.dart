@@ -61,15 +61,21 @@ class CycleReportExporter {
         _line(buf, l10n.healthReportCyclesAnalyzed, '${m.analyzedCycleCount}');
       }
       if (m.hasRangeData) {
-        _line(buf, l10n.healthReportCycleLengthRange,
-            '${m.minCycleLength}–${m.maxCycleLength}');
+        _line(
+          buf,
+          l10n.healthReportCycleLengthRange,
+          '${m.minCycleLength}–${m.maxCycleLength}',
+        );
       }
       if (m.cycleVariability != null) {
         _line(buf, l10n.healthReportCycleVariability, '${m.cycleVariability}');
       }
       if (m.averagePainLevel != null) {
-        _line(buf, l10n.healthReportAveragePain,
-            '${m.averagePainLevel!.toStringAsFixed(1)} / 4');
+        _line(
+          buf,
+          l10n.healthReportAveragePain,
+          '${m.averagePainLevel!.toStringAsFixed(1)} / 4',
+        );
       }
       buf.writeln();
 
@@ -83,27 +89,63 @@ class CycleReportExporter {
     }
 
     buf.writeln(l10n.healthReportCyclePeriodLength);
-    _line(buf, l10n.reportAvgCycle, _days(km['avg_cycle_length'] ?? dash?.avgCycleLength));
-    _line(buf, l10n.reportAvgPeriod, _days(km['avg_period_duration'] ?? dash?.avgPeriodDuration));
-    _line(buf, l10n.healthReportPrevCycleLength, _days(km['prev_cycle_length']));
-    _line(buf, l10n.healthReportPrevPeriodDuration, _days(km['prev_period_duration']));
+    _line(
+      buf,
+      l10n.reportAvgCycle,
+      _days(
+        m != null
+            ? m.avgCycleLength
+            : km['avg_cycle_length'] ?? dash?.avgCycleLength,
+      ),
+    );
+    _line(
+      buf,
+      l10n.reportAvgPeriod,
+      _days(
+        m != null
+            ? m.avgPeriodDuration
+            : km['avg_period_duration'] ?? dash?.avgPeriodDuration,
+      ),
+    );
+    _line(
+      buf,
+      l10n.healthReportPrevCycleLength,
+      _days(km['prev_cycle_length']),
+    );
+    _line(
+      buf,
+      l10n.healthReportPrevPeriodDuration,
+      _days(km['prev_period_duration']),
+    );
     _line(
       buf,
       l10n.healthReportCycleRegularityScore,
-      _score(km['cycle_regularity_score'] ?? dash?.cycleRegularity,
-          km['cycle_regularity_score_status'] ?? dash?.cycleRegularityStatus),
+      _score(
+        km['cycle_regularity_score'] ?? dash?.cycleRegularity,
+        km['cycle_regularity_score_status'] ?? dash?.cycleRegularityStatus,
+      ),
     );
     _line(
       buf,
       l10n.healthReportPeriodRegularityScore,
-      _score(km['period_regularity_score'] ?? dash?.periodRegularity,
-          km['period_regularity_score_status'] ?? dash?.periodRegularityStatus),
+      _score(
+        km['period_regularity_score'] ?? dash?.periodRegularity,
+        km['period_regularity_score_status'] ?? dash?.periodRegularityStatus,
+      ),
     );
     buf.writeln();
 
     buf.writeln(l10n.healthReportPredictions);
-    _line(buf, l10n.healthReportNextPeriodDay, _t(pm['next_period_day'] ?? dash?.nextPeriod));
-    _line(buf, l10n.healthReportNextOvulationDay, _t(pm['next_ovulation_day'] ?? dash?.ovulation));
+    _line(
+      buf,
+      l10n.healthReportNextPeriodDay,
+      _t(pm['next_period_day'] ?? dash?.nextPeriod),
+    );
+    _line(
+      buf,
+      l10n.healthReportNextOvulationDay,
+      _t(pm['next_ovulation_day'] ?? dash?.ovulation),
+    );
     buf.writeln();
 
     if (report.cycles.isNotEmpty) {
@@ -121,7 +163,9 @@ class CycleReportExporter {
       for (final p in report.symptomPatterns.take(12)) {
         final name = p.name?.trim();
         if (name == null || name.isEmpty) continue;
-        buf.writeln('• $name — ${l10n.reportPercentOfCycles(p.percentageOfCycles ?? 0)}');
+        buf.writeln(
+          '• $name — ${l10n.reportPercentOfCycles(p.percentageOfCycles ?? 0)}',
+        );
       }
       buf.writeln();
     }
@@ -173,6 +217,7 @@ class CycleReportExporter {
     required AppLocalizations l10n,
     required CycleReportData report,
     CycleDashboardData? dashboard,
+    DoctorReportMetrics? metrics,
     required String exportedDate,
   }) {
     final buf = StringBuffer();
@@ -183,12 +228,24 @@ class CycleReportExporter {
     // Header
     buf.writeln('Metric,Value');
     buf.writeln('"${l10n.healthReportExportedOn(exportedDate)}",""');
-    buf.writeln('"${l10n.reportAvgCycle}","${_days(km['avg_cycle_length'] ?? dash?.avgCycleLength)}"');
-    buf.writeln('"${l10n.reportAvgPeriod}","${_days(km['avg_period_duration'] ?? dash?.avgPeriodDuration)}"');
-    buf.writeln('"${l10n.healthReportPrevCycleLength}","${_days(km['prev_cycle_length'])}"');
-    buf.writeln('"${l10n.healthReportPrevPeriodDuration}","${_days(km['prev_period_duration'])}"');
-    buf.writeln('"${l10n.healthReportNextPeriodDay}","${_t(pm['next_period_day'] ?? dash?.nextPeriod)}"');
-    buf.writeln('"${l10n.healthReportNextOvulationDay}","${_t(pm['next_ovulation_day'] ?? dash?.ovulation)}"');
+    buf.writeln(
+      '"${l10n.reportAvgCycle}","${_days(metrics != null ? metrics.avgCycleLength : km['avg_cycle_length'] ?? dash?.avgCycleLength)}"',
+    );
+    buf.writeln(
+      '"${l10n.reportAvgPeriod}","${_days(metrics != null ? metrics.avgPeriodDuration : km['avg_period_duration'] ?? dash?.avgPeriodDuration)}"',
+    );
+    buf.writeln(
+      '"${l10n.healthReportPrevCycleLength}","${_days(km['prev_cycle_length'])}"',
+    );
+    buf.writeln(
+      '"${l10n.healthReportPrevPeriodDuration}","${_days(km['prev_period_duration'])}"',
+    );
+    buf.writeln(
+      '"${l10n.healthReportNextPeriodDay}","${_t(pm['next_period_day'] ?? dash?.nextPeriod)}"',
+    );
+    buf.writeln(
+      '"${l10n.healthReportNextOvulationDay}","${_t(pm['next_ovulation_day'] ?? dash?.ovulation)}"',
+    );
     buf.writeln();
 
     // Cycle history

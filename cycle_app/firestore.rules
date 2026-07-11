@@ -32,6 +32,15 @@ service cloud.firestore {
 
 
 
+    // NOTE: App Check for Firestore is enforced from the Firebase Console
+    // (App Check → Cloud Firestore → Enforce), NOT hardcoded in these rules.
+    // Console enforcement has a monitoring phase and is instantly reversible,
+    // so it can't silently lock out real users the way a hardcoded
+    // `request.app != null` check would (sideloaded builds, web, or a failed
+    // attestation would break core writes). See docs/SECURITY_DEPLOY.md step 6.
+
+
+
     // Billing / premium fields — Cloud Functions & admin only.
 
     function premiumBillingFields() {
@@ -198,7 +207,21 @@ service cloud.firestore {
 
 
 
-    function postReadable() {
+    function isAnonymousPostOwner(communityId, postId) {
+      return exists(/databases/$(database)/documents/communityPrivateAuth/$(communityId)/posts/$(postId))
+        && get(/databases/$(database)/documents/communityPrivateAuth/$(communityId)/posts/$(postId))
+            .data.authorUid == request.auth.uid;
+    }
+
+    function isPostAuthor(communityId, postId) {
+      return resource.data.get('authorUid', '') == request.auth.uid
+        || (resource.data.get('isAnonymous', false) == true
+            && isAnonymousPostOwner(communityId, postId));
+    }
+
+
+
+    function postReadable(communityId, postId) {
 
       return !resource.data.get('hidden', false)
 
@@ -206,7 +229,9 @@ service cloud.firestore {
 
           resource.data.get('moderationStatus', 'approved') == 'approved'
 
-          || resource.data.authorUid == request.auth.uid
+          || resource.data.get('authorUid', '') == request.auth.uid
+
+          || isAnonymousPostOwner(communityId, postId)
 
         );
 
@@ -332,7 +357,7 @@ service cloud.firestore {
 
       match /backups/{backupId} {
 
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isPremiumUser();
 
       }
 
@@ -380,6 +405,14 @@ service cloud.firestore {
 
         && request.resource.data.reason.size() <= 200
 
+        && request.resource.data.communityId is string
+
+        && request.resource.data.communityId.size() > 0
+
+        && request.resource.data.postId is string
+
+        && request.resource.data.postId.size() > 0
+
         && request.resource.data.authorUid is string
 
         && request.resource.data.authorAlias is string
@@ -415,6 +448,32 @@ service cloud.firestore {
 
     }
 
+    // IP rate-limit counters — Cloud Functions Admin SDK only.
+    match /ipRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // AI usage audit trail — written by Cloud Functions, read by admin tools.
+    match /ai_usage/{uid} {
+      allow read, write: if false;
+      match /messages/{messageId} {
+        allow read, write: if false;
+      }
+    }
+
+    // Daily AI cost aggregates — server-only.
+    match /aiUsageDaily/{dayId} {
+      allow read, write: if false;
+    }
+
+    match /communityPrivateAuth/{communityId}/posts/{postId} {
+      allow read: if request.auth != null
+        && resource.data.authorUid == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.authorUid == request.auth.uid;
+      allow create, update: if false;
+    }
+
 
 
     match /educationArticles/{articleId} {
@@ -432,7 +491,9 @@ service cloud.firestore {
     // validation; only admins can read, answer (update), reject, or delete.
     match /anonymousQuestions/{questionId} {
 
-      allow create: if request.resource.data.question is string
+      allow create: if request.auth != null
+
+        && request.resource.data.question is string
 
         && request.resource.data.question.size() >= 10
 
@@ -612,7 +673,7 @@ service cloud.firestore {
 
       match /posts/{postId} {
 
-        allow read: if request.auth != null && isCommunityAdult() && postReadable();
+        allow read: if request.auth != null && isCommunityAdult() && postReadable(communityId, postId);
 
         // Creation is server-authoritative: the Function applies rate limits,
         // duplicate checks, profile identity, Premium media checks, and the
@@ -625,7 +686,13 @@ service cloud.firestore {
 
           && (
 
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+            (
+
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+
+              && request.resource.data.commentCount <= resource.data.commentCount
+
+            )
 
             // Deleting a comment that was marked best answer clears the
             // marker in the same transaction as the count decrement.
@@ -638,11 +705,13 @@ service cloud.firestore {
 
               && !('bestAnswerCommentId' in request.resource.data)
 
+              && request.resource.data.commentCount <= resource.data.commentCount
+
             )
 
             || (
 
-              resource.data.authorUid == request.auth.uid
+              isPostAuthor(communityId, postId)
 
               && request.resource.data.diff(resource.data).affectedKeys()
 
@@ -652,7 +721,7 @@ service cloud.firestore {
 
             || (
 
-              resource.data.authorUid == request.auth.uid
+              isPostAuthor(communityId, postId)
 
               && request.resource.data.diff(resource.data).affectedKeys()
 
@@ -718,7 +787,7 @@ service cloud.firestore {
 
         allow delete: if (request.auth != null
 
-          && resource.data.authorUid == request.auth.uid) || isAdmin();
+          && isPostAuthor(communityId, postId)) || isAdmin();
 
 
 
@@ -861,7 +930,7 @@ service cloud.firestore {
 
             && request.resource.data.option >= 0
 
-            && request.resource.data.option < 4;
+            && request.resource.data.option < get(/databases/$(database)/documents/communities/$(communityId)/posts/$(postId)).data.pollOptions.size();
 
           allow delete: if request.auth != null && request.auth.uid == voteUid;
 
@@ -873,15 +942,7 @@ service cloud.firestore {
 
         allow read: if request.auth != null && isCommunityAdult();
 
-        allow create: if request.auth != null
-
-          && request.resource.data.authorUid == request.auth.uid
-
-          && isCommunityAdult()
-
-          && isCommunityNotBanned()
-
-          && isCommunityMember(communityId);
+        allow create: if false;
 
         allow update: if request.auth != null
 
@@ -898,6 +959,8 @@ service cloud.firestore {
               request.resource.data.diff(resource.data).affectedKeys()
 
                   .hasOnly(['viewedBy', 'viewCount'])
+
+              && request.resource.data.viewCount <= resource.data.viewCount + 1
 
             )
 

@@ -12,9 +12,9 @@ import '../../../core/privacy/consent_manager.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../data/community_catalog_repository.dart';
+import '../data/community_list_resolver.dart';
 import '../data/community_repository.dart';
 import '../data/community_seed.dart';
-import '../data/community_sort.dart';
 import '../data/models/community.dart';
 import '../data/models/community_membership.dart';
 import '../data/models/community_post.dart';
@@ -222,21 +222,19 @@ class _CommunityTabState extends State<CommunityTab>
 
   List<Community> get _filtered {
     final lang = Localizations.localeOf(context).languageCode;
-    var list = CommunitySeed.search(_search, lang);
-    if (_category != 'all') {
-      list = list.where((c) => c.topic == _category).toList();
-    }
-    final merged = list.map((c) {
+    final browse = CommunityListResolver.browseAll(catalog: _catalog);
+    final merged = browse.map((c) {
       final match = _communities.where((x) => x.id == c.id);
       return match.isEmpty ? c : match.first;
     }).toList();
-    return sortCommunities(
+    return CommunityListResolver.filterBrowseList(
       communities: merged,
-      catalog: _catalog,
+      search: _search,
+      category: _category,
       languageCode: lang,
+      catalog: _catalog,
       goal: _userGoal,
       joinedIds: _joinedIdsCache,
-      mode: CommunitySortMode.discover,
     );
   }
 
@@ -542,8 +540,10 @@ class _CommunityTabState extends State<CommunityTab>
                 lang: lang,
                 memberships: memberships,
                 communities: _communities,
+                catalog: _catalog,
                 onOpen: _openCommunity,
                 onRefresh: _load,
+                onBrowse: () => _tabs.animateTo(1),
               ),
               CommunitySavedTab(
                 alias: _alias,

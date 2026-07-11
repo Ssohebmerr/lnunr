@@ -86,6 +86,19 @@ async function findUidByPurchaseToken(db, token) {
   return snap.docs[0].id;
 }
 
+/**
+ * Rejects when a purchase token is already linked to a different Firebase uid.
+ * Prevents redeeming a stolen/leaked token on another account.
+ */
+async function assertTokenNotClaimedByOther(db, uid, token) {
+  const ownerUid = await findUidByPurchaseToken(db, token);
+  if (ownerUid && ownerUid !== uid) {
+    const err = new Error('token_already_claimed');
+    err.code = 'token_already_claimed';
+    throw err;
+  }
+}
+
 async function revokeGooglePlayPremium(db, uid, token) {
   const userRef = db.collection('users').doc(uid);
   const existing = (await userRef.get()).data() || {};
@@ -115,6 +128,7 @@ async function applyGooglePlayPremium(db, uid, { productId, token, purchase }) {
   const existing = (await userRef.get()).data() || {};
 
   if (entitled) {
+    await assertTokenNotClaimedByOther(db, uid, token);
     await userRef.set(
       {
         isPremium: true,
@@ -244,10 +258,42 @@ async function handleRtdnMessage(db, androidPublisher, envelope) {
   const uid = await findUidByPurchaseToken(db, purchaseToken);
 
   if (RTDN_REVOKE_TYPES.has(notificationType)) {
-    if (uid) {
-      await revokeGooglePlayPremium(db, uid, purchaseToken);
+    if (!uid || !purchaseToken || !subscriptionId) {
+      return { ok: true, skipped: true, reason: 'missing_uid_or_token' };
     }
-    return { ok: true, revoked: true, uid, notificationType };
+    // Never revoke on notification alone — confirm with Play Developer API.
+    try {
+      const purchase = await fetchSubscription(androidPublisher, {
+        packageName,
+        productId: subscriptionId,
+        token: purchaseToken,
+      });
+      if (!isSubscriptionEntitled(purchase)) {
+        await revokeGooglePlayPremium(db, uid, purchaseToken);
+        return { ok: true, revoked: true, uid, notificationType, verified: true };
+      }
+      return {
+        ok: true,
+        revoked: false,
+        uid,
+        notificationType,
+        verified: true,
+        stillEntitled: true,
+      };
+    } catch (error) {
+      if (error?.code === 410 || error?.response?.status === 410) {
+        await revokeGooglePlayPremium(db, uid, purchaseToken);
+        return {
+          ok: true,
+          revoked: true,
+          uid,
+          notificationType,
+          verified: true,
+          expired: true,
+        };
+      }
+      throw error;
+    }
   }
 
   const result = await processPlaySubscription(db, androidPublisher, {
@@ -260,7 +306,8 @@ async function handleRtdnMessage(db, androidPublisher, envelope) {
 }
 
 /**
- * Decode Pub/Sub push envelope or raw JSON body from googlePlayWebhook.
+ * Decode Pub/Sub push envelope from googlePlayWebhook.
+ * Raw JSON bodies are rejected — only authenticated Pub/Sub push is accepted.
  */
 function decodePubSubBody(body) {
   if (!body || typeof body !== 'object') return null;
@@ -268,10 +315,6 @@ function decodePubSubBody(body) {
   if (body.message?.data) {
     const json = Buffer.from(body.message.data, 'base64').toString('utf8');
     return JSON.parse(json);
-  }
-
-  if (body.subscriptionNotification || body.testNotification) {
-    return body;
   }
 
   return null;
@@ -319,4 +362,5 @@ module.exports = {
   decodePubSubBody,
   revokeExpiredPlayPremium,
   findUidByPurchaseToken,
+  assertTokenNotClaimedByOther,
 };

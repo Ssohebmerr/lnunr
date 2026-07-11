@@ -19,7 +19,7 @@
 
 'use strict';
 
-const { callGemini } = require('./gemini');
+const { callGemini, GEMINI_MODERATION_SAFETY_SETTINGS } = require('./gemini');
 
 const MODERATION_INSTRUCTION = `You are a content moderator for a women's health community app.
 Review the post/comment below. Reject ONLY if it contains:
@@ -41,17 +41,65 @@ Reply ONLY with JSON: {"approved":true} or {"approved":false,"reason":"short rea
  */
 async function moderateContent(geminiApiKey, text) {
   try {
-    const result = await callGemini(geminiApiKey, MODERATION_INSTRUCTION, text, 100);
-    if (result.includes('"approved":true')) return { approved: true };
+    const result = await callGemini(
+      geminiApiKey, MODERATION_INSTRUCTION, text, 100,
+      undefined, GEMINI_MODERATION_SAFETY_SETTINGS,
+    );
+    // Only an EXPLICIT rejection blocks the post. Everything else — an explicit
+    // approval, a safety-blocked/empty reply, or unparseable text — passes,
+    // because the client-side keyword/link/contact filter already caught the
+    // dangerous cases before the text ever reached the model, and reports +
+    // auto-hide remain the human safety net.
     if (result.includes('"approved":false')) {
       const match = result.match(/"reason"\s*:\s*"([^"]+)"/);
       return { approved: false, reason: match ? match[1] : 'Content not allowed.' };
     }
     return { approved: true };
   } catch (e) {
+    // Fail-OPEN on a transient outage (see header note) — never strand a
+    // legitimate post in a review queue nobody drains.
     console.error('Moderation error:', e);
-    return { approved: true };
+    return { approved: true, failOpen: true };
   }
+}
+
+/**
+ * Map a moderation result to a Firestore status update.
+ * Only an explicit AI rejection blocks the write; everything else is approved
+ * (fail-open) so nothing is stranded in a review queue. `pending_review` is now
+ * reserved for the reports auto-hide path, not the submit path.
+ *
+ * @returns {Promise<{
+ *   moderationStatus: 'approved'|'rejected',
+ *   pendingReview: boolean,
+ *   reviewedBy?: string,
+ *   reason?: string,
+ *   reject?: boolean,
+ * }>}
+ */
+async function evaluateModeration(geminiApiKey, text) {
+  if (text.length < 3) {
+    return {
+      moderationStatus: 'approved',
+      pendingReview: false,
+      reviewedBy: 'auto_short',
+    };
+  }
+
+  const result = await moderateContent(geminiApiKey, text);
+  if (result.approved) {
+    return {
+      moderationStatus: 'approved',
+      pendingReview: false,
+      reviewedBy: result.failOpen ? 'auto_ai_failopen' : 'auto_ai',
+    };
+  }
+  return {
+    moderationStatus: 'rejected',
+    pendingReview: false,
+    reason: result.reason || 'Content not allowed.',
+    reject: true,
+  };
 }
 
 /**
@@ -145,5 +193,6 @@ function buildContextString(cycleContext, mode) {
 
 module.exports = {
   moderateContent,
+  evaluateModeration,
   buildContextString,
 };

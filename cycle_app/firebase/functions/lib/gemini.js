@@ -29,6 +29,20 @@ const GEMINI_SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
 ];
 
+// Safety profile for the MODERATION classifier only. We deliberately do NOT
+// block here: the model's job is to READ and classify user text, not to
+// generate content. With BLOCK_MEDIUM the model refuses (returns an empty /
+// "content blocked" response) on ordinary women's-health posts — cramps, heavy
+// bleeding, reproductive anatomy, emotional venting — which then get stranded
+// in `pending_review` forever. Letting the classifier see everything and rely
+// on the moderation PROMPT for the actual reject decision fixes that.
+const GEMINI_MODERATION_SAFETY_SETTINGS = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+];
+
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
 /**
@@ -66,7 +80,7 @@ function buildContents(userPrompt, history) {
  * @returns {Promise<{text: string, usage: {promptTokens: number, completionTokens: number}}>}
  *   Model output + token usage (zeros when the SDK omits usageMetadata).
  */
-async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride, history = []) {
+async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTokens = 2000, temperatureOverride, history = [], safetySettingsOverride) {
   // Defensive cleanup — strip BOM, zero-width chars, whitespace.
   const apiKey = (geminiApiKey || '')
     .replace(/^\uFEFF/, '')
@@ -85,6 +99,10 @@ async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTok
       ? temperatureOverride
       : (maxTokens <= 400 ? 0.6 : 0.78);
 
+  const safetySettings = Array.isArray(safetySettingsOverride)
+    ? safetySettingsOverride
+    : GEMINI_SAFETY_SETTINGS;
+
   let lastError = null;
   for (const modelName of GEMINI_MODELS) {
     try {
@@ -95,7 +113,7 @@ async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTok
           maxOutputTokens: maxTokens || 2000,
           temperature,
         },
-        safetySettings: GEMINI_SAFETY_SETTINGS,
+        safetySettings,
       });
 
       const result = await model.generateContent({
@@ -136,9 +154,9 @@ async function callGeminiDetailed(geminiApiKey, systemPrompt, userPrompt, maxTok
  * Backwards-compatible variant returning only the reply text — used by
  * moderate / adminApi translateText / moderation triggers.
  */
-async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride) {
+async function callGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride, safetySettingsOverride) {
   const { text } = await callGeminiDetailed(
-    geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride,
+    geminiApiKey, systemPrompt, userPrompt, maxTokens, temperatureOverride, [], safetySettingsOverride,
   );
   return text;
 }
@@ -217,6 +235,7 @@ async function* streamGemini(geminiApiKey, systemPrompt, userPrompt, maxTokens =
 
 module.exports = {
   GEMINI_SAFETY_SETTINGS,
+  GEMINI_MODERATION_SAFETY_SETTINGS,
   GEMINI_MODELS,
   callGemini,
   callGeminiDetailed,

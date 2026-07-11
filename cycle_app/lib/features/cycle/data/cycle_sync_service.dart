@@ -7,6 +7,8 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import '../../../core/app_home_refresh.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/profile/local_profile.dart';
+import '../../../core/push/push_registration_service.dart';
+import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../user/data/guest_user_service.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
@@ -84,6 +86,7 @@ class CycleSyncService {
         name: name,
         birthDate: birthDate,
       );
+      await PushRegistrationService().registerIfPossible();
     } catch (e, st) {
       debugPrint('Guest user Firestore sync failed (non-fatal): $e\n$st');
     }

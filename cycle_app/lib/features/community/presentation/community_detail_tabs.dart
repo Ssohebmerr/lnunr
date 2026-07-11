@@ -9,17 +9,23 @@ class _PostsList extends StatefulWidget {
     required this.onJoin,
     required this.onPostTap,
     required this.onAnswerPrompt,
+    required this.onCompose,
+    required this.alias,
   });
 
   final String communityId;
   final String topic;
   final bool joined;
   final bool busy;
+  final String alias;
   final VoidCallback onJoin;
   final void Function(CommunityPost) onPostTap;
 
   /// Opens the composer pre-filled with the weekly question.
   final void Function(String question) onAnswerPrompt;
+
+  /// Opens the blank composer (inline "start a post" bar).
+  final VoidCallback onCompose;
 
   @override
   State<_PostsList> createState() => _PostsListState();
@@ -136,11 +142,16 @@ class _PostsListState extends State<_PostsList> {
               label: Text(l10n.communityJoin),
             ),
           )
-        else
+        else ...[
+          _InlineComposer(
+            alias: widget.alias,
+            onTap: widget.busy ? null : widget.onCompose,
+          ),
           WeeklyQuestionCard(
             topic: widget.topic,
             onAnswer: widget.onAnswerPrompt,
           ),
+        ],
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: CommunitySearchField(
@@ -208,6 +219,91 @@ class _PostsListState extends State<_PostsList> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A prominent "start a post" bar at the top of the feed — the familiar
+/// professional-app pattern, so posting is one obvious tap instead of hunting
+/// for the FAB. Opens the same composer as [_CommunityDetailScreenState._createPost].
+class _InlineComposer extends StatelessWidget {
+  const _InlineComposer({required this.alias, required this.onTap});
+
+  final String alias;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final initial = alias.trim().isNotEmpty ? alias.trim()[0].toUpperCase() : '?';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AuraColors.darkCard.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.22),
+              ),
+              boxShadow: AppShadows.softRose(opacity: 0.14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: AuraDecorations.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    initial,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.communityPostHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: AuraDecorations.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(7),
+                    child: Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

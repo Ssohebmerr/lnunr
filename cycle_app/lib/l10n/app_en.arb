@@ -274,6 +274,12 @@
   "communityBrowse": "Browse groups",
   "communityRecommendedTitle": "Recommended for you",
   "communityJoinedBadge": "Joined",
+  "communityDiscoverNew": "Discover groups",
+  "communityDiscoverJoined": "Your groups",
+  "communityDiscoverNoResults": "No groups match your search. Try another category or clear filters.",
+  "communityClosedBadge": "Closed",
+  "communityFeedBrowseTitle": "Browse all groups",
+  "communityFeedBrowseSubtitle": "The feed shows your joined groups only — explore more communities here.",
   "communitySetupTitle": "Choose a nickname",
   "communitySetupSubtitle": "Use a nickname — not your real name. Cycle data is never shared.",
   "communityAliasLabel": "Nickname",
@@ -1502,6 +1508,24 @@
   "notifRationaleBody": "Lune can send you gentle reminders about your upcoming period, ovulation, and daily check-ins. You can customize or turn off notifications anytime in Settings.",
   "notifRationaleAllow": "Allow Notifications",
   "notifRationaleSkip": "Not Now",
+  "notifOsDisabledBanner": "Notifications are turned off for Lune in system settings. Reminders will not appear until you enable them.",
+  "notifRequestPermission": "Allow notifications",
+  "notifExactAlarmsHint": "For on-time reminders, allow Alarms & reminders for Lune in Android settings.",
+  "notifEnableExactAlarms": "Enable precise alarms",
+  "notifScheduledCount": "{count} reminders scheduled",
+  "@notifScheduledCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notifNoScheduled": "No reminders scheduled yet. Allow notifications and log your cycle.",
+  "notifTestExactAlarmsHint": "Test sent, but precise alarms are off — reminders may be delayed.",
+  "notifNextReminder": "Next reminder: {when}",
+  "@notifNextReminder": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
 
   "ageGateTitle": "How old are you?",
   "ageGateBody": "Lune is designed for users aged 13 and older. Some features like community discussions are restricted to users 18+.",

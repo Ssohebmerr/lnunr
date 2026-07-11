@@ -33,6 +33,57 @@ const admin = require('firebase-admin');
 
 const ROLE_RANK = { owner: 3, admin: 2, moderator: 1 };
 
+const MAX_ADMIN_QUERY_LIMIT = 500;
+
+const MODERATOR_QUERY_PREFIXES = [
+  'communityReports',
+  'anonymousQuestions',
+  'educationArticles',
+  'appBanners',
+  'communityCatalog',
+  'adminBroadcasts',
+  'adminActivityLog',
+];
+
+const BLOCKED_WRITE_PREFIXES = [
+  'admins',
+  'communityPrivateAuth',
+  'communityRateLimits',
+  'communityContentHashes',
+];
+
+function pathSegments(path) {
+  if (!path || typeof path !== 'string') return [];
+  return path.split('/').filter(Boolean);
+}
+
+function isBlockedWritePath(path) {
+  const segments = pathSegments(path);
+  if (segments.length === 0) return true;
+  return BLOCKED_WRITE_PREFIXES.includes(segments[0]);
+}
+
+function isAllowedModeratorQueryPath(collectionPath, collectionGroup) {
+  if (collectionGroup) {
+    return ['posts', 'comments'].includes(collectionGroup);
+  }
+  const segments = Array.isArray(collectionPath)
+    ? collectionPath
+    : pathSegments(collectionPath);
+  if (segments.length === 0) return false;
+  return MODERATOR_QUERY_PREFIXES.includes(segments[0]);
+}
+
+function assertWritableAdminPath(path, role) {
+  if (isBlockedWritePath(path)) {
+    throw new Error('Writes to this path are not permitted.');
+  }
+  const segments = pathSegments(path);
+  if (segments[0] === 'admins' && role !== 'owner') {
+    throw new Error('Only owners may modify admin records.');
+  }
+}
+
 // Action → minimum required role (for adminApi action gating)
 const ACTION_MIN_ROLE = {
   // moderator can do these
@@ -191,4 +242,8 @@ module.exports = {
   serializeFirestoreValue,
   serializeDoc,
   applyServerTokens,
+  MAX_ADMIN_QUERY_LIMIT,
+  isBlockedWritePath,
+  isAllowedModeratorQueryPath,
+  assertWritableAdminPath,
 };

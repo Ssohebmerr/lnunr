@@ -41,8 +41,21 @@
 // ============================================================================
 
 const admin = require('firebase-admin');
+const { setGlobalOptions } = require('firebase-functions/v2');
 
 admin.initializeApp();
+
+// ---------------------------------------------------------------------------
+// Cost blast-radius cap ("denial of wallet" guard).
+// ---------------------------------------------------------------------------
+// Without a ceiling, Cloud Functions v2 autoscale to ~1000 instances, so a
+// flood can't take the service DOWN (Google absorbs that) but it CAN explode
+// the bill. Capping the fleet bounds the worst-case spend. Each v2 instance
+// still serves many concurrent requests, so this ceiling comfortably handles
+// large legitimate spikes. Raise it only if real traffic ever needs more.
+// MUST run before the endpoint modules are required (that's when the functions
+// are actually defined), so keep this above the require() calls below.
+setGlobalOptions({ maxInstances: 20 });
 
 // ---------------------------------------------------------------------------
 // HTTP / callable endpoints

@@ -10,6 +10,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class AppNotifications {
   AppNotifications._();
 
+  static const communityChannelId = 'cycle_aura_community';
+
   static final plugin = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
@@ -83,6 +85,12 @@ class AppNotifications {
         loggingReminderChannelName,
         importance: Importance.defaultImportance,
       ),
+      AndroidNotificationChannel(
+        communityChannelId,
+        'Community',
+        description: 'Likes, replies, and mentions in Lune communities',
+        importance: Importance.defaultImportance,
+      ),
     ];
 
     for (final channel in channels) {
@@ -139,6 +147,41 @@ class AppNotifications {
           false;
     }
     return true;
+  }
+
+  /// Exact alarms when allowed; inexact fallback keeps delivery working on
+  /// Android 12+ when the user has not granted Alarms & reminders.
+  static Future<AndroidScheduleMode> resolveScheduleMode() async {
+    await initialize();
+    final android = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+    final canExact = await android.canScheduleExactNotifications() ?? false;
+    if (kDebugMode && !canExact) {
+      debugPrint(
+        '[AppNotifications] exact alarms unavailable — using inexact schedule',
+      );
+    }
+    return canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+  }
+
+  static Future<bool> canScheduleExactNotifications() async {
+    await initialize();
+    final android = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return true;
+    return await android.canScheduleExactNotifications() ?? true;
+  }
+
+  static Future<void> requestExactAlarmsPermission() async {
+    await initialize();
+    final android = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await android?.requestExactAlarmsPermission();
   }
 }
 

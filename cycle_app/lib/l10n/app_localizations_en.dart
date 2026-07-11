@@ -774,6 +774,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityJoinedBadge => 'Joined';
 
   @override
+  String get communityDiscoverNew => 'Discover groups';
+
+  @override
+  String get communityDiscoverJoined => 'Your groups';
+
+  @override
+  String get communityDiscoverNoResults =>
+      'No groups match your search. Try another category or clear filters.';
+
+  @override
+  String get communityClosedBadge => 'Closed';
+
+  @override
+  String get communityFeedBrowseTitle => 'Browse all groups';
+
+  @override
+  String get communityFeedBrowseSubtitle =>
+      'The feed shows your joined groups only — explore more communities here.';
+
+  @override
   String get communitySetupTitle => 'Choose a nickname';
 
   @override
@@ -3865,6 +3885,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifRationaleSkip => 'Not Now';
+
+  @override
+  String get notifOsDisabledBanner =>
+      'Notifications are turned off for Lune in system settings. Reminders will not appear until you enable them.';
+
+  @override
+  String get notifRequestPermission => 'Allow notifications';
+
+  @override
+  String get notifExactAlarmsHint =>
+      'For on-time reminders, allow Alarms & reminders for Lune in Android settings.';
+
+  @override
+  String get notifEnableExactAlarms => 'Enable precise alarms';
+
+  @override
+  String notifScheduledCount(int count) {
+    return '$count reminders scheduled';
+  }
+
+  @override
+  String get notifNoScheduled =>
+      'No reminders scheduled yet. Allow notifications and log your cycle.';
+
+  @override
+  String get notifTestExactAlarmsHint =>
+      'Test sent, but precise alarms are off — reminders may be delayed.';
+
+  @override
+  String notifNextReminder(String when) {
+    return 'Next reminder: $when';
+  }
 
   @override
   String get ageGateTitle => 'How old are you?';

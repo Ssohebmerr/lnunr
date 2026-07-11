@@ -1,3 +1,5 @@
+import { getAppCheckHeaders } from './admin-app-check.js';
+
 const FUNCTIONS_BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
 
 export function initExtraAdmin(ctx) {
@@ -98,11 +100,13 @@ export function initExtraAdmin(ctx) {
     try {
       const user = auth.currentUser;
       const token = await user.getIdToken();
+      const appCheckHeaders = await getAppCheckHeaders();
       const res = await fetch(`${FUNCTIONS_BASE}/adminBroadcast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          ...appCheckHeaders,
         },
         body: JSON.stringify({ title, body, audience }),
       });
@@ -426,11 +430,13 @@ export function initExtraAdmin(ctx) {
       const user = auth.currentUser;
       if (!user) throw new Error('سجّلي الدخول أولاً');
       const token = await user.getIdToken();
+      const appCheckHeaders = await getAppCheckHeaders();
       const res = await fetch(`${FUNCTIONS_BASE}/reprocessPendingModeration`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
+          ...appCheckHeaders,
         },
         body: '{}',
       });

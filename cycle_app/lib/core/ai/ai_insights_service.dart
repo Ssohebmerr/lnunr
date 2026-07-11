@@ -23,8 +23,8 @@ class AiInsightsService {
   AiInsightsService({
     required AiContextEngine contextEngine,
     required AiGateway gateway,
-  })  : _engine = contextEngine,
-        _gateway = gateway;
+  }) : _engine = contextEngine,
+       _gateway = gateway;
 
   final AiContextEngine _engine;
   final AiGateway _gateway;
@@ -101,15 +101,15 @@ class AiInsightsService {
     final isPregnant = snapshot.isPregnancyMode;
     final prompt = isPregnant
         ? 'Respond in $language.\n'
-            'Add AI-enhanced prenatal visit notes BELOW the data provided. '
-            'Sections: fetal development focus, maternal symptoms patterns, '
-            'pain summary, suggested questions for OB/midwife. '
-            'Do not repeat cycle stats already in the user data — add insight only.'
+              'Add AI-enhanced prenatal visit notes BELOW the data provided. '
+              'Sections: fetal development focus, maternal symptoms patterns, '
+              'pain summary, suggested questions for OB/midwife. '
+              'Do not repeat cycle stats already in the user data — add insight only.'
         : 'Respond in $language.\n'
-            'Add AI-enhanced visit notes BELOW the data provided. '
-            'Sections: symptom pattern analysis, pain trends, irregularities '
-            'worth discussing, suggested questions for the doctor. '
-            'Do not repeat raw stats — add interpretation only.';
+              'Add AI-enhanced visit notes BELOW the data provided. '
+              'Sections: symptom pattern analysis, pain trends, irregularities '
+              'worth discussing, suggested questions for the doctor. '
+              'Do not repeat raw stats — add interpretation only.';
 
     final aiNotes = await _gateway.request(
       message: prompt,
@@ -144,14 +144,15 @@ class AiInsightsService {
     final language = languageCode == 'ar' ? 'Arabic' : 'English';
     final limitedHint = limitedData
         ? (languageCode == 'ar'
-            ? 'البيانات محدودة — أضيفي جملة واحدة احترافية في data_quality_note '
-                'أن التتبع لمدة شهر تقريباً يحسّن دقة التقرير.'
-            : 'Data is limited — include one professional sentence in '
-                'data_quality_note that ~one month of daily logging improves accuracy.')
+              ? 'البيانات محدودة — أضيفي جملة واحدة احترافية في data_quality_note '
+                    'أن التتبع لمدة شهر تقريباً يحسّن دقة التقرير.'
+              : 'Data is limited — include one professional sentence in '
+                    'data_quality_note that ~one month of daily logging improves accuracy.')
         : 'Omit data_quality_note or set it to null.';
 
     final isPregnant = snapshot.isPregnancyMode;
-    final prompt = 'Respond in $language with ONLY valid JSON (no markdown fences):\n'
+    final prompt =
+        'Respond in $language with ONLY valid JSON (no markdown fences):\n'
         '{\n'
         '  "clinical_summary": "2-3 concise professional sentences for a physician",\n'
         '  "patterns": ["observed pattern 1", "observed pattern 2"],\n'
@@ -167,8 +168,12 @@ class AiInsightsService {
         'Never diagnose or prescribe. Write for a doctor reading a clean visit report.';
 
     final context = Map<String, dynamic>.from(snapshot.toPromptMap());
-    if (clinicalMetrics.isNotEmpty) context['clinicalMetrics'] = clinicalMetrics;
-    if (limitedData) context['reportDataLimited'] = true;
+    if (clinicalMetrics.isNotEmpty) {
+      context['clinicalMetrics'] = clinicalMetrics;
+    }
+    if (limitedData) {
+      context['reportDataLimited'] = true;
+    }
 
     final raw = await _gateway.request(
       message: prompt,
@@ -177,7 +182,11 @@ class AiInsightsService {
     );
 
     if (raw == null || raw.trim().isEmpty) return null;
-    return _parseEnrichment(raw.trim(), limitedData: limitedData, languageCode: languageCode);
+    return _parseEnrichment(
+      raw.trim(),
+      limitedData: limitedData,
+      languageCode: languageCode,
+    );
   }
 
   DoctorReportEnrichment? _parseEnrichment(
@@ -210,8 +219,8 @@ class AiInsightsService {
       if (note == null || note.isEmpty || note.toLowerCase() == 'null') {
         note = limitedData
             ? (languageCode == 'ar'
-                ? 'البيانات ما زالت محدودة؛ التتبع اليومي لمدة شهر تقريباً يجعل هذا التقرير أدق.'
-                : 'Data is still limited; about one month of daily logging will make this report more accurate.')
+                  ? 'البيانات ما زالت محدودة؛ التتبع اليومي لمدة شهر تقريباً يجعل هذا التقرير أدق.'
+                  : 'Data is still limited; about one month of daily logging will make this report more accurate.')
             : null;
       }
 
@@ -240,13 +249,15 @@ class AiInsightsService {
   /// One cache slot per type per day per language.
   String _cacheKey(AiInsightType type, String lang) {
     final now = DateTime.now();
-    final day = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final day =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     return 'ai_insight_${type.name}_${lang}_$day';
   }
 
   String _prompt(AiInsightType type, HealthSnapshot s, String lang) {
     final language = lang == 'ar' ? 'Arabic' : 'English';
-    final base = 'Respond in $language. Be warm, supportive, and concise. '
+    final base =
+        'Respond in $language. Be warm, supportive, and concise. '
         'Never diagnose or prescribe. Speak directly to the user ("you"). '
         '${AiPromptStyle.responseFormat}';
 

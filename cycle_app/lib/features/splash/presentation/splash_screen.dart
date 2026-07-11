@@ -179,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   bool _canEnterHome(bool onboardingDone, User? user) {
     if (_hasEmailAccount(user)) return true;
-    return onboardingDone && user != null;
+    return onboardingDone;
   }
 }
 

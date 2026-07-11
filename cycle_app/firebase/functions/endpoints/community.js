@@ -6,9 +6,14 @@
 
 const crypto = require('crypto');
 const { onRequest } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 
-const { handleCors, setCors, bearerToken } = require('../lib/http');
+const { guardRequest, setCors, bearerToken } = require('../lib/http');
+const { evaluateModeration } = require('../lib/moderation');
+const { sanitizePostText, sanitizeCommentText } = require('../lib/text_sanitize');
+
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
 const POST_TYPES = new Set([
   'support', 'question', 'tip', 'vent', 'milestone', 'poll',
@@ -114,7 +119,11 @@ async function reserveSubmission(db, uid, type, bodyText, limit) {
     }
 
     const sameHour = rate.serverHour === hourKey(now);
-    const countKey = type === 'post' ? 'serverPostCount' : 'serverCommentCount';
+    const countKey = type === 'post'
+      ? 'serverPostCount'
+      : type === 'comment'
+        ? 'serverCommentCount'
+        : 'serverStoryCount';
     const current = sameHour ? (Number(rate[countKey]) || 0) : 0;
     if (current >= limit) {
       throw new CommunitySubmissionError(
@@ -130,6 +139,9 @@ async function reserveSubmission(db, uid, type, bodyText, limit) {
       serverCommentCount: type === 'comment'
         ? current + 1
         : (sameHour ? (Number(rate.serverCommentCount) || 0) : 0),
+      serverStoryCount: type === 'story'
+        ? current + 1
+        : (sameHour ? (Number(rate.serverStoryCount) || 0) : 0),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
     tx.set(hashRef, {
@@ -142,7 +154,7 @@ async function reserveSubmission(db, uid, type, bodyText, limit) {
 
 async function submitPost(db, uid, body) {
   const communityId = text(body.communityId, 80);
-  const bodyText = text(body.text, 2000);
+  const bodyText = sanitizePostText(body.text);
   const postType = text(body.postType, 20) || 'support';
   if (!communityId || bodyText.length < 3 || !POST_TYPES.has(postType)) {
     throw new CommunitySubmissionError('invalid_post', 400, 'Invalid post.');
@@ -168,10 +180,16 @@ async function submitPost(db, uid, body) {
   }
 
   await reserveSubmission(db, uid, 'post', bodyText, 10);
+  const moderation = await evaluateModeration(GEMINI_API_KEY.value(), bodyText);
+  if (moderation.reject) {
+    throw new CommunitySubmissionError(
+      'content_rejected', 400, moderation.reason || 'Content not allowed.',
+    );
+  }
+
   const ref = db.collection('communities').doc(communityId).collection('posts').doc();
-  await ref.set({
+  const postPayload = {
     communityId,
-    authorUid: uid,
     authorAlias: anonymous ? 'Anonymous' : text(user.communityAlias, 100),
     text: bodyText,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -183,16 +201,32 @@ async function submitPost(db, uid, body) {
     isAnonymous: anonymous,
     authorIsPremium: !anonymous && user.isPremium === true,
     ...(options ? { pollOptions: options } : {}),
-    moderationStatus: 'pending_review',
+    moderationStatus: moderation.moderationStatus,
     contentHash: contentHash(bodyText),
-  });
-  return { id: ref.id, pendingReview: true };
+  };
+  if (moderation.moderationStatus === 'approved') {
+    postPayload.moderationReviewedAt = admin.firestore.FieldValue.serverTimestamp();
+    postPayload.moderationReviewedBy = moderation.reviewedBy || 'submit_ai';
+  }
+  if (!anonymous) {
+    postPayload.authorUid = uid;
+  }
+  await ref.set(postPayload);
+  if (anonymous) {
+    await db.collection('communityPrivateAuth').doc(communityId)
+      .collection('posts').doc(ref.id)
+      .set({
+        authorUid: uid,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  }
+  return { id: ref.id, pendingReview: moderation.pendingReview };
 }
 
 async function submitComment(db, uid, body) {
   const communityId = text(body.communityId, 80);
   const postId = text(body.postId, 100);
-  const bodyText = text(body.text, 1000);
+  const bodyText = sanitizeCommentText(body.text);
   if (!communityId || !postId || !bodyText) {
     throw new CommunitySubmissionError('invalid_comment', 400, 'Invalid comment.');
   }
@@ -202,6 +236,12 @@ async function submitComment(db, uid, body) {
     .collection('posts').doc(postId);
   const parentCommentId = text(body.parentCommentId, 100) || null;
   await reserveSubmission(db, uid, 'comment', bodyText, 20);
+  const moderation = await evaluateModeration(GEMINI_API_KEY.value(), bodyText);
+  if (moderation.reject) {
+    throw new CommunitySubmissionError(
+      'content_rejected', 400, moderation.reason || 'Content not allowed.',
+    );
+  }
 
   const commentRef = postRef.collection('comments').doc();
   await db.runTransaction(async (tx) => {
@@ -212,7 +252,7 @@ async function submitComment(db, uid, body) {
         'post_unavailable', 404, 'This post is unavailable.',
       );
     }
-    tx.set(commentRef, {
+    const commentPayload = {
       authorUid: uid,
       authorAlias: text(user.communityAlias, 100),
       text: bodyText,
@@ -220,19 +260,64 @@ async function submitComment(db, uid, body) {
       authorAvatarIndex: avatarIndex(user.communityAvatarIndex),
       authorIsPremium: user.isPremium === true,
       ...(parentCommentId ? { parentCommentId } : {}),
-      moderationStatus: 'pending_review',
-    });
+      moderationStatus: moderation.moderationStatus,
+    };
+    if (moderation.moderationStatus === 'approved') {
+      commentPayload.moderationReviewedAt = admin.firestore.FieldValue.serverTimestamp();
+      commentPayload.moderationReviewedBy = moderation.reviewedBy || 'submit_ai';
+    }
+    tx.set(commentRef, commentPayload);
     tx.update(postRef, {
       commentCount: (Number(post.data()?.commentCount) || 0) + 1,
     });
   });
-  return { id: commentRef.id, pendingReview: true };
+  return { id: commentRef.id, pendingReview: moderation.pendingReview };
+}
+
+async function submitStory(db, uid, body) {
+  const communityId = text(body.communityId, 80);
+  if (!communityId) {
+    throw new CommunitySubmissionError('invalid_story', 400, 'Invalid story.');
+  }
+
+  const user = await requireParticipant(db, uid, communityId);
+  const mediaType = text(body.mediaType, 12) || 'text';
+  const mediaUrl = text(body.mediaUrl, 2000) || '';
+  const textOverlay = text(body.textOverlay, 500) || null;
+  const backgroundColor = text(body.backgroundColor, 40) || null;
+
+  if (mediaType === 'image') {
+    if (!mediaUrl || !isOwnedMediaUrl(mediaUrl, communityId, uid)) {
+      throw new CommunitySubmissionError(
+        'media_premium_required', 403, 'Story media is unavailable.',
+      );
+    }
+  }
+
+  const fingerprint = mediaUrl || textOverlay || 'text-story';
+  await reserveSubmission(db, uid, 'story', fingerprint, 5);
+  const ref = db.collection('communities').doc(communityId).collection('stories').doc();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await ref.set({
+    communityId,
+    authorUid: uid,
+    authorAlias: text(user.communityAlias, 100),
+    mediaUrl,
+    mediaType,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+    authorAvatarIndex: avatarIndex(user.communityAvatarIndex),
+    ...(textOverlay ? { textOverlay } : {}),
+    ...(backgroundColor ? { backgroundColor } : {}),
+    viewCount: 0,
+  });
+  return { id: ref.id };
 }
 
 exports.submitCommunity = onRequest(
-  { cors: true, timeoutSeconds: 30 },
+  { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 30 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'community', appCheck: 'required' }))) return;
     const token = bearerToken(req, res);
     if (!token) return;
 
@@ -244,6 +329,8 @@ exports.submitCommunity = onRequest(
         result = await submitPost(admin.firestore(), decoded.uid, req.body || {});
       } else if (action === 'comment') {
         result = await submitComment(admin.firestore(), decoded.uid, req.body || {});
+      } else if (action === 'story') {
+        result = await submitStory(admin.firestore(), decoded.uid, req.body || {});
       } else {
         throw new CommunitySubmissionError('invalid_action', 400, 'Invalid action.');
       }

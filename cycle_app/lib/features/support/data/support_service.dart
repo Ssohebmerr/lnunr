@@ -3,10 +3,9 @@ import 'dart:io' show Platform;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../../core/config/app_secrets.dart';
+import '../../../core/firebase/cloud_functions_client.dart';
 
 /// Talks to Cloud Functions for user-side support actions:
 ///  - submit feedback
@@ -52,19 +51,14 @@ class SupportService {
     final platform = await _platformTag();
     final appVersion = await _appVersion();
 
-    final uri = Uri.parse('${AppSecrets.cloudFunctionsUrl}/submitFeedback');
-    final res = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
+    final res = await CloudFunctionsClient.instance.post(
+      '/submitFeedback',
+      body: {
         'type': type,
         'message': message,
         'appVersion': appVersion,
         'platform': platform,
-      }),
+      },
     );
 
     if (res.statusCode != 200) {
@@ -88,14 +82,9 @@ class SupportService {
       throw Exception('الكود فارغ');
     }
 
-    final uri = Uri.parse('${AppSecrets.cloudFunctionsUrl}/redeemPromoCode');
-    final res = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'code': clean}),
+    final res = await CloudFunctionsClient.instance.post(
+      '/redeemPromoCode',
+      body: {'code': clean},
     );
 
     final body = res.body;

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/premium/premium_badge.dart';
+import '../../../../core/security/community_text_sanitize.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -420,7 +421,7 @@ class PostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          post.text,
+                          CommunityTextSanitize.forDisplay(post.text),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             height: 1.5,
                             letterSpacing: 0.05,

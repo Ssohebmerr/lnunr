@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" integrity="sha384-JUh163oCRItcbPme8pYnROHQMC6fNKTBWtRG3I3I0erJkzNgL7uxKlNwcrcFKeqF" crossorigin="anonymous"></script>
 <style>
   /* ====================================================================
      LUNE ADMIN — DESIGN SYSTEM v2 (2026)
@@ -853,7 +853,10 @@
 
       <div class="sidebar-section">المراجعة</div>
       <div class="tabs">
-        <div class="tab" data-tab="moderation"><span class="tab-ico">🛡️</span><span>المنشورات</span></div>
+        <div class="tab" data-tab="moderation">
+          <span class="tab-ico">🛡️</span><span>المنشورات</span>
+          <span id="tabBadgeModeration" class="tab-badge hidden">0</span>
+        </div>
         <div class="tab" data-tab="reports">
           <span class="tab-ico">⚠️</span><span>البلاغات</span>
           <span id="tabBadgeReports" class="tab-badge hidden">0</span>
@@ -1659,6 +1662,11 @@ import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 import { createAdminClient } from './admin-client.js';
+import { initAdminAppCheck, getAppCheckHeaders } from './admin-app-check.js';
+
+// reCAPTCHA Enterprise site key from Firebase Console → App Check → Web apps.
+// Override before page load: window.LUNE_RECAPTCHA_SITE_KEY = '...';
+const RECAPTCHA_ENTERPRISE_SITE_KEY = window.LUNE_RECAPTCHA_SITE_KEY || '';
 
 const FALLBACK_FIREBASE_CONFIG = {
   // Must match Firebase Hosting /__/firebase/init.json (project lune-7d956).
@@ -1691,8 +1699,9 @@ const firebaseConfig = await loadFirebaseConfig();
 let app, auth, admin;
 try {
   app = initializeApp(firebaseConfig);
+  initAdminAppCheck(app, RECAPTCHA_ENTERPRISE_SITE_KEY);
   auth = getAuth(app);
-  admin = createAdminClient(auth);
+  admin = createAdminClient(auth, { getAppCheckHeaders });
 } catch (bootErr) {
   console.error('Firebase init failed:', bootErr);
   const loginErr = document.getElementById('loginErr');
@@ -1714,6 +1723,14 @@ const hide = (id) => $(id).classList.add('hidden');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
+const safeHttpsUrl = (raw) => {
+  try {
+    const url = new URL(String(raw ?? '').trim());
+    return url.protocol === 'https:' ? url.href : '';
+  } catch (_) {
+    return '';
+  }
+};
 
 // cache for users (for search & export)
 let _allUsers = [];
@@ -1973,6 +1990,17 @@ function updatePendingBadge(count) {
     badge.classList.add('hidden');
   }
 }
+function updateModerationBadge(count) {
+  const badge = document.getElementById('tabBadgeModeration');
+  if (!badge) return;
+  const n = typeof count === 'number' ? count : parseInt(count, 10);
+  if (Number.isFinite(n) && n > 0) {
+    badge.textContent = n > 99 ? '99+' : String(n);
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
 
 async function loadOverview() {
   try {
@@ -1983,6 +2011,7 @@ async function loadOverview() {
     setStat('statPending', stats.pending);
     setStat('statArticles', stats.articles);
     updatePendingBadge(stats.pending);
+    updateModerationBadge(stats.moderationPending);
   } catch (e) {
     console.error('loadOverview:', e);
     ['statUsers', 'statPremium', 'statPosts', 'statPending', 'statArticles']
@@ -2048,7 +2077,7 @@ async function loadArticles() {
     const rows = snap.docs.map((d) => {
       const a = d.data();
       const published = a.published === true;
-      const cover = (a.coverImageUrl || '').trim();
+      const cover = safeHttpsUrl(a.coverImageUrl);
       const thumb = cover
         ? `<img src="${esc(cover)}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:10px;flex-shrink:0" onerror="this.style.display='none'" />`
         : `<div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#E8A0BF,#C9B8E8);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">📄</div>`;
@@ -2435,11 +2464,13 @@ async function syncUsersFromAuth() {
   const user = auth.currentUser;
   if (!user) throw new Error('سجّلي الدخول أولاً');
   const token = await user.getIdToken();
+  const appCheckHeaders = await getAppCheckHeaders();
   const res = await fetch(`${FUNCTIONS_BASE}/syncUsersFromAuth`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      ...appCheckHeaders,
     },
     body: '{}',
   });

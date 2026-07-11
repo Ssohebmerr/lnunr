@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /admin
+
+Sitemap: https://lune-7d956.web.app/sitemap.xml

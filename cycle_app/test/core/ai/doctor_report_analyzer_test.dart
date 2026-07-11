@@ -9,21 +9,20 @@ PeriodsDateRange _cycle({
   required int length,
   int periodDays = 5,
   bool completed = true,
-}) =>
-    PeriodsDateRange(
-      periodStartDate: start,
-      cycleStartDate: start,
-      cycleEndDate: completed ? '${start}T23:59:59' : null,
-      periodDuration: periodDays,
-      cycleLength: length,
-    );
+}) => PeriodsDateRange(
+  periodStartDate: start,
+  cycleStartDate: start,
+  cycleEndDate: completed ? '${start}T23:59:59' : null,
+  periodDuration: periodDays,
+  cycleLength: length,
+);
 
 CycleReportData _report(List<PeriodsDateRange> cycles) => CycleReportData(
-      keyMatrix: const {},
-      predictionMatrix: const {},
-      cycles: cycles,
-      symptomPatterns: const [],
-    );
+  keyMatrix: const {},
+  predictionMatrix: const {},
+  cycles: cycles,
+  symptomPatterns: const [],
+);
 
 void main() {
   group('DoctorReportAnalyzer', () {
@@ -61,6 +60,20 @@ void main() {
           ClinicalFlagType.prolongedPeriod,
         ]),
       );
+    });
+
+    test('does not create cycle-pattern flags from only one or two cycles', () {
+      final result = DoctorReportAnalyzer.analyze(
+        report: _report([
+          _cycle(start: '2026-06-01', length: 39, periodDays: 9),
+          _cycle(start: '2026-04-23', length: 39, periodDays: 9),
+        ]),
+      );
+
+      expect(result.analyzedCycleCount, 2);
+      expect(result.avgCycleLength, 39);
+      expect(result.avgPeriodDuration, 9);
+      expect(result.flags, isEmpty);
     });
 
     test('applies age-aware cycle regularity limits', () {

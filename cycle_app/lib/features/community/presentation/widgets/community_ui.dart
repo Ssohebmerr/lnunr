@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_design_tokens.dart';
@@ -182,43 +180,39 @@ class _GlassChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.pill),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : theme.colorScheme.primary)
-                .withValues(alpha: isDark ? 0.08 : 0.07),
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
-              color: (isDark ? Colors.white : theme.colorScheme.primary)
-                  .withValues(alpha: isDark ? 0.1 : 0.12),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: theme.colorScheme.primary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                sub,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AuraColors.darkCard
+            : theme.colorScheme.surface.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: (isDark ? Colors.white : theme.colorScheme.outline).withValues(
+            alpha: isDark ? 0.07 : 0.08,
           ),
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            sub,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -370,65 +364,51 @@ class CommunityHubTabBar extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            height: 46,
-            decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withValues(
-                alpha: isDark ? 0.06 : 0.04,
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(
-                color: (isDark ? Colors.white : Colors.black).withValues(
-                  alpha: isDark ? 0.08 : 0.05,
-                ),
-              ),
-            ),
-            child: TabBar(
-              controller: controller,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              padding: const EdgeInsets.all(4),
-              indicator: BoxDecoration(
-                gradient: AuraDecorations.primaryGradient,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                boxShadow: [
-                  BoxShadow(
-                    color: AuraColors.rose.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: Colors.white,
-              unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-              labelStyle: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.1,
-              ),
-              unselectedLabelStyle: theme.textTheme.labelMedium,
-              tabs: tabs
-                  .map(
-                    (t) => Tab(
-                      height: 38,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(t.icon, size: 16),
-                          const SizedBox(width: 6),
-                          Text(t.label),
-                        ],
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
+      child: Container(
+        height: 46,
+        decoration: BoxDecoration(
+          color: isDark
+              ? AuraColors.darkCard
+              : Colors.white.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: (isDark ? Colors.white : theme.colorScheme.outline)
+                .withValues(alpha: isDark ? 0.07 : 0.08),
           ),
+        ),
+        child: TabBar(
+          controller: controller,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          padding: const EdgeInsets.all(4),
+          indicator: BoxDecoration(
+            color: theme.colorScheme.primary,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: Colors.white,
+          unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+          labelStyle: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
+          ),
+          unselectedLabelStyle: theme.textTheme.labelMedium,
+          tabs: tabs
+              .map(
+                (t) => Tab(
+                  height: 38,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(t.icon, size: 16),
+                      const SizedBox(width: 6),
+                      Text(t.label),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -586,9 +566,9 @@ class CommunitySearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.025),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -603,8 +583,8 @@ class CommunitySearchField extends StatelessWidget {
           ),
           filled: true,
           fillColor: isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.85),
+              ? AuraColors.darkCard
+              : Colors.white.withValues(alpha: 0.94),
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 14, right: 10),
             child: Icon(

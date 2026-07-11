@@ -10,14 +10,14 @@
 
 const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
-const { handleCors, setCors } = require('../lib/http');
+const { guardRequest, setCors } = require('../lib/http');
 
 const ALLOWED_FEEDBACK_TYPES = ['bug', 'idea', 'help', 'other'];
 
 exports.submitFeedback = onRequest(
   { cors: true, timeoutSeconds: 20 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'feedback', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {

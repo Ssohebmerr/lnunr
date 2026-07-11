@@ -58,7 +58,12 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
         if (key == 'uid' ||
             key.contains('token') ||
             key.contains('fcm') ||
-            key.contains('key')) {
+            key.contains('key') ||
+            key == 'stealth_mode_pin' ||
+            key == 'cycle_secret_key' ||
+            key == 'cycle_iv_key' ||
+            key == 'stealth_pin_hash' ||
+            key == 'stealth_pin_salt') {
           continue;
         }
         final val = p.get(key);

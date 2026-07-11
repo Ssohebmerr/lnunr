@@ -103,8 +103,9 @@ class AppGlassCard extends StatelessWidget {
   }
 }
 
-/// Primary gradient button (rose → lavender).
-class AppGradientButton extends StatelessWidget {
+/// Primary call-to-action button — bold berry pill with a glow and a
+/// tactile press-scale. This is the app's signature 2026 button.
+class AppGradientButton extends StatefulWidget {
   const AppGradientButton({
     super.key,
     required this.label,
@@ -121,56 +122,91 @@ class AppGradientButton extends StatelessWidget {
   final bool loading;
 
   @override
+  State<AppGradientButton> createState() => _AppGradientButtonState();
+}
+
+class _AppGradientButtonState extends State<AppGradientButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final onPressed = this.onPressed;
-    final child = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: loading || onPressed == null
-            ? null
-            : () {
-                HapticFeedback.lightImpact();
-                onPressed();
-              },
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: AuraDecorations.ctaGradient,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: AppShadows.softRose(opacity: isDark ? 0.2 : 0.25),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Row(
-            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (loading)
-                const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              else ...[
-                if (icon != null) ...[
-                  Icon(icon, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
+    final enabled = !widget.loading && widget.onPressed != null;
+
+    void setPressed(bool v) {
+      if (_pressed != v) setState(() => _pressed = v);
+    }
+
+    final button = AnimatedScale(
+      scale: _pressed ? 0.965 : 1.0,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AuraDecorations.ctaGradient,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          boxShadow: [
+            BoxShadow(
+              color: AuraColors.accent.withValues(alpha: enabled ? 0.45 : 0.12),
+              blurRadius: _pressed ? 12 : 22,
+              offset: Offset(0, _pressed ? 4 : 10),
+              spreadRadius: -2,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled
+                ? () {
+                    HapticFeedback.lightImpact();
+                    widget.onPressed!();
+                  }
+                : null,
+            onTapDown: enabled ? (_) => setPressed(true) : null,
+            onTapUp: enabled ? (_) => setPressed(false) : null,
+            onTapCancel: enabled ? () => setPressed(false) : null,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 17),
+              child: Row(
+                mainAxisSize:
+                    widget.expanded ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.loading)
+                    const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  else ...[
+                    if (widget.icon != null) ...[
+                      Icon(widget.icon, color: Colors.white, size: 20),
+                      const SizedBox(width: 9),
+                    ],
+                    Text(
+                      widget.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.5,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ],
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ],
+              ),
+            ),
           ),
         ),
       ),
     );
-    return expanded ? SizedBox(width: double.infinity, child: child) : child;
+    return widget.expanded
+        ? SizedBox(width: double.infinity, child: button)
+        : button;
   }
 }
 

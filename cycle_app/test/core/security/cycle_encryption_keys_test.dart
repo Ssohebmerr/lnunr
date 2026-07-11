@@ -101,10 +101,10 @@ void main() {
   group('CycleEncryptionKeys.loadOrCreate', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      CycleEncryptionKeys.resetCacheForTest();
     });
 
-    test('writes a key into both stores when neither has one', () async {
-      // Run with an empty prefs + no secure storage entry.
+    test('writes keys to keystore only and clears legacy prefs', () async {
       final result = await CycleEncryptionKeys.loadOrCreate();
       expect(result['secretKey'], isNotNull);
       expect(result['secretKey'], isNotEmpty);
@@ -113,11 +113,9 @@ void main() {
       expect(result['secretKey'], isNot(equals(result['ivKey'])),
           reason: 'secret and iv must be different');
 
-      // The write should have persisted into SharedPreferences so a future
-      // boot can recover from a Keystore wipe.
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('cycle_secret_key'), result['secretKey']);
-      expect(prefs.getString('cycle_iv_key'), result['ivKey']);
+      expect(prefs.getString('cycle_secret_key'), isNull);
+      expect(prefs.getString('cycle_iv_key'), isNull);
     });
 
     test('returns the SAME key on a second call (idempotent)', () async {
@@ -127,21 +125,17 @@ void main() {
       expect(second['ivKey'], first['ivKey']);
     });
 
-    test('uses prefs backup when secure store is empty (resilience case)',
-        () async {
-      // Simulate the "Android Keystore got wiped" scenario the comment in
-      // loadOrCreate describes: the prefs still hold the secret, the
-      // secure store does not.
+    test('migrates prefs backup then clears plaintext copy', () async {
       SharedPreferences.setMockInitialValues({
         'cycle_secret_key': 'prefs-only-secret',
         'cycle_iv_key': 'prefs-only-iv-zzzz',
       });
-      // The SecureStorageService instance inside CycleEncryptionKeys uses a
-      // default FlutterSecureStorage that will throw or return null against
-      // our test platform — either way, loadOrCreate must fall back to prefs.
       final result = await CycleEncryptionKeys.loadOrCreate();
       expect(result['secretKey'], 'prefs-only-secret');
       expect(result['ivKey'], 'prefs-only-iv-zzzz');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('cycle_secret_key'), isNull);
+      expect(prefs.getString('cycle_iv_key'), isNull);
     });
   });
 

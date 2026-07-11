@@ -274,6 +274,12 @@
   "communityBrowse": "تصفّح المجموعات",
   "communityRecommendedTitle": "موصى لك",
   "communityJoinedBadge": "منضمة",
+  "communityDiscoverNew": "مجموعات جديدة",
+  "communityDiscoverJoined": "مجموعاتك",
+  "communityDiscoverNoResults": "لا توجد مجموعات مطابقة. جرّبي فئة أخرى أو امسحي البحث.",
+  "communityClosedBadge": "مغلقة",
+  "communityFeedBrowseTitle": "تصفّحي كل المجموعات",
+  "communityFeedBrowseSubtitle": "الخلاصة تعرض مجموعاتك فقط — اكتشفي مجتمعات أخرى من هنا.",
   "communitySetupTitle": "اختاري اسمًا مستعارًا",
   "communitySetupSubtitle": "استخدمي لقبًا — لا اسمك الحقيقي. بيانات الدورة لا تُشارك أبدًا.",
   "communityAliasLabel": "اللقب",
@@ -1452,6 +1458,24 @@
   "notifRationaleBody": "يمكن لـ Lune إرسال تذكيرات لطيفة حول دورتك القادمة والإباضة والفحوص اليومية. يمكنكِ تخصيص أو إيقاف الإشعارات في أي وقت من الإعدادات.",
   "notifRationaleAllow": "السماح بالإشعارات",
   "notifRationaleSkip": "ليس الآن",
+  "notifOsDisabledBanner": "الإشعارات مغلقة لتطبيق Lune في إعدادات النظام. لن تظهر التذكيرات حتى تفعّليها.",
+  "notifRequestPermission": "السماح بالإشعارات",
+  "notifExactAlarmsHint": "للتذكيرات في وقتها، فعّلي «المنبهات والتذكيرات» لتطبيق Lune في إعدادات أندرويد.",
+  "notifEnableExactAlarms": "تفعيل التذكيرات الدقيقة",
+  "notifScheduledCount": "{count} تذكيرات مجدولة",
+  "@notifScheduledCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notifNoScheduled": "لا توجد تذكيرات مجدولة بعد. اسمحي بالإشعارات وسجّلي دورتكِ.",
+  "notifTestExactAlarmsHint": "تم الإرسال، لكن التذكيرات الدقيقة معطّلة — قد تتأخر التذكيرات.",
+  "notifNextReminder": "التذكير التالي: {when}",
+  "@notifNextReminder": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
 
   "ageGateTitle": "كم عمركِ؟",
   "ageGateBody": "Lune مصمم للمستخدمات بعمر 13 عاماً فأكثر. بعض الميزات مثل مناقشات المجتمع محصورة للمستخدمات فوق 18 عاماً.",

@@ -17,7 +17,8 @@ const {
 } = require('../lib/chat_quota');
 const { logAiUsage } = require('../lib/ai_usage');
 const { getSystemPromptForMode, getMaxTokensForMode, getSecureSystemPrompt } = require('../lib/prompts');
-const { handleCors, setCors, bearerToken } = require('../lib/http');
+const { guardRequest, setCors, bearerToken } = require('../lib/http');
+const { sanitizeCycleContext } = require('../lib/context_sanitize');
 
 const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
@@ -74,7 +75,7 @@ exports.analyze = onRequest(
     timeoutSeconds: 90,
   },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'ai', appCheck: 'required' }))) return;
 
     const token = bearerToken(req, res);
     if (!token) return;
@@ -83,7 +84,7 @@ exports.analyze = onRequest(
       const decoded = await admin.auth().verifyIdToken(token);
       const uid = decoded.uid;
       const message = (req.body?.message || '').trim().substring(0, 2000);
-      const cycleContext = req.body?.cycleContext || {};
+      const cycleContext = sanitizeCycleContext(req.body?.cycleContext);
       const isDoctorReport = req.body?.doctorReport === true;
 
       if (!message) {

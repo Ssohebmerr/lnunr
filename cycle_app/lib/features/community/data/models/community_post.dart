@@ -80,11 +80,12 @@ class CommunityPost {
       pollOptions != null &&
       pollOptions!.length >= 2;
 
-  bool isVisibleTo(String? viewerUid) {
+  bool isVisibleTo(String? viewerUid, {bool ownedByViewer = false}) {
     if (hidden) return false;
     if (moderationStatus == 'rejected') return false;
     if (!isPendingReview) return true;
-    return viewerUid != null && viewerUid == authorUid;
+    if (ownedByViewer) return true;
+    return viewerUid != null && authorUid.isNotEmpty && viewerUid == authorUid;
   }
 
   /// Like [isVisibleTo] but also hides posts from authors the [viewerUid] has

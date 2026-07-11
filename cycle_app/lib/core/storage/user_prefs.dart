@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../security/secure_storage_service.dart';
 
 class UserPrefs {
   static const _uidKey = 'uid';
@@ -16,6 +20,11 @@ class UserPrefs {
   static const avatarIndexKey = 'profile_avatar_index';
   static const _stealthEnabledKey = 'stealth_mode_enabled';
   static const _stealthPinKey = 'stealth_mode_pin';
+  static const _stealthPinHashKey = 'stealth_pin_hash';
+  static const _stealthPinSaltKey = 'stealth_pin_salt';
+  static final _secure = SecureStorageService();
+  static String? _stealthPinHashMem;
+  static String? _stealthPinSaltMem;
 
   /// Fixed uid for offline AI chat (stored on device only).
   static const localChatUid = 'local_guest';
@@ -145,14 +154,62 @@ class UserPrefs {
     await p.setBool(_stealthEnabledKey, value);
   }
 
+  static Future<bool> hasStealthPin() async {
+    await _migrateStealthPinFromPrefsIfNeeded();
+    final hash = await _secure.read(_stealthPinHashKey) ?? _stealthPinHashMem;
+    return hash != null && hash.isNotEmpty;
+  }
+
+  /// @deprecated Use [stealthPinMatchesBuffer] — PIN is stored as a hash only.
   static Future<String?> getStealthModePin() async {
-    final p = await SharedPreferences.getInstance();
-    return p.getString(_stealthPinKey);
+    if (!await hasStealthPin()) return null;
+    return null;
   }
 
   static Future<void> setStealthModePin(String pin) async {
     final p = await SharedPreferences.getInstance();
-    await p.setString(_stealthPinKey, pin);
+    await p.remove(_stealthPinKey);
+    final salt = _randomSalt();
+    final hash = _hashPin(pin, salt);
+    _stealthPinSaltMem = salt;
+    _stealthPinHashMem = hash;
+    await _secure.write(_stealthPinSaltKey, salt);
+    await _secure.write(_stealthPinHashKey, hash);
+  }
+
+  /// True when [buffer] ends with the configured stealth PIN digits.
+  static Future<bool> stealthPinMatchesBuffer(String buffer) async {
+    if (buffer.isEmpty) return false;
+    await _migrateStealthPinFromPrefsIfNeeded();
+    final salt = await _secure.read(_stealthPinSaltKey) ?? _stealthPinSaltMem;
+    final hash = await _secure.read(_stealthPinHashKey) ?? _stealthPinHashMem;
+    if (salt == null || hash == null) return false;
+    for (var len = 4; len <= 8 && len <= buffer.length; len++) {
+      final candidate = buffer.substring(buffer.length - len);
+      if (_hashPin(candidate, salt) == hash) return true;
+    }
+    return false;
+  }
+
+  static Future<void> _migrateStealthPinFromPrefsIfNeeded() async {
+    final p = await SharedPreferences.getInstance();
+    final legacy = p.getString(_stealthPinKey);
+    if (legacy == null || legacy.isEmpty) return;
+    final existing = await _secure.read(_stealthPinHashKey);
+    if (existing == null || existing.isEmpty) {
+      await setStealthModePin(legacy);
+    }
+    await p.remove(_stealthPinKey);
+  }
+
+  static String _randomSalt() {
+    final r = Random.secure();
+    final bytes = List<int>.generate(16, (_) => r.nextInt(256));
+    return base64Url.encode(bytes);
+  }
+
+  static String _hashPin(String pin, String salt) {
+    return sha256.convert(utf8.encode('$salt:$pin')).toString();
   }
 
   static bool _sessionUnlocked = false;
@@ -161,5 +218,12 @@ class UserPrefs {
 
   static void setSessionUnlocked(bool value) {
     _sessionUnlocked = value;
+  }
+
+  /// Clears in-process stealth PIN cache (tests only).
+  @visibleForTesting
+  static void resetStealthCacheForTest() {
+    _stealthPinHashMem = null;
+    _stealthPinSaltMem = null;
   }
 }

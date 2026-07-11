@@ -4,15 +4,15 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../../core/age/age_gate.dart';
+import '../../../core/security/community_text_sanitize.dart';
 import '../../../core/ai/firebase_ai_service.dart';
 import '../../../core/ai/direct_gemini_service.dart';
-import '../../../core/config/app_secrets.dart';
+import '../../../core/firebase/cloud_functions_client.dart';
 import '../../../core/storage/user_prefs.dart';
 import 'community_catalog_repository.dart';
-import 'community_icon_registry.dart';
+import 'community_list_resolver.dart';
 import 'community_seed.dart';
 import 'community_sort.dart';
 import 'models/community.dart';
@@ -45,7 +45,7 @@ class CommunityRepository {
   final DirectGeminiService _directGemini;
   final CommunityCatalogRepository _catalog;
 
-  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
+  final CloudFunctionsClient _functions = CloudFunctionsClient.instance;
 
   String? get currentUid => _auth.currentUser?.uid;
 
@@ -68,22 +68,8 @@ class CommunityRepository {
     }
   }
 
-  Community _mergeSeed(Community seed, CommunityCatalogEntry? entry) {
-    if (entry == null) return seed;
-    return seed.copyWith(
-      nameEn: entry.nameEn,
-      nameAr: entry.nameAr,
-      descriptionEn: entry.descriptionEn,
-      descriptionAr: entry.descriptionAr,
-      rulesEn: entry.rulesEn,
-      rulesAr: entry.rulesAr,
-      topic: entry.topic,
-      icon: entry.iconName != null
-          ? communityIconFromName(entry.iconName!)
-          : null,
-      maxMembers: entry.maxMembers,
-    );
-  }
+  Community _mergeSeed(Community seed, CommunityCatalogEntry? entry) =>
+      CommunityListResolver.mergeSeed(seed, entry);
 
   Future<List<Community>> _resolvedCommunities({
     String languageCode = 'en',
@@ -92,12 +78,7 @@ class CommunityRepository {
     CommunitySortMode mode = CommunitySortMode.defaultOrder,
   }) async {
     final catalog = await _catalog.fetchAll();
-    final results = <Community>[];
-    for (final seed in CommunitySeed.defaults) {
-      final entry = catalog[seed.id];
-      if (entry != null && !entry.enabled) continue;
-      results.add(_mergeSeed(seed, entry));
-    }
+    final results = CommunityListResolver.activeOnly(catalog: catalog);
     return sortCommunities(
       communities: results,
       catalog: catalog,
@@ -116,8 +97,9 @@ class CommunityRepository {
     final entry = catalog[id];
     if (entry != null && !entry.enabled) return null;
     final seed = CommunitySeed.byId(id);
-    if (seed == null) return null;
-    return _mergeSeed(seed, entry);
+    if (seed != null) return _mergeSeed(seed, entry);
+    if (entry == null) return null;
+    return CommunityListResolver.fromCatalogOnly(entry);
   }
 
   CollectionReference<Map<String, dynamic>> _membersRef(String communityId) =>
@@ -133,6 +115,57 @@ class CommunityRepository {
     String communityId,
     String postId,
   ) => _postsRef(communityId).doc(postId).collection('comments');
+
+  DocumentReference<Map<String, dynamic>> _privateAuthPostRef(
+    String communityId,
+    String postId,
+  ) =>
+      _firestore
+          .collection('communityPrivateAuth')
+          .doc(communityId)
+          .collection('posts')
+          .doc(postId);
+
+  Future<bool> _userOwnsPost(
+    Map<String, dynamic>? data,
+    String communityId,
+    String postId,
+    String uid,
+  ) async {
+    if (data == null) return false;
+    final authorUid = data['authorUid'] as String?;
+    if (authorUid != null && authorUid == uid) return true;
+    if (data['isAnonymous'] == true) {
+      final snap = await _privateAuthPostRef(communityId, postId).get();
+      return snap.data()?['authorUid'] == uid;
+    }
+    return false;
+  }
+
+  Future<bool> _postVisibleToViewer(CommunityPost post, String? viewerUid) async {
+    if (!post.isPendingReview || !post.isAnonymous) {
+      return post.isVisibleTo(viewerUid);
+    }
+    final owned = viewerUid != null &&
+        await _userOwnsPost(
+          {'isAnonymous': true},
+          post.communityId,
+          post.id,
+          viewerUid,
+        );
+    return post.isVisibleTo(viewerUid, ownedByViewer: owned);
+  }
+
+  Future<List<CommunityPost>> _filterVisiblePosts(
+    Iterable<CommunityPost> posts,
+    String? viewerUid,
+  ) async {
+    final out = <CommunityPost>[];
+    for (final post in posts) {
+      if (await _postVisibleToViewer(post, viewerUid)) out.add(post);
+    }
+    return out;
+  }
 
   Future<CommunityProfile> getProfile(String uid) async {
     final profile = await fetchProfile(uid);
@@ -645,12 +678,12 @@ class CommunityRepository {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map(
-          (s) => s.docs
+        .asyncMap((s) async {
+          final posts = s.docs
               .map((d) => CommunityPost.fromMap(d.id, d.data()))
-              .where((p) => p.isVisibleTo(viewerUid))
-              .toList(),
-        );
+              .toList();
+          return _filterVisiblePosts(posts, viewerUid);
+        });
   }
 
   /// Fetch a single page of posts for infinite scroll.
@@ -671,10 +704,9 @@ class CommunityRepository {
     }
 
     final snap = await query.get();
-    return snap.docs
-        .map((d) => CommunityPost.fromMap(d.id, d.data()))
-        .where((p) => p.isVisibleTo(viewerUid))
-        .toList();
+    final posts =
+        snap.docs.map((d) => CommunityPost.fromMap(d.id, d.data())).toList();
+    return _filterVisiblePosts(posts, viewerUid);
   }
 
   /// Returns the last DocumentSnapshot from the most recent page fetch,
@@ -695,15 +727,15 @@ class CommunityRepository {
     return snap.docs.isNotEmpty ? snap.docs.last : null;
   }
 
-  CommunityPost? _postFromSnapshot(
+  Future<CommunityPost?> _postFromSnapshotAsync(
     DocumentSnapshot<Map<String, dynamic>> snap, {
     String? viewerUid,
-  }) {
+  }) async {
     if (!snap.exists) return null;
     final data = snap.data();
     if (data == null) return null;
     final post = CommunityPost.fromMap(snap.id, data);
-    if (!post.isVisibleTo(viewerUid)) return null;
+    if (!await _postVisibleToViewer(post, viewerUid)) return null;
     return post;
   }
 
@@ -712,12 +744,12 @@ class CommunityRepository {
     return _postsRef(communityId)
         .doc(postId)
         .snapshots()
-        .map((snap) => _postFromSnapshot(snap, viewerUid: viewerUid));
+        .asyncMap((snap) => _postFromSnapshotAsync(snap, viewerUid: viewerUid));
   }
 
   Future<CommunityPost?> getPost(String communityId, String postId) async {
     final snap = await _postsRef(communityId).doc(postId).get();
-    return _postFromSnapshot(snap, viewerUid: _auth.currentUser?.uid);
+    return _postFromSnapshotAsync(snap, viewerUid: _auth.currentUser?.uid);
   }
 
   Stream<List<CommunityComment>> watchComments(
@@ -746,12 +778,15 @@ class CommunityRepository {
   }
 
   Future<ModerationResult> moderateText(String text) async {
-    final local = _fallbackModeration(text);
+    final clean = text.length <= CommunityTextSanitize.maxCommentLength
+        ? CommunityTextSanitize.comment(text)
+        : CommunityTextSanitize.post(text);
+    final local = _fallbackModeration(clean);
     if (!local.approved) return local;
 
     if (kDebugMode) {
       // 1. Try Direct Gemini API (Google AI Studio key — free)
-      final direct = await _directGemini.moderateContent(text: text);
+      final direct = await _directGemini.moderateContent(text: clean);
       if (direct != null) {
         if (direct.approved) return direct;
         if (_isModerationUnavailable(direct.reason)) {
@@ -765,7 +800,7 @@ class CommunityRepository {
       }
 
       // 2. Try Firebase AI Logic (direct, secure, no server)
-      final firebaseAi = await _firebaseAi.moderateContent(text: text);
+      final firebaseAi = await _firebaseAi.moderateContent(text: clean);
       if (firebaseAi != null) {
         if (firebaseAi.approved) return firebaseAi;
         if (_isModerationUnavailable(firebaseAi.reason)) {
@@ -780,7 +815,7 @@ class CommunityRepository {
     }
 
     // Release: Cloud Function only (keys in Firebase Secrets).
-    final cloud = await _moderateViaCloud(text);
+    final cloud = await _moderateViaCloud(clean);
     if (cloud != null) {
       if (cloud.approved) return cloud;
       if (_isModerationUnavailable(cloud.reason)) {
@@ -813,14 +848,9 @@ class CommunityRepository {
   ) async {
     final user = _auth.currentUser;
     if (user == null) throw StateError('Not signed in');
-    final token = await user.getIdToken();
-    final response = await http.post(
-      Uri.parse('$_baseUrl/submitCommunity'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'action': action, ...payload}),
+    final response = await _functions.post(
+      '/submitCommunity',
+      body: {'action': action, ...payload},
     );
 
     Map<String, dynamic> body = const {};
@@ -839,6 +869,9 @@ class CommunityRepository {
       throw const MediaRequiresPremiumException();
     }
     if (code == 'rate_limited' || code == 'duplicate_content') {
+      throw ModerationRejectedException(message);
+    }
+    if (code == 'content_rejected') {
       throw ModerationRejectedException(message);
     }
     throw StateError(message);
@@ -916,14 +949,9 @@ class CommunityRepository {
     if (user == null) return null;
 
     try {
-      final token = await user.getIdToken();
-      final response = await http.post(
-        Uri.parse('$_baseUrl/moderate'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'text': text}),
+      final response = await _functions.post(
+        '/moderate',
+        body: {'text': text},
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -1025,10 +1053,13 @@ class CommunityRepository {
     final ref = _postsRef(communityId).doc(postId);
     final snap = await ref.get();
     if (!snap.exists) return;
-    if (snap.data()?['authorUid'] != uid) {
+    if (!await _userOwnsPost(snap.data(), communityId, postId, uid)) {
       throw StateError('Not your post');
     }
     await ref.delete();
+    if (snap.data()?['isAnonymous'] == true) {
+      await _privateAuthPostRef(communityId, postId).delete();
+    }
   }
 
   Future<void> deleteComment({
@@ -1066,7 +1097,8 @@ class CommunityRepository {
   }) async {
     final postRef = _postsRef(communityId).doc(postId);
     final snap = await postRef.get();
-    if (!snap.exists || snap.data()?['authorUid'] != uid) {
+    if (!snap.exists ||
+        !await _userOwnsPost(snap.data(), communityId, postId, uid)) {
       throw StateError('Only the post author can mark a best answer');
     }
     await postRef.update({'bestAnswerCommentId': commentId});
@@ -1079,7 +1111,10 @@ class CommunityRepository {
   }) async {
     final postRef = _postsRef(communityId).doc(postId);
     final snap = await postRef.get();
-    if (!snap.exists || snap.data()?['authorUid'] != uid) return;
+    if (!snap.exists ||
+        !await _userOwnsPost(snap.data(), communityId, postId, uid)) {
+      return;
+    }
     await postRef.update({'bestAnswerCommentId': FieldValue.delete()});
   }
 
@@ -1105,8 +1140,9 @@ class CommunityRepository {
     final member = await isMember(uid, communityId);
     if (!member) throw StateError('Join the community first');
 
-    final moderation = await moderateText(text);
-    if (!moderation.approved) {
+    final clean = CommunityTextSanitize.post(text);
+    final moderation = await moderateText(clean);
+    if (!moderation.approved && !moderation.pendingReview) {
       throw ModerationRejectedException(
         moderation.reason ?? 'Content rejected',
       );
@@ -1114,7 +1150,7 @@ class CommunityRepository {
 
     final result = await _submitCommunity('post', {
       'communityId': communityId,
-      'text': text,
+      'text': clean,
       'postType': postType.value,
       'communityName': ?communityName,
       'authorAvatarIndex': authorAvatarIndex,
@@ -1137,19 +1173,21 @@ class CommunityRepository {
     await _ensureCanParticipate(uid);
     final ref = _postsRef(communityId).doc(postId);
     final snap = await ref.get();
-    if (!snap.exists || snap.data()?['authorUid'] != uid) {
+    if (!snap.exists ||
+        !await _userOwnsPost(snap.data(), communityId, postId, uid)) {
       throw StateError('Not your post');
     }
 
-    final moderation = await moderateText(text);
-    if (!moderation.approved) {
+    final clean = CommunityTextSanitize.post(text);
+    final moderation = await moderateText(clean);
+    if (!moderation.approved && !moderation.pendingReview) {
       throw ModerationRejectedException(
         moderation.reason ?? 'Content rejected',
       );
     }
 
     await ref.update({
-      'text': text.trim(),
+      'text': clean,
       'postType': postType.value,
       'editedAt': FieldValue.serverTimestamp(),
       if (moderation.pendingReview) 'moderationStatus': 'pending_review',
@@ -1200,8 +1238,9 @@ class CommunityRepository {
     final member = await isMember(uid, communityId);
     if (!member) throw StateError('Join the community first');
 
-    final moderation = await moderateText(text);
-    if (!moderation.approved) {
+    final clean = CommunityTextSanitize.comment(text);
+    final moderation = await moderateText(clean);
+    if (!moderation.approved && !moderation.pendingReview) {
       throw ModerationRejectedException(
         moderation.reason ?? 'Content rejected',
       );
@@ -1210,7 +1249,7 @@ class CommunityRepository {
     final result = await _submitCommunity('comment', {
       'communityId': communityId,
       'postId': postId,
-      'text': text,
+      'text': clean,
       'authorAvatarIndex': authorAvatarIndex,
       'parentCommentId': ?parentCommentId,
     });
@@ -1230,14 +1269,15 @@ class CommunityRepository {
     if (!snap.exists || snap.data()?['authorUid'] != uid) {
       throw StateError('Not your comment');
     }
-    final moderation = await moderateText(text);
-    if (!moderation.approved) {
+    final clean = CommunityTextSanitize.comment(text);
+    final moderation = await moderateText(clean);
+    if (!moderation.approved && !moderation.pendingReview) {
       throw ModerationRejectedException(
         moderation.reason ?? 'Content rejected',
       );
     }
     await ref.update({
-      'text': text.trim(),
+      'text': clean,
       'editedAt': FieldValue.serverTimestamp(),
       if (moderation.pendingReview) 'moderationStatus': 'pending_review',
     });

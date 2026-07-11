@@ -1,15 +1,19 @@
 const FUNCTIONS_BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
 
-export function createAdminClient(auth) {
+export function createAdminClient(auth, { getAppCheckHeaders } = {}) {
   async function api(action, payload = {}) {
     const user = auth.currentUser;
     if (!user) throw new Error('سجّلي الدخول أولاً');
     const token = await user.getIdToken(true);
+    const appCheckHeaders = getAppCheckHeaders
+      ? await getAppCheckHeaders()
+      : {};
     const res = await fetch(`${FUNCTIONS_BASE}/adminApi`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...appCheckHeaders,
       },
       body: JSON.stringify({ action, payload }),
     });

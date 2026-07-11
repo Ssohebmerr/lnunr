@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../data/community_catalog_repository.dart';
+import '../../data/community_list_resolver.dart';
 import '../../data/community_sort.dart';
 import '../../data/models/community.dart';
 import '../widgets/community_card.dart';
@@ -62,7 +63,14 @@ class CommunityDiscoverTab extends StatelessWidget {
       languageCode: lang,
       goal: userGoal,
       joinedIds: joinedIds,
+      limit: communities.length,
     );
+    final unjoined = communities
+        .where((c) => !joinedIds.contains(c.id))
+        .toList();
+    final joinedInBrowse = communities
+        .where((c) => joinedIds.contains(c.id))
+        .toList();
     final selectedCategory = categories.firstWhere(
       (item) => item.$1 == category,
       orElse: () => categories.first,
@@ -97,38 +105,78 @@ class CommunityDiscoverTab extends StatelessWidget {
           const SizedBox(height: 16),
           if (category == 'all' && searchController.text.trim().isEmpty)
             CommunityRecommendedRow(
-              communities: recommended.take(2).toList(),
+              communities: recommended,
               languageCode: lang,
               joinedIds: joinedIds,
               onOpen: onOpen,
             ),
-          Row(
-            children: [
-              Text(
-                l10n.communityBrowse,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const Spacer(),
-              Text(
-                '${communities.length}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
+          if (unjoined.isNotEmpty) ...[
+            Row(
+              children: [
+                Text(
+                  l10n.communityDiscoverNew,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...communities.map(
-            (c) => CommunityCard(
-              community: c,
-              languageCode: lang,
-              isJoined: joinedIds.contains(c.id),
-              onTap: () => onOpen(c, joinedIds.contains(c.id)),
+                const Spacer(),
+                Text(
+                  '${unjoined.length}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
-          ),
+            const SizedBox(height: 10),
+            ...unjoined.map(
+              (c) => CommunityCard(
+                community: c,
+                languageCode: lang,
+                isJoined: false,
+                isJoinable: CommunityListResolver.isJoinable(c.id, catalog),
+                onTap: () => onOpen(c, false),
+              ),
+            ),
+            const SizedBox(height: 18),
+          ],
+          if (joinedInBrowse.isNotEmpty) ...[
+            Row(
+              children: [
+                Text(
+                  l10n.communityDiscoverJoined,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const Spacer(),
+                Text(
+                  '${joinedInBrowse.length}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...joinedInBrowse.map(
+              (c) => CommunityCard(
+                community: c,
+                languageCode: lang,
+                isJoined: true,
+                isJoinable: true,
+                onTap: () => onOpen(c, true),
+              ),
+            ),
+          ],
+          if (unjoined.isEmpty && joinedInBrowse.isEmpty)
+            CommunityEmptyState(
+              icon: Icons.search_off_rounded,
+              title: l10n.communityBrowse,
+              subtitle: l10n.communityDiscoverNoResults,
+            ),
         ],
       ),
     );

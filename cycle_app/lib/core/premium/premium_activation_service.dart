@@ -3,9 +3,8 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
-import '../config/app_secrets.dart';
+import '../firebase/cloud_functions_client.dart';
 import '../../features/sync/data/cloud_sync_service.dart';
 import '../../features/user/data/guest_user_service.dart';
 import 'premium_activation_result.dart';
@@ -78,16 +77,11 @@ class PremiumActivationService {
         return const PremiumActivationResult(ok: false, needsProfile: true);
       }
 
-      final token = await user.getIdToken(true);
-      final response = await http
-          .post(
-            Uri.parse('${AppSecrets.cloudFunctionsUrl}/grantTesterPremium'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 30));
+      final response = await CloudFunctionsClient.instance.post(
+        '/grantTesterPremium',
+        body: const {},
+        timeout: const Duration(seconds: 30),
+      );
 
       Map<String, dynamic> body = {};
       try {

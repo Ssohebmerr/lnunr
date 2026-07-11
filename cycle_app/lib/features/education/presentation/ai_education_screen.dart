@@ -255,24 +255,39 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
                         child: Row(
                           children: [
-                            Text(
-                              '${filtered.length} ${l10n.educationArticles}',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.outline,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.1),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                              ),
+                              child: Text(
+                                '${filtered.length} ${l10n.educationArticles}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
-                            const Spacer(),
-                            Text(
-                              l10n.educationSubtitle,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.outline
-                                    .withValues(alpha: 0.6),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                l10n.educationSubtitle,
+                                textAlign: TextAlign.end,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.outline
+                                      .withValues(alpha: 0.7),
+                                  height: 1.35,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),

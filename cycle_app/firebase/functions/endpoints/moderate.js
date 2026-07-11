@@ -22,14 +22,39 @@ const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
 const { moderateContent } = require('../lib/moderation');
-const { handleCors, setCors } = require('../lib/http');
+const { guardRequest, setCors } = require('../lib/http');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+
+function hourKey(now) {
+  return now.toISOString().slice(0, 13);
+}
+
+async function reserveModerateSlot(db, uid) {
+  const now = new Date();
+  const rateRef = db.collection('communityRateLimits').doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(rateRef);
+    const rate = snap.data() || {};
+    const sameHour = rate.serverHour === hourKey(now);
+    const current = sameHour ? (Number(rate.serverModerateCount) || 0) : 0;
+    if (current >= 30) {
+      const err = new Error('rate_limited');
+      err.code = 'rate_limited';
+      throw err;
+    }
+    tx.set(rateRef, {
+      serverHour: hourKey(now),
+      serverModerateCount: current + 1,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+}
 
 exports.moderate = onRequest(
   { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 30 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'community', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -39,7 +64,8 @@ exports.moderate = onRequest(
     }
 
     try {
-      await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
+      const decoded = await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
+      await reserveModerateSlot(admin.firestore(), decoded.uid);
       const text = (req.body?.text || '').trim().substring(0, 1000);
 
       if (!text) {
@@ -58,7 +84,11 @@ exports.moderate = onRequest(
         res.status(401).json({ error: 'Token expired.' });
         return;
       }
-      res.json({ approved: true });
+      if (error.code === 'rate_limited') {
+        res.status(429).json({ approved: false, error: 'rate_limited' });
+        return;
+      }
+      res.json({ approved: false, pendingReview: true, reason: 'Moderation unavailable' });
     }
   },
 );

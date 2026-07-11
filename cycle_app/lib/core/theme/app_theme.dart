@@ -98,22 +98,28 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: isDark ? scheme.primary : AuraColors.accentDeep,
           foregroundColor: isDark ? AuraColors.darkBg : Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+          elevation: 3,
+          shadowColor: AuraColors.accent.withValues(alpha: 0.5),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 17),
+          shape: const StadiumBorder(),
+          textStyle: GoogleFonts.cairo(
+            fontWeight: FontWeight.w800,
+            fontSize: 15.5,
+            letterSpacing: 0.2,
           ),
-          textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.primary,
-          side: BorderSide(color: scheme.primary.withValues(alpha: 0.5)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(color: scheme.primary.withValues(alpha: 0.6), width: 1.6),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 15),
+          textStyle: GoogleFonts.cairo(
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            letterSpacing: 0.2,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -141,6 +147,18 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+        selectedColor:
+            (isDark ? AuraColors.darkRose : AuraColors.accent).withValues(alpha: 0.20),
+        checkmarkColor: isDark ? AuraColors.darkRose : AuraColors.accentDeep,
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor:
+              isDark ? scheme.primary : AuraColors.accentDeep,
+          selectedForegroundColor: isDark ? AuraColors.darkBg : Colors.white,
+          shape: const StadiumBorder(),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

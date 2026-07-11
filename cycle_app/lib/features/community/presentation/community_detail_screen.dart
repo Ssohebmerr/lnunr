@@ -509,9 +509,11 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
               topic: widget.community.topic,
               joined: _joined,
               busy: _busy,
+              alias: widget.alias,
               onJoin: _toggleJoin,
               onPostTap: _openPostDetail,
               onAnswerPrompt: _answerWeeklyQuestion,
+              onCompose: () => _createPost(),
             ),
             _AboutTab(
               community: widget.community,

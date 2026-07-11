@@ -75,21 +75,75 @@ class _LogTabState extends State<LogTab> {
       );
     }
 
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, _navBarClearance),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          color: theme.brightness == Brightness.dark
-              ? AuraColors.darkCard.withValues(alpha: 0.55)
-              : Colors.white.withValues(alpha: 0.72),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: AuraDecorations.softCard(isDark),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.28),
+                        theme.colorScheme.primary.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(Icons.edit_calendar_rounded,
+                      color: theme.colorScheme.primary, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        MaterialLocalizations.of(context)
+                            .formatMediumDate(DateTime.now()),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.wellnessDailyLogDesc,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          child: MenstrualLogPeriodView(
+          const SizedBox(height: 10),
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                color: isDark
+                    ? AuraColors.darkCard.withValues(alpha: 0.4)
+                    : Colors.white.withValues(alpha: 0.32),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                child: MenstrualLogPeriodView(
             key: _refreshKey,
             embeddedInTab: true,
             symptomsLogDate: DateTime.now(),
@@ -128,8 +182,11 @@ class _LogTabState extends State<LogTab> {
                 DailyLogFeedback.showError(context, l10n);
               }
             },
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

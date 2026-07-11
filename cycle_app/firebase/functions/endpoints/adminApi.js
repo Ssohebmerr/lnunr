@@ -33,9 +33,13 @@ const {
   refFromPath,
   collectionFromPath,
   docFromPath,
+  MAX_ADMIN_QUERY_LIMIT,
+  isBlockedWritePath,
+  isAllowedModeratorQueryPath,
+  assertWritableAdminPath,
 } = require('../lib/adminAuth');
 
-const { handleCors, setCors } = require('../lib/http');
+const { guardRequest, setCors } = require('../lib/http');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
@@ -43,7 +47,7 @@ const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 // Query / Count helpers — used by 'query' and 'count' actions.
 // ---------------------------------------------------------------------------
 
-async function runAdminQuery(payload) {
+async function runAdminQuery(payload, role) {
   const {
     collectionPath,
     collectionGroup,
@@ -51,6 +55,11 @@ async function runAdminQuery(payload) {
     orderBy: orderByField,
     limit: rowLimit = 100,
   } = payload;
+
+  if (role === 'moderator' &&
+      !isAllowedModeratorQueryPath(collectionPath, collectionGroup)) {
+    throw new Error('Moderators cannot query this collection.');
+  }
 
   let q;
   if (collectionGroup) {
@@ -65,14 +74,22 @@ async function runAdminQuery(payload) {
   if (orderByField?.field) {
     q = q.orderBy(orderByField.field, orderByField.dir || 'asc');
   }
-  if (rowLimit) q = q.limit(rowLimit);
+  const cappedLimit = Math.min(
+    Math.max(Number(rowLimit) || 100, 1),
+    MAX_ADMIN_QUERY_LIMIT,
+  );
+  q = q.limit(cappedLimit);
 
   const snap = await q.get();
   return snap.docs.map(serializeDoc);
 }
 
-async function runAdminCount(payload) {
+async function runAdminCount(payload, role) {
   const { collectionPath, collectionGroup, filters = [] } = payload;
+  if (role === 'moderator' &&
+      !isAllowedModeratorQueryPath(collectionPath, collectionGroup)) {
+    throw new Error('Moderators cannot count this collection.');
+  }
   let q;
   if (collectionGroup) {
     q = admin.firestore().collectionGroup(collectionGroup);
@@ -125,7 +142,7 @@ function buildDailySnapshot(db) {
 exports.adminApi = onRequest(
   { cors: true, timeoutSeconds: 120, secrets: [GEMINI_API_KEY] },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -184,40 +201,58 @@ exports.adminApi = onRequest(
         res.status(403).json({ error: `Requires ${minRole} role.` });
         return;
       }
+      const callerRole = await getCallerRole(decoded);
 
       let result;
       switch (action) {
         case 'overview': {
-          const [users, premium, posts, pending, articles] = await Promise.all([
+          const [users, premium, posts, pendingReports, articles, pendingPosts, pendingComments] =
+            await Promise.all([
             admin.firestore().collection('users').count().get(),
             admin.firestore().collection('users').where('isPremium', '==', true).count().get(),
             admin.firestore().collectionGroup('posts').count().get(),
             admin.firestore().collection('communityReports').where('status', '==', 'pending').count().get(),
             admin.firestore().collection('educationArticles').where('published', '==', true).count().get(),
+            admin.firestore().collectionGroup('posts')
+              .where('moderationStatus', '==', 'pending_review').count().get(),
+            admin.firestore().collectionGroup('comments')
+              .where('moderationStatus', '==', 'pending_review').count().get(),
           ]);
+          const moderationPending =
+            pendingPosts.data().count + pendingComments.data().count;
           result = {
             users: users.data().count,
             premium: premium.data().count,
             posts: posts.data().count,
-            pending: pending.data().count,
+            pending: pendingReports.data().count,
+            moderationPending,
             articles: articles.data().count,
           };
           break;
         }
         case 'query':
-          result = { items: await runAdminQuery(payload) };
+          result = { items: await runAdminQuery(payload, callerRole) };
           break;
         case 'count':
-          result = { count: await runAdminCount(payload) };
+          result = { count: await runAdminCount(payload, callerRole) };
           break;
         case 'get': {
-          const snap = await docFromPath(payload.path).get();
+          const segments = Array.isArray(payload.path)
+            ? payload.path
+            : String(payload.path || '').split('/').filter(Boolean);
+          if (callerRole === 'moderator' &&
+              (segments.length === 0 ||
+                  !isAllowedModeratorQueryPath(segments[0], null))) {
+            throw new Error('Moderators cannot read this document.');
+          }
+          const snap = await docFromPath(segments).get();
           result = snap.exists
             ? { exists: true, item: serializeDoc(snap) }
             : { exists: false };
           break;
         }
         case 'set':
+          assertWritableAdminPath(payload.path, callerRole);
           await docFromPath(payload.path).set(
             applyServerTokens(payload.data || {}),
             { merge: payload.merge === true },
@@ -225,14 +260,19 @@ exports.adminApi = onRequest(
           result = { ok: true };
           break;
         case 'update':
+          assertWritableAdminPath(payload.path, callerRole);
           await docFromPath(payload.path).update(applyServerTokens(payload.data || {}));
           result = { ok: true };
           break;
         case 'delete':
+          assertWritableAdminPath(payload.path, callerRole);
           await docFromPath(payload.path).delete();
           result = { ok: true };
           break;
         case 'add': {
+          if (isBlockedWritePath(payload.collectionPath)) {
+            throw new Error('Writes to this collection are not permitted.');
+          }
           const ref = await collectionFromPath(payload.collectionPath).add(
             applyServerTokens(payload.data || {}),
           );
