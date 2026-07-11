@@ -11,14 +11,14 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
-const { verifyCallerIsAdmin } = require('../lib/adminAuth');
+const { callerHasRole } = require('../lib/adminAuth');
 const { sendBroadcastInternal } = require('../lib/broadcast');
-const { handleCors, setCors } = require('../lib/http');
+const { guardRequest, setCors } = require('../lib/http');
 
 exports.adminBroadcast = onRequest(
   { cors: true, timeoutSeconds: 60 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -29,7 +29,7 @@ exports.adminBroadcast = onRequest(
 
     try {
       const decoded = await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
-      if (!(await verifyCallerIsAdmin(decoded))) {
+      if (!(await callerHasRole(decoded, 'admin'))) {
         setCors(res);
         res.status(403).json({ error: 'Admin only.' });
         return;

@@ -1526,6 +1526,42 @@ abstract class AppLocalizations {
   /// **'Joined'**
   String get communityJoinedBadge;
 
+  /// No description provided for @communityDiscoverNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover groups'**
+  String get communityDiscoverNew;
+
+  /// No description provided for @communityDiscoverJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Your groups'**
+  String get communityDiscoverJoined;
+
+  /// No description provided for @communityDiscoverNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups match your search. Try another category or clear filters.'**
+  String get communityDiscoverNoResults;
+
+  /// No description provided for @communityClosedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get communityClosedBadge;
+
+  /// No description provided for @communityFeedBrowseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse all groups'**
+  String get communityFeedBrowseTitle;
+
+  /// No description provided for @communityFeedBrowseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The feed shows your joined groups only — explore more communities here.'**
+  String get communityFeedBrowseSubtitle;
+
   /// No description provided for @communitySetupTitle.
   ///
   /// In en, this message translates to:
@@ -7093,6 +7129,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not Now'**
   String get notifRationaleSkip;
+
+  /// No description provided for @notifOsDisabledBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are turned off for Lune in system settings. Reminders will not appear until you enable them.'**
+  String get notifOsDisabledBanner;
+
+  /// No description provided for @notifRequestPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications'**
+  String get notifRequestPermission;
+
+  /// No description provided for @notifExactAlarmsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For on-time reminders, allow Alarms & reminders for Lune in Android settings.'**
+  String get notifExactAlarmsHint;
+
+  /// No description provided for @notifEnableExactAlarms.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable precise alarms'**
+  String get notifEnableExactAlarms;
+
+  /// No description provided for @notifScheduledCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reminders scheduled'**
+  String notifScheduledCount(int count);
+
+  /// No description provided for @notifNoScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders scheduled yet. Allow notifications and log your cycle.'**
+  String get notifNoScheduled;
+
+  /// No description provided for @notifTestExactAlarmsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Test sent, but precise alarms are off — reminders may be delayed.'**
+  String get notifTestExactAlarmsHint;
+
+  /// No description provided for @notifNextReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Next reminder: {when}'**
+  String notifNextReminder(String when);
 
   /// No description provided for @ageGateTitle.
   ///

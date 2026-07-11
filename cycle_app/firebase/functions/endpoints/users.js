@@ -25,6 +25,7 @@ const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
 const { verifyCallerIsAdmin } = require('../lib/adminAuth');
+const { guardRequest, setCors, bearerToken } = require('../lib/http');
 
 const ADMIN_BOOTSTRAP_KEY = defineSecret('ADMIN_BOOTSTRAP_KEY');
 
@@ -81,21 +82,6 @@ async function deleteUserAiData(db, uid) {
   }, { merge: true });
 }
 
-function handleOptions(req, res) {
-  if (req.method !== 'OPTIONS') return false;
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST');
-  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-  res.status(204).send('');
-  return true;
-}
-
-function authToken(req, res) {
-  const header = req.headers.authorization || '';
-  if (header.startsWith('Bearer ')) return header.substring('Bearer '.length);
-  res.status(401).json({ error: 'Auth required.' });
-  return null;
-}
 
 // ---------------------------------------------------------------------------
 // syncUsersFromAuth — backfill users/ from Firebase Auth (admin only).
@@ -104,22 +90,13 @@ function authToken(req, res) {
 exports.syncUsersFromAuth = onRequest(
   { cors: true, timeoutSeconds: 300 },
   async (req, res) => {
-    if (req.method === 'OPTIONS') {
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'POST');
-      res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-      res.status(204).send('');
-      return;
-    }
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
 
-    const authHeader = req.headers.authorization || '';
-    if (!authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Auth required.' });
-      return;
-    }
+    const token = bearerToken(req, res);
+    if (!token) return;
 
     try {
-      const decoded = await admin.auth().verifyIdToken(authHeader.split('Bearer ')[1]);
+      const decoded = await admin.auth().verifyIdToken(token);
       if (!(await verifyCallerIsAdmin(decoded))) {
         res.status(403).json({ error: 'Admin only.' });
         return;
@@ -158,11 +135,11 @@ exports.syncUsersFromAuth = onRequest(
         nextPageToken = result.pageToken;
       } while (nextPageToken);
 
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       res.json({ synced });
     } catch (error) {
       console.error('syncUsersFromAuth error:', error);
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       if (error.code === 'auth/id-token-expired') {
         res.status(401).json({ error: 'Token expired.' });
         return;
@@ -190,6 +167,14 @@ exports.bootstrapAdmin = onCall({ secrets: [ADMIN_BOOTSTRAP_KEY] }, async (reque
     throw new HttpsError('invalid-argument', 'Email and password required.');
   }
 
+  const existingAdmins = await admin.firestore().collection('admins').limit(1).get();
+  if (!existingAdmins.empty) {
+    throw new HttpsError(
+      'failed-precondition',
+      'Bootstrap already completed. Use the admin panel to add admins.',
+    );
+  }
+
   let userRecord;
   let isNewUser = false;
   try {
@@ -204,7 +189,10 @@ exports.bootstrapAdmin = onCall({ secrets: [ADMIN_BOOTSTRAP_KEY] }, async (reque
   }
 
   if (!isNewUser) {
-    await admin.auth().updateUser(userRecord.uid, { password });
+    throw new HttpsError(
+      'already-exists',
+      'Email already registered. Bootstrap only creates a new owner account.',
+    );
   }
 
   await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
@@ -238,8 +226,8 @@ exports.bootstrapAdmin = onCall({ secrets: [ADMIN_BOOTSTRAP_KEY] }, async (reque
 exports.deleteUserAccount = onRequest(
   { cors: true, timeoutSeconds: 120 },
   async (req, res) => {
-    if (handleOptions(req, res)) return;
-    const token = authToken(req, res);
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
+    const token = bearerToken(req, res);
     if (!token) return;
 
     try {
@@ -285,11 +273,11 @@ exports.deleteUserAccount = onRequest(
       // 4. Delete the Auth user last.
       await admin.auth().deleteUser(uid);
 
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       res.json({ success: true });
     } catch (error) {
       console.error('Delete account error:', error);
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       if (error.code === 'auth/id-token-expired') {
         res.status(401).json({ error: 'Token expired. Please re-authenticate.' });
         return;
@@ -307,18 +295,18 @@ exports.deleteUserAccount = onRequest(
 exports.purgeAiData = onRequest(
   { cors: true, timeoutSeconds: 120 },
   async (req, res) => {
-    if (handleOptions(req, res)) return;
-    const token = authToken(req, res);
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
+    const token = bearerToken(req, res);
     if (!token) return;
 
     try {
       const decoded = await admin.auth().verifyIdToken(token);
       await deleteUserAiData(admin.firestore(), decoded.uid);
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       res.json({ success: true });
     } catch (error) {
       console.error('Purge AI data error:', error);
-      res.set('Access-Control-Allow-Origin', '*');
+      setCors(res, req);
       if (error.code === 'auth/id-token-expired') {
         res.status(401).json({ error: 'Token expired. Please re-authenticate.' });
         return;

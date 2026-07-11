@@ -346,45 +346,44 @@ class _SelfCareTabState extends State<SelfCareTab> {
               ),
             ),
           ),
-          AppHubCard(
-            blur: false,
-            icon: Icons.edit_calendar_outlined,
-            title: l10n.wellnessDailyLog,
-            subtitle: l10n.wellnessDailyLogDesc,
-            color: theme.colorScheme.primary,
-            onTap: () => WellnessHubLauncher.openDailyLog(context),
-          ),
-          AppHubCard(
-            blur: false,
-            icon: Icons.medication_outlined,
-            title: l10n.wellnessPills,
-            subtitle: l10n.wellnessPillsDesc,
-            color: theme.colorScheme.secondary,
-            onTap: () => WellnessHubLauncher.openPills(context),
-          ),
-          AppHubCard(
-            blur: false,
-            icon: Icons.sanitizer_outlined,
-            title: l10n.wellnessSanitary,
-            subtitle: l10n.wellnessSanitaryDesc,
-            color: AppColors.accent,
-            onTap: () => WellnessHubLauncher.openSanitary(context),
-          ),
-          AppHubCard(
-            blur: false,
-            icon: Icons.favorite_outline,
-            title: l10n.wellnessSex,
-            subtitle: l10n.wellnessSexDesc,
-            color: const Color(0xFFE57373),
-            onTap: () => WellnessHubLauncher.openSex(context),
-          ),
-          AppHubCard(
-            blur: false,
-            icon: Icons.shield_outlined,
-            title: l10n.wellnessLarc,
-            subtitle: l10n.wellnessLarcDesc,
-            color: const Color(0xFF26A69A),
-            onTap: () => WellnessHubLauncher.openLarc(context),
+          _WellnessGroup(
+            rows: [
+              _WellnessRowData(
+                icon: Icons.edit_calendar_outlined,
+                title: l10n.wellnessDailyLog,
+                subtitle: l10n.wellnessDailyLogDesc,
+                color: theme.colorScheme.primary,
+                onTap: () => WellnessHubLauncher.openDailyLog(context),
+              ),
+              _WellnessRowData(
+                icon: Icons.medication_outlined,
+                title: l10n.wellnessPills,
+                subtitle: l10n.wellnessPillsDesc,
+                color: theme.colorScheme.secondary,
+                onTap: () => WellnessHubLauncher.openPills(context),
+              ),
+              _WellnessRowData(
+                icon: Icons.sanitizer_outlined,
+                title: l10n.wellnessSanitary,
+                subtitle: l10n.wellnessSanitaryDesc,
+                color: AppColors.accent,
+                onTap: () => WellnessHubLauncher.openSanitary(context),
+              ),
+              _WellnessRowData(
+                icon: Icons.favorite_outline,
+                title: l10n.wellnessSex,
+                subtitle: l10n.wellnessSexDesc,
+                color: const Color(0xFFE57373),
+                onTap: () => WellnessHubLauncher.openSex(context),
+              ),
+              _WellnessRowData(
+                icon: Icons.shield_outlined,
+                title: l10n.wellnessLarc,
+                subtitle: l10n.wellnessLarcDesc,
+                color: const Color(0xFF26A69A),
+                onTap: () => WellnessHubLauncher.openLarc(context),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
 
@@ -529,6 +528,129 @@ class _RitualProgress extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Plain data holder for one Wellness Hub entry.
+class _WellnessRowData {
+  const _WellnessRowData({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+}
+
+/// The Wellness Hub tools grouped into a single premium card with dividers —
+/// calmer and less repetitive than five stacked hub cards.
+class _WellnessGroup extends StatelessWidget {
+  const _WellnessGroup({required this.rows});
+
+  final List<_WellnessRowData> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppGlassCard(
+      blur: false,
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            _WellnessRow(data: rows[i], first: i == 0, last: i == rows.length - 1),
+            if (i != rows.length - 1)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: 68,
+                endIndent: 16,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WellnessRow extends StatelessWidget {
+  const _WellnessRow({
+    required this.data,
+    required this.first,
+    required this.last,
+  });
+
+  final _WellnessRowData data;
+  final bool first;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius = Radius.circular(AppRadius.lg);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: data.onTap,
+        borderRadius: BorderRadius.vertical(
+          top: first ? radius : Radius.zero,
+          bottom: last ? radius : Radius.zero,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      data.color.withValues(alpha: 0.28),
+                      data.color.withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(data.icon, color: data.color, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      data.subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: theme.colorScheme.outline),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

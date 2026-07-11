@@ -9,7 +9,7 @@ import 'ai_gateway_exception.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
 import 'models/ai_turn.dart';
-import '../config/app_secrets.dart';
+import '../firebase/cloud_functions_client.dart';
 import '../../features/user/data/guest_user_service.dart';
 
 void _aiLog(String message) {
@@ -28,7 +28,9 @@ class AiGateway {
 
   final FirebaseAuth _auth;
 
-  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
+  /// Lazy so constructing an [AiGateway] never touches Firebase before it is
+  /// initialized (and so the auth guard runs before the client is resolved).
+  CloudFunctionsClient get _functions => CloudFunctionsClient.instance;
 
   Future<String?> request({
     required String message,
@@ -171,11 +173,8 @@ _aiLog('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
     String? personality,
     List<AiTurn> history = const [],
   }) async {
-    final token = await _auth.currentUser!.getIdToken(true);
-    final endpoint = (mode == 'analyze' || mode == 'doctor')
-        ? '$_baseUrl/analyze'
-        : '$_baseUrl/chat';
-_aiLog('[AiGateway] Calling $endpoint');
+    final path = (mode == 'analyze' || mode == 'doctor') ? '/analyze' : '/chat';
+_aiLog('[AiGateway] Calling $path');
 
     final safeContext =
         Map<String, dynamic>.from(jsonSafe(context) as Map? ?? {});
@@ -187,35 +186,13 @@ _aiLog('[AiGateway] Calling $endpoint');
       history: history,
     );
 
-    late final String body;
-    try {
-      body = jsonEncode(payload);
-    } catch (e, st) {
-  _aiLog('[AiGateway] jsonEncode failed: $e\n$st');
-      // Last resort: minimal payload so AI still works.
-      body = jsonEncode({
-        'message': message,
-        'cycleContext': {
-          'userLocale': safeContext['userLocale'] ?? 'ar',
-        },
-        'mode': mode,
-        'maxTokens': 1200,
-        'temperature': 0.8,
-      });
-    }
-
     late final http.Response response;
     try {
-      response = await http
-          .post(
-            Uri.parse(endpoint),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 90));
+      response = await _functions.post(
+        path,
+        body: payload,
+        timeout: const Duration(seconds: 90),
+      );
     } catch (e, st) {
   _aiLog('[AiGateway] Network error: $e\n$st');
       throw const AiGatewayException('network_error');
@@ -336,8 +313,7 @@ _aiLog('[AiGateway] Cloud Function status: ${response.statusCode}');
     String? personality,
     List<AiTurn> history = const [],
   }) async* {
-    final token = await _auth.currentUser!.getIdToken(true);
-    final endpoint = '$_baseUrl/chat';
+    final path = '/chat';
     final safeContext =
         Map<String, dynamic>.from(jsonSafe(context) as Map? ?? {});
     final payload = _buildPayloadMap(
@@ -362,15 +338,15 @@ _aiLog('[AiGateway] Cloud Function status: ${response.statusCode}');
 
     final client = http.Client();
     try {
-      final request = http.Request('POST', Uri.parse(endpoint))
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Authorization'] = 'Bearer $token'
+      final request = http.Request('POST', Uri.parse('${CloudFunctionsClient.baseUrl}$path'))
         ..body = body;
 
       final http.StreamedResponse response;
       try {
-        response =
-            await client.send(request).timeout(const Duration(seconds: 90));
+        response = await CloudFunctionsClient.instance.send(
+          request,
+          timeout: const Duration(seconds: 90),
+        );
       } catch (e, st) {
     _aiLog('[AiGateway.stream] network error: $e\n$st');
         throw const AiGatewayException('network_error');

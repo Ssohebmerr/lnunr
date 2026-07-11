@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
@@ -49,6 +50,8 @@ class NotificationService {
   static Future<bool> sendTestNotification() async {
     await initialize();
     final granted = await requestPermission();
+    if (!granted) return false;
+
     final ar = await _isArabic();
     await _plugin.show(
       _testId,
@@ -59,7 +62,74 @@ class NotificationService {
       _details(high: true),
       payload: NotificationPayload.home(),
     );
-    return granted;
+
+    if (!await AppNotifications.canScheduleExactNotifications()) {
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationService] test OK but exact alarms denied — '
+          'scheduled reminders may be delayed',
+        );
+      }
+    }
+    return true;
+  }
+
+  /// Returns how many local reminders are queued (best-effort).
+  static Future<int> pendingReminderCount() async {
+    await initialize();
+    final pending = await _plugin.pendingNotificationRequests();
+    return pending.length;
+  }
+
+  /// Earliest upcoming reminder we know about (daily log, smart phase, cycle).
+  static Future<DateTime?> nextScheduledReminderAt() async {
+    if (!await _canScheduleNow()) return null;
+    if (!await NotificationPrefs.masterEnabled()) return null;
+
+    final now = DateTime.now();
+    final candidates = <DateTime>[];
+    final prefs = await SharedPreferences.getInstance();
+
+    if (prefs.getBool('daily_log_reminder_enabled') ?? true) {
+      var daily = DateTime(now.year, now.month, now.day, 20, 0);
+      if (!daily.isAfter(now)) {
+        daily = daily.add(const Duration(days: 1));
+      }
+      candidates.add(daily);
+    }
+
+    final smartNext = prefs.getString('smart_phase_next_at');
+    if (smartNext != null && smartNext.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(smartNext);
+        if (dt.isAfter(now)) candidates.add(dt);
+      } catch (_) {}
+    }
+
+    if (prefs.getBool('period_reminder_enabled') ?? true) {
+      final api = MenstrualCycleWidget.instance;
+      if (api != null) {
+        try {
+          final nextDateStr = await api.getNextPredictedPeriodDate();
+          if (nextDateStr.isNotEmpty) {
+            final next = DateTime.parse(nextDateStr);
+            final reminderDay = next.subtract(const Duration(days: 1));
+            final at = DateTime(
+              reminderDay.year,
+              reminderDay.month,
+              reminderDay.day,
+              9,
+              0,
+            );
+            if (at.isAfter(now)) candidates.add(at);
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (candidates.isEmpty) return null;
+    candidates.sort();
+    return candidates.first;
   }
 
   /// System permission prompt once after install (onboarding or first home open).
@@ -68,23 +138,47 @@ class NotificationService {
   /// background callbacks that don't have a UI context).
   static Future<void> ensureInitialPermission([BuildContext? context]) async {
     if (await NotificationPrefs.hasPromptedForPermission()) return;
-    await NotificationPrefs.markPermissionPrompted();
 
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool(NotificationPrefs.masterKey) ?? true)) {
       await prefs.setBool(NotificationPrefs.masterKey, true);
     }
 
+    var granted = false;
     if (context != null && context.mounted) {
-      await showNotificationRationale(context);
+      granted = await showNotificationRationale(context);
     } else {
-      await requestPermission();
+      granted = await requestPermission();
     }
-    await scheduleFromPrefs();
+
+    await NotificationPrefs.markPermissionPrompted();
+
+    if (granted) {
+      await scheduleFromPrefs();
+    }
   }
+
+  static Future<bool> _canScheduleNow() async {
+    await initialize();
+    final enabled = await areNotificationsEnabled();
+    if (!enabled) {
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationService] OS notifications disabled — skipping schedule',
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
+  static Future<AndroidScheduleMode> _scheduleMode() =>
+      AppNotifications.resolveScheduleMode();
 
   static Future<void> scheduleFromPrefs() async {
     try {
+      if (!await _canScheduleNow()) return;
+
       if (!await NotificationPrefs.masterEnabled()) {
         await cancelAll();
         await _cancelMenstrudelReminders();
@@ -153,19 +247,21 @@ class NotificationService {
 
     try {
       final next = DateTime.parse(nextDateStr);
-      final reminder = next.subtract(const Duration(days: 1));
-      if (reminder.isBefore(DateTime.now())) return;
+      final reminderDay = next.subtract(const Duration(days: 1));
+      var at = DateTime(reminderDay.year, reminderDay.month, reminderDay.day, 9, 0);
+      if (at.isBefore(DateTime.now())) return;
 
       final ar = await _isArabic();
+      final mode = await _scheduleMode();
       await _plugin.zonedSchedule(
         _periodId,
         'Lune',
         ar
             ? 'قد تبدأ دورتك غدًا. جهزي نفسك واحرصي على الراحة.'
             : 'Your period may start tomorrow. Check your calendar.',
-        tz.TZDateTime.from(reminder, tz.local),
+        tz.TZDateTime.from(at, tz.local),
         _details(high: true),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: NotificationPayload.home(),
       );
     } catch (e, st) {
@@ -187,6 +283,7 @@ class NotificationService {
       if (at.isBefore(now)) return;
 
       final ar = await _isArabic();
+      final mode = await _scheduleMode();
       await _plugin.zonedSchedule(
         _periodTodayId,
         'Lune',
@@ -195,7 +292,7 @@ class NotificationService {
             : 'Your period is expected today. Take care of yourself.',
         tz.TZDateTime.from(at, tz.local),
         _details(high: true),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: mode,
       payload: NotificationPayload.home(action: 'open_log'),
       );
     } catch (e, st) {
@@ -217,6 +314,7 @@ class NotificationService {
       if (reminder.isBefore(DateTime.now())) return;
 
       final ar = await _isArabic();
+      final mode = await _scheduleMode();
       await _plugin.zonedSchedule(
         _ovulationId,
         'Lune',
@@ -225,7 +323,7 @@ class NotificationService {
             : 'Today is your predicted ovulation day.',
         tz.TZDateTime.from(reminder, tz.local),
         _details(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: NotificationPayload.home(),
       );
     } catch (e, st) {
@@ -263,6 +361,7 @@ class NotificationService {
       }
 
       final ar = await _isArabic();
+      final mode = await _scheduleMode();
       await _plugin.zonedSchedule(
         _lateId,
         'Lune',
@@ -271,7 +370,7 @@ class NotificationService {
             : 'Your period is running late. This is often normal — log how you feel or update your dates.',
         tz.TZDateTime.from(at, tz.local),
         _details(high: true),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: NotificationPayload.home(action: 'open_log'),
       );
     } catch (e, st) {
@@ -307,6 +406,7 @@ class NotificationService {
       }
 
       final ar = await _isArabic();
+      final mode = await _scheduleMode();
       await _plugin.zonedSchedule(
         _fertileId,
         'Lune',
@@ -315,7 +415,7 @@ class NotificationService {
             : "Your fertile window is opening soon. If you're trying to conceive, these are your key days.",
         tz.TZDateTime.from(at, tz.local),
         _details(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: NotificationPayload.home(),
       );
     } catch (e, st) {
@@ -350,7 +450,7 @@ class NotificationService {
       body,
       tz.TZDateTime.from(scheduled, tz.local),
       _details(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _scheduleMode(),
       matchDateTimeComponents: DateTimeComponents.time,
         payload: NotificationPayload.home(action: 'open_log'),
     );

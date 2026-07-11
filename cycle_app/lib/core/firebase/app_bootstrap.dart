@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -37,14 +39,16 @@ class AppBootstrap {
     );
 
     try {
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: _useDebugAppCheck
-            ? AndroidProvider.debug
-            : AndroidProvider.playIntegrity,
-        appleProvider: _useDebugAppCheck
-            ? AppleProvider.debug
-            : AppleProvider.appAttest,
-      );
+      await FirebaseAppCheck.instance
+          .activate(
+            androidProvider: _useDebugAppCheck
+                ? AndroidProvider.debug
+                : AndroidProvider.playIntegrity,
+            appleProvider: _useDebugAppCheck
+                ? AppleProvider.debug
+                : AppleProvider.appAttest,
+          )
+          .timeout(const Duration(seconds: 4));
     } catch (e, st) {
       // App Check can fail on sideloaded release APKs (no Play Integrity).
       // The app must still launch; Firebase calls may be limited until fixed.

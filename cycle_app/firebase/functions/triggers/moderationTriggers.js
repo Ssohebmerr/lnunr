@@ -1,21 +1,8 @@
 // ============================================================================
 // triggers/moderationTriggers.js — Firestore triggers for content moderation.
 // ----------------------------------------------------------------------------
-// Four triggers kept in one file because they share helpers (moderation
-// decision, post-rejection update). Each handles a different collection:
-//
-//   - onStoryCreated     stories/{id}    ephemeral content (24h), rejected
-//                                       stories are deleted outright
-//   - onPostCreated      posts/{id}       status: pending_review → approved/rejected
-//   - onCommentCreated   comments/{id}    same flow as posts
-//   - onReportCreated    communityReports/{id}
-//                                       if 3+ reports target a post, hide it
-//                                       and re-queue for moderation
-//
-// WHY kept together (instead of one file per trigger):
-//   Each trigger is short (~30 lines) and they share the same helper
-//   `applyModerationResult`-equivalent logic inline. Splitting them out
-//   would create four near-duplicate files with no shared state.
+// Backup path when submitCommunity could not auto-approve (AI outage).
+// Primary moderation runs synchronously in endpoints/community.js.
 // ============================================================================
 
 'use strict';
@@ -24,62 +11,58 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
-const { moderateContent } = require('../lib/moderation');
+const { evaluateModeration } = require('../lib/moderation');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
-// ---------------------------------------------------------------------------
-// Helper — update a community doc with an approved/rejected result.
-// ---------------------------------------------------------------------------
 async function applyResult(ref, text, isStory = false) {
-  const result = await moderateContent(GEMINI_API_KEY.value(), text);
-  const communityId = ref.parent.parent?.id;
-  const postId = ref.parent.id;
-  const docPath = `${communityId ? communityId + '/' : ''}${ref.parent.parent ? ref.parent.parent.id + '/' : ''}${ref.id}`;
+  try {
+    const decision = await evaluateModeration(GEMINI_API_KEY.value(), text);
 
-  if (isStory) {
-    // Stories are ephemeral — reject by deleting outright.
-    if (!result.approved) {
-      await ref.delete();
-      console.log(`Rejected & deleted story: ${result.reason}`);
-    } else {
-      console.log(`Story approved: ${docPath}`);
+    if (isStory) {
+      if (decision.reject) {
+        await ref.delete();
+        console.log(`Rejected & deleted story: ${decision.reason}`);
+      } else {
+        console.log(`Story approved: ${ref.path}`);
+      }
+      return;
     }
-    return;
-  }
 
-  if (text.length < 3) {
-    await ref.update({
-      moderationStatus: 'approved',
-      moderationReviewedAt: admin.firestore.FieldValue.serverTimestamp(),
-      moderationReviewedBy: 'auto_short',
-    });
-    return;
-  }
+    if (decision.moderationStatus === 'pending_review') {
+      console.log(`Keeping pending review: ${ref.path}`);
+      return;
+    }
 
-  if (result.approved) {
-    await ref.update({
-      moderationStatus: 'approved',
-      moderationReviewedAt: admin.firestore.FieldValue.serverTimestamp(),
-      moderationReviewedBy: 'auto_ai',
-    });
-    console.log(`Auto-approved post ${docPath}`);
-  } else {
+    if (decision.moderationStatus === 'approved') {
+      await ref.update({
+        moderationStatus: 'approved',
+        moderationReviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+        moderationReviewedBy: decision.reviewedBy || 'auto_ai',
+      });
+      console.log(`Auto-approved: ${ref.path}`);
+      return;
+    }
+
     await ref.update({
       moderationStatus: 'rejected',
       hidden: true,
-      moderationReason: result.reason || 'Content not allowed.',
+      moderationReason: decision.reason || 'Content not allowed.',
       rejectedAt: admin.firestore.FieldValue.serverTimestamp(),
+      moderationReviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      moderationReviewedBy: 'auto_ai',
     });
-    console.log(`Rejected post ${docPath}: ${result.reason}`);
+    console.log(`Rejected: ${ref.path}: ${decision.reason}`);
+  } catch (error) {
+    console.error(`Moderation trigger failed for ${ref.path}:`, error);
   }
 }
 
-// ---------------------------------------------------------------------------
-// onStoryCreated — ephemeral stories.
-// ---------------------------------------------------------------------------
 exports.onStoryCreated = onDocumentCreated(
-  'communities/{communityId}/stories/{storyId}',
+  {
+    document: 'communities/{communityId}/stories/{storyId}',
+    secrets: [GEMINI_API_KEY],
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data) return;
@@ -91,11 +74,11 @@ exports.onStoryCreated = onDocumentCreated(
   },
 );
 
-// ---------------------------------------------------------------------------
-// onPostCreated — community posts (pending_review → approved/rejected).
-// ---------------------------------------------------------------------------
 exports.onPostCreated = onDocumentCreated(
-  'communities/{communityId}/posts/{postId}',
+  {
+    document: 'communities/{communityId}/posts/{postId}',
+    secrets: [GEMINI_API_KEY],
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data || data.moderationStatus !== 'pending_review') return;
@@ -104,11 +87,11 @@ exports.onPostCreated = onDocumentCreated(
   },
 );
 
-// ---------------------------------------------------------------------------
-// onCommentCreated — comments go through the same flow.
-// ---------------------------------------------------------------------------
 exports.onCommentCreated = onDocumentCreated(
-  'communities/{communityId}/posts/{postId}/comments/{commentId}',
+  {
+    document: 'communities/{communityId}/posts/{postId}/comments/{commentId}',
+    secrets: [GEMINI_API_KEY],
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data || data.moderationStatus !== 'pending_review') return;
@@ -117,9 +100,6 @@ exports.onCommentCreated = onDocumentCreated(
   },
 );
 
-// ---------------------------------------------------------------------------
-// onReportCreated — auto-hide posts with 3+ pending reports.
-// ---------------------------------------------------------------------------
 exports.onReportCreated = onDocumentCreated(
   'communityReports/{reportId}',
   async (event) => {

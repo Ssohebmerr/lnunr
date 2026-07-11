@@ -63,10 +63,14 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       );
       _commentController.clear();
       _cancelReply();
-      if (pending && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.communityPendingReview),
+            content: Text(
+              pending
+                  ? AppLocalizations.of(context)!.communityPendingReview
+                  : AppLocalizations.of(context)!.communityPostPublished,
+            ),
           ),
         );
       }

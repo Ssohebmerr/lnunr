@@ -772,6 +772,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get communityJoinedBadge => 'منضمة';
 
   @override
+  String get communityDiscoverNew => 'مجموعات جديدة';
+
+  @override
+  String get communityDiscoverJoined => 'مجموعاتك';
+
+  @override
+  String get communityDiscoverNoResults =>
+      'لا توجد مجموعات مطابقة. جرّبي فئة أخرى أو امسحي البحث.';
+
+  @override
+  String get communityClosedBadge => 'مغلقة';
+
+  @override
+  String get communityFeedBrowseTitle => 'تصفّحي كل المجموعات';
+
+  @override
+  String get communityFeedBrowseSubtitle =>
+      'الخلاصة تعرض مجموعاتك فقط — اكتشفي مجتمعات أخرى من هنا.';
+
+  @override
   String get communitySetupTitle => 'اختاري اسمًا مستعارًا';
 
   @override
@@ -3849,6 +3869,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notifRationaleSkip => 'ليس الآن';
+
+  @override
+  String get notifOsDisabledBanner =>
+      'الإشعارات مغلقة لتطبيق Lune في إعدادات النظام. لن تظهر التذكيرات حتى تفعّليها.';
+
+  @override
+  String get notifRequestPermission => 'السماح بالإشعارات';
+
+  @override
+  String get notifExactAlarmsHint =>
+      'للتذكيرات في وقتها، فعّلي «المنبهات والتذكيرات» لتطبيق Lune في إعدادات أندرويد.';
+
+  @override
+  String get notifEnableExactAlarms => 'تفعيل التذكيرات الدقيقة';
+
+  @override
+  String notifScheduledCount(int count) {
+    return '$count تذكيرات مجدولة';
+  }
+
+  @override
+  String get notifNoScheduled =>
+      'لا توجد تذكيرات مجدولة بعد. اسمحي بالإشعارات وسجّلي دورتكِ.';
+
+  @override
+  String get notifTestExactAlarmsHint =>
+      'تم الإرسال، لكن التذكيرات الدقيقة معطّلة — قد تتأخر التذكيرات.';
+
+  @override
+  String notifNextReminder(String when) {
+    return 'التذكير التالي: $when';
+  }
 
   @override
   String get ageGateTitle => 'كم عمركِ؟';

@@ -137,7 +137,7 @@ class _HomeTabState extends State<HomeTab> {
           16,
           0,
           16,
-          MediaQuery.paddingOf(context).bottom + 120,
+          MediaQuery.paddingOf(context).bottom + 24,
         ),
         itemCount: sections.length,
         itemBuilder: (context, index) {

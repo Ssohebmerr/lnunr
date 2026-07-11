@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -16,24 +18,38 @@ class GuestUserService {
   final FirebaseAuth _auth;
   final GuestUserRepository _repository;
 
-  /// Returns Firebase Auth uid (anonymous when no email account).
+  /// Returns Firebase Auth uid when online; otherwise last cached uid or device id.
   Future<String> ensureSession() async {
     await UserPrefs.getOrCreateDeviceId();
     var user = _auth.currentUser;
-    if (user == null) {
-      try {
-        final cred = await _auth.signInAnonymously();
-        user = cred.user;
-      } catch (e, st) {
-        debugPrint('GuestUserService signInAnonymously failed: $e\n$st');
-        rethrow;
-      }
+    if (user != null) {
+      await UserPrefs.saveUid(user.uid);
+      return user.uid;
     }
-    if (user == null) {
-      throw StateError('Anonymous sign-in returned no user');
+
+    final cachedUid = await UserPrefs.getUid();
+    if (cachedUid != null && cachedUid.isNotEmpty) {
+      return cachedUid;
     }
-    await UserPrefs.saveUid(user.uid);
-    return user.uid;
+
+    try {
+      final cred = await _auth.signInAnonymously().timeout(
+        const Duration(seconds: 5),
+      );
+      user = cred.user;
+    } catch (e, st) {
+      debugPrint('GuestUserService signInAnonymously failed (offline?): $e\n$st');
+    }
+
+    if (user != null) {
+      await UserPrefs.saveUid(user.uid);
+      return user.uid;
+    }
+
+    // Offline: local device id is enough for cycle tracking on this phone.
+    final deviceId = await UserPrefs.getOrCreateDeviceId();
+    await UserPrefs.saveUid(deviceId);
+    return deviceId;
   }
 
   Future<String> getDeviceId() => UserPrefs.getOrCreateDeviceId();

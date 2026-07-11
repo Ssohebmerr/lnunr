@@ -169,6 +169,72 @@ class CommunitySeed {
       icon: Icons.restaurant_menu_outlined,
       maxMembers: 250,
     ),
+    Community(
+      id: 'pregnancy-support',
+      nameEn: 'Pregnancy & Expecting',
+      nameAr: 'الحمل والانتظار',
+      descriptionEn:
+          'Share the journey week by week — symptoms, questions, and joy.',
+      descriptionAr: 'شاركي رحلة الحمل أسبوعاً بأسبوع — الأعراض والأسئلة والفرح.',
+      topic: 'support',
+      icon: Icons.child_friendly_outlined,
+      maxMembers: 200,
+    ),
+    Community(
+      id: 'irregular-periods',
+      nameEn: 'Irregular & Missed Periods',
+      nameAr: 'الدورة غير المنتظمة والمتأخرة',
+      descriptionEn:
+          'Support for late, missing, or unpredictable cycles — you are not alone.',
+      descriptionAr: 'دعم للدورة المتأخرة أو الغائبة أو غير المتوقعة — لستِ وحدك.',
+      topic: 'condition',
+      icon: Icons.event_busy_outlined,
+      maxMembers: 200,
+    ),
+    Community(
+      id: 'sleep-cycle',
+      nameEn: 'Sleep & Your Cycle',
+      nameAr: 'النوم ودورتك',
+      descriptionEn:
+          'Tips and support for cycle-related insomnia, fatigue, and rest.',
+      descriptionAr: 'نصائح ودعم للأرق والتعب المرتبط بالدورة والراحة.',
+      topic: 'general',
+      icon: Icons.bedtime_outlined,
+      maxMembers: 150,
+    ),
+    Community(
+      id: 'cycle-syncing',
+      nameEn: 'Cycle Syncing & Productivity',
+      nameAr: 'مزامنة الدورة والإنتاجية',
+      descriptionEn:
+          'Plan work, energy, and self-care around your cycle phases.',
+      descriptionAr: 'خطّطي لعملك وطاقتك وعنايتك بنفسك حسب مراحل دورتك.',
+      topic: 'general',
+      icon: Icons.calendar_month_outlined,
+      maxMembers: 200,
+    ),
+    Community(
+      id: 'thyroid-hormones',
+      nameEn: 'Thyroid & Hormonal Health',
+      nameAr: 'الغدة الدرقية وصحة الهرمونات',
+      descriptionEn:
+          'Peer support for thyroid and hormone imbalances that affect cycles.',
+      descriptionAr: 'دعم جماعي لاضطرابات الغدة والهرمونات التي تؤثر على الدورة.',
+      topic: 'condition',
+      icon: Icons.healing_outlined,
+      maxMembers: 150,
+    ),
+    Community(
+      id: 'fibroids-support',
+      nameEn: 'Fibroids Support',
+      nameAr: 'دعم الأورام الليفية',
+      descriptionEn:
+          'Share experiences with fibroids — symptoms, care, and questions.',
+      descriptionAr: 'شاركي تجاربك مع الأورام الليفية — الأعراض والعناية والأسئلة.',
+      topic: 'condition',
+      icon: Icons.spa_outlined,
+      maxMembers: 150,
+    ),
   ];
 
   static List<Community> filterByTopic(String? topic) {

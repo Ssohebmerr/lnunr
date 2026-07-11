@@ -4,11 +4,10 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
-import '../../../core/config/app_secrets.dart';
+import '../../../core/firebase/cloud_functions_client.dart';
 
 /// Google Play Billing for Premium subscriptions on Android (Play policy).
 ///
@@ -28,7 +27,7 @@ class PlayBillingService {
   static const Set<String> productIds = {monthlyProductId, yearlyProductId};
 
   static const packageName = 'com.lune.app';
-  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
+  static final _functions = CloudFunctionsClient.instance;
 
   final InAppPurchase _iap;
   StreamSubscription<List<PurchaseDetails>>? _purchaseSub;
@@ -107,21 +106,15 @@ class PlayBillingService {
     if (user == null) return false;
 
     try {
-      final token = await user.getIdToken();
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/verifyPlayPurchase'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: jsonEncode({
-              'purchaseToken': purchase.verificationData.serverVerificationData,
-              'productId': purchase.productID,
-              'packageName': packageName,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
+      final response = await _functions.post(
+        '/verifyPlayPurchase',
+        body: {
+          'purchaseToken': purchase.verificationData.serverVerificationData,
+          'productId': purchase.productID,
+          'packageName': packageName,
+        },
+        timeout: const Duration(seconds: 30),
+      );
 
       if (response.statusCode != 200) {
         debugPrint(

@@ -9,6 +9,7 @@ import '../../../core/age/age_gate.dart';
 import '../../../core/locale/locale_controller.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/privacy/consent_dialogs.dart';
+import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/notifications/notification_rationale_dialog.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
@@ -180,11 +181,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         goal: _goal,
       );
       if (!mounted) return;
-      await showNotificationRationale(context);
-      try {
-        await NotificationService.scheduleFromPrefs();
-      } catch (e) {
-        debugPrint('Onboarding notification schedule skipped: $e');
+      final granted = await showNotificationRationale(context);
+      await NotificationPrefs.markPermissionPrompted();
+      if (granted) {
+        try {
+          await NotificationService.scheduleFromPrefs();
+        } catch (e) {
+          debugPrint('Onboarding notification schedule skipped: $e');
+        }
       }
       if (mounted) {
         router.go('/home');

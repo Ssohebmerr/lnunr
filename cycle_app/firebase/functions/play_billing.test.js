@@ -3,7 +3,12 @@
  * Run: node play_billing.test.js
  */
 const assert = require('assert');
-const { isSubscriptionEntitled, parseExpiryDate } = require('./play_billing');
+const {
+  isSubscriptionEntitled,
+  parseExpiryDate,
+  assertTokenNotClaimedByOther,
+  decodePubSubBody,
+} = require('./play_billing');
 
 function test(name, fn) {
   try {
@@ -62,6 +67,62 @@ test('parseExpiryDate', () => {
   const d = parseExpiryDate({ expiryTimeMillis: String(future) });
   assert.ok(d instanceof Date);
   assert.strictEqual(d.getTime(), future);
+});
+
+test('decodePubSubBody accepts Pub/Sub envelope only', () => {
+  const payload = { subscriptionNotification: { purchaseToken: 'tok' } };
+  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
+  const decoded = decodePubSubBody({ message: { data: encoded } });
+  assert.deepStrictEqual(decoded, payload);
+});
+
+test('decodePubSubBody rejects raw JSON', () => {
+  assert.strictEqual(
+    decodePubSubBody({ subscriptionNotification: { purchaseToken: 'tok' } }),
+    null,
+  );
+});
+
+test('assertTokenNotClaimedByOther allows unclaimed token', async () => {
+  const db = {
+    collection: () => ({
+      where: () => ({
+        limit: () => ({
+          get: async () => ({ empty: true }),
+        }),
+      }),
+    }),
+  };
+  await assertTokenNotClaimedByOther(db, 'user-a', 'token-1');
+});
+
+test('assertTokenNotClaimedByOther allows same owner', async () => {
+  const db = {
+    collection: () => ({
+      where: () => ({
+        limit: () => ({
+          get: async () => ({ empty: false, docs: [{ id: 'user-a' }] }),
+        }),
+      }),
+    }),
+  };
+  await assertTokenNotClaimedByOther(db, 'user-a', 'token-1');
+});
+
+test('assertTokenNotClaimedByOther rejects other owner', async () => {
+  const db = {
+    collection: () => ({
+      where: () => ({
+        limit: () => ({
+          get: async () => ({ empty: false, docs: [{ id: 'user-b' }] }),
+        }),
+      }),
+    }),
+  };
+  await assert.rejects(
+    () => assertTokenNotClaimedByOther(db, 'user-a', 'token-1'),
+    (err) => err.code === 'token_already_claimed',
+  );
 });
 
 console.log('All play_billing tests passed.');

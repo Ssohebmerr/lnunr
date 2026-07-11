@@ -87,26 +87,25 @@ class DoctorReportMetrics {
       maxCycleLength != null &&
       minCycleLength != maxCycleLength;
 
-  bool get isEmpty => !hasCycleStats && averagePainLevel == null && flags.isEmpty;
+  bool get isEmpty =>
+      !hasCycleStats && averagePainLevel == null && flags.isEmpty;
 
   /// Compact numeric summary handed to the AI so its clinical notes reference
   /// the exact same figures printed on the report.
   Map<String, dynamic> toContextMap() => {
-        if (analyzedCycleCount > 0) 'analyzedCycleCount': analyzedCycleCount,
-        if (avgCycleLength != null) 'avgCycleLengthDays': avgCycleLength,
-        if (minCycleLength != null) 'minCycleLengthDays': minCycleLength,
-        if (maxCycleLength != null) 'maxCycleLengthDays': maxCycleLength,
-        if (cycleVariability != null) 'cycleVariabilityDays': cycleVariability,
-        if (avgPeriodDuration != null) 'avgPeriodDurationDays': avgPeriodDuration,
-        if (minPeriodDuration != null) 'minPeriodDurationDays': minPeriodDuration,
-        if (maxPeriodDuration != null) 'maxPeriodDurationDays': maxPeriodDuration,
-        if (lastPeriodStart != null)
-          'lastPeriodStart': _iso(lastPeriodStart!),
-        if (averagePainLevel != null)
-          'averagePainLevel_0to4': averagePainLevel,
-        if (flags.isNotEmpty)
-          'clinicalFlags': flags.map((f) => f.type.name).toList(),
-      };
+    if (analyzedCycleCount > 0) 'analyzedCycleCount': analyzedCycleCount,
+    if (avgCycleLength != null) 'avgCycleLengthDays': avgCycleLength,
+    if (minCycleLength != null) 'minCycleLengthDays': minCycleLength,
+    if (maxCycleLength != null) 'maxCycleLengthDays': maxCycleLength,
+    if (cycleVariability != null) 'cycleVariabilityDays': cycleVariability,
+    if (avgPeriodDuration != null) 'avgPeriodDurationDays': avgPeriodDuration,
+    if (minPeriodDuration != null) 'minPeriodDurationDays': minPeriodDuration,
+    if (maxPeriodDuration != null) 'maxPeriodDurationDays': maxPeriodDuration,
+    if (lastPeriodStart != null) 'lastPeriodStart': _iso(lastPeriodStart!),
+    if (averagePainLevel != null) 'averagePainLevel_0to4': averagePainLevel,
+    if (flags.isNotEmpty)
+      'clinicalFlags': flags.map((f) => f.type.name).toList(),
+  };
 
   static String _iso(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'
@@ -125,6 +124,11 @@ class DoctorReportAnalyzer {
   static const _longCycleDays = 38;
   static const _prolongedPeriodDays = 8;
   static const _severePain = 3.0; // on the 0–4 PainLevel scale
+  // A single unusually short, long, or heavy period is useful information for
+  // the report, but it is not enough history for a clinical-looking pattern
+  // prompt. Keep the raw numbers visible and wait for three completed cycles
+  // before surfacing cycle/bleeding discussion flags.
+  static const _minimumCompletedCyclesForPatternFlags = 3;
 
   static DoctorReportMetrics analyze({
     required CycleReportData report,
@@ -154,8 +158,9 @@ class DoctorReportAnalyzer {
     final avgCycle = _avg(cycleLengths);
     final minCycle = _min(cycleLengths);
     final maxCycle = _max(cycleLengths);
-    final variability =
-        (minCycle != null && maxCycle != null) ? maxCycle - minCycle : null;
+    final variability = (minCycle != null && maxCycle != null)
+        ? maxCycle - minCycle
+        : null;
 
     final avgPeriod = _avg(periodDurations);
     final minPeriod = _min(periodDurations);
@@ -184,20 +189,25 @@ class DoctorReportAnalyzer {
     final avgPain = snapshot?.averagePainLevel;
 
     final flags = <ClinicalFlag>[];
-    if (avgCycle != null) {
-      if (avgCycle < _shortCycleDays) {
-        flags.add(ClinicalFlag(ClinicalFlagType.shortCycle, value: avgCycle));
-      } else if (avgCycle > _longCycleDays) {
-        flags.add(ClinicalFlag(ClinicalFlagType.longCycle, value: avgCycle));
+    if (cycleLengths.length >= _minimumCompletedCyclesForPatternFlags) {
+      if (avgCycle != null) {
+        if (avgCycle < _shortCycleDays) {
+          flags.add(ClinicalFlag(ClinicalFlagType.shortCycle, value: avgCycle));
+        } else if (avgCycle > _longCycleDays) {
+          flags.add(ClinicalFlag(ClinicalFlagType.longCycle, value: avgCycle));
+        }
       }
-    }
-    if (variability != null &&
-        cycleLengths.length >= 3 &&
-        variability > _regularityLimitDays(patientAge)) {
-      flags.add(ClinicalFlag(ClinicalFlagType.irregularCycle, value: variability));
-    }
-    if (avgPeriod != null && avgPeriod > _prolongedPeriodDays) {
-      flags.add(ClinicalFlag(ClinicalFlagType.prolongedPeriod, value: avgPeriod));
+      if (variability != null &&
+          variability > _regularityLimitDays(patientAge)) {
+        flags.add(
+          ClinicalFlag(ClinicalFlagType.irregularCycle, value: variability),
+        );
+      }
+      if (avgPeriod != null && avgPeriod > _prolongedPeriodDays) {
+        flags.add(
+          ClinicalFlag(ClinicalFlagType.prolongedPeriod, value: avgPeriod),
+        );
+      }
     }
     if (avgPain != null && avgPain >= _severePain) {
       flags.add(const ClinicalFlag(ClinicalFlagType.highPain));

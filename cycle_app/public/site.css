@@ -1,64 +1,65 @@
-/* Lune — shared site design (Soft UI Evolution, professional) */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+/* Lune — shared site design (Refined Lunar, 2026) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Brand — matches Lune app (AuraColors) */
+  /* Brand — refined Lune palette (AuraColors, deepened for clarity) */
   --rose: #E8A0BF;
-  --rose-deep: #D484A8;
-  --blush: #FADADD;
+  --rose-deep: #C06D93;
+  --blush: #FBE4EB;
   --lavender: #D4C4F0;
   --lavender-soft: #C9B8E8;
-  --peach: #FFD6C9;
-  --cream: #FFFBF8;
-  --plum: #5C3D52;
-  --plum-muted: #8B6B7A;
+  --peach: #FFD9CC;
+  --cream: #FFFCFA;
+  --plum: #47293C;
+  --plum-muted: #7C5E6D;
 
-  --accent: #D484A8;
-  --accent-dark: #C47296;
-  --accent-soft: #FFF0F5;
-  --accent-muted: #FADADD;
-  --primary: #D484A8;
+  --accent: #B85084;
+  --accent-dark: #9E4472;
+  --accent-soft: #FCEFF4;
+  --accent-muted: #F6DCE6;
+  --primary: #B85084;
   --primary-light: #E8A0BF;
 
   /* Surfaces */
   --bg: #FFFFFF;
-  --bg-cream: #FFFBF8;
-  --bg-subtle: #FFF8F5;
-  --bg-section: #F5EDFF;
-  --bg-page: #FFF0F5;
+  --bg-cream: #FFFCFA;
+  --bg-subtle: #FEF8FB;
+  --bg-section: #FBF4FA;
+  --bg-page: #FFFAFC;
   --card: #FFFFFF;
   --surface: #FFFFFF;
   --rose-light: rgba(232, 160, 191, 0.22);
 
   /* Text */
-  --text: #5C3D52;
-  --text-muted: #8B6B7A;
-  --text-light: #A8949F;
-  --text-secondary: #8B6B7A;
+  --text: #47293C;
+  --text-muted: #7C5E6D;
+  --text-light: #A891A0;
+  --text-secondary: #7C5E6D;
 
-  /* Borders & shadows */
-  --border: rgba(232, 160, 191, 0.28);
-  --border-light: rgba(212, 196, 240, 0.35);
-  --shadow-sm: 0 2px 12px rgba(190, 24, 93, 0.1);
-  --shadow-md: 0 12px 36px rgba(190, 24, 93, 0.14);
-  --shadow-lg: 0 20px 56px rgba(92, 61, 82, 0.14);
-  --shadow-card: 0 4px 28px rgba(92, 61, 82, 0.08);
-  --shadow-soft: 0 4px 24px rgba(124, 58, 237, 0.1);
+  /* Borders & shadows — soft, diffuse, plum-tinted (modern) */
+  --border: rgba(71, 41, 60, 0.10);
+  --border-light: rgba(71, 41, 60, 0.07);
+  --shadow-sm: 0 1px 2px rgba(71, 41, 60, 0.05), 0 1px 3px rgba(71, 41, 60, 0.04);
+  --shadow-md: 0 4px 10px rgba(71, 41, 60, 0.05), 0 14px 34px rgba(71, 41, 60, 0.08);
+  --shadow-lg: 0 8px 18px rgba(71, 41, 60, 0.06), 0 28px 56px rgba(71, 41, 60, 0.12);
+  --shadow-card: 0 1px 2px rgba(71, 41, 60, 0.03), 0 8px 22px rgba(71, 41, 60, 0.05);
+  --shadow-soft: 0 4px 18px rgba(184, 80, 132, 0.10);
 
-  --radius: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+  --radius: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --transition: 250ms var(--ease-out);
+  --transition: 260ms var(--ease-out);
   --radius-pill: 999px;
   --max-width: 1120px;
   --nav-height: 72px;
   --font: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Lora', 'IBM Plex Sans Arabic', Georgia, serif;
+  --font-display: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --gradient-mesh: linear-gradient(135deg, #FDF2F8 0%, #FFF0F5 32%, #F5EDFF 68%, #FFEDE8 100%);
-  --gradient-brand: linear-gradient(135deg, #BE185D 0%, #D484A8 45%, #7C3AED 100%);
-  --gradient-cta: linear-gradient(135deg, #BE185D 0%, #9D174D 40%, #7C3AED 100%);
+  /* Refined gradients — rose→mauve, no electric magenta/purple */
+  --gradient-mesh: linear-gradient(180deg, #FFFCFA 0%, #FFF8FB 55%, #FBF5FB 100%);
+  --gradient-brand: linear-gradient(135deg, #C15C8A 0%, #A94D77 52%, #8B5AA4 100%);
+  --gradient-cta: linear-gradient(140deg, #A94D77 0%, #8E4268 42%, #6E4F8E 100%);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,8 +69,10 @@ body {
   color: var(--text);
   background: var(--gradient-mesh);
   background-attachment: fixed;
-  line-height: 1.65;
+  line-height: 1.7;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   position: relative;
 }
 body::before {
@@ -79,9 +82,8 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 55% 40% at 8% 12%, rgba(232, 160, 191, 0.14), transparent 55%),
-    radial-gradient(ellipse 45% 35% at 92% 18%, rgba(201, 184, 232, 0.16), transparent 50%),
-    radial-gradient(ellipse 40% 30% at 50% 100%, rgba(255, 214, 201, 0.12), transparent 55%);
+    radial-gradient(ellipse 50% 40% at 85% 0%, rgba(201, 184, 232, 0.10), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 5% 8%, rgba(232, 160, 191, 0.08), transparent 55%);
 }
 body > * { position: relative; z-index: 1; }
 img { max-width: 100%; display: block; }
@@ -110,11 +112,10 @@ a { color: inherit; }
   top: 0;
   z-index: 100;
   height: var(--nav-height);
-  background: rgba(255, 251, 248, 0.92);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, var(--shadow-soft);
+  background: rgba(255, 252, 250, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--border-light);
 }
 .site-nav .container {
   height: 100%;
@@ -185,11 +186,12 @@ a { color: inherit; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 13px 26px;
   border-radius: var(--radius-pill);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
   border: none;
   cursor: pointer;
@@ -198,11 +200,11 @@ a { color: inherit; }
 .btn-primary {
   background: var(--gradient-brand);
   color: #fff;
-  box-shadow: 0 6px 24px rgba(190, 24, 93, 0.28);
+  box-shadow: 0 6px 20px rgba(169, 77, 119, 0.24), 0 1px 2px rgba(71, 41, 60, 0.1);
 }
 .btn-primary:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 10px 36px rgba(190, 24, 93, 0.35);
+  filter: brightness(1.04);
+  box-shadow: 0 10px 30px rgba(169, 77, 119, 0.32), 0 1px 2px rgba(71, 41, 60, 0.1);
   transform: translateY(-2px);
 }
 .btn-primary:active { transform: translateY(0); }

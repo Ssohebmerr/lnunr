@@ -96,13 +96,22 @@ class _PartnerPageState extends State<PartnerPage> {
     final theme = Theme.of(context);
     final signedIn = FirebaseAuth.instance.currentUser != null;
 
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.partnerTitle)),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(l10n.partnerTitle),
+      ),
       body: AppMeshBackground(
         child: !signedIn
             ? _SignInPrompt(l10n: l10n, theme: theme)
             : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                padding: EdgeInsets.fromLTRB(16, topInset, 16, 32),
                 children: [
                   _IntroBanner(l10n: l10n, theme: theme),
                   const SizedBox(height: 16),
@@ -175,14 +184,54 @@ class _IntroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
-      padding: const EdgeInsets.all(14),
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: AuraDecorations.heroSurface(isDark),
       child: Row(
         children: [
-          Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AuraColors.rose, AuraColors.lavenderSoft],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AuraColors.rose.withValues(alpha: 0.3),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.favorite_rounded,
+                color: Colors.white, size: 26),
+          ),
+          const SizedBox(width: 14),
           Expanded(
-            child: Text(l10n.partnerIntro, style: theme.textTheme.bodySmall),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.partnerTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.partnerIntro,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

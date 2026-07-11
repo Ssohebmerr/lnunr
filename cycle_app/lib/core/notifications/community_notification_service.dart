@@ -7,7 +7,7 @@ import 'notification_prefs.dart';
 class CommunityNotificationService {
   CommunityNotificationService._();
 
-  static const _channelId = 'cycle_aura_community';
+  static const _channelId = AppNotifications.communityChannelId;
   static const _baseId = 2000;
   static int _seq = 0;
 

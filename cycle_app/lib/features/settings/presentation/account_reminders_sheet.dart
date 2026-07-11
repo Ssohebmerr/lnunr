@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/notifications/app_notifications.dart';
 import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../l10n/app_localizations.dart';
@@ -21,6 +23,10 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
   bool _latePeriodReminder = true;
   bool _smartPhaseReminder = true;
   bool _loading = true;
+  bool _osNotificationsEnabled = true;
+  bool _exactAlarmsEnabled = true;
+  int _pendingCount = 0;
+  DateTime? _nextReminderAt;
 
   @override
   void initState() {
@@ -30,6 +36,10 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    final osEnabled = await NotificationService.areNotificationsEnabled();
+    final exactOk = await AppNotifications.canScheduleExactNotifications();
+    final pending = await NotificationService.pendingReminderCount();
+    final nextAt = await NotificationService.nextScheduledReminderAt();
     if (mounted) {
       setState(() {
         _notifications = prefs.getBool('notifications_enabled') ?? true;
@@ -40,6 +50,10 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
             prefs.getBool(NotificationPrefs.latePeriodKey) ?? true;
         _smartPhaseReminder =
             prefs.getBool(NotificationPrefs.smartPhaseKey) ?? true;
+        _osNotificationsEnabled = osEnabled;
+        _exactAlarmsEnabled = exactOk;
+        _pendingCount = pending;
+        _nextReminderAt = nextAt;
         _loading = false;
       });
     }
@@ -49,6 +63,7 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
     await NotificationService.scheduleFromPrefs();
+    await _load();
   }
 
   Future<void> _sendTest() async {
@@ -56,13 +71,24 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
     final messenger = ScaffoldMessenger.of(context);
     final granted = await NotificationService.sendTestNotification();
     if (!mounted) return;
+
+    if (!granted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.testNotificationBlocked)),
+      );
+      await _load();
+      return;
+    }
+
+    final exactOk = await AppNotifications.canScheduleExactNotifications();
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          granted ? l10n.testNotificationSent : l10n.testNotificationBlocked,
+          exactOk ? l10n.testNotificationSent : l10n.notifTestExactAlarmsHint,
         ),
       ),
     );
+    await _load();
   }
 
   @override
@@ -86,6 +112,80 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
           if (_loading)
             const Center(child: CircularProgressIndicator())
           else ...[
+            if (!_osNotificationsEnabled)
+              Card(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.notifOsDisabledBanner,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      FilledButton.tonal(
+                        onPressed: () async {
+                          await NotificationService.requestPermission();
+                          await _load();
+                        },
+                        child: Text(l10n.notifRequestPermission),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (_osNotificationsEnabled && !_exactAlarmsEnabled) ...[
+              const SizedBox(height: 8),
+              Card(
+                color: theme.colorScheme.secondaryContainer
+                    .withValues(alpha: 0.35),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.notifExactAlarmsHint,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: () async {
+                          await AppNotifications.requestExactAlarmsPermission();
+                          await _load();
+                        },
+                        child: Text(l10n.notifEnableExactAlarms),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              _pendingCount > 0
+                  ? l10n.notifScheduledCount(_pendingCount)
+                  : l10n.notifNoScheduled,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            if (_nextReminderAt != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.notifNextReminder(
+                  DateFormat.yMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).add_jm().format(_nextReminderAt!.toLocal()),
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.notificationsEnable),

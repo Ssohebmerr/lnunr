@@ -2,9 +2,8 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 
-import '../config/app_secrets.dart';
+import '../firebase/cloud_functions_client.dart';
 
 /// Deletes optional cloud data when the user revokes consent (GDPR).
 class ConsentDataService {
@@ -15,7 +14,7 @@ class ConsentDataService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
+  static final _functions = CloudFunctionsClient.instance;
 
   Future<void> purgeCloudBackups() async {
     final uid = _auth.currentUser?.uid;
@@ -35,14 +34,7 @@ class ConsentDataService {
   Future<void> purgeAiData() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
-    final token = await _auth.currentUser!.getIdToken();
-    final response = await http.post(
-      Uri.parse('$_baseUrl/purgeAiData'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    final response = await _functions.post('/purgeAiData', body: const {});
     if (response.statusCode == 200) return;
 
     String message = 'Failed to purge AI data';

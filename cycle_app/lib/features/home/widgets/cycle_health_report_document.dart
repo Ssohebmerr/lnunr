@@ -47,7 +47,7 @@ class CycleHealthReportDocument extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+    final theme = _documentTheme(Theme.of(context));
     final locale = Localizations.localeOf(context);
     final ar = locale.languageCode == 'ar';
     final dateFmt = DateFormat.yMMMMd(locale.toString());
@@ -61,254 +61,289 @@ class CycleHealthReportDocument extends StatelessWidget {
     final snap = snapshot;
     final vitalsRows = _vitalsRows(l10n, snap);
 
-    return Container(
-      color: const Color(0xFFD4D4D4),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ReportHeader(
-                  title: l10n.healthReportTitle,
-                  createdBy: l10n.healthReportCreatedBy,
-                  exportedLabel: l10n.healthReportExportedOn(
-                    dateFmt.format(exportedAt),
+    return Theme(
+      data: theme,
+      child: Container(
+        color: const Color(0xFFD4D4D4),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
-                  qrPayload: qrPayload,
-                ),
-                const SizedBox(height: 14),
-                _PatientHeader(
-                  patient: pt,
-                  metrics: m,
-                  reportId: reportId,
-                  goalLabel: _goalLabel(l10n, snap),
-                  ar: ar,
-                  l10n: l10n,
-                ),
-                if (refining) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.doctorReportRefining,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ReportHeader(
+                    title: l10n.healthReportTitle,
+                    createdBy: l10n.healthReportCreatedBy,
+                    exportedLabel: l10n.healthReportExportedOn(
+                      dateFmt.format(exportedAt),
                     ),
+                    qrPayload: qrPayload,
                   ),
-                ],
-                if (enrich?.clinicalSummary != null &&
-                    enrich!.clinicalSummary!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportClinicalSummary,
-                    children: [
-                      Text(
-                        enrich.clinicalSummary!.trim(),
-                        style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
+                  const SizedBox(height: 14),
+                  _PatientHeader(
+                    patient: pt,
+                    metrics: m,
+                    reportId: reportId,
+                    goalLabel: _goalLabel(l10n, snap),
+                    ar: ar,
+                    l10n: l10n,
+                  ),
+                  if (refining) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.doctorReportRefining,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
                       ),
-                    ],
-                  ),
-                ],
-                if (m != null && !m.isEmpty) ...[
+                    ),
+                  ],
+                  if (enrich?.clinicalSummary != null &&
+                      enrich!.clinicalSummary!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportClinicalSummary,
+                      children: [
+                        Text(
+                          enrich.clinicalSummary!.trim(),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (m != null && !m.isEmpty) ...[
+                    const SizedBox(height: 20),
+                    _ReportSection(
+                      title: l10n.healthReportMenstrualHistory,
+                      children: _menstrualHistoryRows(l10n, m, dateFmt, ar),
+                    ),
+                  ],
+                  if (m != null && m.flags.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _RedFlagSection(
+                      title: l10n.healthReportPatternsToDiscuss,
+                      items: [
+                        for (final f in m.flags)
+                          DoctorReportFlagText.of(l10n, f),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   _ReportSection(
-                    title: l10n.healthReportMenstrualHistory,
-                    children: _menstrualHistoryRows(l10n, m, dateFmt, ar),
-                  ),
-                ],
-                if (m != null && m.flags.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _RedFlagSection(
-                    title: l10n.healthReportPatternsToDiscuss,
-                    items: [
-                      for (final f in m.flags) DoctorReportFlagText.of(l10n, f),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 20),
-                _ReportSection(
-                  title: l10n.healthReportCyclePeriodLength,
-                  children: [
-                    _StatRow(
-                      label: l10n.reportAvgCycle,
-                      value: _daysLabel(
-                        km['avg_cycle_length'] ?? dash?.avgCycleLength,
-                        ar,
-                      ),
-                    ),
-                    _StatRow(
-                      label: l10n.reportAvgPeriod,
-                      value: _daysLabel(
-                        km['avg_period_duration'] ?? dash?.avgPeriodDuration,
-                        ar,
-                      ),
-                    ),
-                    _StatRow(
-                      label: l10n.healthReportPrevCycleLength,
-                      value: _daysLabel(km['prev_cycle_length'], ar),
-                    ),
-                    _StatRow(
-                      label: l10n.healthReportPrevPeriodDuration,
-                      value: _daysLabel(km['prev_period_duration'], ar),
-                    ),
-                    _StatRow(
-                      label: l10n.healthReportCycleRegularityScore,
-                      value: _scoreLabel(
-                        km['cycle_regularity_score'] ?? dash?.cycleRegularity,
-                        km['cycle_regularity_score_status'] ??
-                            dash?.cycleRegularityStatus,
-                      ),
-                    ),
-                    _StatRow(
-                      label: l10n.healthReportPeriodRegularityScore,
-                      value: _scoreLabel(
-                        km['period_regularity_score'] ?? dash?.periodRegularity,
-                        km['period_regularity_score_status'] ??
-                            dash?.periodRegularityStatus,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                _ReportSection(
-                  title: l10n.healthReportPredictions,
-                  children: [
-                    _StatRow(
-                      label: l10n.healthReportNextPeriodDay,
-                      value: _text(
-                        pm['next_period_day'] ?? dash?.nextPeriod,
-                      ),
-                    ),
-                    _StatRow(
-                      label: l10n.healthReportNextOvulationDay,
-                      value: _text(pm['next_ovulation_day'] ?? dash?.ovulation),
-                    ),
-                  ],
-                ),
-                if (report.cycles.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportCycleHistorySummary,
+                    title: l10n.healthReportCyclePeriodLength,
                     children: [
-                      for (var i = 0; i < report.cycles.length && i < 8; i++)
-                        _CycleHistoryRow(
-                          cycle: report.cycles[i],
-                          isCurrent: i == 0,
-                          ar: ar,
-                          l10n: l10n,
+                      _StatRow(
+                        label: l10n.reportAvgCycle,
+                        value: _daysLabel(
+                          m != null
+                              ? m.avgCycleLength
+                              : km['avg_cycle_length'] ?? dash?.avgCycleLength,
+                          ar,
                         ),
+                      ),
+                      _StatRow(
+                        label: l10n.reportAvgPeriod,
+                        value: _daysLabel(
+                          m != null
+                              ? m.avgPeriodDuration
+                              : km['avg_period_duration'] ??
+                                    dash?.avgPeriodDuration,
+                          ar,
+                        ),
+                      ),
+                      _StatRow(
+                        label: l10n.healthReportPrevCycleLength,
+                        value: _daysLabel(km['prev_cycle_length'], ar),
+                      ),
+                      _StatRow(
+                        label: l10n.healthReportPrevPeriodDuration,
+                        value: _daysLabel(km['prev_period_duration'], ar),
+                      ),
+                      _StatRow(
+                        label: l10n.healthReportCycleRegularityScore,
+                        value: _scoreLabel(
+                          km['cycle_regularity_score'] ?? dash?.cycleRegularity,
+                          km['cycle_regularity_score_status'] ??
+                              dash?.cycleRegularityStatus,
+                        ),
+                      ),
+                      _StatRow(
+                        label: l10n.healthReportPeriodRegularityScore,
+                        value: _scoreLabel(
+                          km['period_regularity_score'] ??
+                              dash?.periodRegularity,
+                          km['period_regularity_score_status'] ??
+                              dash?.periodRegularityStatus,
+                        ),
+                      ),
                     ],
                   ),
-                ],
-                if (report.symptomPatterns.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   _ReportSection(
-                    title: l10n.healthReportSymptomPatternsSummary,
+                    title: l10n.healthReportPredictions,
                     children: [
-                      for (final p in report.symptomPatterns.take(12))
-                        _SymptomPatternRow(pattern: p),
+                      _StatRow(
+                        label: l10n.healthReportNextPeriodDay,
+                        value: _text(pm['next_period_day'] ?? dash?.nextPeriod),
+                      ),
+                      _StatRow(
+                        label: l10n.healthReportNextOvulationDay,
+                        value: _text(
+                          pm['next_ovulation_day'] ?? dash?.ovulation,
+                        ),
+                      ),
                     ],
                   ),
-                ],
-                if (_hasSymptomBurden(m, snap)) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportSymptomBurden,
-                    children: _symptomBurdenRows(l10n, m, snap, ar),
+                  if (report.cycles.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportCycleHistorySummary,
+                      children: [
+                        for (var i = 0; i < report.cycles.length && i < 8; i++)
+                          _CycleHistoryRow(
+                            cycle: report.cycles[i],
+                            isCurrent: i == 0,
+                            ar: ar,
+                            l10n: l10n,
+                          ),
+                      ],
+                    ),
+                  ],
+                  if (report.symptomPatterns.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportSymptomPatternsSummary,
+                      children: [
+                        for (final p in report.symptomPatterns.take(12))
+                          _SymptomPatternRow(pattern: p),
+                      ],
+                    ),
+                  ],
+                  if (_hasSymptomBurden(m, snap)) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportSymptomBurden,
+                      children: _symptomBurdenRows(l10n, m, snap, ar),
+                    ),
+                  ],
+                  if (enrich != null && enrich.patterns.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportObservedPatterns,
+                      children: [
+                        for (final item in enrich.patterns)
+                          _BulletRow(text: item),
+                      ],
+                    ),
+                  ],
+                  if (enrich != null && enrich.discussionPoints.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportDiscussionPoints,
+                      children: [
+                        for (final item in enrich.discussionPoints)
+                          _BulletRow(text: item),
+                      ],
+                    ),
+                  ],
+                  if (enrich != null && enrich.redFlags.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _RedFlagSection(
+                      title: l10n.healthReportRedFlags,
+                      items: enrich.redFlags,
+                    ),
+                  ],
+                  if (vitalsRows.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    _ReportSection(
+                      title: l10n.healthReportVitalsAdherence,
+                      children: vitalsRows,
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  Divider(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.25),
                   ),
-                ],
-                if (enrich != null && enrich.patterns.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportObservedPatterns,
-                    children: [
-                      for (final item in enrich.patterns)
-                        _BulletRow(text: item),
-                    ],
-                  ),
-                ],
-                if (enrich != null && enrich.discussionPoints.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportDiscussionPoints,
-                    children: [
-                      for (final item in enrich.discussionPoints)
-                        _BulletRow(text: item),
-                    ],
-                  ),
-                ],
-                if (enrich != null && enrich.redFlags.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _RedFlagSection(
-                    title: l10n.healthReportRedFlags,
-                    items: enrich.redFlags,
-                  ),
-                ],
-                if (vitalsRows.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _ReportSection(
-                    title: l10n.healthReportVitalsAdherence,
-                    children: vitalsRows,
-                  ),
-                ],
-                const SizedBox(height: 20),
-                Divider(color: theme.colorScheme.outline.withValues(alpha: 0.25)),
-                const SizedBox(height: 8),
-                if (enrich?.dataQualityNote != null &&
-                    enrich!.dataQualityNote!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  if (enrich?.dataQualityNote != null &&
+                      enrich!.dataQualityNote!.trim().isNotEmpty) ...[
+                    Text(
+                      enrich.dataQualityNote!.trim(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                        fontStyle: FontStyle.italic,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ] else if (limitedData && limitedDataNote != null) ...[
+                    Text(
+                      limitedDataNote!,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                        fontStyle: FontStyle.italic,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   Text(
-                    enrich.dataQualityNote!.trim(),
+                    l10n.healthReportFooter,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.outline,
-                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.doctorReportDisclaimer,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.outline,
                       height: 1.35,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                ] else if (limitedData && limitedDataNote != null) ...[
-                  Text(
-                    limitedDataNote!,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                      fontStyle: FontStyle.italic,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
                 ],
-                Text(
-                  l10n.healthReportFooter,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.outline,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.doctorReportDisclaimer,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.outline,
-                    height: 1.35,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  ThemeData _documentTheme(ThemeData inherited) {
+    const scheme = ColorScheme.light(
+      primary: AuraColors.roseDeep,
+      onPrimary: Colors.white,
+      surface: Colors.white,
+      onSurface: AuraColors.ink,
+      onSurfaceVariant: AuraColors.inkSoft,
+      outline: AuraColors.plumMuted,
+      outlineVariant: AuraColors.blush,
+    );
+    return ThemeData.light(useMaterial3: true).copyWith(
+      colorScheme: scheme,
+      textTheme: inherited.textTheme.apply(
+        bodyColor: AuraColors.ink,
+        displayColor: AuraColors.ink,
+      ),
+      iconTheme: const IconThemeData(color: AuraColors.inkSoft),
+      dividerColor: AuraColors.blush,
     );
   }
 
@@ -327,43 +362,56 @@ class CycleHealthReportDocument extends StatelessWidget {
   ) {
     final rows = <Widget>[];
     if (m.lastPeriodStart != null) {
-      rows.add(_StatRow(
-        label: l10n.healthReportLastPeriod,
-        value: dateFmt.format(m.lastPeriodStart!),
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportLastPeriod,
+          value: dateFmt.format(m.lastPeriodStart!),
+        ),
+      );
     }
     if (m.firstCycleDate != null && m.lastCycleDate != null) {
-      rows.add(_StatRow(
-        label: l10n.healthReportDataPeriod,
-        value: '${dateFmt.format(m.firstCycleDate!)} — '
-            '${dateFmt.format(m.lastCycleDate!)}',
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportDataPeriod,
+          value:
+              '${dateFmt.format(m.firstCycleDate!)} — '
+              '${dateFmt.format(m.lastCycleDate!)}',
+        ),
+      );
     }
     if (m.analyzedCycleCount > 0) {
-      rows.add(_StatRow(
-        label: l10n.healthReportCyclesAnalyzed,
-        value: '${m.analyzedCycleCount}',
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportCyclesAnalyzed,
+          value: '${m.analyzedCycleCount}',
+        ),
+      );
     }
     if (m.hasRangeData) {
-      rows.add(_StatRow(
-        label: l10n.healthReportCycleLengthRange,
-        value: _rangeLabel(m.minCycleLength!, m.maxCycleLength!, ar),
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportCycleLengthRange,
+          value: _rangeLabel(m.minCycleLength!, m.maxCycleLength!, ar),
+        ),
+      );
     }
     if (m.cycleVariability != null) {
-      rows.add(_StatRow(
-        label: l10n.healthReportCycleVariability,
-        value: _daysLabel(m.cycleVariability, ar),
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportCycleVariability,
+          value: _daysLabel(m.cycleVariability, ar),
+        ),
+      );
     }
     if (m.minPeriodDuration != null &&
         m.maxPeriodDuration != null &&
         m.minPeriodDuration != m.maxPeriodDuration) {
-      rows.add(_StatRow(
-        label: l10n.healthReportPeriodLengthRange,
-        value: _rangeLabel(m.minPeriodDuration!, m.maxPeriodDuration!, ar),
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportPeriodLengthRange,
+          value: _rangeLabel(m.minPeriodDuration!, m.maxPeriodDuration!, ar),
+        ),
+      );
     }
     return rows;
   }
@@ -382,16 +430,20 @@ class CycleHealthReportDocument extends StatelessWidget {
     final rows = <Widget>[];
     final pain = m?.averagePainLevel;
     if (pain != null) {
-      rows.add(_StatRow(
-        label: l10n.healthReportAveragePain,
-        value: '${pain.toStringAsFixed(1)} / 4',
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportAveragePain,
+          value: '${pain.toStringAsFixed(1)} / 4',
+        ),
+      );
     }
     if (snap != null && snap.wellnessLogCount > 0) {
-      rows.add(_StatRow(
-        label: l10n.healthReportWellnessEntries,
-        value: '${snap.wellnessLogCount}',
-      ));
+      rows.add(
+        _StatRow(
+          label: l10n.healthReportWellnessEntries,
+          value: '${snap.wellnessLogCount}',
+        ),
+      );
     }
     return rows;
   }
@@ -405,25 +457,31 @@ class CycleHealthReportDocument extends StatelessWidget {
     if (vitals is Map) {
       final weight = vitals['latestWeight'];
       if (weight != null && weight.toString().trim().isNotEmpty) {
-        rows.add(_StatRow(
-          label: l10n.healthReportLatestWeight,
-          value: weight.toString().trim(),
-        ));
+        rows.add(
+          _StatRow(
+            label: l10n.healthReportLatestWeight,
+            value: weight.toString().trim(),
+          ),
+        );
       }
       final temp = vitals['latestBodyTemperature'];
       if (temp != null && temp.toString().trim().isNotEmpty) {
-        rows.add(_StatRow(
-          label: l10n.healthReportLatestTemperature,
-          value: temp.toString().trim(),
-        ));
+        rows.add(
+          _StatRow(
+            label: l10n.healthReportLatestTemperature,
+            value: temp.toString().trim(),
+          ),
+        );
       }
       final water = vitals['avgWaterLast30Days'];
       if (water != null) {
         final unit = (vitals['waterUnit'] ?? '').toString().trim();
-        rows.add(_StatRow(
-          label: l10n.healthReportAvgWater,
-          value: '$water $unit'.trim(),
-        ));
+        rows.add(
+          _StatRow(
+            label: l10n.healthReportAvgWater,
+            value: '$water $unit'.trim(),
+          ),
+        );
       }
     }
 
@@ -432,10 +490,12 @@ class CycleHealthReportDocument extends StatelessWidget {
       final taken = pills['takenLast7Days'];
       final scheduled = pills['scheduledLast7Days'];
       if (taken != null && scheduled is num && scheduled > 0) {
-        rows.add(_StatRow(
-          label: l10n.healthReportPillAdherence,
-          value: '$taken / $scheduled',
-        ));
+        rows.add(
+          _StatRow(
+            label: l10n.healthReportPillAdherence,
+            value: '$taken / $scheduled',
+          ),
+        );
       }
     }
 
@@ -515,15 +575,23 @@ class _PatientHeader extends StatelessWidget {
     final rows = <Widget>[];
 
     if (pt != null && pt.hasName) {
-      rows.add(_kv(theme, l10n.doctorReportPatientName, pt.name!.trim(),
-          emphasize: true));
+      rows.add(
+        _kv(
+          theme,
+          l10n.doctorReportPatientName,
+          pt.name!.trim(),
+          emphasize: true,
+        ),
+      );
     }
     if (pt?.age != null) {
-      rows.add(_kv(
-        theme,
-        l10n.doctorReportPatientAge,
-        ar ? '${pt!.age} سنة' : '${pt!.age} yrs',
-      ));
+      rows.add(
+        _kv(
+          theme,
+          l10n.doctorReportPatientAge,
+          ar ? '${pt!.age} سنة' : '${pt!.age} yrs',
+        ),
+      );
     }
     rows.add(_kv(theme, l10n.healthReportMode, goalLabel));
     if (reportId != null && reportId!.isNotEmpty) {
@@ -535,9 +603,7 @@ class _PatientHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: AuraColors.blush.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AuraColors.roseDeep.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: AuraColors.roseDeep.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -585,8 +651,9 @@ class _PatientHeader extends StatelessWidget {
             flex: 2,
             child: Text(
               k,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -625,7 +692,9 @@ class _RedFlagSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF6EC),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0A34E).withValues(alpha: 0.45)),
+        border: Border.all(
+          color: const Color(0xFFE0A34E).withValues(alpha: 0.45),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -764,7 +833,11 @@ class _ReportSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.event_note_outlined, size: 18, color: AuraColors.roseDeep),
+            Icon(
+              Icons.event_note_outlined,
+              size: 18,
+              color: AuraColors.roseDeep,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -923,8 +996,18 @@ class _CycleHistoryRow extends StatelessWidget {
     if (parsed == null) return raw.trim();
     if (ar) {
       const months = [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+        'يناير',
+        'فبراير',
+        'مارس',
+        'أبريل',
+        'مايو',
+        'يونيو',
+        'يوليو',
+        'أغسطس',
+        'سبتمبر',
+        'أكتوبر',
+        'نوفمبر',
+        'ديسمبر',
       ];
       final m = months[parsed.month - 1];
       return '$m ${parsed.day.toString().padLeft(2, '0')}';
@@ -934,10 +1017,7 @@ class _CycleHistoryRow extends StatelessWidget {
 }
 
 class _CycleDotsRow extends StatelessWidget {
-  const _CycleDotsRow({
-    required this.cycleLength,
-    required this.periodDays,
-  });
+  const _CycleDotsRow({required this.cycleLength, required this.periodDays});
 
   final int cycleLength;
   final int periodDays;
@@ -986,9 +1066,7 @@ class _SymptomPatternRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(name, style: theme.textTheme.bodySmall),
-              ),
+              Expanded(child: Text(name, style: theme.textTheme.bodySmall)),
               Text(
                 l10n.reportPercentOfCycles(pct),
                 style: theme.textTheme.labelSmall?.copyWith(

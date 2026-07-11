@@ -4,10 +4,9 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../core/cms/app_settings.dart';
-import '../../../core/config/app_secrets.dart';
+import '../../../core/firebase/cloud_functions_client.dart';
 import '../../community/data/models/community_profile.dart';
 
 class AdminAiReport {
@@ -524,21 +523,13 @@ class AdminRepository {
     try {
       final user = _auth.currentUser;
       if (user == null) return {'error': 'Not authenticated'};
-      final token = await user.getIdToken();
-      final url = Uri.parse(
-        '${AppSecrets.cloudFunctionsUrl}/adminBroadcast',
-      );
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
+      final response = await CloudFunctionsClient.instance.post(
+        '/adminBroadcast',
+        body: {
           'title': title,
           'body': body,
           'audience': ?audience,
-        }),
+        },
       );
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode != 200) {
@@ -562,14 +553,9 @@ class AdminRepository {
     final user = _auth.currentUser;
     if (user == null) return {'error': 'Not authenticated'};
     try {
-      final token = await user.getIdToken();
-      final response = await http.post(
-        Uri.parse('${AppSecrets.cloudFunctionsUrl}/adminApi'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'action': action, 'payload': payload}),
+      final response = await CloudFunctionsClient.instance.post(
+        '/adminApi',
+        body: {'action': action, 'payload': payload},
       );
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode != 200) {

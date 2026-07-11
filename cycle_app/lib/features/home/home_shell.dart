@@ -172,9 +172,9 @@ class _HomeShellState extends State<HomeShell> {
       );
       return;
     }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const AiChatPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AiChatPage()));
   }
 
   void _openLog() {
@@ -194,10 +194,8 @@ class _HomeShellState extends State<HomeShell> {
     final l10n = AppLocalizations.of(context)!;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SubFeaturePage(
-          title: l10n.navReports,
-          child: const ReportsTab(),
-        ),
+        builder: (_) =>
+            SubFeaturePage(title: l10n.navReports, child: const ReportsTab()),
       ),
     );
   }
@@ -238,180 +236,187 @@ class _HomeShellState extends State<HomeShell> {
 
     return PremiumSyncListener(
       child: CommunityNotificationListener(
-      child: Container(
-      decoration: AppTheme.gradientBackground(context),
-      child: Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: AppTheme.gradientBackground(context),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (isAccount)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.sm,
-                    AppSpacing.md,
-                    AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.navAccount,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
+        child: Container(
+          decoration: AppTheme.gradientBackground(context),
+          child: Scaffold(
+            extendBody: false,
+            backgroundColor: Colors.transparent,
+            body: Container(
+              decoration: AppTheme.gradientBackground(context),
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (isAccount)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.sm,
                         ),
-                      ),
-                      if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
-                        _AiHeaderChip(
-                          label: l10n.homeAiChipLabel,
-                          onTap: _openAiChat,
-                        ),
-                    ],
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.sm,
-                    AppSpacing.md,
-                    AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onDoubleTap: () async {
-                          if (_stealthEnabled) {
-                            UserPrefs.setSessionUnlocked(false);
-                            if (mounted) {
-                              context.go('/stealth');
-                            }
-                          }
-                        },
-                        child: AppAvatar(
-                          radius: 22,
-                          avatarIndex: _avatarIndex,
-                          photoPath: _photoPath,
-                          networkUrl: _photoUrl,
-                          isPremium: _isPremium,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              greeting,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              labels[_index],
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
+                            Expanded(
+                              child: Text(
+                                l10n.navAccount,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                ),
                               ),
                             ),
+                            if (FeatureFlags.isEnabledSync(
+                              FeatureFlags.aiChatEnabled,
+                            ))
+                              _AiHeaderChip(
+                                label: l10n.homeAiChipLabel,
+                                onTap: _openAiChat,
+                              ),
+                          ],
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onDoubleTap: () async {
+                                if (_stealthEnabled) {
+                                  UserPrefs.setSessionUnlocked(false);
+                                  if (mounted) {
+                                    context.go('/stealth');
+                                  }
+                                }
+                              },
+                              child: AppAvatar(
+                                radius: 22,
+                                avatarIndex: _avatarIndex,
+                                photoPath: _photoPath,
+                                networkUrl: _photoUrl,
+                                isPremium: _isPremium,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    greeting,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    labels[_index],
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (FeatureFlags.isEnabledSync(
+                              FeatureFlags.aiChatEnabled,
+                            ))
+                              _AiHeaderChip(
+                                label: l10n.homeAiChipLabel,
+                                onTap: _openAiChat,
+                              ),
+                            if (_index == 0)
+                              IconButton(
+                                tooltip: l10n.navReports,
+                                onPressed: _openReports,
+                                icon: FeminineIconView(
+                                  FeminineIcon.reports,
+                                  color: theme.colorScheme.primary,
+                                  size: 22,
+                                ),
+                              ),
+                            if (_stealthEnabled)
+                              IconButton(
+                                tooltip: l10n.stealthHideNow,
+                                onPressed: () => context.push('/stealth'),
+                                icon: Icon(
+                                  Icons.visibility_off_rounded,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            if (_index == 0)
+                              IconButton(
+                                tooltip: l10n.retry,
+                                onPressed: HomeRefreshScope.refresh,
+                                icon: Icon(
+                                  Icons.refresh_rounded,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
                           ],
                         ),
                       ),
-                      if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled))
-                        _AiHeaderChip(
-                          label: l10n.homeAiChipLabel,
-                          onTap: _openAiChat,
-                        ),
-                      if (_index == 0)
-                        IconButton(
-                          tooltip: l10n.navReports,
-                          onPressed: _openReports,
-                          icon: FeminineIconView(
-                            FeminineIcon.reports,
-                            color: theme.colorScheme.primary,
-                            size: 22,
-                          ),
-                        ),
-                      if (_stealthEnabled)
-                        IconButton(
-                          tooltip: l10n.stealthHideNow,
-                          onPressed: () => context.push('/stealth'),
-                          icon: Icon(
-                            Icons.visibility_off_rounded,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      if (_index == 0)
-                        IconButton(
-                          tooltip: l10n.retry,
-                          onPressed: HomeRefreshScope.refresh,
-                          icon: Icon(
-                            Icons.refresh_rounded,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              Expanded(
-                child: IndexedStack(
-                  index: _index,
-                  sizing: StackFit.expand,
-                  children: List.generate(4, _tabChild),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _index,
+                        sizing: StackFit.expand,
+                        children: List.generate(4, _tabChild),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
 
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          0,
-          16,
-          16 + MediaQuery.paddingOf(context).bottom,
-        ),
-        child: Container(
-          height: 68,
-          clipBehavior: Clip.none,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            color: isDark
-                ? AuraColors.darkCard.withValues(alpha: 0.85)
-                : Colors.white.withValues(alpha: 0.88),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.04),
-            ),
-            boxShadow: AppShadows.navFloat(isDark),
-          ),
-          child: Row(
-            children: _bottomNavItems(
-              context: context,
-              labels: labels,
-              selectedIndex: _index,
-              communityEnabled: _communityEnabled,
-              onSelect: _onTabSelected,
-              onLog: _openLog,
+            bottomNavigationBar: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                12 + MediaQuery.paddingOf(context).bottom,
+              ),
+              child: Container(
+                height: 64,
+                clipBehavior: Clip.none,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  color: isDark
+                      ? AuraColors.darkCard.withValues(alpha: 0.97)
+                      : Colors.white.withValues(alpha: 0.97),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.04),
+                  ),
+                  boxShadow: AppShadows.navFloat(isDark),
+                ),
+                child: Row(
+                  children: _bottomNavItems(
+                    context: context,
+                    labels: labels,
+                    selectedIndex: _index,
+                    communityEnabled: _communityEnabled,
+                    onSelect: _onTabSelected,
+                    onLog: _openLog,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       ),
-    ),
-    ),
-    ),
     );
   }
 
@@ -429,11 +434,11 @@ class _HomeShellState extends State<HomeShell> {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     Widget nav(int index) => _NavItem(
-          icon: _navIcons[index],
-          label: labels[index],
-          selected: selectedIndex == index,
-          onTap: () => onSelect(index),
-        );
+      icon: _navIcons[index],
+      label: labels[index],
+      selected: selectedIndex == index,
+      onTap: () => onSelect(index),
+    );
 
     if (!communityEnabled) {
       // Home | + | SelfCare · Account
@@ -441,11 +446,7 @@ class _HomeShellState extends State<HomeShell> {
       final afterLog = [nav(2), nav(3)];
       final leading = isRtl ? afterLog.reversed.toList() : beforeLog;
       final trailing = isRtl ? beforeLog : afterLog;
-      return [
-        ...leading,
-        _BottomBarLogSlot(onPressed: onLog),
-        ...trailing,
-      ];
+      return [...leading, _BottomBarLogSlot(onPressed: onLog), ...trailing];
     }
 
     // LTR: Home · Community | + | SelfCare · Account
@@ -455,11 +456,7 @@ class _HomeShellState extends State<HomeShell> {
     final leading = isRtl ? afterLog.reversed.toList() : beforeLog;
     final trailing = isRtl ? beforeLog.reversed.toList() : afterLog;
 
-    return [
-      ...leading,
-      _BottomBarLogSlot(onPressed: onLog),
-      ...trailing,
-    ];
+    return [...leading, _BottomBarLogSlot(onPressed: onLog), ...trailing];
   }
 }
 
@@ -472,16 +469,13 @@ class _BottomBarLogSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 72,
-      height: 68,
+      width: 64,
+      height: 64,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
         children: [
-          Positioned(
-            top: -20,
-            child: _LogFabButton(onPressed: onPressed),
-          ),
+          Positioned(top: -14, child: _LogFabButton(onPressed: onPressed)),
         ],
       ),
     );
@@ -496,8 +490,8 @@ class _LogFabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 56,
-      height: 56,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: AuraDecorations.ctaGradient,
@@ -513,7 +507,7 @@ class _LogFabButton extends StatelessWidget {
             onPressed();
           },
           customBorder: const CircleBorder(),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
     );
@@ -521,10 +515,7 @@ class _LogFabButton extends StatelessWidget {
 }
 
 class _AiHeaderChip extends StatelessWidget {
-  const _AiHeaderChip({
-    required this.label,
-    required this.onTap,
-  });
+  const _AiHeaderChip({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -596,7 +587,7 @@ class _NavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: SizedBox(
-            height: 68,
+            height: 64,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

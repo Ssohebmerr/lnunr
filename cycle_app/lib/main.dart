@@ -27,8 +27,9 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'core/analytics/active_ping_service.dart';
-import 'core/premium/play_billing_coordinator.dart';
+import 'core/security/app_lock_controller.dart';
+import 'core/security/app_lock_overlay.dart';
+import 'core/push/push_registration_service.dart';
 import 'core/notifications/app_notifications.dart';
 
 import 'core/ai/ai_context_engine.dart';
@@ -40,6 +41,7 @@ import 'core/config/feature_flags.dart';
 import 'core/firebase/app_bootstrap.dart';
 import 'features/user/data/guest_user_service.dart';
 import 'core/ai/lune_personality.dart';
+import 'core/analytics/active_ping_service.dart';
 import 'core/locale/locale_controller.dart';
 import 'core/navigation/home_shell_actions.dart';
 import 'core/notifications/notification_service.dart';
@@ -81,22 +83,19 @@ void main() async {
 
   try {
     await AppBootstrap.initialize();
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        unawaited(PushRegistrationService().registerIfPossible());
+      }
+    });
+    unawaited(PushRegistrationService().registerIfPossible());
   } catch (e, st) {
     debugPrint('[Main] AppBootstrap initialize failed: $e\n$st');
   }
 
-  // Guest session + Firestore profile for anyone who finished onboarding.
+  // Guest session — must not block cold start when offline.
   if (await UserPrefs.isOnboardingDone()) {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      final hasEmail = _hasEmailAccount(user);
-      if (!hasEmail || user == null) {
-        await GuestUserService().ensureSession();
-      }
-      await GuestUserService().syncLocalProfileIfNeeded();
-    } catch (e, st) {
-      debugPrint('[Main] Guest session bootstrap failed: $e\n$st');
-    }
+    unawaited(_bootstrapGuestSession());
   }
 
   tz_data.initializeTimeZones();
@@ -115,14 +114,7 @@ void main() async {
     debugPrint('[Main] NotificationService initialize failed: $e');
   }
 
-  // FCM token sync must not block startup when offline.
-  try {
-    unawaited(_registerFcmTokenIfSignedIn());
-  } catch (e) {
-    debugPrint('[Main] FCM registration trigger failed: $e');
-  }
-
-  // FCM foreground listener — show local notification when app is open
+  // FCM registration handled via authStateChanges + PushRegistrationService. — show local notification when app is open
   FirebaseMessaging.onMessage.listen((message) {
     final title = message.notification?.title;
     final body = message.notification?.body;
@@ -149,10 +141,18 @@ void main() async {
   }
 
   FirebaseMessaging.onMessageOpenedApp.listen(handleFcmLaunch);
-  final initialFcm = await FirebaseMessaging.instance.getInitialMessage();
-  if (initialFcm != null) {
+  RemoteMessage? initialFcm;
+  try {
+    initialFcm = await FirebaseMessaging.instance
+        .getInitialMessage()
+        .timeout(const Duration(seconds: 3));
+  } catch (e) {
+    if (kDebugMode) debugPrint('[Main] getInitialMessage skipped: $e');
+  }
+  final launchMessage = initialFcm;
+  if (launchMessage != null) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      handleFcmLaunch(initialFcm);
+      handleFcmLaunch(launchMessage);
     });
   }
 
@@ -204,8 +204,13 @@ void main() async {
   try {
     await bridge.applyLocale(localeController.locale.languageCode);
     await bridge.linkAuthenticatedUser(FirebaseAuth.instance.currentUser);
-    await CycleSyncService().onCycleDataChanged().timeout(
-      const Duration(seconds: 10),
+    unawaited(
+      CycleSyncService()
+          .onCycleDataChanged()
+          .timeout(const Duration(seconds: 10))
+          .catchError((Object e, StackTrace st) {
+        debugPrint('Initial cycle sync skipped (non-fatal): $e\n$st');
+      }),
     );
   } catch (e, st) {
     debugPrint('Initial cycle sync skipped (non-fatal): $e\n$st');
@@ -237,24 +242,7 @@ void main() async {
 
 /// Registers FCM token in background — never blocks app launch.
 Future<void> _registerFcmTokenIfSignedIn() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
-  try {
-    final fcmToken = await FirebaseMessaging.instance.getToken().timeout(
-      const Duration(seconds: 8),
-    );
-    if (fcmToken == null) return;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .set({
-          'fcmToken': fcmToken,
-          'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true))
-        .timeout(const Duration(seconds: 8));
-  } catch (e) {
-    if (kDebugMode) debugPrint('[Main] FCM token sync skipped: $e');
-  }
+  await PushRegistrationService().registerIfPossible();
 }
 
 class LuneApp extends StatefulWidget {
@@ -272,6 +260,8 @@ class LuneApp extends StatefulWidget {
 }
 
 class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
+  late final AppLockController _appLock;
+
   /// Throttle for the on-resume notification refresh. The daily-motivation
   /// runway only needs topping up occasionally, so we skip re-laying it on
   /// every quick app switch.
@@ -281,9 +271,18 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _appLock = AppLockController();
     WidgetsBinding.instance.addObserver(this);
-    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
-    HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+    if (!kIsWeb) {
+      HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
+      HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (MenstrudelInit.settingsService?.areBiometricsEnabled == true) {
+        _appLock.lock();
+        unawaited(_appLock.authenticateIfNeeded());
+      }
+    });
   }
 
   @override
@@ -294,7 +293,18 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final path = _router.state.matchedLocation;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      if (MenstrudelInit.settingsService?.areBiometricsEnabled == true) {
+        _appLock.lock();
+      }
+    }
     if (state == AppLifecycleState.resumed) {
+      if (path != '/stealth' &&
+          MenstrudelInit.settingsService?.areBiometricsEnabled == true) {
+        unawaited(_appLock.authenticateIfNeeded());
+      }
       // Pick up any "log period" request the watch sent while we were away.
       MenstrudelInit.watchService?.processPendingWatchLog().then((_) {
         CycleSyncService().onCycleDataChanged();
@@ -338,6 +348,7 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider.value(value: localeController),
         ChangeNotifierProvider.value(value: themeController),
+        ChangeNotifierProvider<AppLockController>.value(value: _appLock),
       ],
       child: MultiRepositoryProvider(
         providers: [
@@ -390,6 +401,8 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
                 darkTheme: AppTheme.dark(locale),
                 themeMode: themeController.themeMode,
                 routerConfig: _router,
+                builder: (context, child) =>
+                    AppLockOverlay(child: child ?? const SizedBox.shrink()),
               );
             },
           ),
@@ -413,7 +426,25 @@ bool _hasEmailAccount(User? user) {
 
 bool _canEnterHome(bool onboardingDone, User? user) {
   if (_hasEmailAccount(user)) return true;
-  return onboardingDone && user != null;
+  return onboardingDone;
+}
+
+Future<void> _bootstrapGuestSession() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    final hasEmail = _hasEmailAccount(user);
+    if (!hasEmail || user == null) {
+      await GuestUserService().ensureSession().timeout(
+        const Duration(seconds: 6),
+      );
+    }
+    await GuestUserService().syncLocalProfileIfNeeded().timeout(
+      const Duration(seconds: 6),
+    );
+    await PushRegistrationService().registerIfPossible();
+  } catch (e, st) {
+    debugPrint('[Main] Guest session bootstrap failed (non-fatal): $e\n$st');
+  }
 }
 
 final _router = GoRouter(

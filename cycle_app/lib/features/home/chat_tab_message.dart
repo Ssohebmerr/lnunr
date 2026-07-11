@@ -48,8 +48,10 @@ class _ChatMessageRow extends StatelessWidget {
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 constraints: BoxConstraints(maxWidth: maxW),
                 decoration: BoxDecoration(
                   gradient: AuraDecorations.primaryGradient,
@@ -61,8 +63,7 @@ class _ChatMessageRow extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          theme.colorScheme.primary.withValues(alpha: 0.25),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
                       blurRadius: 14,
                       offset: const Offset(0, 5),
                     ),
@@ -114,7 +115,9 @@ class _ChatMessageRow extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   constraints: BoxConstraints(maxWidth: maxW),
                   decoration: BoxDecoration(
                     color: isDark
@@ -164,8 +167,10 @@ class _ChatMessageRow extends StatelessWidget {
                   children: [
                     if (showTime)
                       Padding(
-                        padding:
-                            const EdgeInsetsDirectional.only(top: 6, start: 4),
+                        padding: const EdgeInsetsDirectional.only(
+                          top: 6,
+                          start: 4,
+                        ),
                         child: Text(
                           timeText,
                           style: theme.textTheme.labelSmall?.copyWith(
@@ -182,26 +187,33 @@ class _ChatMessageRow extends StatelessWidget {
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeInOut,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: isSpeaking
-                              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                              ? theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                )
                               : theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: isDark ? 0.35 : 0.55),
+                                    .withValues(alpha: isDark ? 0.35 : 0.55),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSpeaking
-                                ? theme.colorScheme.primary
-                                    .withValues(alpha: 0.55)
-                                : theme.colorScheme.outline
-                                    .withValues(alpha: 0.18),
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.55,
+                                  )
+                                : theme.colorScheme.outline.withValues(
+                                    alpha: 0.18,
+                                  ),
                             width: 1,
                           ),
                           boxShadow: isSpeaking
                               ? [
                                   BoxShadow(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.25),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.25,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -240,16 +252,21 @@ class _ChatMessageRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     // ── Report button ─────────────────────────────────────
                     GestureDetector(
-                      onTap: () => _showAiReportDialog(context,
-                          cleanText.isNotEmpty ? cleanText : message.text),
+                      onTap: () => _showAiReportDialog(
+                        context,
+                        cleanText.isNotEmpty ? cleanText : message.text,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 5),
+                          horizontal: 4,
+                          vertical: 5,
+                        ),
                         child: Icon(
                           Icons.flag_outlined,
                           size: 15,
-                          color: theme.colorScheme.outline
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -270,7 +287,8 @@ class _ChatMessageRow extends StatelessWidget {
       builder: (ctx) {
         return AlertDialog(
           title: Text(
-              isAr ? 'الإبلاغ عن رد الذكاء الاصطناعي' : 'Report AI Response'),
+            isAr ? 'الإبلاغ عن رد الذكاء الاصطناعي' : 'Report AI Response',
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -286,11 +304,23 @@ class _ChatMessageRow extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  _reportOption(ctx, isAr ? 'طبي / تشخيصي' : 'Medical / Diagnostic', responseText),
-                  _reportOption(ctx, isAr ? 'غير دقيق' : 'Inaccurate', responseText),
-                  _reportOption(ctx, isAr ? 'محتوى غير لائق' : 'Inappropriate', responseText),
+                  _reportOption(
+                    ctx,
+                    isAr ? 'طبي / تشخيصي' : 'Medical / Diagnostic',
+                    responseText,
+                  ),
+                  _reportOption(
+                    ctx,
+                    isAr ? 'غير دقيق' : 'Inaccurate',
+                    responseText,
+                  ),
+                  _reportOption(
+                    ctx,
+                    isAr ? 'محتوى غير لائق' : 'Inappropriate',
+                    responseText,
+                  ),
                 ],
-              )
+              ),
             ],
           ),
           actions: [
@@ -309,8 +339,7 @@ class _ChatMessageRow extends StatelessWidget {
       label: Text(label, style: const TextStyle(fontSize: 12)),
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(dialogContext);
-        final isAr =
-            Localizations.localeOf(dialogContext).languageCode == 'ar';
+        final isAr = Localizations.localeOf(dialogContext).languageCode == 'ar';
         Navigator.pop(dialogContext);
 
         final user = FirebaseAuth.instance.currentUser;
@@ -413,15 +442,13 @@ class _AiActionChips extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.pill),
             onTap: () => onTap(a),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
                 gradient: AuraDecorations.primaryGradient,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        theme.colorScheme.primary.withValues(alpha: 0.25),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -448,33 +475,32 @@ class _AiActionChips extends StatelessWidget {
     );
   }
 
-  (IconData, String) _renderFor(
-      AiSuggestedAction a, AppLocalizations l10n) {
+  (IconData, String) _renderFor(AiSuggestedAction a, AppLocalizations l10n) {
     return switch (a.type) {
       AiActionType.logMood => (
-          Icons.mood_rounded,
-          a.label ?? l10n.aiActionLogMood(a.value)
-        ),
+        Icons.mood_rounded,
+        a.label ?? l10n.aiActionLogMood(a.value),
+      ),
       AiActionType.logSymptom => (
-          Icons.healing_rounded,
-          a.label ?? l10n.aiActionLogSymptom(a.value)
-        ),
+        Icons.healing_rounded,
+        a.label ?? l10n.aiActionLogSymptom(a.value),
+      ),
       AiActionType.logWater => (
-          Icons.water_drop_rounded,
-          a.label ?? l10n.aiActionLogWater(a.value)
-        ),
+        Icons.water_drop_rounded,
+        a.label ?? l10n.aiActionLogWater(a.value),
+      ),
       AiActionType.logPain => (
-          Icons.bolt_rounded,
-          a.label ?? l10n.aiActionLogPain(a.value)
-        ),
+        Icons.bolt_rounded,
+        a.label ?? l10n.aiActionLogPain(a.value),
+      ),
       AiActionType.openLog => (
-          Icons.edit_note_rounded,
-          a.label ?? l10n.aiActionOpenLog
-        ),
+        Icons.edit_note_rounded,
+        a.label ?? l10n.aiActionOpenLog,
+      ),
       AiActionType.openInsights => (
-          Icons.insights_rounded,
-          a.label ?? l10n.aiActionOpenInsights
-        ),
+        Icons.insights_rounded,
+        a.label ?? l10n.aiActionOpenInsights,
+      ),
     };
   }
 }

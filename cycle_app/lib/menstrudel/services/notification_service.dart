@@ -54,7 +54,7 @@ class NotificationService {
       body,
       tzScheduledTime,
       details,
-      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await AppNotifications.resolveScheduleMode(),
       payload: payload,
     );
   }
@@ -289,7 +289,7 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: fln.AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await AppNotifications.resolveScheduleMode(),
       matchDateTimeComponents: fln.DateTimeComponents.time,
       payload: NotificationPayload.account(action: 'open_pill'),
     );

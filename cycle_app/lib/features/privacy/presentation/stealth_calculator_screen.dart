@@ -84,11 +84,9 @@ class _StealthCalculatorScreenState extends State<StealthCalculatorScreen> {
   }
 
   void _checkSecretUnlock() async {
-    final pin = await UserPrefs.getStealthModePin();
-    if (pin == null || pin.isEmpty) return;
+    if (!await UserPrefs.hasStealthPin()) return;
 
-    // The secret sequence is: PIN digits + '='
-    if (_secretBuffer.endsWith(pin)) {
+    if (await UserPrefs.stealthPinMatchesBuffer(_secretBuffer)) {
       _unlockApp();
     }
   }

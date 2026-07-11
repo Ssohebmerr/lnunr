@@ -27,7 +27,7 @@ const admin = require('firebase-admin');
 const { defineSecret, defineString } = require('firebase-functions/params');
 
 const playBilling = require('../play_billing');
-const { handleCors, setCors } = require('../lib/http');
+const { guardRequest, setCors } = require('../lib/http');
 
 const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT');
 
@@ -48,7 +48,7 @@ const TESTER_PREMIUM_ENABLED = defineString('TESTER_PREMIUM_ENABLED', {
 exports.verifyPlayPurchase = onRequest(
   { cors: true, secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT], timeoutSeconds: 30 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -92,7 +92,11 @@ exports.verifyPlayPurchase = onRequest(
     } catch (error) {
       console.error('Verify Play purchase error:', error);
       setCors(res);
-      res.status(500).json({ verified: false, error: error.message });
+      if (error.code === 'token_already_claimed') {
+        res.status(409).json({ verified: false, error: 'token_already_claimed' });
+        return;
+      }
+      res.status(500).json({ verified: false, error: 'verification_failed' });
     }
   },
 );
@@ -104,7 +108,7 @@ exports.verifyPlayPurchase = onRequest(
 exports.redeemPromoCode = onRequest(
   { cors: true, timeoutSeconds: 30 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
@@ -190,7 +194,7 @@ exports.redeemPromoCode = onRequest(
 exports.grantTesterPremium = onRequest(
   { cors: true, timeoutSeconds: 30 },
   async (req, res) => {
-    if (handleCors(req, res)) return;
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
     // Hard gate: refuse entirely unless explicitly enabled for a QA build.
     if (TESTER_PREMIUM_ENABLED.value() !== 'true') {

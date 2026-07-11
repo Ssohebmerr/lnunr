@@ -21,10 +21,13 @@ class AuraColors {
   // ── 2026 refresh: a decisive accent + ink tones for hierarchy & contrast ──
   /// Vivid berry-rose — the single colour that "pops" for primary actions.
   static const accent = Color(0xFFD84A83);
+
   /// Deeper accent placed behind white text so it clears WCAG AA (~5.4:1).
   static const accentDeep = Color(0xFFC02E6A);
+
   /// Near-black plum for high-contrast headings.
   static const ink = Color(0xFF3A2633);
+
   /// AA-safe secondary text — replaces the too-light plumMuted on tinted cards.
   static const inkSoft = Color(0xFF6E5561);
 
@@ -34,8 +37,10 @@ class AuraColors {
   static const success = Color(0xFF4CAF7D);
   static const warning = Color(0xFFF0B429);
   static const danger = Color(0xFFD64550);
+
   /// Streak-fire accent (challenges, rituals) — warm ember, not raw orange.
   static const ember = Color(0xFFE0764A);
+
   /// Points / rewards star — soft gold, not raw amber.
   static const gold = Color(0xFFDD9A2B);
 
@@ -49,7 +54,11 @@ class AuraColors {
 
   static const gradientRoseLavender = [rose, lavenderSoft];
   static const gradientPeachRose = [peachGold, rose];
-  static const gradientPremium = [Color(0xFFFFCDB2), Color(0xFFE8A0BF), lavenderSoft];
+  static const gradientPremium = [
+    Color(0xFFFFCDB2),
+    Color(0xFFE8A0BF),
+    lavenderSoft,
+  ];
   static const gradientCta = [accent, accentDeep];
   static const gradientAccent = [accent, Color(0xFFF06AA0)];
 }
@@ -76,34 +85,35 @@ class AppShadows {
   AppShadows._();
 
   static List<BoxShadow> softRose({double opacity = 0.12}) => [
-        BoxShadow(
-          color: AuraColors.rose.withValues(alpha: opacity),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: AuraColors.rose.withValues(alpha: opacity),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   static List<BoxShadow> softPlum({double opacity = 0.08}) => [
-        BoxShadow(
-          color: AuraColors.plum.withValues(alpha: opacity),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: AuraColors.plum.withValues(alpha: opacity),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   static List<BoxShadow> navFloat(bool isDark) => [
-        BoxShadow(
-          color: (isDark ? AuraColors.darkRose : AuraColors.rose)
-              .withValues(alpha: isDark ? 0.2 : 0.18),
-          blurRadius: 28,
-          offset: const Offset(0, 10),
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: (isDark ? AuraColors.darkRose : AuraColors.rose).withValues(
+        alpha: isDark ? 0.2 : 0.18,
+      ),
+      blurRadius: 28,
+      offset: const Offset(0, 10),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }
 
 class AuraDecorations {
@@ -115,13 +125,8 @@ class AuraDecorations {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AuraColors.darkBgDeep,
-            AuraColors.darkBg,
-            AuraColors.darkBgMid,
-            Color(0xFF241828),
-          ],
-          stops: [0.0, 0.35, 0.7, 1.0],
+          colors: [AuraColors.darkBgDeep, AuraColors.darkBg, Color(0xFF241827)],
+          stops: [0.0, 0.58, 1.0],
         ),
       );
     }
@@ -129,13 +134,8 @@ class AuraDecorations {
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Color(0xFFFFF8F5),
-          Color(0xFFFFF0F5),
-          Color(0xFFF5EDFF),
-          Color(0xFFFFEDE8),
-        ],
-        stops: [0.0, 0.3, 0.65, 1.0],
+        colors: [Color(0xFFFFFBF9), Color(0xFFFFF5F8), Color(0xFFF8F3FC)],
+        stops: [0.0, 0.55, 1.0],
       ),
     );
   }
@@ -145,32 +145,27 @@ class AuraDecorations {
     double radius = AppRadius.lg,
     Color? tint,
   }) {
-    final tintColor = tint ?? (isDark ? Colors.white : Colors.white);
+    final surfaceColor = tint != null
+        ? tint.withValues(alpha: isDark ? 0.14 : 0.16)
+        : (isDark
+              ? AuraColors.darkCard.withValues(alpha: 0.94)
+              : Colors.white.withValues(alpha: 0.94));
     return BoxDecoration(
       borderRadius: BorderRadius.circular(radius),
-      color: isDark
-          ? tintColor.withValues(alpha: 0.07)
-          : tintColor.withValues(alpha: 0.65),
+      color: surfaceColor,
       border: Border.all(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.9),
+            ? Colors.white.withValues(alpha: 0.07)
+            : AuraColors.plum.withValues(alpha: 0.06),
         width: 1.0,
       ),
       boxShadow: [
-        // Soft ambient shadow
         BoxShadow(
-          color: (isDark ? AuraColors.darkRose : AuraColors.rose)
-              .withValues(alpha: isDark ? 0.12 : 0.08),
-          blurRadius: 24,
+          color: (isDark ? Colors.black : AuraColors.plum).withValues(
+            alpha: isDark ? 0.24 : 0.055,
+          ),
+          blurRadius: 14,
           offset: const Offset(0, 6),
-        ),
-        // Inner highlight (top edge glow)
-        BoxShadow(
-          color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.5),
-          blurRadius: 0,
-          offset: const Offset(0, 1),
-          spreadRadius: 0,
         ),
       ],
     );
@@ -185,11 +180,7 @@ class AuraDecorations {
   }) {
     final decoration = glassCard(isDark: isDark, radius: radius);
     if (!blur) {
-      return Container(
-        padding: padding,
-        decoration: decoration,
-        child: child,
-      );
+      return Container(padding: padding, decoration: decoration, child: child);
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
@@ -233,14 +224,8 @@ class AuraDecorations {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: isDark
-            ? [
-                AuraColors.darkCard.withValues(alpha: 0.95),
-                AuraColors.darkBgMid.withValues(alpha: 0.9),
-              ]
-            : [
-                Colors.white.withValues(alpha: 0.92),
-                AuraColors.blush.withValues(alpha: 0.55),
-              ],
+            ? [const Color(0xFF37263A), AuraColors.darkCard]
+            : [Colors.white, const Color(0xFFFFF2F7)],
       ),
       border: Border.all(
         color: isDark
@@ -249,10 +234,11 @@ class AuraDecorations {
       ),
       boxShadow: [
         BoxShadow(
-          color: (isDark ? Colors.black : AuraColors.accent)
-              .withValues(alpha: isDark ? 0.35 : 0.14),
-          blurRadius: 28,
-          offset: const Offset(0, 12),
+          color: (isDark ? Colors.black : AuraColors.accent).withValues(
+            alpha: isDark ? 0.28 : 0.10,
+          ),
+          blurRadius: 20,
+          offset: const Offset(0, 9),
         ),
       ],
     );
@@ -273,8 +259,9 @@ class AuraDecorations {
       ),
       boxShadow: [
         BoxShadow(
-          color: (isDark ? Colors.black : AuraColors.plum)
-              .withValues(alpha: isDark ? 0.28 : 0.06),
+          color: (isDark ? Colors.black : AuraColors.plum).withValues(
+            alpha: isDark ? 0.28 : 0.06,
+          ),
           blurRadius: 16,
           offset: const Offset(0, 6),
         ),
@@ -292,9 +279,13 @@ class AuraDecorations {
     return InputDecoration(
       hintText: hint,
       prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, size: 20, color: isDark
-              ? Colors.white.withValues(alpha: 0.5)
-              : AuraColors.plumMuted)
+          ? Icon(
+              prefixIcon,
+              size: 20,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.5)
+                  : AuraColors.plumMuted,
+            )
           : null,
       suffixIcon: suffix,
       filled: true,

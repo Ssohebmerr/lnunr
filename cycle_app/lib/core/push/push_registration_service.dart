@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+
+import '../notifications/app_notifications.dart';
 
 /// Saves the device FCM token so admin broadcasts can reach this user.
 class PushRegistrationService {
@@ -23,14 +28,20 @@ class PushRegistrationService {
 
     try {
       if (!kIsWeb) {
-        await _messaging.requestPermission();
+        if (Platform.isAndroid) {
+          await AppNotifications.requestPermission();
+        } else {
+          await _messaging.requestPermission();
+        }
       }
-      final token = await _messaging.getToken();
+      final token = await _messaging.getToken().timeout(
+        const Duration(seconds: 8),
+      );
       if (token == null || token.isEmpty) return;
       await _firestore.collection('users').doc(uid).set({
         'fcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
 
       _messaging.onTokenRefresh.listen((next) async {
         final current = _auth.currentUser?.uid;
@@ -41,7 +52,7 @@ class PushRegistrationService {
         }, SetOptions(merge: true));
       });
     } catch (e) {
-      debugPrint('PushRegistrationService: $e');
+      if (kDebugMode) debugPrint('PushRegistrationService: $e');
     }
   }
 

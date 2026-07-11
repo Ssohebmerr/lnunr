@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/media/media_upload_service.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
+import '../../../core/security/community_text_sanitize.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
@@ -178,7 +179,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   // ──────────────────────────────────────────────────────────
   Future<void> _submit() async {
     final user = FirebaseAuth.instance.currentUser;
-    final text = _controller.text.trim();
+    final text = CommunityTextSanitize.post(_controller.text);
     if (user == null || text.isEmpty) return;
 
     final l10n = AppLocalizations.of(context)!;

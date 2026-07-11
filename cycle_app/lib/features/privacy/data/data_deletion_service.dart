@@ -1,9 +1,8 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 
-import '../../../core/config/app_secrets.dart';
+import '../../../core/firebase/cloud_functions_client.dart';
 import '../../../core/security/secure_storage_service.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -17,7 +16,7 @@ class DataDeletionService {
         _authRepository = authRepository ?? AuthRepository(),
         _secureStorage = secureStorage ?? SecureStorageService();
 
-  static final _baseUrl = AppSecrets.cloudFunctionsUrl;
+  static final _functions = CloudFunctionsClient.instance;
 
   final FirebaseAuth _auth;
   final AuthRepository _authRepository;
@@ -27,14 +26,7 @@ class DataDeletionService {
     final user = _auth.currentUser;
     if (user == null) throw StateError('Not signed in');
 
-    final token = await user.getIdToken();
-    final response = await http.post(
-      Uri.parse('$_baseUrl/deleteUserAccount'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    final response = await _functions.post('/deleteUserAccount', body: const {});
 
     if (response.statusCode == 401) {
       throw const AccountDeletionReauthRequired();

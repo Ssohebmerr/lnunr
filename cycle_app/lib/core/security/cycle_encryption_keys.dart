@@ -12,31 +12,32 @@ class CycleEncryptionKeys {
   static const _secretKey = 'cycle_secret_key';
   static const _ivKey = 'cycle_iv_key';
   static final _secure = SecureStorageService();
+  static Map<String, String>? _cachedKeys;
 
   /// Loads the AES key/iv used to encrypt the cycle database.
   ///
-  /// The key is kept in BOTH the platform keystore and a private
-  /// SharedPreferences backup. Losing this key makes every saved period date
-  /// unreadable, so resilience is prioritised: a fresh key is only generated
-  /// when neither store has one (true first run). This guards against the
-  /// known Android case where the keystore entry is wiped by an OS update or
-  /// backup restore, which previously caused all cycle data to "disappear"
-  /// after the app was closed.
+  /// Keys live in the platform keystore only. A one-time migration reads any
+  /// legacy SharedPreferences copy, moves it into secure storage, then deletes
+  /// the plaintext backup.
   static Future<Map<String, String>> loadOrCreate() async {
+    if (_cachedKeys != null) return Map<String, String>.from(_cachedKeys!);
+
     final prefs = await SharedPreferences.getInstance();
 
     // 1. Prefer the secure keystore.
     var secret = await _secure.read(_secretKey);
     var iv = await _secure.read(_ivKey);
 
-    // 2. Fall back to the prefs backup as an atomic pair (never mix sources,
-    //    or we'd combine a secret with the wrong iv and corrupt decryption).
+    // 2. One-time migration from legacy plaintext prefs backup.
     if (secret == null || iv == null) {
       final backupSecret = prefs.getString(_secretKey);
       final backupIv = prefs.getString(_ivKey);
       if (backupSecret != null && backupIv != null) {
         secret = backupSecret;
         iv = backupIv;
+        if (kDebugMode) {
+          debugPrint('[CycleEncryptionKeys] Migrating keys from prefs to keystore.');
+        }
       }
     }
 
@@ -50,13 +51,14 @@ class CycleEncryptionKeys {
       }
     }
 
-    // 4. Mirror into both stores so a future keystore failure can recover.
+    // 4. Persist in keystore only — never mirror to SharedPreferences.
     await _secure.write(_secretKey, secret);
     await _secure.write(_ivKey, iv);
-    await prefs.setString(_secretKey, secret);
-    await prefs.setString(_ivKey, iv);
+    await prefs.remove(_secretKey);
+    await prefs.remove(_ivKey);
 
-    return {'secretKey': secret, 'ivKey': iv};
+    _cachedKeys = {'secretKey': secret, 'ivKey': iv};
+    return Map<String, String>.from(_cachedKeys!);
   }
 
   static String _randomKey(int length) {
@@ -78,4 +80,8 @@ class CycleEncryptionKeys {
     if (uid == null || uid.isEmpty) return localCustomerId;
     return sha256.convert(utf8.encode(uid)).toString().substring(0, 16);
   }
+
+  /// Clears the in-process key cache (tests only).
+  @visibleForTesting
+  static void resetCacheForTest() => _cachedKeys = null;
 }

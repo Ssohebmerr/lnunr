@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/media/media_upload_service.dart';
 import 'community_constants.dart';
+import 'community_story_submit.dart';
 import 'models/community_story.dart';
 
 class CommunityStoryRepository {
@@ -137,20 +138,12 @@ class CommunityStoryRepository {
       isVideo: false,
     );
 
-    await _storiesRef(communityId).add({
+    await submitCommunityStory({
       'communityId': communityId,
-      'authorUid': uid,
-      'authorAlias': alias,
       'mediaUrl': mediaUrl,
       'mediaType': 'image',
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(
-        DateTime.now().add(const Duration(hours: 24)),
-      ),
-      'authorAvatarIndex': authorAvatarIndex,
-      'textOverlay': ?textOverlay,
-      'backgroundColor': ?backgroundColor,
-      'viewCount': 0,
+      'textOverlay': textOverlay,
+      'backgroundColor': backgroundColor,
     });
   }
 
@@ -165,20 +158,12 @@ class CommunityStoryRepository {
   }) async {
     await _ensureStoryAllowed(uid, communityId);
 
-    await _storiesRef(communityId).add({
+    await submitCommunityStory({
       'communityId': communityId,
-      'authorUid': uid,
-      'authorAlias': alias,
       'mediaUrl': '',
       'mediaType': 'text',
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(
-        DateTime.now().add(const Duration(hours: 24)),
-      ),
-      'authorAvatarIndex': authorAvatarIndex,
       'textOverlay': text,
       'backgroundColor': backgroundColor,
-      'viewCount': 0,
     });
   }
 

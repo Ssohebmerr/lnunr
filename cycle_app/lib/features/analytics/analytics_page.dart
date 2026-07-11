@@ -89,33 +89,68 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     final lang = Localizations.localeOf(context).languageCode;
+    final ar = lang.startsWith('ar');
     final accent = AnalyticsData.accentFor(_goal);
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight + 4;
 
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        children: [
-          _AnalyticsTopBar(goal: _goal, accent: accent),
-          const SizedBox(height: 12),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_failed || _data == null)
-            _EmptyState(
-              message: lang.startsWith('ar')
-                  ? 'ابدئي بتسجيل دورتكِ لتري المؤشرات.'
-                  : 'Log your cycle to unlock analytics.',
-              onRetry: _load,
-            )
-          else
-            _buildSection(_data!),
-          const SizedBox(height: 20),
-          _DoctorExportBanner(),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(ar ? 'التحليلات' : 'Analytics'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  ar ? 'مؤشرات شاملة' : 'Full metrics',
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+      body: AppMeshBackground(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(16, topInset, 16, 100),
+            children: [
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_failed || _data == null)
+                _EmptyState(
+                  message: ar
+                      ? 'ابدئي بتسجيل دورتكِ لتري المؤشرات.'
+                      : 'Log your cycle to unlock analytics.',
+                  onRetry: _load,
+                )
+              else
+                _buildSection(_data!),
+              const SizedBox(height: 20),
+              _DoctorExportBanner(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -145,47 +180,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         return AnalyticsGeneralSection(
             data: data, goal: _goal, history: _history);
     }
-  }
-}
-
-class _AnalyticsTopBar extends StatelessWidget {
-  const _AnalyticsTopBar({required this.goal, required this.accent});
-
-  final UserGoalTypes goal;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = Localizations.localeOf(context).languageCode;
-    return Row(
-      children: [
-        Icon(goal.icon, color: accent, size: 24),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            lang.startsWith('ar') ? 'التحليلات' : 'Analytics',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-          ),
-          child: Text(
-            lang.startsWith('ar') ? 'مؤشرات شاملة' : 'Full metrics',
-            style: TextStyle(
-              color: accent,
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 

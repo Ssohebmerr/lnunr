@@ -80,7 +80,8 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
 
     if (!mounted) return;
 
-    final report = loadedReport ??
+    final report =
+        loadedReport ??
         const CycleReportData(
           keyMatrix: {},
           predictionMatrix: {},
@@ -100,7 +101,8 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     final exportedLabel = dateFmt.format(_exportedAt);
     final reportId = 'LN-${DateFormat('yyyyMMdd-HHmm').format(_exportedAt)}';
 
-    final isLimited = (report.cycles.isEmpty &&
+    final isLimited =
+        (report.cycles.isEmpty &&
             report.keyMatrix.isEmpty &&
             report.symptomPatterns.isEmpty &&
             dashboard == null) ||
@@ -168,10 +170,9 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
       enrichment: enrichment,
       metrics: metrics,
       patient: _patient,
-      limitedDataNote:
-          limitedData && (enrichment?.dataQualityNote == null)
-              ? l10n.doctorReportLimitedData
-              : null,
+      limitedDataNote: limitedData && (enrichment?.dataQualityNote == null)
+          ? l10n.doctorReportLimitedData
+          : null,
     );
 
     setState(() {
@@ -183,8 +184,10 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
 
   String _qrPayload() {
     // QR opens the Lune web/app landing page for the physician.
-    return PrivacyConstants.privacyPolicyUrl
-        .replaceAll('/privacy-policy.html', '');
+    return PrivacyConstants.privacyPolicyUrl.replaceAll(
+      '/privacy-policy.html',
+      '',
+    );
   }
 
   Future<void> _exportReport() async {
@@ -198,9 +201,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     final dateFmt = DateFormat.yMMMMd(locale.toString());
     final messenger = ScaffoldMessenger.of(context);
 
-    messenger.showSnackBar(
-      SnackBar(content: Text(l10n.doctorReportExporting)),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(l10n.doctorReportExporting)));
 
     try {
       final file = await CycleReportFileExporter.export(
@@ -217,15 +218,15 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
         exportedDateLabel: dateFmt.format(_exportedAt),
         rtl: locale.languageCode == 'ar',
         plainText: _plainText,
+        limitedDataNote: _limitedData && (_enrichment?.dataQualityNote == null)
+            ? l10n.doctorReportLimitedData
+            : null,
       );
 
       if (!mounted) return;
 
       await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          subject: l10n.doctorReportTitle,
-        ),
+        ShareParams(files: [XFile(file.path)], subject: l10n.doctorReportTitle),
       );
 
       if (!mounted) return;
@@ -244,25 +245,38 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
     final updated = await DoctorReportPatientSheet.show(context, _patient);
     if (updated == null || !mounted) return;
 
-    setState(() => _patient = updated);
+    final report = _report;
+    final refreshedMetrics = report == null
+        ? _metrics
+        : DoctorReportAnalyzer.analyze(
+            report: report,
+            snapshot: _snapshot,
+            patientAge: updated.age,
+          );
+
+    setState(() {
+      _patient = updated;
+      _metrics = refreshedMetrics;
+    });
 
     // Regenerate the plain-text export so copy/share reflect the new header.
     if (_report != null) {
       final l10n = AppLocalizations.of(context)!;
       final locale = Localizations.localeOf(context);
-      final exportedLabel = DateFormat.yMMMMd(locale.toString()).format(_exportedAt);
+      final exportedLabel = DateFormat.yMMMMd(
+        locale.toString(),
+      ).format(_exportedAt);
       final plain = CycleReportExporter.toPlainText(
         l10n: l10n,
         report: _report!,
         dashboard: _dashboard,
         exportedDate: exportedLabel,
         enrichment: _enrichment,
-        metrics: _metrics,
+        metrics: refreshedMetrics,
         patient: updated,
-        limitedDataNote:
-            _limitedData && (_enrichment?.dataQualityNote == null)
-                ? l10n.doctorReportLimitedData
-                : null,
+        limitedDataNote: _limitedData && (_enrichment?.dataQualityNote == null)
+            ? l10n.doctorReportLimitedData
+            : null,
       );
       if (mounted) setState(() => _plainText = plain);
     }
@@ -307,10 +321,7 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
               tooltip: l10n.doctorReportShare,
               icon: const Icon(Icons.share_outlined),
               onPressed: () => SharePlus.instance.share(
-                ShareParams(
-                  text: _plainText!,
-                  subject: l10n.doctorReportTitle,
-                ),
+                ShareParams(text: _plainText!, subject: l10n.doctorReportTitle),
               ),
             ),
           ],
@@ -328,26 +339,26 @@ class _DoctorReportScreenState extends State<DoctorReportScreen> {
               ),
             )
           : _failed
-              ? _EmptyReportState(onRetry: _load)
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-                  children: [
-                    CycleHealthReportDocument(
-                      report: _report!,
-                      dashboard: _dashboard,
-                      qrPayload: _qrPayload(),
-                      exportedAt: _exportedAt,
-                      metrics: _metrics,
-                      patient: _patient,
-                      snapshot: _snapshot,
-                      reportId: _reportId,
-                      enrichment: _enrichment,
-                      refining: _refining,
-                      limitedData: _limitedData,
-                      limitedDataNote: l10n.doctorReportLimitedData,
-                    ),
-                  ],
+          ? _EmptyReportState(onRetry: _load)
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                CycleHealthReportDocument(
+                  report: _report!,
+                  dashboard: _dashboard,
+                  qrPayload: _qrPayload(),
+                  exportedAt: _exportedAt,
+                  metrics: _metrics,
+                  patient: _patient,
+                  snapshot: _snapshot,
+                  reportId: _reportId,
+                  enrichment: _enrichment,
+                  refining: _refining,
+                  limitedData: _limitedData,
+                  limitedDataNote: l10n.doctorReportLimitedData,
                 ),
+              ],
+            ),
     );
   }
 }
@@ -368,13 +379,13 @@ class _EmptyReportState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.analytics_outlined,
-                size: 56, color: theme.colorScheme.outline),
-            const SizedBox(height: 12),
-            Text(
-              l10n.doctorReportFailed,
-              textAlign: TextAlign.center,
+            Icon(
+              Icons.analytics_outlined,
+              size: 56,
+              color: theme.colorScheme.outline,
             ),
+            const SizedBox(height: 12),
+            Text(l10n.doctorReportFailed, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: onRetry,
