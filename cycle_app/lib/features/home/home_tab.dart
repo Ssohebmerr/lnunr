@@ -520,6 +520,9 @@ class _HeroHeader extends StatelessWidget {
           : 'Healing, feeding, mood — every day is progress.';
     }
     if (data.nextPeriod.isNotEmpty && data.nextPeriod != '—') {
+      if (data.predictionWindowDays > 1 && data.nextPeriodRange.isNotEmpty) {
+        return '${l10n.nextPeriod}: ${data.nextPeriodRange}';
+      }
       return '${l10n.nextPeriod}: ${data.nextPeriod}';
     }
     return l10n.homeCycleDay(data.cycleDay);

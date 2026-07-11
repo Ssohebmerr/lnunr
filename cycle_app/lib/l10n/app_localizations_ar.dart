@@ -3903,6 +3903,32 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get ovulationLogTitle => 'إشارات الخصوبة';
+
+  @override
+  String get ovulationLogToday => 'أُبِضت اليوم';
+
+  @override
+  String get ovulationLogLhPositive => 'اختبار LH إيجابي';
+
+  @override
+  String get ovulationLogPickDate => 'تاريخ آخر';
+
+  @override
+  String get ovulationLogSaved => 'تم الحفظ — ستُعدَّل التوقعات';
+
+  @override
+  String get ovulationCalibratedHint => 'مُعاير من سجلكِ';
+
+  @override
+  String get predictionWindowHint => 'تقدير — كلما سجّلتِ أكثر، يضيق النطاق';
+
+  @override
+  String predictionCenterDate(String date) {
+    return 'أفضل تخمين: $date';
+  }
+
+  @override
   String get ageGateTitle => 'كم عمركِ؟';
 
   @override

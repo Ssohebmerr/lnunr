@@ -1476,6 +1476,19 @@
       "when": { "type": "String" }
     }
   },
+  "ovulationLogTitle": "إشارات الخصوبة",
+  "ovulationLogToday": "أُبِضت اليوم",
+  "ovulationLogLhPositive": "اختبار LH إيجابي",
+  "ovulationLogPickDate": "تاريخ آخر",
+  "ovulationLogSaved": "تم الحفظ — ستُعدَّل التوقعات",
+  "ovulationCalibratedHint": "مُعاير من سجلكِ",
+  "predictionWindowHint": "تقدير — كلما سجّلتِ أكثر، يضيق النطاق",
+  "predictionCenterDate": "أفضل تخمين: {date}",
+  "@predictionCenterDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
 
   "ageGateTitle": "كم عمركِ؟",
   "ageGateBody": "Lune مصمم للمستخدمات بعمر 13 عاماً فأكثر. بعض الميزات مثل مناقشات المجتمع محصورة للمستخدمات فوق 18 عاماً.",

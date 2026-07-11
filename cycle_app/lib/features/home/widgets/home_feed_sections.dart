@@ -77,14 +77,30 @@ class HomeKeyDatesCard extends StatelessWidget {
             icon: Icons.water_drop_outlined,
             color: theme.colorScheme.primary,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: data.predictionWindowDays > 1 &&
+                    data.nextPeriodRange.isNotEmpty
+                ? data.nextPeriodRange
+                : data.nextPeriod,
+            subtitle: data.predictionWindowDays > 1 &&
+                    data.nextPeriodRange.isNotEmpty
+                ? l10n.predictionCenterDate(data.nextPeriod)
+                : null,
           ),
           const SizedBox(height: 10),
           _DateRow(
             icon: Icons.favorite_outline,
             color: theme.colorScheme.secondary,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.predictionWindowDays > 1 &&
+                    data.ovulationRange.isNotEmpty
+                ? data.ovulationRange
+                : data.ovulation,
+            subtitle: data.ovulationCalibrated
+                ? l10n.ovulationCalibratedHint
+                : (data.predictionWindowDays > 1 &&
+                        data.ovulationRange.isNotEmpty
+                    ? l10n.predictionCenterDate(data.ovulation)
+                    : null),
           ),
           if (data.expectedDueDate.isNotEmpty &&
               data.expectedDueDate != '—' &&
@@ -95,6 +111,15 @@ class HomeKeyDatesCard extends StatelessWidget {
               color: theme.colorScheme.tertiary,
               label: l10n.homeDueDate,
               value: data.expectedDueDate,
+            ),
+          ],
+          if (data.predictionWindowDays > 1) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.predictionWindowHint,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
           const SizedBox(height: 14),
@@ -135,12 +160,14 @@ class _DateRow extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
+    this.subtitle,
   });
 
   final IconData icon;
   final Color color;
   final String label;
   final String value;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -150,11 +177,25 @@ class _DateRow extends StatelessWidget {
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (subtitle != null && subtitle!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         Text(

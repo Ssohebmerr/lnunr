@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/cycle/data/cycle_bridge_service.dart';
 import '../../features/cycle/data/cycle_sync_service.dart';
 import '../../features/cycle/data/today_log_service.dart';
+import '../cycle/ovulation_log_service.dart';
 import '../../features/pregnancy/data/pregnancy_development_content.dart';
 import '../../features/pregnancy/data/pregnancy_tracking_service.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
@@ -104,8 +105,13 @@ class AiContextEngine {
       };
     }
 
+    int? learnedCycleLength;
+    try {
+      learnedCycleLength = await widget.getEffectiveCycleLength();
+    } catch (_) {}
+
     return HealthSnapshot(
-      cycleLength: widget.getCycleLength(),
+      cycleLength: learnedCycleLength ?? widget.getCycleLength(),
       periodDuration: widget.getPeriodDuration(),
       currentPhase: phase,
       currentCycleDay: cycleDay,
@@ -158,10 +164,27 @@ class AiContextEngine {
           list.length > 6 ? list.sublist(list.length - 6) : list;
       final lengths = lastSix(history.cycleLengths);
       final durations = lastSix(history.periodDurations);
-      if (lengths.isEmpty && durations.isEmpty) return const {};
+      final ovulationService = OvulationLogService();
+      final measuredLuteal = await ovulationService.measuredLutealLengths();
+      final ovulationLogsCount = await ovulationService.entryCount();
+      if (lengths.isEmpty && durations.isEmpty && measuredLuteal.isEmpty) {
+        return const {};
+      }
+      final window = SmartCyclePredictor.predictionWindowDays(lengths);
+      final score = lengths.length >= 2
+          ? SmartCyclePredictor.regularityScore(lengths)
+          : 0.0;
       return {
         if (lengths.isNotEmpty) 'recentCycleLengths': lengths,
         if (durations.isNotEmpty) 'recentPeriodDurations': durations,
+        if (measuredLuteal.isNotEmpty) 'measuredLutealDays': measuredLuteal,
+        'ovulationLogsCount': ovulationLogsCount,
+        'ovulationCalibrated': measuredLuteal.length >= 2,
+        'predictionWindowDays': window,
+        'cycleRegularityScore': score.round(),
+        'predictionNote': score < 75
+            ? 'irregular_cycles_use_median_and_wider_window'
+            : 'regular_cycles_use_weighted_recent_average',
       };
     } catch (_) {
       return const {};

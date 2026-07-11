@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../../cycle/presentation/widgets/lune_cycle_ring.dart';
+import '../../cycle/presentation/widgets/ovulation_log_card.dart';
 import '../../home/widgets/home_feed_sections.dart';
 import '../data/goal_mode_analytics.dart';
 import '../data/goal_mode_content.dart';
@@ -298,6 +299,10 @@ class GoalCycleSharedBody extends StatelessWidget {
                 const SizedBox(height: 12),
                 _GoalChecklistCard(goal: goal, lang: lang),
                 const SizedBox(height: 12),
+                if (goal == UserGoalTypes.general || goal.isConceiveMode) ...[
+                  const OvulationLogCard(),
+                  const SizedBox(height: 12),
+                ],
                 HomeKeyDatesCard(data: data),
                 const SizedBox(height: 16),
                 HomeTipsSection(phase: data.phase),

@@ -46,6 +46,7 @@ import 'core/locale/locale_controller.dart';
 import 'core/navigation/home_shell_actions.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/privacy/privacy_constants.dart';
+import 'core/premium/play_billing_coordinator.dart';
 import 'core/security/cycle_encryption_keys.dart';
 import 'core/storage/user_prefs.dart';
 import 'core/theme/app_theme.dart';
@@ -168,6 +169,7 @@ void main() async {
       secretKey: keys['secretKey'],
       ivKey: keys['ivKey'],
     );
+    CycleBridgeService.wireOvulationCalibration();
   } catch (e, st) {
     debugPrint('[Main] MenstrualCycleWidget init failed: $e\n$st');
   }
@@ -238,11 +240,6 @@ void main() async {
       ),
     ),
   );
-}
-
-/// Registers FCM token in background — never blocks app launch.
-Future<void> _registerFcmTokenIfSignedIn() async {
-  await PushRegistrationService().registerIfPossible();
 }
 
 class LuneApp extends StatefulWidget {

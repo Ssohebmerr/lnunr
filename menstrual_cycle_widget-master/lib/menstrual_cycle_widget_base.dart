@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'menstrual_cycle_widget.dart';
+import 'utils/smart_cycle_predictor.dart';
 import 'ui/model/body_temperature_data.dart';
 import 'ui/model/meditation_data.dart';
 import 'ui/model/phases_percentage.dart';
@@ -51,6 +52,10 @@ class MenstrualCycleWidget {
 
   // instance of  MenstrualCycleWidget object
   static MenstrualCycleWidget? instance;
+
+  /// Optional hook from the host app (cycle_app) to supply measured luteal
+  /// phase lengths derived from ovulation / LH logs.
+  static Future<List<int>> Function()? measuredLutealProvider;
 
   // Return previous period day into string
   String getPreviousPeriodDay() => _lastPeriodDate;
@@ -970,18 +975,95 @@ class MenstrualCycleWidget {
     return 0;
   }
 
-  /// get average cycle length. Default is 0
+  /// get average cycle length from completed cycles only (excludes current).
   Future<int> getAvgCycleLength() async {
-    List<PeriodsDateRange> allPeriodRange = await getAllPeriodsDetails();
-    int avgCycleLength = 0;
-    if (allPeriodRange.isNotEmpty) {
-      int totalCycleLength = 0;
-      for (int i = 0; i < allPeriodRange.length; i++) {
-        totalCycleLength = totalCycleLength + allPeriodRange[i].cycleLength!;
-      }
-      avgCycleLength = totalCycleLength ~/ allPeriodRange.length;
+    final completed = await _completedCycleLengths();
+    if (completed.isEmpty) return 0;
+    final total = completed.reduce((a, b) => a + b);
+    return total ~/ completed.length;
+  }
+
+  /// Learned cycle length — recent history weighted; median when irregular.
+  Future<int> getEffectiveCycleLength() async {
+    final completed = await _completedCycleLengths();
+    return SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: completed,
+      configuredFallback: getCycleLength(),
+    );
+  }
+
+  /// Pulls cycle lengths from finished cycles (skips the in-progress one).
+  Future<List<int>> _completedCycleLengths() async {
+    final all = await getAllPeriodsDetails();
+    if (all.length < 2) return [];
+    final lengths = <int>[];
+    for (var i = 1; i < all.length; i++) {
+      final len = all[i].cycleLength;
+      if (len != null && len > 0) lengths.add(len);
     }
-    return avgCycleLength;
+    return SmartCyclePredictor.filterValidCycleLengths(lengths);
+  }
+
+  Future<List<int>> _completedPeriodDurations() async {
+    final all = await getAllPeriodsDetails();
+    if (all.length < 2) return [];
+    final durations = <int>[];
+    for (var i = 1; i < all.length; i++) {
+      final d = all[i].periodDuration;
+      if (d != null && d > 0) durations.add(d);
+    }
+    return durations;
+  }
+
+  Future<List<int>> _measuredLutealLengths() async {
+    final provider = MenstrualCycleWidget.measuredLutealProvider;
+    if (provider == null) return [];
+    try {
+      return await provider();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<int> _resolvedLutealDays() async {
+    final completed = await _completedCycleLengths();
+    final effectiveLength = await getEffectiveCycleLength();
+    final measured = await _measuredLutealLengths();
+    return SmartCyclePredictor.lutealPhaseDays(
+      effectiveCycleLength: effectiveLength,
+      completedLengths: completed,
+      measuredLutealLengths: measured,
+    );
+  }
+
+  /// Updates stored cycle metrics from logged history without touching period days.
+  Future<void> applyLearnedCycleMetrics() async {
+    final completed = await _completedCycleLengths();
+    if (completed.isEmpty) return;
+
+    final learnedLength = SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: completed,
+      configuredFallback: getCycleLength(),
+    );
+    final durations = await _completedPeriodDurations();
+    final learnedPeriod = SmartCyclePredictor.effectivePeriodDuration(
+      completedDurations: durations,
+      configuredFallback: getPeriodDuration(),
+    );
+
+    if (learnedLength == getCycleLength() &&
+        learnedPeriod == getPeriodDuration()) {
+      return;
+    }
+
+    _cycleLength = learnedLength;
+    _periodDuration = learnedPeriod;
+    final dbHelper = MenstrualCycleDbHelper.instance;
+    await dbHelper.insertCurrentUserDetails(
+      customerId: Encryption.instance.encrypt(_customerId),
+      cycleLength: _cycleLength,
+      periodDuration: _periodDuration,
+    );
   }
 
   /// get last period duration. Default is 0
@@ -1277,19 +1359,16 @@ class MenstrualCycleWidget {
 
   /// get Next Predicted Period Date
   Future<String> getNextPredictedPeriodDate() async {
-    if (_lastPeriodDate.isNotEmpty) {
-      int cycleLength = getCycleLength();
-      DateTime nextPeriodDate = CalenderDateUtils.dateFormat
-          .parse(getPreviousPeriodDay())
-          .add(Duration(days: cycleLength));
+    if (_lastPeriodDate.isEmpty) return "";
 
-      String today = CalenderDateUtils.dateDayFormat(DateTime.now());
-      String nextDate = CalenderDateUtils.dateDayFormat(nextPeriodDate);
-      if (nextDate.compareTo(today) < 0) return "";
+    final lastPeriod = CalenderDateUtils.dateFormat.parse(getPreviousPeriodDay());
+    final effectiveLength = await getEffectiveCycleLength();
+    final nextPeriodDate = SmartCyclePredictor.nextPeriodStart(
+      lastPeriodStart: lastPeriod,
+      effectiveCycleLength: effectiveLength,
+    );
 
-      return nextDate;
-    }
-    return "";
+    return CalenderDateUtils.dateDayFormat(nextPeriodDate);
   }
 
   /// to check today is period day
@@ -1327,32 +1406,20 @@ class MenstrualCycleWidget {
     return false;
   }
 
-  /// get Next Predicted Period Date
+  /// get Next Ovulation Date
   Future<String> getNextOvulationDate() async {
-    if (_lastPeriodDate.isNotEmpty) {
-      int cycleLength = getCycleLength();
-      DateTime lastPeriod =
-          CalenderDateUtils.dateFormat.parse(getPreviousPeriodDay());
+    if (_lastPeriodDate.isEmpty) return "";
 
-      DateTime ovulationDate = lastPeriod
-          .add(Duration(days: cycleLength))
-          .add(const Duration(days: -14));
+    final lastPeriod = CalenderDateUtils.dateFormat.parse(getPreviousPeriodDay());
+    final effectiveLength = await getEffectiveCycleLength();
+    final luteal = await _resolvedLutealDays();
+    final ovulationDate = SmartCyclePredictor.nextOvulation(
+      lastPeriodStart: lastPeriod,
+      effectiveCycleLength: effectiveLength,
+      lutealDays: luteal,
+    );
 
-      if (DateTime.now().isAfter(ovulationDate)) {
-        DateTime nextPeriodStart = lastPeriod
-            .add(Duration(days: cycleLength));
-        ovulationDate = nextPeriodStart
-            .add(Duration(days: cycleLength))
-            .add(const Duration(days: -14));
-      }
-
-      String today = CalenderDateUtils.dateDayFormat(DateTime.now());
-      String ovDateStr = CalenderDateUtils.dateDayFormat(ovulationDate);
-      if (ovDateStr.compareTo(today) < 0) return "";
-
-      return ovDateStr;
-    }
-    return "";
+    return CalenderDateUtils.dateDayFormat(ovulationDate);
   }
 
   Future<List<SymptomsPatterns>> getSymptomsPatternForReport() async {
@@ -1526,14 +1593,16 @@ class MenstrualCycleWidget {
     return symptomAnalysisData;
   }
 
-  /// get current phase name based on cycle day
+  /// get current phase name based on cycle day — scaled to actual cycle length.
   Future<String> getCurrentPhaseName() async {
     int currentCycleDay = await getCurrentCycleDay();
-    int cycleLength = getCycleLength();
+    final cycleLength = await getEffectiveCycleLength();
     int menstruationDayCount = getPeriodDuration();
 
-    int follicularEnd = menstruationDayCount + defaultFollicularDay;
-    int ovulationEnd = follicularEnd + defaultOvulationDay;
+    final luteal = await _resolvedLutealDays();
+    final ovulationDay = cycleLength - luteal;
+    final fertileStart = ovulationDay - 5;
+    final follicularEnd = fertileStart - 1;
 
     if (currentCycleDay <= 0) return "";
     if (currentCycleDay <= menstruationDayCount) {
@@ -1542,7 +1611,7 @@ class MenstrualCycleWidget {
     if (currentCycleDay <= follicularEnd) {
       return WidgetBaseLanguage.follicularPhaseLabel;
     }
-    if (currentCycleDay <= ovulationEnd) {
+    if (currentCycleDay <= ovulationDay) {
       return WidgetBaseLanguage.ovulationLabel;
     }
     if (currentCycleDay <= cycleLength) {

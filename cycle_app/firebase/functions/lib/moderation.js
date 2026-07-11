@@ -149,6 +149,10 @@ function buildContextString(cycleContext, mode) {
     parts.push('Current cycle day: ' + (cycleContext.currentCycleDay || 'unknown'));
     parts.push('Next period: ' + (cycleContext.nextPeriodDate || 'unknown'));
     parts.push('Ovulation: ' + (cycleContext.ovulationDate || 'unknown'));
+    parts.push('Cycle regularity: ' + (cycleContext.cycleRegularity || 'unknown'));
+    if (cycleContext.cycleHistory && cycleContext.cycleHistory.ovulationCalibrated) {
+      parts.push('Ovulation timing is calibrated from user ovulation/LH logs — treat ovulation date as more reliable than generic estimates.');
+    }
   }
 
   // todayLog is an object (symptoms/mood/water/...) — stringify it, otherwise
@@ -176,6 +180,13 @@ function buildContextString(cycleContext, mode) {
 
   if (cycleContext.cycleHistory) {
     parts.push('Cycle history (last 6): ' + JSON.stringify(cycleContext.cycleHistory));
+    const window = cycleContext.cycleHistory.predictionWindowDays;
+    if (window != null) {
+      parts.push(
+        'Prediction uncertainty: ±' + window + ' days around next period/ovulation dates. ' +
+        'When irregular, explain that dates are estimates and encourage logging each period to improve accuracy.',
+      );
+    }
   }
 
   if (mode === 'patterns' && cycleContext.cycleHistory) {

@@ -1526,6 +1526,19 @@
       "when": { "type": "String" }
     }
   },
+  "ovulationLogTitle": "Fertility signals",
+  "ovulationLogToday": "Ovulated today",
+  "ovulationLogLhPositive": "LH test positive",
+  "ovulationLogPickDate": "Pick another date",
+  "ovulationLogSaved": "Saved — predictions will adjust",
+  "ovulationCalibratedHint": "Calibrated from your log",
+  "predictionWindowHint": "Estimate — the more you log, the narrower the window gets",
+  "predictionCenterDate": "Best guess: {date}",
+  "@predictionCenterDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
 
   "ageGateTitle": "How old are you?",
   "ageGateBody": "Lune is designed for users aged 13 and older. Some features like community discussions are restricted to users 18+.",

@@ -2,7 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:menstrual_cycle_widget/ui/model/symptoms_patterns.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/cycle/ovulation_log_service.dart';
+import '../../../core/cycle/prediction_display.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
 
 /// Bridges Cycle Aura app with menstrual_cycle_widget package APIs.
@@ -115,11 +118,44 @@ class CycleBridgeService {
     }
   }
 
-  Future<CycleDashboardData> loadDashboard() async {
+  Future<CycleDashboardData> loadDashboard({String? languageCode}) async {
+    final lang = languageCode ?? await _readLocale();
+    final history = await tryLoadAnalyticsHistory();
+    final completed =
+        SmartCyclePredictor.filterValidCycleLengths(history.cycleLengths);
+    final window = SmartCyclePredictor.predictionWindowDays(completed);
+    final measured = await OvulationLogService().measuredLutealLengths();
+    final ovulationCalibrated = measured.length >= 2;
+
+    final nextPeriod =
+        await _safeField(_api.getNextPredictedPeriodDate, '');
+    final ovulation = await _safeField(_api.getNextOvulationDate, '');
+
+    final nextDt = PredictionDisplay.tryParseDashboardDate(nextPeriod);
+    final ovDt = PredictionDisplay.tryParseDashboardDate(ovulation);
+    final nextPeriodRange = nextDt != null && window > 0
+        ? PredictionDisplay.formatPredictionRange(
+            center: nextDt,
+            windowDays: window,
+            languageCode: lang,
+          )
+        : '';
+    final ovulationRange = ovDt != null && window > 0
+        ? PredictionDisplay.formatPredictionRange(
+            center: ovDt,
+            windowDays: window,
+            languageCode: lang,
+          )
+        : '';
+
     return CycleDashboardData(
       phase: await _safeField(_api.getCurrentPhaseName, ''),
-      nextPeriod: await _safeField(_api.getNextPredictedPeriodDate, ''),
-      ovulation: await _safeField(_api.getNextOvulationDate, ''),
+      nextPeriod: nextPeriod,
+      nextPeriodRange: nextPeriodRange,
+      ovulation: ovulation,
+      ovulationRange: ovulationRange,
+      predictionWindowDays: window,
+      ovulationCalibrated: ovulationCalibrated,
       cycleDay: await _safeField(_api.getCurrentCycleDay, 0),
       periodDay: await _safeField(_api.getCurrentPeriodDay, 0),
       cycleRegularity: await _safeField(_api.getCycleRegularityScore, 0.0),
@@ -140,6 +176,21 @@ class CycleBridgeService {
       expectedPregnancyTestDate:
           await _safeField(_api.getExpectedPregnancyTestDate, ''),
     );
+  }
+
+  Future<String> _readLocale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('app_locale') ?? 'ar';
+    } catch (_) {
+      return 'ar';
+    }
+  }
+
+  /// Wires ovulation-log → luteal calibration into the widget engine.
+  static void wireOvulationCalibration() {
+    MenstrualCycleWidget.measuredLutealProvider =
+        OvulationLogService().measuredLutealLengths;
   }
 
   Future<Map<String, dynamic>> loadFullSummary() =>
@@ -336,7 +387,11 @@ class CycleDashboardData {
   const CycleDashboardData({
     required this.phase,
     required this.nextPeriod,
+    required this.nextPeriodRange,
     required this.ovulation,
+    required this.ovulationRange,
+    required this.predictionWindowDays,
+    required this.ovulationCalibrated,
     required this.cycleDay,
     required this.periodDay,
     required this.cycleRegularity,
@@ -357,7 +412,11 @@ class CycleDashboardData {
 
   final String phase;
   final String nextPeriod;
+  final String nextPeriodRange;
   final String ovulation;
+  final String ovulationRange;
+  final int predictionWindowDays;
+  final bool ovulationCalibrated;
   final int cycleDay;
   final int periodDay;
   final double cycleRegularity;

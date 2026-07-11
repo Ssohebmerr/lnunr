@@ -8,6 +8,7 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_sync_service.dart';
+import '../cycle/presentation/widgets/ovulation_log_card.dart';
 import 'widgets/daily_log_feedback.dart';
 
 /// Daily symptom / period logging — opened from the + FAB or embedded in a tab.
@@ -129,6 +130,8 @@ class _LogTabState extends State<LogTab> {
               ],
             ),
           ),
+          const SizedBox(height: 10),
+          const OvulationLogBar(),
           const SizedBox(height: 10),
           Expanded(
             child: DecoratedBox(

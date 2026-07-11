@@ -4,6 +4,7 @@ import 'package:cycle_aura/menstrudel/models/cycles/cycle_stats.dart';
 import 'package:cycle_aura/menstrudel/models/periods/period_stats.dart';
 import 'package:cycle_aura/menstrudel/models/cycles/monthly_cycle_data.dart';
 import 'package:cycle_aura/menstrudel/utils/constants.dart';
+import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'dart:math';
 
 /// A utility class for calculating cycle statistics and predicting the next period
@@ -17,11 +18,6 @@ class PeriodPredictor {
 
   /// Calculates a list of valid cycle lengths (in days) from the start date of
   /// one period to the start date of the next.
-  ///
-  /// A cycle length is only considered valid if it falls within the range
-  /// [minValidCycleLength] and [maxValidCycleLength] (defined in `constants.dart`).
-  ///
-  /// Returns an empty list if there are fewer than `_minPeriodsLogged` or no valid cycles.
   static List<int> _getValidCycleLengths(List<Period> periods) {
     if (periods.length < _minPeriodsLogged) {
       return [];
@@ -40,13 +36,9 @@ class PeriodPredictor {
         cycleLengths.add(days);
       }
     }
-    return cycleLengths;
+    return SmartCyclePredictor.filterValidCycleLengths(cycleLengths);
   }
 
-  /// Calculates a list of valid period durations (in days) from a list of period entries.
-  ///
-  /// Duration is calculated as the difference between end date and start date, plus one day.
-  /// Only durations greater than 0 are included.
   static List<int> _getValidPeriodDurations(List<Period> periods) {
     final List<int> durations = [];
     for (final period in periods) {
@@ -57,13 +49,6 @@ class PeriodPredictor {
     return durations;
   }
 
-  /// Estimates the start and end dates of the next period.
-  ///
-  /// The prediction is based on the average cycle length and average period duration
-  /// calculated from the historical period entries.
-  ///
-  /// Returns a [PeriodPredictionResult] object, or `null` if there are not enough
-  /// entries or if statistics cannot be calculated.
   static PeriodPredictionResult? estimateNextPeriod(
     List<Period> periods,
     DateTime now,
@@ -79,40 +64,44 @@ class PeriodPredictor {
     if (validCycleLengths.isEmpty) {
       return null;
     }
-    final int totalCycleDays = validCycleLengths.reduce((a, b) => a + b);
-    final int averageCycleLength = (totalCycleDays / validCycleLengths.length)
-        .round();
+
+    final averageCycleLength = SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: validCycleLengths,
+      configuredFallback: _defaultCycleLength,
+    );
 
     final List<int> periodDurations = _getValidPeriodDurations(sortedPeriods);
     if (periodDurations.isEmpty) {
       return null;
     }
-    final int totalDurationDays = periodDurations.reduce((a, b) => a + b);
-    final int averagePeriodDuration =
-        (totalDurationDays / periodDurations.length).round();
+    final averagePeriodDuration = SmartCyclePredictor.effectivePeriodDuration(
+      completedDurations: periodDurations,
+      configuredFallback: 5,
+    );
 
     if (averageCycleLength <= 0 || averagePeriodDuration <= 0) {
       return null;
     }
 
-    DateTime lastPeriodStartDate = sortedPeriods.last.startDate;
-
-    DateTime estimatedStartDate = lastPeriodStartDate.add(
-      Duration(days: averageCycleLength),
+    final lastPeriodStartDate = sortedPeriods.last.startDate;
+    final estimatedStartDate = SmartCyclePredictor.nextPeriodStart(
+      lastPeriodStart: lastPeriodStartDate,
+      effectiveCycleLength: averageCycleLength,
+      now: now,
     );
 
-    DateTime estimatedEndDate = estimatedStartDate.add(
+    final estimatedEndDate = estimatedStartDate.add(
       Duration(days: averagePeriodDuration - 1),
     );
 
-    DateTime today = DateTime(now.year, now.month, now.day);
-    DateTime startOfEstimatedDate = DateTime(
+    final today = DateTime(now.year, now.month, now.day);
+    final startOfEstimatedDate = DateTime(
       estimatedStartDate.year,
       estimatedStartDate.month,
       estimatedStartDate.day,
     );
 
-    int daysUntilDue = startOfEstimatedDate.difference(today).inDays;
+    final daysUntilDue = startOfEstimatedDate.difference(today).inDays;
 
     return PeriodPredictionResult(
       estimatedStartDate: estimatedStartDate,
@@ -123,10 +112,6 @@ class PeriodPredictor {
     );
   }
 
-  /// Generates a list of monthly cycle data containing the cycle length for each
-  /// recorded cycle end month.
-  ///
-  /// Returns an empty list if there are fewer than `_minPeriodsLogged` or no valid cycle data.
   static List<MonthlyCycleData> getMonthlyCycleData(List<Period> periods) {
     if (periods.length < _minPeriodsLogged) {
       return [];
@@ -155,13 +140,6 @@ class PeriodPredictor {
     return monthlyData;
   }
 
-  /// Calculates and returns statistics about the user's menstrual cycles.
-  ///
-  /// Statistics include average, shortest, and longest cycle lengths, and the total
-  /// number of valid cycles recorded.
-  ///
-  /// Returns a [CycleStats] object, or `null` if there are not enough periods
-  /// or no valid cycle data.
   static CycleStats? getCycleStats(List<Period> periods) {
     if (periods.length < _minPeriodsLogged) {
       return null;
@@ -173,13 +151,10 @@ class PeriodPredictor {
       return null;
     }
 
-    int totalCycleDays = validCycleLengths.reduce((a, b) => a + b);
-    int averageCycleLength = (totalCycleDays / validCycleLengths.length)
-        .round();
-
-    if (averageCycleLength == 0) {
-      averageCycleLength = _defaultCycleLength;
-    }
+    final averageCycleLength = SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: validCycleLengths,
+      configuredFallback: _defaultCycleLength,
+    );
 
     int shortestCycle = validCycleLengths.reduce(min);
     int longestCycle = validCycleLengths.reduce(max);
@@ -193,12 +168,6 @@ class PeriodPredictor {
     );
   }
 
-  /// Calculates and returns statistics about the duration of the user's periods.
-  ///
-  /// Statistics include average, shortest, and longest period durations, and the total
-  /// number of periods recorded.
-  ///
-  /// Returns a [PeriodStats] object, or `null` if there are fewer than `_minPeriodsLogged` periods.
   static PeriodStats? getPeriodStats(List<Period> entries) {
     if (entries.length < _minPeriodsLogged) {
       return null;

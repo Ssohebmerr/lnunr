@@ -3919,6 +3919,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get ovulationLogTitle => 'Fertility signals';
+
+  @override
+  String get ovulationLogToday => 'Ovulated today';
+
+  @override
+  String get ovulationLogLhPositive => 'LH test positive';
+
+  @override
+  String get ovulationLogPickDate => 'Pick another date';
+
+  @override
+  String get ovulationLogSaved => 'Saved — predictions will adjust';
+
+  @override
+  String get ovulationCalibratedHint => 'Calibrated from your log';
+
+  @override
+  String get predictionWindowHint =>
+      'Estimate — the more you log, the narrower the window gets';
+
+  @override
+  String predictionCenterDate(String date) {
+    return 'Best guess: $date';
+  }
+
+  @override
   String get ageGateTitle => 'How old are you?';
 
   @override

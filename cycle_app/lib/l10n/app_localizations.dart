@@ -7178,6 +7178,54 @@ abstract class AppLocalizations {
   /// **'Next reminder: {when}'**
   String notifNextReminder(String when);
 
+  /// No description provided for @ovulationLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility signals'**
+  String get ovulationLogTitle;
+
+  /// No description provided for @ovulationLogToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulated today'**
+  String get ovulationLogToday;
+
+  /// No description provided for @ovulationLogLhPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'LH test positive'**
+  String get ovulationLogLhPositive;
+
+  /// No description provided for @ovulationLogPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another date'**
+  String get ovulationLogPickDate;
+
+  /// No description provided for @ovulationLogSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved — predictions will adjust'**
+  String get ovulationLogSaved;
+
+  /// No description provided for @ovulationCalibratedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrated from your log'**
+  String get ovulationCalibratedHint;
+
+  /// No description provided for @predictionWindowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate — the more you log, the narrower the window gets'**
+  String get predictionWindowHint;
+
+  /// No description provided for @predictionCenterDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Best guess: {date}'**
+  String predictionCenterDate(String date);
+
   /// No description provided for @ageGateTitle.
   ///
   /// In en, this message translates to:
