@@ -23,9 +23,9 @@ Future<void> showModerationRejectedDialog(
             const SizedBox(height: 12),
             Text(
               reason,
-              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                ctx,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             Text(

@@ -34,7 +34,8 @@ class CommunityMyGroupsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lookup = {
-      for (final c in CommunityListResolver.browseAll(catalog: catalog)) c.id: c,
+      for (final c in CommunityListResolver.browseAll(catalog: catalog))
+        c.id: c,
       for (final c in communities) c.id: c,
     };
     final mine = sortJoinedCommunities(
@@ -55,7 +56,12 @@ class CommunityMyGroupsTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          MediaQuery.paddingOf(context).bottom + 24,
+        ),
         itemCount: mine.length,
         itemBuilder: (_, i) => CommunityCard(
           community: mine[i],

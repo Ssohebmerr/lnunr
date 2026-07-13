@@ -49,23 +49,23 @@ class _CommunityNotificationListenerState
         .limit(10)
         .snapshots()
         .listen(
-      (snap) async {
-        if (_skipInitialSnapshot) {
-          _skipInitialSnapshot = false;
-          return;
-        }
+          (snap) async {
+            if (_skipInitialSnapshot) {
+              _skipInitialSnapshot = false;
+              return;
+            }
 
-        for (final change in snap.docChanges) {
-          if (change.type != DocumentChangeType.added) continue;
-          final data = change.doc.data();
-          if (data == null) continue;
-          await CommunityNotificationService.showFromInbox(data);
-        }
-      },
-      onError: (Object e, StackTrace st) {
-        debugPrint('CommunityNotificationListener: $e\n$st');
-      },
-    );
+            for (final change in snap.docChanges) {
+              if (change.type != DocumentChangeType.added) continue;
+              final data = change.doc.data();
+              if (data == null) continue;
+              await CommunityNotificationService.showFromInbox(data);
+            }
+          },
+          onError: (Object e, StackTrace st) {
+            debugPrint('CommunityNotificationListener: $e\n$st');
+          },
+        );
   }
 
   @override

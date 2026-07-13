@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../../cycle/presentation/widgets/lune_cycle_ring.dart';
+import '../../cycle/presentation/widgets/ovulation_log_card.dart';
 import '../../home/widgets/home_feed_sections.dart';
 import '../data/goal_mode_analytics.dart';
 import '../data/goal_mode_content.dart';
@@ -47,11 +48,7 @@ class GoalModeHomeSection extends StatelessWidget {
 
 /// Compact goal strip — title + one-line context (no stats wall).
 class GoalModeBannerCard extends StatelessWidget {
-  const GoalModeBannerCard({
-    super.key,
-    required this.goal,
-    required this.data,
-  });
+  const GoalModeBannerCard({super.key, required this.goal, required this.data});
 
   final UserGoalTypes goal;
   final CycleDashboardData data;
@@ -120,53 +117,43 @@ class GoalModeBannerCard extends StatelessWidget {
   ) {
     return switch (goal) {
       UserGoalTypes.conceive => (
-          Icons.child_friendly,
-          l10n.goalModeConceiveTitle,
-          LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
-          ),
+        Icons.child_friendly,
+        l10n.goalModeConceiveTitle,
+        LinearGradient(
+          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
         ),
+      ),
       UserGoalTypes.avoid => (
-          Icons.shield_outlined,
-          l10n.goalModeAvoidTitle,
-          const LinearGradient(
-            colors: [Color(0xFF5C6BC0), Color(0xFF7E57C2)],
-          ),
-        ),
+        Icons.shield_outlined,
+        l10n.goalModeAvoidTitle,
+        const LinearGradient(colors: [Color(0xFF5C6BC0), Color(0xFF7E57C2)]),
+      ),
       UserGoalTypes.pcos => (
-          Icons.medical_services_outlined,
-          l10n.localeName.startsWith('ar') ? 'إدارة تكيس المبايض' : 'PCOS Management',
-          const LinearGradient(
-            colors: [Color(0xFF26A69A), Color(0xFF00897B)],
-          ),
-        ),
+        Icons.medical_services_outlined,
+        l10n.localeName.startsWith('ar')
+            ? 'إدارة تكيس المبايض'
+            : 'PCOS Management',
+        const LinearGradient(colors: [Color(0xFF26A69A), Color(0xFF00897B)]),
+      ),
       UserGoalTypes.menopause => (
-          Icons.hourglass_empty_rounded,
-          l10n.localeName.startsWith('ar') ? 'تتبع سن الأمل' : 'Menopause Tracking',
-          const LinearGradient(
-            colors: [Color(0xFF8D6E63), Color(0xFF5D4037)],
-          ),
-        ),
+        Icons.hourglass_empty_rounded,
+        l10n.localeName.startsWith('ar')
+            ? 'تتبع سن الأمل'
+            : 'Menopause Tracking',
+        const LinearGradient(colors: [Color(0xFF8D6E63), Color(0xFF5D4037)]),
+      ),
       UserGoalTypes.postpartum => (
-          Icons.baby_changing_station_rounded,
-          l10n.localeName.startsWith('ar') ? 'الاستشفاء بعد الولادة' : 'Postpartum Recovery',
-          const LinearGradient(
-            colors: [Color(0xFFEC407A), Color(0xFFC2185B)],
-          ),
-        ),
+        Icons.baby_changing_station_rounded,
+        l10n.localeName.startsWith('ar')
+            ? 'الاستشفاء بعد الولادة'
+            : 'Postpartum Recovery',
+        const LinearGradient(colors: [Color(0xFFEC407A), Color(0xFFC2185B)]),
+      ),
       _ => (
-          Icons.health_and_safety_outlined,
-          l10n.goalModeGeneralTitle,
-          LinearGradient(
-            colors: [
-              AppColors.accent,
-              theme.colorScheme.primary,
-            ],
-          ),
-        ),
+        Icons.health_and_safety_outlined,
+        l10n.goalModeGeneralTitle,
+        LinearGradient(colors: [AppColors.accent, theme.colorScheme.primary]),
+      ),
     };
   }
 }
@@ -231,8 +218,10 @@ class GoalCycleSharedBody extends StatelessWidget {
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               maintainState: false,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               leading: Icon(
                 Icons.insights_outlined,
@@ -286,7 +275,8 @@ class GoalCycleSharedBody extends StatelessWidget {
                           GoalModeAnalytics.fertilityLevel(data),
                           l10n,
                         ),
-                        highlight: GoalModeAnalytics.fertilityLevel(data) ==
+                        highlight:
+                            GoalModeAnalytics.fertilityLevel(data) ==
                             FertilityLevel.high,
                       ),
                   ],
@@ -298,6 +288,10 @@ class GoalCycleSharedBody extends StatelessWidget {
                 const SizedBox(height: 12),
                 _GoalChecklistCard(goal: goal, lang: lang),
                 const SizedBox(height: 12),
+                if (goal == UserGoalTypes.general || goal.isConceiveMode) ...[
+                  const OvulationLogCard(),
+                  const SizedBox(height: 12),
+                ],
                 HomeKeyDatesCard(data: data),
                 const SizedBox(height: 16),
                 HomeTipsSection(phase: data.phase),
@@ -315,18 +309,22 @@ class GoalCycleSharedBody extends StatelessWidget {
     return switch (goal) {
       UserGoalTypes.conceive => l10n.homeGoalMoreConceive,
       UserGoalTypes.avoid => l10n.homeGoalMoreAvoid,
-      UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
-          ? 'متابعة أسبوعية، نصائح طبية، ودعم للحمل الصحي.'
-          : 'Weekly tracking, medical tips, and support for a healthy pregnancy.',
-      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
-          ? 'الهبّات الساخنة، النوم، والمزاج — أنماط تساعدكِ على الراحة.'
-          : 'Hot flashes, sleep, and mood — patterns help you find relief.',
-      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
-          ? 'الانتظام، الأعراض الهرمونية، ونمط الحياة — كلها مرتبطة.'
-          : 'Regularity, hormonal symptoms, and lifestyle — all linked.',
-      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
-          ? 'الشفاء، النوم، والمزاج — شفاؤكِ رحلة يومية.'
-          : 'Healing, sleep, and mood — your recovery is a daily journey.',
+      UserGoalTypes.pregnant =>
+        l10n.localeName.startsWith('ar')
+            ? 'متابعة أسبوعية، نصائح طبية، ودعم للحمل الصحي.'
+            : 'Weekly tracking, medical tips, and support for a healthy pregnancy.',
+      UserGoalTypes.menopause =>
+        l10n.localeName.startsWith('ar')
+            ? 'الهبّات الساخنة، النوم، والمزاج — أنماط تساعدكِ على الراحة.'
+            : 'Hot flashes, sleep, and mood — patterns help you find relief.',
+      UserGoalTypes.pcos =>
+        l10n.localeName.startsWith('ar')
+            ? 'الانتظام، الأعراض الهرمونية، ونمط الحياة — كلها مرتبطة.'
+            : 'Regularity, hormonal symptoms, and lifestyle — all linked.',
+      UserGoalTypes.postpartum =>
+        l10n.localeName.startsWith('ar')
+            ? 'الشفاء، النوم، والمزاج — شفاؤكِ رحلة يومية.'
+            : 'Healing, sleep, and mood — your recovery is a daily journey.',
       _ => l10n.homeGoalMoreGeneral,
     };
   }
@@ -451,13 +449,13 @@ class _GoalStatsRow extends StatelessWidget {
           AppStatCard(
             icon: Icons.favorite_outline,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.ovulationDisplay,
             accent: theme.colorScheme.secondary,
           ),
           AppStatCard(
             icon: Icons.event_outlined,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: data.periodDisplay,
             accent: theme.colorScheme.primary,
           ),
           AppStatCard(
@@ -482,7 +480,7 @@ class _GoalStatsRow extends StatelessWidget {
           AppStatCard(
             icon: Icons.favorite,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.ovulationDisplay,
             accent: data.isOvulationDay
                 ? theme.colorScheme.error
                 : theme.colorScheme.secondary,
@@ -504,7 +502,8 @@ class _GoalStatsRow extends StatelessWidget {
           AppStatCard(
             icon: Icons.science_outlined,
             label: l10n.goalModeTestDate,
-            value: data.expectedPregnancyTestDate.isNotEmpty &&
+            value:
+                data.expectedPregnancyTestDate.isNotEmpty &&
                     data.expectedPregnancyTestDate != '—'
                 ? data.expectedPregnancyTestDate
                 : '—',
@@ -538,13 +537,13 @@ class _GoalStatsRow extends StatelessWidget {
         AppStatCard(
           icon: Icons.event_outlined,
           label: l10n.nextPeriod,
-          value: data.nextPeriod,
+          value: data.periodDisplay,
           accent: theme.colorScheme.secondary,
         ),
         AppStatCard(
           icon: Icons.favorite_outline,
           label: l10n.homeOvulation,
-          value: data.ovulation,
+          value: data.ovulationDisplay,
           accent: theme.colorScheme.tertiary,
         ),
       ],
@@ -558,11 +557,15 @@ class _GoalStatsRow extends StatelessWidget {
   ) {
     return switch (level) {
       FertilityLevel.high => (l10n.goalModeFertilityHigh, AuraColors.danger),
-      FertilityLevel.moderate =>
-        (l10n.goalModeFertilityModerate, AuraColors.warning),
+      FertilityLevel.moderate => (
+        l10n.goalModeFertilityModerate,
+        AuraColors.warning,
+      ),
       FertilityLevel.low => (l10n.goalModeFertilityLow, AuraColors.success),
-      FertilityLevel.unknown =>
-        (l10n.goalModeFertilityUnknown, theme.colorScheme.outline),
+      FertilityLevel.unknown => (
+        l10n.goalModeFertilityUnknown,
+        theme.colorScheme.outline,
+      ),
     };
   }
 }

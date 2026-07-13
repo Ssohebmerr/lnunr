@@ -115,7 +115,7 @@ class _WeeklyRecapCardState extends State<WeeklyRecapCard> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(9),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -125,9 +125,9 @@ class _WeeklyRecapCardState extends State<WeeklyRecapCard> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFB07CD8).withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFFB07CD8).withValues(alpha: 0.15),
+                      blurRadius: 9,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),

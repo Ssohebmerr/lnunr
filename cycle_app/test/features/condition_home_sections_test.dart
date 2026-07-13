@@ -16,7 +16,11 @@ CycleDashboardData _fakeData({
   return CycleDashboardData(
     phase: 'Luteal',
     nextPeriod: 'Jul 20',
+    nextPeriodRange: '',
     ovulation: 'Jul 6',
+    ovulationRange: '',
+    predictionWindowDays: 0,
+    ovulationCalibrated: false,
     cycleDay: cycleDay,
     periodDay: 0,
     cycleRegularity: regularity,

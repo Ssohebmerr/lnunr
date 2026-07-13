@@ -140,7 +140,7 @@ class _EditSanitaryProductBottomSheetState extends State<EditSanitaryProductBott
                   child: Row(
                     children: SanitaryProducts.values.map((type) {
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
+                        padding: const EdgeInsetsDirectional.only(end: 8.0),
                         child: FilterChip(
                           selected: _selectedType == type,
                           label: Text(type.getDisplayName(l10n)),
@@ -176,7 +176,7 @@ class _EditSanitaryProductBottomSheetState extends State<EditSanitaryProductBott
                       FilledButton.tonalIcon(
                         icon: const Icon(Icons.calendar_today, size: 18),
                         label: Text(DateFormat('EEE, d MMM').format(_selectedDate)),
-                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: Alignment.centerLeft),
+                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: AlignmentDirectional.centerStart),
                         onPressed: _isEditing ? _selectDate : null,
                       ),
                     ],
@@ -192,7 +192,7 @@ class _EditSanitaryProductBottomSheetState extends State<EditSanitaryProductBott
                       FilledButton.tonalIcon(
                         icon: const Icon(Icons.access_time, size: 18),
                         label: Text(_selectedTime.format(context)),
-                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: Alignment.centerLeft),
+                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: AlignmentDirectional.centerStart),
                         onPressed: _isEditing ? _selectTime : null,
                       ),
                     ],

@@ -110,7 +110,7 @@ class _SymptomEntrySheetState extends State<SymptomEntrySheet> {
                   FilledButton.tonalIcon(
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(DateFormat('EEEE, d MMMM yyyy').format(_selectedDate)),
-                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: Alignment.centerLeft),
+                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: AlignmentDirectional.centerStart),
                     onPressed: _pickDate,
                   ),
                   const SizedBox(height: 8),

@@ -1,5 +1,6 @@
 /// Community media uploads — enabled for stories, disabled for posts (Play safety).
 const bool kCommunityMediaUploadsEnabled = true;
+
 /// Matches Firestore `birthYearValid()` in firestore.rules.
 const int kCommunityMinBirthYear = 1940;
 const int kCommunityMaxBirthYearFirestore = 2010;

@@ -10,7 +10,7 @@ initFuturePeriodDay() async {
   final instance = MenstrualCycleWidget.instance!;
 
   List<String> futurePeriodDays = [];
-  int cycleLength = instance.getCycleLength() - 1;
+  int cycleLength = instance.getCycleLength();
   int periodLength = instance.getPeriodDuration();
   if (instance.getPreviousPeriodDay().isNotEmpty) {
     DateTime nextPeriodDate = CalenderDateUtils.dateFormat

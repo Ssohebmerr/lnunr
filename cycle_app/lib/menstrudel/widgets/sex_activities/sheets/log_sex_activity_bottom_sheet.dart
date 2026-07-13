@@ -132,7 +132,7 @@ class _LogSexActivityBottomSheetState extends State<LogSexActivityBottomSheet> {
                         onPressed: _selectDate,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          alignment: Alignment.centerLeft,
+                          alignment: AlignmentDirectional.centerStart,
                         ),
                       ),
                     ],
@@ -151,7 +151,7 @@ class _LogSexActivityBottomSheetState extends State<LogSexActivityBottomSheet> {
                         onPressed: _selectTime,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          alignment: Alignment.centerLeft,
+                          alignment: AlignmentDirectional.centerStart,
                         ),
                       ),
                     ],

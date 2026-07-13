@@ -63,7 +63,10 @@ class CommunityDiscoverTab extends StatelessWidget {
       languageCode: lang,
       goal: userGoal,
       joinedIds: joinedIds,
-      limit: communities.length,
+      // Recommendations are a curated preview. Every community remains
+      // available in the complete lists below without repeating the entire
+      // catalog in the horizontal rail.
+      limit: 6,
     );
     final unjoined = communities
         .where((c) => !joinedIds.contains(c.id))
@@ -79,30 +82,48 @@ class CommunityDiscoverTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          MediaQuery.paddingOf(context).bottom + 24,
+        ),
         children: [
-          CommunitySearchField(
-            controller: searchController,
-            hint: l10n.communitySearchHint,
-            onChanged: onSearchChanged,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              onPressed: () => _pickCategory(context, categories),
-              icon: const Icon(Icons.tune_rounded, size: 18),
-              label: Text(selectedCategory.$2),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+          Row(
+            children: [
+              Expanded(
+                child: CommunitySearchField(
+                  controller: searchController,
+                  hint: l10n.communitySearchHint,
+                  onChanged: onSearchChanged,
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+              _CategoryFilterButton(
+                label: selectedCategory.$2,
+                active: category != 'all',
+                onTap: () => _pickCategory(context, categories),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          if (category != 'all') ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: InputChip(
+                avatar: Icon(selectedCategory.$3, size: 15),
+                label: Text(selectedCategory.$2),
+                onDeleted: () => onCategoryChanged('all'),
+                deleteIcon: const Icon(Icons.close_rounded, size: 16),
+                visualDensity: VisualDensity.compact,
+                side: BorderSide.none,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.45),
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
           if (category == 'all' && searchController.text.trim().isEmpty)
             CommunityRecommendedRow(
               communities: recommended,
@@ -111,23 +132,10 @@ class CommunityDiscoverTab extends StatelessWidget {
               onOpen: onOpen,
             ),
           if (unjoined.isNotEmpty) ...[
-            Row(
-              children: [
-                Text(
-                  l10n.communityDiscoverNew,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
-                Text(
-                  '${unjoined.length}',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            _SectionHeading(
+              title: l10n.communityDiscoverNew,
+              count: unjoined.length,
+              emphasized: true,
             ),
             const SizedBox(height: 10),
             ...unjoined.map(
@@ -142,23 +150,9 @@ class CommunityDiscoverTab extends StatelessWidget {
             const SizedBox(height: 18),
           ],
           if (joinedInBrowse.isNotEmpty) ...[
-            Row(
-              children: [
-                Text(
-                  l10n.communityDiscoverJoined,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
-                Text(
-                  '${joinedInBrowse.length}',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            _SectionHeading(
+              title: l10n.communityDiscoverJoined,
+              count: joinedInBrowse.length,
             ),
             const SizedBox(height: 10),
             ...joinedInBrowse.map(
@@ -210,5 +204,106 @@ class CommunityDiscoverTab extends StatelessWidget {
       ),
     );
     if (selected != null && selected != category) onCategoryChanged(selected);
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.title,
+    required this.count,
+    this.emphasized = false,
+  });
+
+  final String title;
+  final int count;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = emphasized
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+        Container(
+          constraints: const BoxConstraints(minWidth: 28),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$count',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryFilterButton extends StatelessWidget {
+  const _CategoryFilterButton({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: active
+                  ? theme.colorScheme.primary
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.white.withValues(alpha: 0.9)),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: active
+                    ? Colors.transparent
+                    : theme.colorScheme.outline.withValues(alpha: 0.1),
+              ),
+            ),
+            child: Icon(
+              Icons.tune_rounded,
+              size: 20,
+              color: active ? Colors.white : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

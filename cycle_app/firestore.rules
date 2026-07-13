@@ -361,6 +361,15 @@ service cloud.firestore {
 
       }
 
+      // Account-scoped backup encryption key (escrow). Owner-only, and NOT
+      // premium-gated on purpose: a lapsed subscriber must still be able to
+      // read the key that decrypts backups made while premium.
+      match /secure/{docId} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
 
 
       match /communityMemberships/{communityId} {
@@ -372,6 +381,14 @@ service cloud.firestore {
 
 
       match /blockedUsers/{blockedUid} {
+
+        allow read, write: if isOwner(userId);
+
+      }
+
+      // Members the user follows. Owner-only, like blockedUsers; the
+      // followed user is notified via the onUserFollowed trigger.
+      match /following/{followedUid} {
 
         allow read, write: if isOwner(userId);
 
@@ -586,6 +603,17 @@ service cloud.firestore {
     match /{path=**}/comments/{commentId} {
 
       allow get, list: if isAdmin();
+
+    }
+
+    // Own-comments lookup for the feed's "my comments" filter. Safe because
+    // the rule only passes when the query itself is constrained to the
+    // signed-in user's own comments (authorUid == auth.uid).
+    match /{path=**}/comments/{commentId} {
+
+      allow list: if request.auth != null
+
+        && resource.data.authorUid == request.auth.uid;
 
     }
 

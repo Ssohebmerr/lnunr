@@ -112,6 +112,28 @@
   "@conditionRitualsDoneToday": {
     "placeholders": { "done": {"type": "int"}, "total": {"type": "int"} }
   },
+  "conditionTrendsTitle": "اتجاهاتكِ",
+  "conditionTrendsEmpty": "لا تسجيلات بعد — سجّلي أعراضكِ وطقوسكِ من الشاشة الرئيسية وستظهر اتجاهاتكِ هنا.",
+  "conditionTrendLast14Days": "آخر 14 يوماً",
+  "conditionTrendLast30Days": "آخر 30 يوماً",
+  "conditionTrendLast7Days": "آخر 7 أيام",
+  "conditionTrendToday": "اليوم",
+  "conditionTrendHotFlashes": "الهبّات الساخنة",
+  "conditionTrendMood": "تسجيلات المزاج",
+  "conditionTrendSymptomsPerDay": "الأعراض في اليوم",
+  "conditionTopSymptoms": "أكثر الأعراض تكراراً",
+  "conditionDaysLogged": "أيام مسجَّلة",
+  "conditionRitualCompletion": "إنجاز الطقوس",
+  "conditionDoctorReportCta": "تقرير للطبيبة (PDF)",
+  "conditionReportTitle": "تقرير ملخّص للطبيبة",
+  "conditionReportOverview": "نظرة عامة",
+  "conditionReportGoalLabel": "الهدف الصحي",
+  "conditionReportConsistency": "انتظام التسجيل",
+  "conditionReportNoLogs": "لا توجد تسجيلات يومية في آخر 30 يوماً — سجّلي الأعراض من الشاشة الرئيسية لإغناء هذا التقرير.",
+  "conditionReportTimes": "{count}×",
+  "@conditionReportTimes": {
+    "placeholders": { "count": {"type": "int"} }
+  },
   "conditionStreakDays": "{days} يوم متتالٍ من التسجيل",
   "@conditionStreakDays": {
     "placeholders": { "days": {"type": "int"} }
@@ -478,7 +500,7 @@
   "doctorReportGenerating": "جارٍ تحضير التقرير...",
   "doctorReportFailed": "بيانات الدورة غير جاهزة بعد. افتحي الشاشة الرئيسية ثم حاولي مجدداً.",
   "doctorReportRetry": "إعادة المحاولة",
-  "doctorReportLimitedData": "هذا التقرير مبني على بيانات محدودة. بعد حوالي شهر من التسجيل اليومي، تصبح التوقعات والأنماط أدق بكثير.",
+  "doctorReportLimitedData": "هذا التقرير مبني على بيانات محدودة. تسجيل بدايات عدة دورات مكتملة يسمح بقياس الدقة الشخصية وتحسين نطاق التوقع.",
   "doctorReportAiTitle": "ملاحظات المساعد الذكي",
   "doctorReportAiSubtitle": "سياق مفيد لزيارة الطبيب — وليس تشخيصاً.",
   "doctorReportAiLoading": "الذكاء الاصطناعي يراجع بياناتك…",
@@ -988,13 +1010,13 @@
   "goalModeTodayFocus": "تركيز اليوم",
   "goalModeChecklist": "قائمتك",
   "goalModeReportInsights": "رؤى لهدفك",
-  "goalModeFertilityToday": "الخصوبة اليوم",
-  "goalModeFertilityHigh": "عالية",
-  "goalModeFertilityModerate": "متوسطة",
-  "goalModeFertilityLow": "منخفضة",
+  "goalModeFertilityToday": "تقدير الخصوبة اليوم",
+  "goalModeFertilityHigh": "مرتفعة تقديريًا",
+  "goalModeFertilityModerate": "متوسطة تقديريًا",
+  "goalModeFertilityLow": "أقل تقديريًا",
   "goalModeFertilityUnknown": "سجّلي أكثر",
   "goalModeTestDate": "اختبار حمل",
-  "goalModeOvulationToday": "يوم الإباضة اليوم",
+  "goalModeOvulationToday": "نافذة إباضة مقدّرة اليوم",
   "goalModeConceiveSelfCare": "عناية الخصوبة",
   "goalModeConceiveSelfCareSub": "عادات يومية صغيرة تدعم محاولة الحمل.",
   "goalModeAvoidSelfCare": "عناية الوقاية",
@@ -1235,8 +1257,32 @@
   "@communityActivityReply": {
     "placeholders": { "alias": { "type": "String" } }
   },
+  "communityActivityFollow": "{alias} بدأت بمتابعتك",
+  "@communityActivityFollow": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityActivityMention": "{alias} ذكرتك في تعليق",
+  "@communityActivityMention": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityFollow": "متابعة",
+  "communityFollowingBtn": "متابَعة",
+  "communityUnfollow": "إلغاء المتابعة",
+  "communityUnfollowed": "أُلغيت المتابعة",
+  "communityFollowedToast": "أصبحتِ تتابعين {alias}",
+  "@communityFollowedToast": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityFollowingTitle": "المتابَعات",
+  "communityFollowingSubtitle": "العضوات اللواتي تتابعينهن",
+  "communityFollowingEmpty": "لا تتابعين أحداً بعد. اضغطي على اسم عضوة في أي منشور لمتابعتها.",
+  "communityCommentSortOldest": "الأقدم أولاً",
+  "communityCommentSortNewest": "الأحدث أولاً",
+  "communityCommentSortTop": "الأكثر إعجاباً",
   "communityMarkAllRead": "تعليم الكل كمقروء",
   "communitySortNewest": "الأحدث",
+  "communityFeedPopular": "شائع",
+  "communityFeedMyComments": "تعليقاتي",
   "communitySortDiscussed": "الأكثر نقاشاً",
   "communityFilterMyPosts": "منشوراتي",
   "communitySearchPosts": "ابحثي في المنشورات...",
@@ -1476,6 +1522,41 @@
       "when": { "type": "String" }
     }
   },
+  "ovulationLogTitle": "إشارات الخصوبة",
+  "ovulationLogToday": "أُبِضت اليوم",
+  "ovulationLogLhPositive": "اختبار LH إيجابي",
+  "ovulationLogPickDate": "تاريخ آخر",
+  "ovulationLogSaved": "تم الحفظ — ستُعدَّل التوقعات",
+  "ovulationCalibratedHint": "مُعاير من سجلكِ",
+  "predictionWindowHint": "تقدير — كلما سجّلتِ أكثر، يضيق النطاق",
+  "predictionCenterDate": "أفضل تخمين: {date}",
+  "@predictionCenterDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "predictionConfidenceLabel": "ثقة التنبؤ",
+  "predictionConfidenceLearning": "قيد التعلّم",
+  "predictionConfidenceModerate": "متوسطة",
+  "predictionConfidenceStrong": "قوية",
+  "predictionAccuracyPersonal": "أصاب ضمن يومين في {within} من آخر {total} دورات قابلة للاختبار",
+  "@predictionAccuracyPersonal": {
+    "placeholders": {
+      "within": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "predictionAccuracyLearning": "نحتاج 4 دورات مكتملة لعرض دقتكِ الشخصية",
+  "predictionWindowActive": "أنتِ الآن داخل النطاق المتوقع للدورة",
+  "periodPredictionLate": "مرّ {days} يوم بعد نهاية النطاق المتوقع",
+  "@periodPredictionLate": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "predictionPossibleMissingLog": "قد تكون هذه دورة أطول من المعتاد أو ربما فاتكِ تسجيل دورة. راجعي التقويم قبل اعتماد التوقع التالي.",
+  "predictionEvidenceNote": "نطاق شخصي مبني على سجلكِ — تقدير وليس ضمانًا طبيًا",
+  "ovulationEstimateHint": "تقدير للدورة الحالية — لا يُستخدم وحده لمنع الحمل",
 
   "ageGateTitle": "كم عمركِ؟",
   "ageGateBody": "Lune مصمم للمستخدمات بعمر 13 عاماً فأكثر. بعض الميزات مثل مناقشات المجتمع محصورة للمستخدمات فوق 18 عاماً.",

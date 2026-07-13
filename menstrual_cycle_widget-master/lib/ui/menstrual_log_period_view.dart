@@ -664,11 +664,34 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     if (widget.embeddedInTab) {
       return theme.brightness == Brightness.dark
           ? theme.colorScheme.surfaceContainerHigh
-          : theme.colorScheme.surfaceContainerHighest;
+          : Colors.white.withValues(alpha: 0.92);
     }
     return theme.brightness == Brightness.dark
         ? theme.colorScheme.surfaceContainerHigh
         : Colors.white;
+  }
+
+  /// Soft, brand-consistent section-card decoration: rounded corners and a
+  /// hairline border instead of a flat filled [Card] — matches the app shell.
+  BoxDecoration _sectionCardDecoration(BuildContext context) {
+    final theme = Theme.of(context);
+    return BoxDecoration(
+      color: _cardFillColor(context),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+      ),
+    );
+  }
+
+  /// Parses a "#RRGGBB" category colour, falling back to the theme primary.
+  Color _categoryColor(BuildContext context, String? hex) {
+    if (hex == null || hex.isEmpty) return widget.themeColor;
+    try {
+      return Color(int.parse("0xff${hex.replaceAll("#", "")}"));
+    } catch (_) {
+      return widget.themeColor;
+    }
   }
 
   Color _onSurfaceColor(BuildContext context) {
@@ -979,12 +1002,11 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8),
-      child: Card(
-        color: _cardFillColor(context),
-        elevation: 0,
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+      child: Container(
+        decoration: _sectionCardDecoration(context),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(14.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1123,12 +1145,11 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8),
-      child: Card(
-        color: _cardFillColor(context),
-        elevation: 0,
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+      child: Container(
+        decoration: _sectionCardDecoration(context),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(14.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1399,23 +1420,36 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
               SizedBox(
                 height: 4,
               ),
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      Icons.verified_user,
-                      color: Colors.green,
-                      size: 18,
-                    ),
-                    Text(
-                      " ${WidgetBaseLanguage.protectedData}",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontFamily: getFontFamily(),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const Icon(
+                        Icons.verified_user,
+                        color: Colors.green,
+                        size: 14,
                       ),
-                    )
-                  ]),
+                      const SizedBox(width: 5),
+                      Text(
+                        WidgetBaseLanguage.protectedData,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade700,
+                          fontFamily: getFontFamily(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SizedBox(
                 height: 5,
               ),
@@ -1432,26 +1466,42 @@ class _MenstrualLogPeriodViewState extends State<MenstrualLogPeriodView> {
                                 physics: const ClampingScrollPhysics(),
                                 itemCount: symptomsList.length,
                                 itemBuilder: (BuildContext context, int index) {
-                                  return Card(
-                                    color: cardColor,
-                                    elevation: 0,
+                                  final categoryColor = _categoryColor(
+                                      context,
+                                      symptomsList[index].categoryColor);
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: _sectionCardDecoration(context),
                                     child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.all(14.0),
                                       child: Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            "${symptomsList[index].categoryName}",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: getFontFamily(),
-                                            ),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 10,
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  color: categoryColor,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                "${symptomsList[index].categoryName}",
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: getFontFamily(),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          Divider(color: Color(0xFFD3D3D3)),
+                                          const SizedBox(height: 12),
                                           Wrap(
                                               children: symptomsList[index]
                                                   .symptomsData!

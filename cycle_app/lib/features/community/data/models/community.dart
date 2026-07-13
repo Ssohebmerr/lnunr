@@ -47,18 +47,17 @@ class Community {
     String? topic,
     IconData? icon,
     int? maxMembers,
-  }) =>
-      Community(
-        id: id,
-        nameEn: nameEn ?? this.nameEn,
-        nameAr: nameAr ?? this.nameAr,
-        descriptionEn: descriptionEn ?? this.descriptionEn,
-        descriptionAr: descriptionAr ?? this.descriptionAr,
-        topic: topic ?? this.topic,
-        icon: icon ?? this.icon,
-        maxMembers: maxMembers ?? this.maxMembers,
-        memberCount: memberCount ?? this.memberCount,
-        rulesEn: rulesEn ?? this.rulesEn,
-        rulesAr: rulesAr ?? this.rulesAr,
-      );
+  }) => Community(
+    id: id,
+    nameEn: nameEn ?? this.nameEn,
+    nameAr: nameAr ?? this.nameAr,
+    descriptionEn: descriptionEn ?? this.descriptionEn,
+    descriptionAr: descriptionAr ?? this.descriptionAr,
+    topic: topic ?? this.topic,
+    icon: icon ?? this.icon,
+    maxMembers: maxMembers ?? this.maxMembers,
+    memberCount: memberCount ?? this.memberCount,
+    rulesEn: rulesEn ?? this.rulesEn,
+    rulesAr: rulesAr ?? this.rulesAr,
+  );
 }

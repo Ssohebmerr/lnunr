@@ -235,6 +235,14 @@ async function submitComment(db, uid, body) {
   const postRef = db.collection('communities').doc(communityId)
     .collection('posts').doc(postId);
   const parentCommentId = text(body.parentCommentId, 100) || null;
+  // Mentioned member uids (client resolves @alias → uid from the thread's
+  // participants). Capped and self-mentions dropped; only used for inbox
+  // notifications, never rendered back.
+  const mentions = Array.isArray(body.mentions)
+    ? [...new Set(body.mentions.filter((m) =>
+        typeof m === 'string' && m.length > 0 && m.length <= 128 && m !== uid,
+      ))].slice(0, 5)
+    : [];
   await reserveSubmission(db, uid, 'comment', bodyText, 20);
   const moderation = await evaluateModeration(GEMINI_API_KEY.value(), bodyText);
   if (moderation.reject) {
@@ -260,6 +268,7 @@ async function submitComment(db, uid, body) {
       authorAvatarIndex: avatarIndex(user.communityAvatarIndex),
       authorIsPremium: user.isPremium === true,
       ...(parentCommentId ? { parentCommentId } : {}),
+      ...(mentions.length ? { mentions } : {}),
       moderationStatus: moderation.moderationStatus,
     };
     if (moderation.moderationStatus === 'approved') {

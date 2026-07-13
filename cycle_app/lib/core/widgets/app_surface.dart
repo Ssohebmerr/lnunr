@@ -62,10 +62,11 @@ class AppStatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
+              // One shared icon-chip tint recipe (0.25→0.10) across all cards.
               gradient: LinearGradient(
                 colors: [
                   color.withValues(alpha: 0.25),
-                  color.withValues(alpha: 0.08),
+                  color.withValues(alpha: 0.10),
                 ],
               ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -152,16 +153,16 @@ class AppQuickTile extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  color.withValues(alpha: 0.35),
-                  color.withValues(alpha: 0.12),
+                  color.withValues(alpha: 0.25),
+                  color.withValues(alpha: 0.10),
                 ],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: color.withValues(alpha: 0.10),
+                  blurRadius: 9,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -221,8 +222,8 @@ class AppHubCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    accent.withValues(alpha: 0.3),
-                    accent.withValues(alpha: 0.1),
+                    accent.withValues(alpha: 0.25),
+                    accent.withValues(alpha: 0.10),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),

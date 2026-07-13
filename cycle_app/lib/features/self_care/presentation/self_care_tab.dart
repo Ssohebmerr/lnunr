@@ -127,29 +127,36 @@ class _SelfCareTabState extends State<SelfCareTab> {
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     final isPregnant = _goal.isPregnancyMode;
-    final displayGoal =
-        _goal == UserGoalTypes.sexual ? UserGoalTypes.general : _goal;
+    final displayGoal = _goal == UserGoalTypes.sexual
+        ? UserGoalTypes.general
+        : _goal;
 
     final String tipText;
     if (isPregnant) {
-      tipText = PregnancySelfCareContent.tipForWeek(_pregnancyWeek, lang)
-          .forLocale(lang);
+      tipText = PregnancySelfCareContent.tipForWeek(
+        _pregnancyWeek,
+        lang,
+      ).forLocale(lang);
     } else if (_dashboard != null) {
-      tipText =
-          GoalModeContent.dailyTip(displayGoal, _dashboard!, lang).forLang(lang);
+      tipText = GoalModeContent.dailyTip(
+        displayGoal,
+        _dashboard!,
+        lang,
+      ).forLang(lang);
     } else {
       tipText = SelfCareContent.tipForPhase(_phase, lang).forLocale(lang);
     }
 
     final rituals = isPregnant
         ? PregnancySelfCareContent.ritualsForWeek(_pregnancyWeek)
-        : GoalModeContent.rituals(displayGoal)
-            .map((t) => SelfCareTip(en: t.en, ar: t.ar))
-            .toList();
+        : GoalModeContent.rituals(
+            displayGoal,
+          ).map((t) => SelfCareTip(en: t.en, ar: t.ar)).toList();
 
-    final ritualsDone = List.generate(rituals.length, (i) => _ritualStates[i])
-        .where((v) => v)
-        .length;
+    final ritualsDone = List.generate(
+      rituals.length,
+      (i) => _ritualStates[i],
+    ).where((v) => v).length;
 
     String sectionTitle() {
       if (isPregnant) return l10n.pregnancySelfCareTitle;
@@ -173,7 +180,12 @@ class _SelfCareTabState extends State<SelfCareTab> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
         ),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          MediaQuery.paddingOf(context).bottom + 24,
+        ),
         children: [
           if (isFirstTime) ...[
             const SizedBox(height: 16),
@@ -189,14 +201,18 @@ class _SelfCareTabState extends State<SelfCareTab> {
                       shape: BoxShape.circle,
                       color: theme.colorScheme.primary.withValues(alpha: 0.15),
                     ),
-                    child: Icon(Icons.spa_rounded,
-                        size: 36, color: theme.colorScheme.primary),
+                    child: Icon(
+                      Icons.spa_rounded,
+                      size: 36,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l10n.selfCareWelcomeTitle,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -310,12 +326,12 @@ class _SelfCareTabState extends State<SelfCareTab> {
               child: _RitualProgress(done: ritualsDone, total: rituals.length),
             ),
           ...rituals.asMap().entries.map(
-                (e) => _RitualTile(
-                  title: e.value.forLocale(lang),
-                  value: e.key < _ritualStates.length && _ritualStates[e.key],
-                  onChanged: (v) => _toggleRitual(e.key, v),
-                ),
-              ),
+            (e) => _RitualTile(
+              title: e.value.forLocale(lang),
+              value: e.key < _ritualStates.length && _ritualStates[e.key],
+              onChanged: (v) => _toggleRitual(e.key, v),
+            ),
+          ),
           const SizedBox(height: 20),
 
           // ── Phase-based self-care library ─────────────────────────────────
@@ -392,9 +408,9 @@ class _SelfCareTabState extends State<SelfCareTab> {
           AppGlassCard(
             blur: false,
             onTap: () async {
-              await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ChallengesPage()),
-              );
+              await Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ChallengesPage()));
               _load();
             },
             child: Row(
@@ -411,8 +427,10 @@ class _SelfCareTabState extends State<SelfCareTab> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.local_fire_department,
-                      color: AuraColors.ember),
+                  child: const Icon(
+                    Icons.local_fire_department,
+                    color: AuraColors.ember,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -446,8 +464,10 @@ class _SelfCareTabState extends State<SelfCareTab> {
                       ),
                     ),
                   ),
-                Icon(Icons.chevron_right_rounded,
-                    color: theme.colorScheme.outline),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.colorScheme.outline,
+                ),
               ],
             ),
           ),
@@ -476,8 +496,11 @@ class _StreakPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.local_fire_department,
-              size: 14, color: AuraColors.ember),
+          const Icon(
+            Icons.local_fire_department,
+            size: 14,
+            color: AuraColors.ember,
+          ),
           const SizedBox(width: 4),
           Text(
             l10n.selfCareRitualStreak(days),
@@ -512,10 +535,10 @@ class _RitualProgress extends StatelessWidget {
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 8,
-              backgroundColor:
-                  theme.colorScheme.primary.withValues(alpha: 0.12),
-              valueColor:
-                  AlwaysStoppedAnimation(theme.colorScheme.primary),
+              backgroundColor: theme.colorScheme.primary.withValues(
+                alpha: 0.12,
+              ),
+              valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
             ),
           ),
         ),
@@ -565,7 +588,11 @@ class _WellnessGroup extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < rows.length; i++) ...[
-            _WellnessRow(data: rows[i], first: i == 0, last: i == rows.length - 1),
+            _WellnessRow(
+              data: rows[i],
+              first: i == 0,
+              last: i == rows.length - 1,
+            ),
             if (i != rows.length - 1)
               Divider(
                 height: 1,
@@ -645,8 +672,10 @@ class _WellnessRow extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded,
-                  color: theme.colorScheme.outline),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.outline,
+              ),
             ],
           ),
         ),

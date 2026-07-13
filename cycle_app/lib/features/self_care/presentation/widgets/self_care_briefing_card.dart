@@ -170,7 +170,7 @@ class _SelfCareBriefingCardState extends State<SelfCareBriefingCard> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(9),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: AuraDecorations.primaryGradient,
                   borderRadius: BorderRadius.circular(12),

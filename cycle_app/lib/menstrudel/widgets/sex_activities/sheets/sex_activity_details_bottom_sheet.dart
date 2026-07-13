@@ -226,7 +226,7 @@ class _EditSexLogBottomSheetState extends State<EditSexLogBottomSheet> {
           onPressed: onTap,
           icon: Icon(icon, size: 18),
           label: Text(value),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: Alignment.centerLeft),
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), alignment: AlignmentDirectional.centerStart),
         ),
       ],
     );

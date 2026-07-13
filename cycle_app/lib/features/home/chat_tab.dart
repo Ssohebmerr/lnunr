@@ -43,6 +43,17 @@ class _ChatTabState extends State<ChatTab> {
   final FlutterTts _tts = FlutterTts();
   String? _speakingMessageId;
 
+  /// Ids of AI replies the user has expanded past the "Read more" fold.
+  /// Kept here (not inside the recycled list rows) so the expanded state stays
+  /// pinned to the right message while the conversation scrolls.
+  final Set<String> _expandedMessages = <String>{};
+
+  void _toggleExpanded(String id) {
+    setState(() {
+      if (!_expandedMessages.remove(id)) _expandedMessages.add(id);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -377,6 +388,7 @@ class _ChatTabState extends State<ChatTab> {
                         : const AiActionParseResult(
                             cleanText: '', actions: []);
                     return _ChatMessageRow(
+                      key: ValueKey('msg-${item.message.id}'),
                       message: item.message,
                       theme: theme,
                       showAvatar: item.showAvatar,
@@ -387,6 +399,8 @@ class _ChatTabState extends State<ChatTab> {
                       onActionTap: _handleAction,
                       isSpeaking: _speakingMessageId == item.message.id,
                       onTtsTap: _toggleTts,
+                      isExpanded: _expandedMessages.contains(item.message.id),
+                      onToggleExpand: () => _toggleExpanded(item.message.id),
                     );
                   }
                   if (item is _TimelineTyping) {
@@ -419,30 +433,6 @@ class _ChatTabState extends State<ChatTab> {
               onTap: (text) => _send(text),
             );
           },
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          child: Column(
-            children: [
-              Text(
-                l10n.privacyMedicalDisclaimer,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                  fontSize: 10,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                l10n.homeAiCardSubtitlePremium,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                  fontSize: 10,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
         ),
         SafeArea(
           top: false,
@@ -618,7 +608,7 @@ class _ChatInputBar extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: focusNode.hasFocus
-                ? theme.colorScheme.primary.withValues(alpha: 0.10)
+                ? theme.colorScheme.primary.withValues(alpha: 0.07)
                 : Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
             blurRadius: 14,
             offset: const Offset(0, 4),
@@ -645,7 +635,7 @@ class _ChatInputBar extends StatelessWidget {
                       color: sending
                           ? theme.colorScheme.outline
                           : AuraColors.danger,
-                      size: 19,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -707,7 +697,7 @@ class _ChatInputBar extends StatelessWidget {
                           ? [
                               BoxShadow(
                                 color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.35),
+                                    .withValues(alpha: 0.24),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -716,7 +706,7 @@ class _ChatInputBar extends StatelessWidget {
                     ),
                     child: sending
                         ? Padding(
-                            padding: const EdgeInsets.all(11),
+                            padding: const EdgeInsets.all(12),
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: theme.colorScheme.primary,

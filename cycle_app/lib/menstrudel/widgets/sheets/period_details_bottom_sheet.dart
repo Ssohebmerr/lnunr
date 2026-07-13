@@ -323,7 +323,7 @@ Future<void> _showNewCustomSymptomDialog() async {
             header,
             const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.only(left: 4.0),
+              padding: const EdgeInsetsDirectional.only(start: 4.0),
               child: Text(
                 l10n.notSet,
                 style: textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: colorScheme.onSurfaceVariant),

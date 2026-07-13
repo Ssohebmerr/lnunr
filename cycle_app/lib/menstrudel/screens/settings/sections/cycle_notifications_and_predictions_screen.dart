@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:provider/provider.dart';
@@ -59,10 +60,8 @@ class CycleNotificationsAndPredictionsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final settingsService = context.watch<SettingsService>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_cycleNotificationsAndPredictions),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_cycleNotificationsAndPredictions,
       body: ListView(
         children: [
           SwitchListTile(

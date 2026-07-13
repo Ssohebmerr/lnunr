@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/widgets/app_avatar.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/models/community_story.dart';
 
 /// Groups stories by author.
@@ -82,16 +83,6 @@ class StoryRing extends StatelessWidget {
                           AuraColors.rose,
                         ],
                       ),
-                boxShadow: isViewed
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: AuraColors.rose
-                              .withValues(alpha: isDark ? 0.15 : 0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
               ),
               child: Container(
                 decoration: BoxDecoration(
@@ -104,8 +95,9 @@ class StoryRing extends StatelessWidget {
                 child: ClipOval(
                   child: isCurrentUser
                       ? Container(
-                          color: theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.4),
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.4,
+                          ),
                           child: Icon(
                             Icons.add_rounded,
                             size: 26,
@@ -123,7 +115,9 @@ class StoryRing extends StatelessWidget {
             if (showLabel) ...[
               const SizedBox(height: 5),
               Text(
-                isCurrentUser ? 'Your story' : group.authorAlias,
+                isCurrentUser
+                    ? AppLocalizations.of(context)!.storyYourStory
+                    : group.authorAlias,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 10,
                   fontWeight: isViewed ? FontWeight.w500 : FontWeight.w600,
@@ -189,14 +183,13 @@ class _StoryViewerState extends State<StoryViewer>
 
   void _startProgress() {
     _progressController?.dispose();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _next();
-        }
-      });
+    _progressController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 6))
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              _next();
+            }
+          });
     _progressController!.forward();
 
     widget.onMarkViewed(_currentStory.communityId, _currentStory.id);
@@ -296,8 +289,11 @@ class _StoryViewerState extends State<StoryViewer>
                 width: double.infinity,
                 height: double.infinity,
                 errorBuilder: (_, _, _) => const Center(
-                  child: Icon(Icons.broken_image,
-                      color: Colors.white38, size: 48),
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white38,
+                    size: 48,
+                  ),
                 ),
               ),
             // Gradient overlay (top)
@@ -363,8 +359,9 @@ class _StoryViewerState extends State<StoryViewer>
                             }
                             return LinearProgressIndicator(
                               value: value,
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.3),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.3,
+                              ),
                               valueColor: const AlwaysStoppedAnimation<Color>(
                                 Colors.white,
                               ),
@@ -433,18 +430,23 @@ class _StoryViewerState extends State<StoryViewer>
                   ),
                   if (isOwn)
                     IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          color: Colors.white70, size: 22),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.white70,
+                        size: 22,
+                      ),
                       onPressed: () async {
                         final navigator = Navigator.of(context);
-                        await widget.onDelete(
-                            story.communityId, story.id);
+                        await widget.onDelete(story.communityId, story.id);
                         navigator.pop();
                       },
                     ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: Colors.white, size: 26),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -462,9 +464,7 @@ class _StoryViewerState extends State<StoryViewer>
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(blurRadius: 8, color: Colors.black54),
-                    ],
+                    shadows: [Shadow(blurRadius: 8, color: Colors.black54)],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -472,8 +472,11 @@ class _StoryViewerState extends State<StoryViewer>
             // Pause indicator
             if (_paused)
               const Center(
-                child: Icon(Icons.pause_rounded,
-                    color: Colors.white38, size: 56),
+                child: Icon(
+                  Icons.pause_rounded,
+                  color: Colors.white38,
+                  size: 56,
+                ),
               ),
           ],
         ),

@@ -337,7 +337,7 @@ class _StatCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.first.withValues(alpha: 0.35),
+                  color: gradient.first.withValues(alpha: 0.18),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -361,7 +361,7 @@ class _StatCard extends StatelessWidget {
                   : Text(
                       value,
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
                         color: gradient.first,
                       ),

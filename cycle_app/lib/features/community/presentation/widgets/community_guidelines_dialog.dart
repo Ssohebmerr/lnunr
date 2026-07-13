@@ -29,7 +29,9 @@ Future<bool> showCommunityGuidelinesDialog(
   final lang = Localizations.localeOf(context).languageCode;
   final rules = community.rulesForLocale(lang).isNotEmpty
       ? community.rulesForLocale(lang)
-      : (lang.startsWith('ar') ? CommunitySeed.defaultRulesAr : CommunitySeed.defaultRulesEn);
+      : (lang.startsWith('ar')
+            ? CommunitySeed.defaultRulesAr
+            : CommunitySeed.defaultRulesEn);
 
   var agreed = false;
   final result = await showDialog<bool>(
@@ -50,8 +52,8 @@ Future<bool> showCommunityGuidelinesDialog(
               Text(
                 l10n.communityDisclaimer,
                 style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(ctx).colorScheme.outline,
-                    ),
+                  color: Theme.of(ctx).colorScheme.outline,
+                ),
               ),
               const SizedBox(height: 8),
               CheckboxListTile(

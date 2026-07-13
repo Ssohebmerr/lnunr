@@ -366,7 +366,7 @@ class _KickCard extends StatelessWidget {
                     Text(
                       '$count',
                       style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(

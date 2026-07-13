@@ -8,8 +8,8 @@ import '../../../core/app_home_refresh.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/push/push_registration_service.dart';
-import '../../../core/notifications/notification_prefs.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../../core/cycle/ovulation_log_service.dart';
 import '../../user/data/guest_user_service.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
 import '../../../core/storage/user_prefs.dart';
@@ -167,6 +167,17 @@ class CycleSyncService {
       }
     } catch (e, st) {
       debugPrint('syncWidgetToMenstrudel failed (non-fatal): $e\n$st');
+    }
+
+    // Re-learn cycle length / period duration from completed history.
+    try {
+      final api = MenstrualCycleWidget.instance;
+      if (api != null) {
+        await api.applyLearnedCycleMetrics();
+      }
+      await OvulationLogService().pruneInvalidEntries();
+    } catch (e, st) {
+      debugPrint('applyLearnedCycleMetrics failed (non-fatal): $e\n$st');
     }
 
     try {

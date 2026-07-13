@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/cycle/data/cycle_bridge_service.dart';
 import '../../features/cycle/data/cycle_sync_service.dart';
 import '../../features/cycle/data/today_log_service.dart';
+import '../cycle/ovulation_log_service.dart';
 import '../../features/pregnancy/data/pregnancy_development_content.dart';
 import '../../features/pregnancy/data/pregnancy_tracking_service.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
@@ -21,7 +22,7 @@ import 'wellness_hub_collector.dart';
 /// never build context maps by hand.
 class AiContextEngine {
   AiContextEngine({CycleSyncService? syncService})
-      : _sync = syncService ?? CycleSyncService();
+    : _sync = syncService ?? CycleSyncService();
 
   final CycleSyncService _sync;
 
@@ -87,8 +88,8 @@ class AiContextEngine {
       );
       fetalSnippet = info.bodyFor(locale);
       maternalSnippet = info.maternalFor(locale);
-      pregnancyTracking =
-          (await PregnancyTrackingService().buildSummary()).toPromptMap();
+      pregnancyTracking = (await PregnancyTrackingService().buildSummary())
+          .toPromptMap();
     }
 
     final today = await TodayLogService().loadToday();
@@ -97,15 +98,22 @@ class AiContextEngine {
         'symptoms': today.symptoms,
         'waterCups': today.waterCups,
         if (today.weight != null) 'weight': today.weight,
-        if (today.bodyTemperature != null) 'bodyTemperature': today.bodyTemperature,
+        if (today.bodyTemperature != null)
+          'bodyTemperature': today.bodyTemperature,
         if (today.sleepTime != null) 'sleepTime': today.sleepTime,
-        if (today.meditationTime != null) 'meditationTime': today.meditationTime,
+        if (today.meditationTime != null)
+          'meditationTime': today.meditationTime,
         if (today.notes != null) 'notes': today.notes,
       };
     }
 
+    int? learnedCycleLength;
+    try {
+      learnedCycleLength = await widget.getEffectiveCycleLength();
+    } catch (_) {}
+
     return HealthSnapshot(
-      cycleLength: widget.getCycleLength(),
+      cycleLength: learnedCycleLength ?? widget.getCycleLength(),
       periodDuration: widget.getPeriodDuration(),
       currentPhase: phase,
       currentCycleDay: cycleDay,
@@ -158,10 +166,52 @@ class AiContextEngine {
           list.length > 6 ? list.sublist(list.length - 6) : list;
       final lengths = lastSix(history.cycleLengths);
       final durations = lastSix(history.periodDurations);
-      if (lengths.isEmpty && durations.isEmpty) return const {};
+      final ovulationService = OvulationLogService();
+      final measuredLuteal = await ovulationService.measuredLutealLengths();
+      final ovulationLogsCount = await ovulationService.entryCount();
+      final prediction = await MenstrualCycleWidget.instance
+          ?.getCurrentPeriodPrediction();
+      if (lengths.isEmpty &&
+          durations.isEmpty &&
+          measuredLuteal.isEmpty &&
+          prediction == null) {
+        return const {};
+      }
+      final window = SmartCyclePredictor.predictionWindowDays(lengths);
+      final score = lengths.length >= 2
+          ? SmartCyclePredictor.regularityScore(lengths)
+          : 0.0;
       return {
         if (lengths.isNotEmpty) 'recentCycleLengths': lengths,
         if (durations.isNotEmpty) 'recentPeriodDurations': durations,
+        if (measuredLuteal.isNotEmpty) 'measuredLutealDays': measuredLuteal,
+        'ovulationLogsCount': ovulationLogsCount,
+        'ovulationCalibrated': measuredLuteal.length >= 2,
+        'predictionWindowDays': window,
+        'cycleRegularityScore': score.round(),
+        if (prediction != null) ...{
+          'predictionConfidence': prediction.confidence.name,
+          'predictionConfidenceScore': double.parse(
+            prediction.confidenceScore.toStringAsFixed(2),
+          ),
+          'predictionWindowStart': prediction.windowStart
+              .toIso8601String()
+              .substring(0, 10),
+          'predictionWindowEnd': prediction.windowEnd
+              .toIso8601String()
+              .substring(0, 10),
+          'isPeriodLate': prediction.isLate,
+          'daysPastExpectedWindow': prediction.daysLate,
+          'possibleMissingLog': prediction.possibleMissingLog,
+          'backtestedCycles': prediction.accuracy.evaluatedCycles,
+          'backtestsWithinTwoDays': prediction.accuracy.withinTwoDays,
+          'medianAbsoluteErrorDays': double.parse(
+            prediction.accuracy.medianAbsoluteError.toStringAsFixed(1),
+          ),
+        },
+        'predictionNote': score < 75
+            ? 'irregular_cycles_use_median_and_wider_window'
+            : 'regular_cycles_use_weighted_recent_average',
       };
     } catch (_) {
       return const {};
@@ -182,13 +232,16 @@ class AiContextEngine {
   Future<Map<String, dynamic>> buildAnonymizedContext() async =>
       (await buildSnapshot()).toPromptMap();
 
-  Future<({
-    Map<String, int> symptoms,
-    int logCount,
-    String? lastFlow,
-    int? daysSinceLastLog,
-    double? averagePain,
-  })> _collectWellness() async {
+  Future<
+    ({
+      Map<String, int> symptoms,
+      int logCount,
+      String? lastFlow,
+      int? daysSinceLastLog,
+      double? averagePain,
+    })
+  >
+  _collectWellness() async {
     final logsRepo = MenstrudelInit.logsRepository;
     if (logsRepo == null) {
       return (

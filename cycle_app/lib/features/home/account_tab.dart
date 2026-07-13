@@ -214,16 +214,15 @@ class _AccountTabState extends State<AccountTab> {
   /// plans are always reachable (the old bottom sheet hid them entirely).
   void _openPlans() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const SubscriptionPlansScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const SubscriptionPlansScreen()),
     );
   }
 
   /// Opens Google Play's subscription management for the current account.
   Future<void> _manageSubscription() async {
-    final uri =
-        Uri.parse('https://play.google.com/store/account/subscriptions');
+    final uri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions',
+    );
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -240,15 +239,15 @@ class _AccountTabState extends State<AccountTab> {
     try {
       await user.sendEmailVerification();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.accountVerificationSent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.accountVerificationSent)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     }
   }
@@ -257,9 +256,9 @@ class _AccountTabState extends State<AccountTab> {
     final l10n = AppLocalizations.of(context)!;
     await PlayBillingCoordinator.instance.billing.restorePurchases();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.restorePurchasesDone)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.restorePurchasesDone)));
     }
   }
 
@@ -267,18 +266,19 @@ class _AccountTabState extends State<AccountTab> {
   /// purchase on another device). Never grants premium from the client.
   Future<void> _refreshPremiumStatus() async {
     final l10n = AppLocalizations.of(context)!;
-    final result =
-        await PremiumActivationService.refreshPremiumStatus(force: true);
+    final result = await PremiumActivationService.refreshPremiumStatus(
+      force: true,
+    );
     if (!mounted) return;
     if (result.ok) {
       setState(() => _premium = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumActivated)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.premiumActivated)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.notPremium)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.notPremium)));
     }
   }
 
@@ -300,22 +300,32 @@ class _AccountTabState extends State<AccountTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.watch_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.watch_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.accountWatchSheetTitle,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            Text(
-              l10n.accountWatchSheetBody,
-              textAlign: TextAlign.center,
-            ),
+            Text(l10n.accountWatchSheetBody, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             _WatchFeature(icon: Icons.sync, text: l10n.accountWatchFeatureSync),
-            _WatchFeature(icon: Icons.circle_outlined, text: l10n.accountWatchFeatureRing),
-            _WatchFeature(icon: Icons.water_drop, text: l10n.accountWatchFeatureLog),
-            _WatchFeature(icon: Icons.calendar_today, text: l10n.accountWatchFeaturePhase),
+            _WatchFeature(
+              icon: Icons.circle_outlined,
+              text: l10n.accountWatchFeatureRing,
+            ),
+            _WatchFeature(
+              icon: Icons.water_drop,
+              text: l10n.accountWatchFeatureLog,
+            ),
+            _WatchFeature(
+              icon: Icons.calendar_today,
+              text: l10n.accountWatchFeaturePhase,
+            ),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -329,9 +339,11 @@ class _AccountTabState extends State<AccountTab> {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(synced
-                                  ? l10n.watchSyncSuccess
-                                  : l10n.watchSyncFailed),
+                              content: Text(
+                                synced
+                                    ? l10n.watchSyncSuccess
+                                    : l10n.watchSyncFailed,
+                              ),
                             ),
                           );
                         }
@@ -388,7 +400,12 @@ class _AccountTabState extends State<AccountTab> {
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        MediaQuery.paddingOf(context).bottom + 24,
+      ),
       children: [
         _ProfileCard(
           user: user,
@@ -401,8 +418,9 @@ class _AccountTabState extends State<AccountTab> {
           photoUrl: _photoUrl,
           l10n: l10n,
           theme: theme,
-          onCopyAccountId:
-              _accountUid != null ? () => _copyText(_accountUid!) : null,
+          onCopyAccountId: _accountUid != null
+              ? () => _copyText(_accountUid!)
+              : null,
           onLinkEmail: !hasEmail ? () => context.push('/register') : null,
           onEditProfile: () async {
             final updated = await showModalBottomSheet<bool>(
@@ -471,8 +489,8 @@ class _AccountTabState extends State<AccountTab> {
                   : null,
               onTap: hasEmail
                   ? (user!.emailVerified
-                      ? null
-                      : () => _sendEmailVerification(user))
+                        ? null
+                        : () => _sendEmailVerification(user))
                   : () => context.push('/register'),
             ),
             if (_accountUid != null && _accountUid!.isNotEmpty)
@@ -492,7 +510,7 @@ class _AccountTabState extends State<AccountTab> {
               title: hasEmail ? l10n.accountTypeEmail : l10n.accountTypeGuest,
               subtitle: _memberSince != null
                   ? '${l10n.accountMemberSinceTitle} '
-                      '${DateFormat.yMMMM(Localizations.localeOf(context).toString()).format(_memberSince!)}'
+                        '${DateFormat.yMMMM(Localizations.localeOf(context).toString()).format(_memberSince!)}'
                   : null,
               showDivider: false,
               trailing: const SizedBox.shrink(),
@@ -506,11 +524,8 @@ class _AccountTabState extends State<AccountTab> {
             AccountMenuTile(
               femIcon: FeminineIcon.insights,
               title: l10n.accountMenuInsights,
-              onTap: () => _openSub(
-                context,
-                l10n.navInsights,
-                const InsightsTab(),
-              ),
+              onTap: () =>
+                  _openSub(context, l10n.navInsights, const InsightsTab()),
             ),
             AccountMenuTile(
               femIcon: FeminineIcon.education,
@@ -534,9 +549,9 @@ class _AccountTabState extends State<AccountTab> {
                 femIcon: FeminineIcon.partner,
                 title: l10n.partnerTitle,
                 subtitle: l10n.partnerSubtitle,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PartnerPage()),
-                ),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const PartnerPage())),
               ),
             AccountMenuTile(
               femIcon: FeminineIcon.watch,
@@ -552,9 +567,9 @@ class _AccountTabState extends State<AccountTab> {
                 femIcon: FeminineIcon.settings,
                 title: l10n.adminTitle,
                 showDivider: false,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AdminScreen()),
-                ),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const AdminScreen())),
               ),
           ],
         ),
@@ -723,8 +738,9 @@ class _ProfileCard extends StatelessWidget {
     return email != null && email.isNotEmpty && user?.isAnonymous != true;
   }
 
-  String _shortId(String id) =>
-      id.length > 14 ? '${id.substring(0, 10)}…${id.substring(id.length - 4)}' : id;
+  String _shortId(String id) => id.length > 14
+      ? '${id.substring(0, 10)}…${id.substring(id.length - 4)}'
+      : id;
 
   String _subtitleLine() {
     if (_hasEmail) return user!.email!.trim();
@@ -864,17 +880,16 @@ class _AccountHeroCard extends StatelessWidget {
             const SizedBox(height: 14),
             // Status pill — Premium (gradient) or Free (muted).
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
               decoration: BoxDecoration(
                 gradient: premium ? AuraDecorations.primaryGradient : null,
                 color: premium
                     ? null
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.6),
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.6,
+                      ),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                boxShadow:
-                    premium ? AppShadows.softRose(opacity: 0.25) : null,
+                boxShadow: premium ? AppShadows.softRose(opacity: 0.25) : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -919,12 +934,15 @@ class _AccountHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.4),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -932,7 +950,7 @@ class _AccountHeroCard extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.badge_outlined,
-                          size: 13,
+                          size: 12,
                           color: theme.colorScheme.outline,
                         ),
                         const SizedBox(width: 6),
@@ -1014,8 +1032,9 @@ class _PremiumStatusCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     premium ? l10n.premiumActive : l10n.premiumTitle,
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

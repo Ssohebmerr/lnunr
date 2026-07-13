@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/logs_repository.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:cycle_aura/menstrudel/models/period_logs/symptom.dart';
@@ -98,10 +99,8 @@ class LogSettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_LoggingScreen),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_LoggingScreen,
       body: ListView(
         children: [
           SwitchListTile(

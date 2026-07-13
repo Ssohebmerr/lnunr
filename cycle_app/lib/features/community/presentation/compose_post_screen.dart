@@ -12,7 +12,6 @@ import '../../../core/security/community_text_sanitize.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/models/community.dart';
@@ -279,7 +278,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         color: isDark
             ? AuraColors.darkCard.withValues(alpha: 0.85)
             : Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.1)
@@ -378,7 +377,6 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     final lang = Localizations.localeOf(context).languageCode;
     final communityName = widget.community.nameForLocale(lang);
     final isBusy = _sending || _uploadingMedia;
-    final gradient = CommunityTopicPalette.gradient(widget.community.topic);
     final topInset = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     return Scaffold(
@@ -390,14 +388,9 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         scrolledUnderElevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: AppGlassCard(
-            radius: AppRadius.pill,
-            padding: const EdgeInsets.all(8),
-            onTap: () => Navigator.of(context).maybePop(),
-            child: Icon(
-              Icons.arrow_back_rounded,
-              color: theme.colorScheme.onSurface,
-            ),
+          child: IconButton.filledTonal(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
         ),
         title: Column(
@@ -459,14 +452,17 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: gradient,
+                          color: isDark
+                              ? AuraColors.darkCard.withValues(alpha: 0.82)
+                              : Colors.white.withValues(alpha: 0.88),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.08,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
                         ),
                         child: Row(
                           children: [
@@ -474,14 +470,16 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.22),
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.md,
-                                ),
+                                color: CommunityTopicPalette.iconColor(
+                                  widget.community.topic,
+                                ).withValues(alpha: isDark ? 0.18 : 0.11),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(
                                 widget.community.icon,
-                                color: Colors.white,
+                                color: CommunityTopicPalette.iconColor(
+                                  widget.community.topic,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -492,16 +490,13 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                                   Text(
                                     communityName,
                                     style: theme.textTheme.titleSmall?.copyWith(
-                                      color: Colors.white,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                   Text(
                                     l10n.communityPostHint,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.88,
-                                      ),
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -561,7 +556,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                           color: isDark
                               ? AuraColors.darkCard.withValues(alpha: 0.85)
                               : Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.1)

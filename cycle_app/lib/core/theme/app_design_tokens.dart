@@ -84,18 +84,20 @@ class AppRadius {
 class AppShadows {
   AppShadows._();
 
-  static List<BoxShadow> softRose({double opacity = 0.12}) => [
+  // 2026 calm-premium pass: the rose "glow" is dialled back ~55% (0.12→0.055)
+  // and the blur tightened so cards read as clean surfaces, not pink halos.
+  static List<BoxShadow> softRose({double opacity = 0.055}) => [
     BoxShadow(
       color: AuraColors.rose.withValues(alpha: opacity),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
+      blurRadius: 18,
+      offset: const Offset(0, 6),
     ),
   ];
 
-  static List<BoxShadow> softPlum({double opacity = 0.08}) => [
+  static List<BoxShadow> softPlum({double opacity = 0.06}) => [
     BoxShadow(
       color: AuraColors.plum.withValues(alpha: opacity),
-      blurRadius: 16,
+      blurRadius: 14,
       offset: const Offset(0, 4),
     ),
   ];
@@ -162,10 +164,10 @@ class AuraDecorations {
       boxShadow: [
         BoxShadow(
           color: (isDark ? Colors.black : AuraColors.plum).withValues(
-            alpha: isDark ? 0.24 : 0.055,
+            alpha: isDark ? 0.20 : 0.045,
           ),
-          blurRadius: 14,
-          offset: const Offset(0, 6),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
         ),
       ],
     );
@@ -233,12 +235,14 @@ class AuraDecorations {
             : Colors.white.withValues(alpha: 0.9),
       ),
       boxShadow: [
+        // Hero accent halo softened ~50% (0.10→0.05) so the headline text —
+        // not the pink glow behind the card — is the focal point.
         BoxShadow(
           color: (isDark ? Colors.black : AuraColors.accent).withValues(
-            alpha: isDark ? 0.28 : 0.10,
+            alpha: isDark ? 0.22 : 0.05,
           ),
-          blurRadius: 20,
-          offset: const Offset(0, 9),
+          blurRadius: 16,
+          offset: const Offset(0, 7),
         ),
       ],
     );
@@ -260,10 +264,10 @@ class AuraDecorations {
       boxShadow: [
         BoxShadow(
           color: (isDark ? Colors.black : AuraColors.plum).withValues(
-            alpha: isDark ? 0.28 : 0.06,
+            alpha: isDark ? 0.22 : 0.045,
           ),
-          blurRadius: 16,
-          offset: const Offset(0, 6),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
         ),
       ],
     );

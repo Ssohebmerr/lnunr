@@ -139,12 +139,12 @@ class CycleReportExporter {
     _line(
       buf,
       l10n.healthReportNextPeriodDay,
-      _t(pm['next_period_day'] ?? dash?.nextPeriod),
+      _t(dash?.periodDisplay ?? pm['next_period_day']),
     );
     _line(
       buf,
       l10n.healthReportNextOvulationDay,
-      _t(pm['next_ovulation_day'] ?? dash?.ovulation),
+      _t(dash?.ovulationDisplay ?? pm['next_ovulation_day']),
     );
     buf.writeln();
 
@@ -241,10 +241,10 @@ class CycleReportExporter {
       '"${l10n.healthReportPrevPeriodDuration}","${_days(km['prev_period_duration'])}"',
     );
     buf.writeln(
-      '"${l10n.healthReportNextPeriodDay}","${_t(pm['next_period_day'] ?? dash?.nextPeriod)}"',
+      '"${l10n.healthReportNextPeriodDay}","${_t(dash?.periodDisplay ?? pm['next_period_day'])}"',
     );
     buf.writeln(
-      '"${l10n.healthReportNextOvulationDay}","${_t(pm['next_ovulation_day'] ?? dash?.ovulation)}"',
+      '"${l10n.healthReportNextOvulationDay}","${_t(dash?.ovulationDisplay ?? pm['next_ovulation_day'])}"',
     );
     buf.writeln();
 

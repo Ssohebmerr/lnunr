@@ -11,11 +11,9 @@ import 'community_story_submit.dart';
 import 'models/community_story.dart';
 
 class CommunityStoryRepository {
-  CommunityStoryRepository({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  CommunityStoryRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -25,7 +23,10 @@ class CommunityStoryRepository {
 
   Future<void> _ensureStoryAllowed(String uid, String communityId) async {
     // Check adult status
-    final userDoc = await _firestore.collection('users').doc(uid).get()
+    final userDoc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get()
         .timeout(const Duration(seconds: 8));
     final birthYear = userDoc.data()?['communityBirthYear'] as int?;
     if (birthYear == null || !isCommunityAdultBirthYear(birthYear)) {
@@ -174,9 +175,7 @@ class CommunityStoryRepository {
 
     final ref = _storiesRef(communityId).doc(storyId);
     try {
-      await ref.update({
-        'viewCount': FieldValue.increment(1),
-      });
+      await ref.update({'viewCount': FieldValue.increment(1)});
     } catch (e) {
       debugPrint('markViewed error: $e');
     }
@@ -197,10 +196,9 @@ class CommunityStoryRepository {
   /// Clean up expired stories.
   Future<void> cleanupExpired(String communityId) async {
     final now = Timestamp.fromDate(DateTime.now());
-    final snap = await _storiesRef(communityId)
-        .where('expiresAt', isLessThan: now)
-        .limit(50)
-        .get();
+    final snap = await _storiesRef(
+      communityId,
+    ).where('expiresAt', isLessThan: now).limit(50).get();
 
     final batch = _firestore.batch();
     for (final doc in snap.docs) {

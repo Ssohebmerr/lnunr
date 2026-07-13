@@ -1,9 +1,12 @@
+import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
+
 class PeriodPredictionResult {
   final DateTime estimatedStartDate;
   final DateTime estimatedEndDate;
   final int daysUntilDue;
   final int averageCycleLength;
   final int averagePeriodDuration;
+  final CyclePredictionEstimate? evidence;
 
   PeriodPredictionResult({
     required this.estimatedStartDate,
@@ -11,6 +14,7 @@ class PeriodPredictionResult {
     required this.daysUntilDue,
     required this.averageCycleLength,
     required this.averagePeriodDuration,
+    this.evidence,
   });
 
   @override

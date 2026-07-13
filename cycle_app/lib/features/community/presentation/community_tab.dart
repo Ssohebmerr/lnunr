@@ -169,8 +169,8 @@ class _CommunityTabState extends State<CommunityTab>
     var saved = false;
 
     final profile = _profile;
-    final onlyYear = birthYearOnly ||
-        (profile != null && profile.needsBirthYearOnly);
+    final onlyYear =
+        birthYearOnly || (profile != null && profile.needsBirthYearOnly);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -193,7 +193,10 @@ class _CommunityTabState extends State<CommunityTab>
             photoUrl: photoUrl,
           );
           try {
-            await context.read<CommunityRepository>().saveProfile(user.uid, profile);
+            await context.read<CommunityRepository>().saveProfile(
+              user.uid,
+              profile,
+            );
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -252,8 +255,8 @@ class _CommunityTabState extends State<CommunityTab>
     if (profile.isMinor) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.communityAdultsOnly)),
+          content: Text(AppLocalizations.of(context)!.communityAdultsOnly),
+        ),
       );
       return;
     }
@@ -307,9 +310,9 @@ class _CommunityTabState extends State<CommunityTab>
   }
 
   void _openActivity() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CommunityActivityScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CommunityActivityScreen()));
   }
 
   Future<void> _openStoryComposer(
@@ -357,8 +360,8 @@ class _CommunityTabState extends State<CommunityTab>
                 child: Text(
                   l10n.storyChooseCommunity,
                   style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
@@ -455,14 +458,12 @@ class _CommunityTabState extends State<CommunityTab>
     }
 
     return StreamBuilder<List<CommunityMembership>>(
-      stream: context
-          .read<CommunityRepository>()
-          .watchJoinedMemberships(user.uid),
+      stream: context.read<CommunityRepository>().watchJoinedMemberships(
+        user.uid,
+      ),
       builder: (context, membershipSnap) {
         if (membershipSnap.hasError) {
-          debugPrint(
-            'CommunityTab membership stream: ${membershipSnap.error}',
-          );
+          debugPrint('CommunityTab membership stream: ${membershipSnap.error}');
         }
 
         final memberships = membershipSnap.data ?? [];
@@ -497,14 +498,16 @@ class _CommunityTabState extends State<CommunityTab>
               delegate: CommunityTabBarDelegate(
                 controller: _tabs,
                 tabs: [
-                  (icon: Icons.dynamic_feed_rounded,
-                      label: l10n.communityTabFeed),
-                  (icon: Icons.explore_rounded,
-                      label: l10n.communityTabDiscover),
-                  (icon: Icons.favorite_rounded,
-                      label: l10n.communityTabMine),
-                  (icon: Icons.bookmark_rounded,
-                      label: l10n.communityTabSaved),
+                  (
+                    icon: Icons.dynamic_feed_rounded,
+                    label: l10n.communityTabFeed,
+                  ),
+                  (
+                    icon: Icons.explore_rounded,
+                    label: l10n.communityTabDiscover,
+                  ),
+                  (icon: Icons.favorite_rounded, label: l10n.communityTabMine),
+                  (icon: Icons.bookmark_rounded, label: l10n.communityTabSaved),
                 ],
               ),
             ),

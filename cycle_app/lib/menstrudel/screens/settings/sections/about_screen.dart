@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cycle_aura/core/privacy/privacy_constants.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -54,8 +55,9 @@ Widget build(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   final theme = Theme.of(context);
 
-  return Scaffold(
-    appBar: AppBar(title: Text(l10n.settingsScreen_about), centerTitle: true),
+  return AuraSettingsScaffold(
+    title: l10n.settingsScreen_about,
+    centerTitle: true,
     body: ListView(
       children: [
         const SizedBox(height: 32),
@@ -132,7 +134,7 @@ Widget build(BuildContext context) {
 
 Widget _buildSectionHeader(BuildContext context, String title) {
   return Padding(
-    padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+    padding: const EdgeInsetsDirectional.only(start: 16, top: 16, bottom: 8),
     child: Text(
       title.toUpperCase(),
       style: Theme.of(context).textTheme.labelSmall?.copyWith(

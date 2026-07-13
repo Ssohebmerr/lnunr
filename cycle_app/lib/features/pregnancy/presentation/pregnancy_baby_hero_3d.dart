@@ -105,9 +105,9 @@ class _PregnancyBabyHero3DCardState extends State<PregnancyBabyHero3DCard>
                           boxShadow: [
                             BoxShadow(
                               color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.18 + 0.12 * pulse),
-                              blurRadius: 32 + 18 * pulse,
-                              spreadRadius: 2 + 4 * pulse,
+                                  .withValues(alpha: 0.11 + 0.08 * pulse),
+                              blurRadius: 26 + 14 * pulse,
+                              spreadRadius: 1 + 3 * pulse,
                             ),
                             BoxShadow(
                               color: Colors.white.withValues(alpha: 0.55),

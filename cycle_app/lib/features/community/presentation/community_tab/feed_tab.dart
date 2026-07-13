@@ -40,11 +40,33 @@ class CommunityFeedTab extends StatefulWidget {
 
 class _CommunityFeedTabState extends State<CommunityFeedTab> {
   PostType? _typeFilter;
-  CommunityFeedSort _sort = CommunityFeedSort.newest;
-  bool _myPostsOnly = false;
   final _searchController = TextEditingController();
   String _search = '';
   String _categoryFilter = 'all';
+
+  /// Selected feed chip: newest / popular / discussed / following / mine /
+  /// commented. Replaces the old sort enum + my-posts toggle pair.
+  String _feedChip = 'newest';
+
+  // Lazy streams — only created the first time their chip is selected so
+  // regular feed browsing never runs the extra queries.
+  Stream<Set<String>>? _followingUids;
+  Stream<Set<String>>? _commentedPostIds;
+
+  void _selectChip(String id) {
+    final repo = context.read<CommunityRepository>();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    setState(() {
+      _feedChip = id;
+      if (uid != null) {
+        if (id == 'following') {
+          _followingUids ??= repo.watchFollowingUids(uid);
+        } else if (id == 'commented') {
+          _commentedPostIds ??= repo.watchMyCommentedPostIds(uid);
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -53,27 +75,27 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
   }
 
   String _typeLabel(PostType type, AppLocalizations l10n) => switch (type) {
-        PostType.support => l10n.postTypeSupport,
-        PostType.question => l10n.postTypeQuestion,
-        PostType.tip => l10n.postTypeTip,
-        PostType.vent => l10n.postTypeVent,
-        PostType.milestone => l10n.postTypeMilestone,
-        PostType.poll => l10n.postTypePoll,
-      };
+    PostType.support => l10n.postTypeSupport,
+    PostType.question => l10n.postTypeQuestion,
+    PostType.tip => l10n.postTypeTip,
+    PostType.vent => l10n.postTypeVent,
+    PostType.milestone => l10n.postTypeMilestone,
+    PostType.poll => l10n.postTypePoll,
+  };
 
   int get _activeFilterCount =>
       (_categoryFilter != 'all' ? 1 : 0) + (_typeFilter != null ? 1 : 0);
 
   List<({String id, String label})> _categories(AppLocalizations l10n) => [
-        (id: 'all', label: l10n.communityCatAll),
-        (id: 'general', label: l10n.communityCatGeneral),
-        (id: 'conception', label: l10n.communityCatConception),
-        (id: 'contraception', label: l10n.communityCatContraception),
-        (id: 'condition', label: l10n.communityCatCondition),
-        (id: 'support', label: l10n.communityCatSupport),
-        (id: 'culture', label: l10n.communityCatCulture),
-        (id: 'age', label: l10n.communityCatAge),
-      ];
+    (id: 'all', label: l10n.communityCatAll),
+    (id: 'general', label: l10n.communityCatGeneral),
+    (id: 'conception', label: l10n.communityCatConception),
+    (id: 'contraception', label: l10n.communityCatContraception),
+    (id: 'condition', label: l10n.communityCatCondition),
+    (id: 'support', label: l10n.communityCatSupport),
+    (id: 'culture', label: l10n.communityCatCulture),
+    (id: 'age', label: l10n.communityCatAge),
+  ];
 
   /// Category + post-type filters live in a bottom sheet so the feed header
   /// stays clean — one search row and one sort row.
@@ -202,11 +224,42 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
     return StreamBuilder<Set<String>>(
-      stream:
-          uid != null ? repo.watchBlockedUids(uid) : Stream.value(const {}),
+      stream: uid != null ? repo.watchBlockedUids(uid) : Stream.value(const {}),
       builder: (context, blockedSnap) {
         final blocked = blockedSnap.data ?? const <String>{};
-        return StreamBuilder<List<CommunityPost>>(
+        return StreamBuilder<Set<String>>(
+          stream: _followingUids ?? Stream.value(const {}),
+          builder: (context, followingSnap) {
+            final followed = followingSnap.data ?? const <String>{};
+            return StreamBuilder<Set<String>>(
+              stream: _commentedPostIds ?? Stream.value(const {}),
+              builder: (context, commentedSnap) {
+                final commented = commentedSnap.data ?? const <String>{};
+                return _buildFeed(
+                  context,
+                  l10n,
+                  repo,
+                  blocked: blocked,
+                  followed: followed,
+                  commented: commented,
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFeed(
+    BuildContext context,
+    AppLocalizations l10n,
+    CommunityRepository repo, {
+    required Set<String> blocked,
+    required Set<String> followed,
+    required Set<String> commented,
+  }) {
+    return StreamBuilder<List<CommunityPost>>(
           stream: repo.watchJoinedFeed(widget.joinedIds),
           builder: (context, snap) {
             final all = (snap.data ?? [])
@@ -225,9 +278,21 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
             posts = filterAndSortCommunityPosts(
               posts: posts,
               query: _search,
-              sort: _sort,
-              authorUidFilter: _myPostsOnly ? currentUid : null,
+              sort: _feedChip == 'discussed'
+                  ? CommunityFeedSort.discussed
+                  : CommunityFeedSort.newest,
+              authorUidFilter: _feedChip == 'mine' ? currentUid : null,
             );
+            switch (_feedChip) {
+              case 'popular':
+                posts = sortByPopularity(posts);
+              case 'following':
+                posts = posts
+                    .where((p) => followed.contains(p.authorUid))
+                    .toList();
+              case 'commented':
+                posts = posts.where((p) => commented.contains(p.id)).toList();
+            }
 
             return RefreshIndicator(
               onRefresh: widget.onRefresh,
@@ -246,24 +311,33 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Material(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        color: Theme.of(context).colorScheme.surface.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.22
+                              : 0.55,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.08),
+                          ),
+                        ),
                         child: InkWell(
                           onTap: widget.onJoinPrompt,
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
+                              horizontal: 12,
+                              vertical: 10,
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.explore_rounded,
                                   color: Theme.of(context).colorScheme.primary,
+                                  size: 20,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -286,10 +360,13 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                              height: 1.25,
                                             ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -297,10 +374,9 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                                 Icon(
                                   Icons.arrow_forward_ios_rounded,
                                   size: 14,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.7),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.7),
                                 ),
                               ],
                             ),
@@ -332,7 +408,7 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                       ),
                     ),
                   ),
-                  // Single sort row
+                  // Feed chips: sort modes + personal filters, always visible.
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -341,35 +417,36 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                           (
                             id: 'newest',
                             label: l10n.communitySortNewest,
-                            icon: Icons.schedule_rounded
+                            icon: Icons.schedule_rounded,
+                          ),
+                          (
+                            id: 'popular',
+                            label: l10n.communityFeedPopular,
+                            icon: Icons.local_fire_department_outlined,
+                          ),
+                          (
+                            id: 'following',
+                            label: l10n.communityFollowingTitle,
+                            icon: Icons.favorite_outline_rounded,
                           ),
                           (
                             id: 'discussed',
                             label: l10n.communitySortDiscussed,
-                            icon: Icons.forum_outlined
+                            icon: Icons.forum_outlined,
                           ),
                           (
                             id: 'mine',
                             label: l10n.communityFilterMyPosts,
-                            icon: Icons.person_outline_rounded
+                            icon: Icons.person_outline_rounded,
+                          ),
+                          (
+                            id: 'commented',
+                            label: l10n.communityFeedMyComments,
+                            icon: Icons.chat_bubble_outline_rounded,
                           ),
                         ],
-                        selected: _myPostsOnly
-                            ? 'mine'
-                            : (_sort == CommunityFeedSort.discussed
-                                ? 'discussed'
-                                : 'newest'),
-                        onSelected: (id) => setState(() {
-                          if (id == 'mine') {
-                            _myPostsOnly = true;
-                            _sort = CommunityFeedSort.newest;
-                          } else {
-                            _myPostsOnly = false;
-                            _sort = id == 'discussed'
-                                ? CommunityFeedSort.discussed
-                                : CommunityFeedSort.newest;
-                          }
-                        }),
+                        selected: _feedChip,
+                        onSelected: _selectChip,
                       ),
                     ),
                   ),
@@ -383,7 +460,12 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        12,
+                        16,
+                        MediaQuery.paddingOf(context).bottom + 24,
+                      ),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (_, i) => PostCard(
@@ -400,8 +482,6 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
             );
           },
         );
-      },
-    );
   }
 }
 
@@ -434,28 +514,18 @@ class _FilterButton extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: active ? AuraDecorations.primaryGradient : null,
               color: active
-                  ? null
+                  ? theme.colorScheme.primary
                   : (isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.white.withValues(alpha: 0.85)),
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.white.withValues(alpha: 0.85)),
               borderRadius: BorderRadius.circular(AppRadius.lg),
               border: Border.all(
                 color: active
                     ? Colors.transparent
                     : (isDark ? Colors.white : theme.colorScheme.outline)
-                        .withValues(alpha: isDark ? 0.08 : 0.1),
+                          .withValues(alpha: isDark ? 0.08 : 0.1),
               ),
-              boxShadow: active
-                  ? [
-                      BoxShadow(
-                        color: AuraColors.rose.withValues(alpha: 0.25),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
             ),
             child: Stack(
               clipBehavior: Clip.none,

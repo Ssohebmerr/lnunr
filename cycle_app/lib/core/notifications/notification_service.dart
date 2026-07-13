@@ -34,7 +34,8 @@ class NotificationService {
 
   static Future<void> initialize() => AppNotifications.initialize();
 
-  static Future<bool> requestPermission() => AppNotifications.requestPermission();
+  static Future<bool> requestPermission() =>
+      AppNotifications.requestPermission();
 
   /// Whether the OS will actually surface our notifications right now (i.e. the
   /// per-app notification switch is on). Lets the UI warn when everything is
@@ -248,7 +249,13 @@ class NotificationService {
     try {
       final next = DateTime.parse(nextDateStr);
       final reminderDay = next.subtract(const Duration(days: 1));
-      var at = DateTime(reminderDay.year, reminderDay.month, reminderDay.day, 9, 0);
+      var at = DateTime(
+        reminderDay.year,
+        reminderDay.month,
+        reminderDay.day,
+        9,
+        0,
+      );
       if (at.isBefore(DateTime.now())) return;
 
       final ar = await _isArabic();
@@ -293,7 +300,7 @@ class NotificationService {
         tz.TZDateTime.from(at, tz.local),
         _details(high: true),
         androidScheduleMode: mode,
-      payload: NotificationPayload.home(action: 'open_log'),
+        payload: NotificationPayload.home(action: 'open_log'),
       );
     } catch (e, st) {
       debugPrint('_schedulePeriodStartToday failed: $e\n$st');
@@ -309,8 +316,13 @@ class NotificationService {
       if (dateStr.isEmpty) return;
 
       final ovulation = DateTime.parse(dateStr);
-      final reminder =
-          DateTime(ovulation.year, ovulation.month, ovulation.day, 9, 0);
+      final reminder = DateTime(
+        ovulation.year,
+        ovulation.month,
+        ovulation.day,
+        9,
+        0,
+      );
       if (reminder.isBefore(DateTime.now())) return;
 
       final ar = await _isArabic();
@@ -345,16 +357,22 @@ class NotificationService {
     }
 
     try {
-      final nextDateStr = await api.getNextPredictedPeriodDate();
-      if (nextDateStr.isEmpty) {
+      final prediction = await api.getCurrentPeriodPrediction();
+      if (prediction == null) {
         await _plugin.cancel(_lateId);
         return;
       }
 
-      final predicted = DateTime.parse(nextDateStr);
-      // Grace of 2 days before we call it "late", at 9:00 AM.
-      final at = DateTime(predicted.year, predicted.month, predicted.day, 9, 0)
-          .add(const Duration(days: 2));
+      // Wait until the full personalized window has passed before using the
+      // word "late". This stays aligned with the date card on Home.
+      final end = prediction.windowEnd;
+      final at = DateTime(
+        end.year,
+        end.month,
+        end.day,
+        9,
+        0,
+      ).add(const Duration(days: 1));
       if (at.isBefore(DateTime.now())) {
         await _plugin.cancel(_lateId);
         return;
@@ -366,8 +384,8 @@ class NotificationService {
         _lateId,
         'Lune',
         ar
-            ? 'دورتك متأخرة عن الموعد المتوقع. غالبًا هذا طبيعي — سجّلي أعراضك أو حدّثي تاريخ دورتك.'
-            : 'Your period is running late. This is often normal — log how you feel or update your dates.',
+            ? 'انتهى نطاق دورتك المتوقع دون تسجيل جديد. قد يحدث هذا طبيعيًا — راجعي التقويم وسجّلي ما تشعرين به.'
+            : 'Your expected period window passed without a new log. This can happen naturally — review your calendar and log how you feel.',
         tz.TZDateTime.from(at, tz.local),
         _details(high: true),
         androidScheduleMode: mode,
@@ -398,8 +416,13 @@ class NotificationService {
 
       final ovulation = DateTime.parse(dateStr);
       // Fertile window opens ~4 days before ovulation; nudge at 9:00 AM.
-      final at = DateTime(ovulation.year, ovulation.month, ovulation.day, 9, 0)
-          .subtract(const Duration(days: 4));
+      final at = DateTime(
+        ovulation.year,
+        ovulation.month,
+        ovulation.day,
+        9,
+        0,
+      ).subtract(const Duration(days: 4));
       if (at.isBefore(DateTime.now())) {
         await _plugin.cancel(_fertileId);
         return;
@@ -411,8 +434,8 @@ class NotificationService {
         _fertileId,
         'Lune',
         ar
-            ? 'نافذتك الخصبة تبدأ قريبًا. إن كنتِ تخططين للحمل، هذه أيامك الأهم.'
-            : "Your fertile window is opening soon. If you're trying to conceive, these are your key days.",
+            ? 'نافذة الخصوبة المقدّرة تبدأ قريبًا. أكّديها بإشارات جسمكِ إن كنتِ تخططين للحمل.'
+            : "Your estimated fertile window is opening soon. Confirm it with body signals if you're trying to conceive.",
         tz.TZDateTime.from(at, tz.local),
         _details(),
         androidScheduleMode: mode,
@@ -452,7 +475,7 @@ class NotificationService {
       _details(),
       androidScheduleMode: await _scheduleMode(),
       matchDateTimeComponents: DateTimeComponents.time,
-        payload: NotificationPayload.home(action: 'open_log'),
+      payload: NotificationPayload.home(action: 'open_log'),
     );
   }
 

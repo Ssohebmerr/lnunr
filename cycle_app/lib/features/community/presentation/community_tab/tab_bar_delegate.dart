@@ -15,7 +15,10 @@ class CommunityTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return CommunityHubTabBar(controller: controller, tabs: tabs);
   }
 

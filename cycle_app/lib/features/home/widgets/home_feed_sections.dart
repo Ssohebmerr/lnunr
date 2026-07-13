@@ -34,7 +34,11 @@ class HomeTodayBanner extends StatelessWidget {
               gradient: AuraDecorations.primaryGradient,
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            child: const Icon(Icons.calendar_today, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.calendar_today,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -73,18 +77,30 @@ class HomeKeyDatesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (data.isPeriodLate ||
+              data.isPredictionWindowActive ||
+              data.possibleMissingLog) ...[
+            _PredictionStatusBanner(data: data),
+            const SizedBox(height: 12),
+          ],
           _DateRow(
             icon: Icons.water_drop_outlined,
             color: theme.colorScheme.primary,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: data.periodDisplay,
+            subtitle: data.nextPeriodRange.isNotEmpty
+                ? l10n.predictionCenterDate(data.nextPeriod)
+                : null,
           ),
           const SizedBox(height: 10),
           _DateRow(
             icon: Icons.favorite_outline,
             color: theme.colorScheme.secondary,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.ovulationDisplay,
+            subtitle: data.ovulationCalibrated
+                ? l10n.ovulationCalibratedHint
+                : l10n.ovulationEstimateHint,
           ),
           if (data.expectedDueDate.isNotEmpty &&
               data.expectedDueDate != '—' &&
@@ -97,6 +113,8 @@ class HomeKeyDatesCard extends StatelessWidget {
               value: data.expectedDueDate,
             ),
           ],
+          const SizedBox(height: 12),
+          _PredictionEvidence(data: data),
           const SizedBox(height: 14),
           Text(
             l10n.homeCycleProgress,
@@ -112,7 +130,9 @@ class HomeKeyDatesCard extends StatelessWidget {
                   ? (data.cycleDay / data.avgCycleLength).clamp(0.0, 1.0)
                   : null,
               minHeight: 8,
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+              backgroundColor: theme.colorScheme.primary.withValues(
+                alpha: 0.12,
+              ),
               valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
             ),
           ),
@@ -135,12 +155,14 @@ class _DateRow extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
+    this.subtitle,
   });
 
   final IconData icon;
   final Color color;
   final String label;
   final String value;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -150,20 +172,182 @@ class _DateRow extends StatelessWidget {
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 10),
         Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (subtitle != null && subtitle!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          flex: 3,
           child: Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            value,
+            textAlign: TextAlign.end,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
-        Text(
-          value,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ],
+    );
+  }
+}
+
+class _PredictionStatusBanner extends StatelessWidget {
+  const _PredictionStatusBanner({required this.data});
+
+  final CycleDashboardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final (icon, color, text) = data.possibleMissingLog
+        ? (
+            Icons.fact_check_outlined,
+            AuraColors.warning,
+            l10n.predictionPossibleMissingLog,
+          )
+        : data.isPeriodLate
+        ? (
+            Icons.schedule_rounded,
+            theme.colorScheme.error,
+            l10n.periodPredictionLate(data.daysLate),
+          )
+        : (
+            Icons.check_circle_outline_rounded,
+            AuraColors.success,
+            l10n.predictionWindowActive,
+          );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PredictionEvidence extends StatelessWidget {
+  const _PredictionEvidence({required this.data});
+
+  final CycleDashboardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final accuracy = data.predictionAccuracy;
+    final confidenceLabel = switch (data.predictionConfidence) {
+      CyclePredictionConfidence.strong => l10n.predictionConfidenceStrong,
+      CyclePredictionConfidence.moderate => l10n.predictionConfidenceModerate,
+      CyclePredictionConfidence.learning => l10n.predictionConfidenceLearning,
+    };
+    final confidenceColor = switch (data.predictionConfidence) {
+      CyclePredictionConfidence.strong => AuraColors.success,
+      CyclePredictionConfidence.moderate => AuraColors.warning,
+      CyclePredictionConfidence.learning => theme.colorScheme.outline,
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                l10n.predictionConfidenceLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: confidenceColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  confidenceLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: confidenceColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            accuracy.hasPersonalEvidence
+                ? l10n.predictionAccuracyPersonal(
+                    accuracy.withinTwoDays,
+                    accuracy.evaluatedCycles,
+                  )
+                : l10n.predictionAccuracyLearning,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.predictionEvidenceNote,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -187,9 +371,9 @@ class HomeWeeklyCalendarCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Text(
               l10n.homeWeeklyCalendar,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           SizedBox(
@@ -391,11 +575,11 @@ class _HomeLearnWatchRailState extends State<HomeLearnWatchRail> {
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, _, _) =>
                                           _mediaGradientHeader(
-                                        accent: accent,
-                                        item: item,
-                                        l10n: l10n,
-                                        theme: theme,
-                                      ),
+                                            accent: accent,
+                                            item: item,
+                                            l10n: l10n,
+                                            theme: theme,
+                                          ),
                                     )
                                   : _mediaGradientHeader(
                                       accent: accent,

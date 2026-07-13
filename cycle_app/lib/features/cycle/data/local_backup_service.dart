@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -24,7 +25,8 @@ class LocalBackupService {
         ShareParams(files: [XFile(file.path)], subject: 'Lune Backup'),
       );
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('LocalBackupService.exportAndShare failed: $e\n$st');
       return false;
     }
   }
@@ -40,8 +42,9 @@ class LocalBackupService {
       final content = await File(result.files.single.path!).readAsString();
       final decoded = jsonDecode(content);
       if (decoded is! Map<String, dynamic>) return false;
-      return _bridge.importEncryptedBackup(decoded);
-    } catch (_) {
+      return await _bridge.importEncryptedBackup(decoded);
+    } catch (e, st) {
+      debugPrint('LocalBackupService.importFromFile failed: $e\n$st');
       return false;
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
@@ -125,10 +126,8 @@ class AppearanceSettingsScreen extends StatelessWidget {
 
     final selectedViewName = '${settingsService.historyView.name[0].toUpperCase()}${settingsService.historyView.name.substring(1)}';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_appearance),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_appearance,
       body: ListView(
         children: [
           ListTile(

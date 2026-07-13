@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,31 +35,31 @@ class PostCard extends StatelessWidget {
   final bool showCommunity;
 
   Color _typeColor(PostType type) => switch (type) {
-        PostType.support => AuraColors.rose,
-        PostType.question => const Color(0xFF7B6CF6),
-        PostType.tip => const Color(0xFF3D9A78),
-        PostType.vent => const Color(0xFFE88B4A),
-        PostType.milestone => const Color(0xFFE0B33B),
-        PostType.poll => const Color(0xFF4DA3CC),
-      };
+    PostType.support => AuraColors.rose,
+    PostType.question => const Color(0xFF7B6CF6),
+    PostType.tip => const Color(0xFF3D9A78),
+    PostType.vent => const Color(0xFFE88B4A),
+    PostType.milestone => const Color(0xFFE0B33B),
+    PostType.poll => const Color(0xFF4DA3CC),
+  };
 
   IconData _typeIcon(PostType type) => switch (type) {
-        PostType.support => Icons.favorite_rounded,
-        PostType.question => Icons.help_outline_rounded,
-        PostType.tip => Icons.lightbulb_outline_rounded,
-        PostType.vent => Icons.whatshot_rounded,
-        PostType.milestone => Icons.emoji_events_rounded,
-        PostType.poll => Icons.poll_rounded,
-      };
+    PostType.support => Icons.favorite_rounded,
+    PostType.question => Icons.help_outline_rounded,
+    PostType.tip => Icons.lightbulb_outline_rounded,
+    PostType.vent => Icons.whatshot_rounded,
+    PostType.milestone => Icons.emoji_events_rounded,
+    PostType.poll => Icons.poll_rounded,
+  };
 
   String _typeLabel(PostType type, AppLocalizations l10n) => switch (type) {
-        PostType.support => l10n.postTypeSupport,
-        PostType.question => l10n.postTypeQuestion,
-        PostType.tip => l10n.postTypeTip,
-        PostType.vent => l10n.postTypeVent,
-        PostType.milestone => l10n.postTypeMilestone,
-        PostType.poll => l10n.postTypePoll,
-      };
+    PostType.support => l10n.postTypeSupport,
+    PostType.question => l10n.postTypeQuestion,
+    PostType.tip => l10n.postTypeTip,
+    PostType.vent => l10n.postTypeVent,
+    PostType.milestone => l10n.postTypeMilestone,
+    PostType.poll => l10n.postTypePoll,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -73,493 +71,472 @@ class PostCard extends StatelessWidget {
     final time = communityRelativeTime(context, post.createdAt);
     final typeColor = _typeColor(post.postType);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.white.withValues(alpha: 0.7),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: typeColor.withValues(alpha: isDark ? 0.05 : 0.07),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Header ──
-                    Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16, 16, 12, 0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Avatar with ring — tap opens the member profile
-                          GestureDetector(
-                            onTap: post.isAnonymous
-                                ? null
-                                : () => showMemberProfileSheet(
-                                      context,
-                                      communityId: post.communityId,
-                                      authorUid: post.authorUid,
-                                      alias: post.authorAlias,
-                                      avatarIndex: post.authorAvatarIndex,
-                                      isPremium: post.authorIsPremium,
-                                    ),
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    typeColor.withValues(alpha: 0.5),
-                                    typeColor.withValues(alpha: 0.15),
-                                  ],
-                                ),
+    return Semantics(
+      button: true,
+      label: '${post.authorAlias}: ${post.text}',
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Material(
+          color: isDark
+              ? AuraColors.darkCard.withValues(alpha: 0.9)
+              : Colors.white.withValues(alpha: 0.94),
+          elevation: isDark ? 0 : 1,
+          shadowColor: AuraColors.plum.withValues(alpha: 0.08),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            side: BorderSide(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : theme.colorScheme.outline.withValues(alpha: 0.07),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(height: 3, color: typeColor.withValues(alpha: 0.78)),
+                // ── Header ──
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(14, 13, 8, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Avatar with ring — tap opens the member profile
+                      GestureDetector(
+                        onTap: post.isAnonymous
+                            ? null
+                            : () => showMemberProfileSheet(
+                                context,
+                                communityId: post.communityId,
+                                authorUid: post.authorUid,
+                                alias: post.authorAlias,
+                                avatarIndex: post.authorAvatarIndex,
+                                isPremium: post.authorIsPremium,
                               ),
-                              child: post.isAnonymous
-                                  ? Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: theme
-                                            .colorScheme.primaryContainer
-                                            .withValues(alpha: 0.55),
-                                      ),
-                                      child: Icon(
-                                        Icons.visibility_off_outlined,
-                                        size: 18,
-                                        color: theme
-                                            .colorScheme.onPrimaryContainer,
-                                      ),
-                                    )
-                                  : AppAvatar(
-                                      radius: 20,
-                                      avatarIndex: post.authorAvatarIndex,
-                                      uidSeed: post.authorUid,
-                                      isPremium: post.authorIsPremium,
-                                    ),
+                        child: Container(
+                          padding: const EdgeInsets.all(1.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: typeColor.withValues(alpha: 0.32),
+                              width: 1.5,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          child: post.isAnonymous
+                              ? Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: theme.colorScheme.primaryContainer
+                                        .withValues(alpha: 0.55),
+                                  ),
+                                  child: Icon(
+                                    Icons.visibility_off_outlined,
+                                    size: 18,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                )
+                              : AppAvatar(
+                                  radius: 19,
+                                  avatarIndex: post.authorAvatarIndex,
+                                  uidSeed: post.authorUid,
+                                  isPremium: post.authorIsPremium,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        post.authorAlias,
-                                        style:
-                                            theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: -0.1,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                Flexible(
+                                  child: Text(
+                                    post.authorAlias,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.1,
                                     ),
-                                    if (post.authorIsPremium)
-                                      const PremiumNameBadge(),
-                                  ],
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const SizedBox(height: 3),
-                                Row(
-                                  children: [
-                                    Text(
-                                      time,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    if (post.isEdited)
-                                      Text(
-                                        ' · ${l10n.communityEdited}',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.outline,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    if (post.isPendingReview)
-                                      Text(
-                                        ' · ${l10n.communityPendingReview}',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.secondary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                if (post.authorIsPremium)
+                                  const PremiumNameBadge(),
                               ],
                             ),
+                            const SizedBox(height: 3),
+                            Wrap(
+                              spacing: 0,
+                              runSpacing: 2,
+                              children: [
+                                Text(
+                                  time,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (post.isEdited)
+                                  Text(
+                                    ' · ${l10n.communityEdited}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.outline,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                if (post.isPendingReview)
+                                  Text(
+                                    ' · ${l10n.communityPendingReview}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.secondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (uid != null && uid != post.authorUid)
+                        PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_horiz_rounded,
+                            size: 20,
+                            color: theme.colorScheme.outline,
                           ),
-                          _TypeBadge(
-                            color: typeColor,
-                            icon: _typeIcon(post.postType),
-                            label: _typeLabel(post.postType, l10n),
-                          ),
-                          if (uid != null && uid != post.authorUid)
-                            PopupMenuButton<String>(
-                              icon: Icon(
-                                Icons.more_horiz_rounded,
-                                size: 20,
-                                color: theme.colorScheme.outline,
+                          onSelected: (action) async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            if (action == 'copy') {
+                              await copyCommunityText(context, post.text);
+                            } else if (action == 'report') {
+                              final reason = await showReportReasonSheet(
+                                context,
+                              );
+                              if (reason == null || !context.mounted) {
+                                return;
+                              }
+                              await repo.reportPost(
+                                communityId: post.communityId,
+                                postId: post.id,
+                                reporterUid: uid,
+                                reason: reason.code,
+                                authorUid: post.authorUid,
+                                authorAlias: post.authorAlias,
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(l10n.communityReported)),
+                              );
+                            } else if (action == 'block') {
+                              final confirmed = await confirmBlockUser(
+                                context,
+                                authorAlias: post.authorAlias,
+                              );
+                              if (!confirmed || !context.mounted) return;
+                              await repo.blockUser(
+                                uid: uid,
+                                blockedUid: post.authorUid,
+                                authorAlias: post.authorAlias,
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(l10n.communityBlocked)),
+                              );
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'copy',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.copy_outlined, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.communityCopy),
+                                ],
                               ),
-                              onSelected: (action) async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                if (action == 'copy') {
-                                  await copyCommunityText(context, post.text);
-                                } else if (action == 'report') {
-                                  final reason = await showReportReasonSheet(context);
-                                  if (reason == null || !context.mounted) return;
-                                  await repo.reportPost(
-                                    communityId: post.communityId,
-                                    postId: post.id,
-                                    reporterUid: uid,
-                                    reason: reason.code,
-                                    authorUid: post.authorUid,
-                                    authorAlias: post.authorAlias,
-                                  );
-                                  messenger.showSnackBar(
-                                    SnackBar(content: Text(l10n.communityReported)),
-                                  );
-                                } else if (action == 'block') {
-                                  final confirmed = await confirmBlockUser(
-                                    context,
-                                    authorAlias: post.authorAlias,
-                                  );
-                                  if (!confirmed || !context.mounted) return;
-                                  await repo.blockUser(
-                                    uid: uid,
-                                    blockedUid: post.authorUid,
-                                    authorAlias: post.authorAlias,
-                                  );
-                                  messenger.showSnackBar(
-                                    SnackBar(content: Text(l10n.communityBlocked)),
-                                  );
-                                }
-                              },
-                              itemBuilder: (_) => [
-                                PopupMenuItem(
-                                  value: 'copy',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.copy_outlined, size: 18),
-                                      const SizedBox(width: 8),
-                                      Text(l10n.communityCopy),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'report',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.flag_outlined, size: 18),
-                                      const SizedBox(width: 8),
-                                      Text(l10n.communityReportPost),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'block',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.block_outlined, size: 18),
-                                      const SizedBox(width: 8),
-                                      Text(l10n.communityBlockUser),
-                                    ],
-                                  ),
-                                ),
-                              ],
                             ),
+                            PopupMenuItem(
+                              value: 'report',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.flag_outlined, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.communityReportPost),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'block',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.block_outlined, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.communityBlockUser),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                // ── Compact metadata ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: Wrap(
+                    spacing: 7,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _TypeBadge(
+                        color: typeColor,
+                        icon: _typeIcon(post.postType),
+                        label: _typeLabel(post.postType, l10n),
+                      ),
+                      if (showCommunity && post.communityName != null)
+                        _PostMetaBadge(
+                          icon: Icons.groups_rounded,
+                          label: post.communityName!,
+                          color: theme.colorScheme.primary,
+                        ),
+                      if (post.postType == PostType.question &&
+                          (post.hasBestAnswer || post.commentCount > 0))
+                        _PostMetaBadge(
+                          icon: post.hasBestAnswer
+                              ? Icons.verified_rounded
+                              : Icons.help_outline_rounded,
+                          label: post.hasBestAnswer
+                              ? l10n.communityBestAnswer
+                              : l10n.communityAnswered,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                    ],
+                  ),
+                ),
+                // ── Milestone celebration banner ──
+                if (post.postType == PostType.milestone) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(
+                          0xFFE0B33B,
+                        ).withValues(alpha: isDark ? 0.16 : 0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        border: Border.all(
+                          color: const Color(
+                            0xFFE0B33B,
+                          ).withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.emoji_events_rounded,
+                            color: Color(0xFFE0B33B),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.postTypeMilestone,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: isDark
+                                    ? const Color(0xFFFFD875)
+                                    : const Color(0xFF8A6510),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    // ── Community label ──
-                    if (showCommunity && post.communityName != null) ...[
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer
-                                .withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            border: Border.all(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.groups_rounded,
-                                size: 13,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  post.communityName!,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                  ),
+                ],
+                // ── Text ──
+                if (post.text.isNotEmpty &&
+                    post.text != '📷' &&
+                    post.text != '🎬') ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      CommunityTextSanitize.forDisplay(post.text),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        height: 1.5,
+                        letterSpacing: 0.05,
+                        fontWeight: post.postType == PostType.milestone
+                            ? FontWeight.w600
+                            : null,
                       ),
-                    ],
-                    // ── Media ──
-                    if (post.hasImage || post.hasVideo) ...[
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: PostMediaView(
-                          mediaUrl: post.mediaUrl!,
-                          mediaType: post.mediaType!,
-                          compact: post.hasVideo,
-                        ),
+                      maxLines: 6,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+                // ── Poll ──
+                if (post.isPoll) ...[
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: PollView(post: post, accentColor: typeColor),
+                  ),
+                ],
+                // ── Media follows the post text, matching familiar social
+                // feed reading order. All media behavior stays unchanged.
+                if (post.hasImage || post.hasVideo) ...[
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: PostMediaView(
+                      mediaUrl: post.mediaUrl!,
+                      mediaType: post.mediaType!,
+                      compact: post.hasVideo,
+                    ),
+                  ),
+                ],
+                // ── Top-comment preview (server-denormalised) ──
+                if (post.hasTopComment) ...[
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: isDark ? 0.28 : 0.45),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
-                    ],
-                    // ── Milestone celebration banner ──
-                    if (post.postType == PostType.milestone) ...[
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppAvatar(
+                            radius: 11,
+                            avatarIndex: post.topCommentAvatarIndex,
+                            uidSeed: post.topCommentAlias ?? post.id,
                           ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFFE0B33B),
-                                Color(0xFFFFC75A),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFE0B33B)
-                                    .withValues(alpha: 0.4),
-                                blurRadius: 14,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.emoji_events_rounded,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  l10n.postTypeMilestone,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.2,
-                                  ),
-                                ),
-                              ),
-                              const Icon(
-                                Icons.celebration_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    // ── Text ──
-                    if (post.text.isNotEmpty &&
-                        post.text != '📷' &&
-                        post.text != '🎬') ...[
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          CommunityTextSanitize.forDisplay(post.text),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            height: 1.5,
-                            letterSpacing: 0.05,
-                            fontWeight: post.postType == PostType.milestone
-                                ? FontWeight.w600
-                                : null,
-                          ),
-                          maxLines: 5,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                    // ── Poll ──
-                    if (post.isPoll) ...[
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: PollView(post: post, accentColor: typeColor),
-                      ),
-                    ],
-                    // ── Action bar ──
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: (isDark ? Colors.white : Colors.black)
-                                  .withValues(alpha: 0.03),
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                            ),
-                            child: Row(
-                              children: [
-                                if (uid != null) ...[
-                                  _ReactionAction(post: post, uid: uid),
-                                  StreamBuilder<bool>(
-                                    stream: repo.watchPostSaved(
-                                      uid,
-                                      post.communityId,
-                                      post.id,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${post.topCommentAlias ?? ''}  ',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
                                     ),
-                                    builder: (context, savedSnap) {
-                                      final saved = savedSnap.data ?? false;
-                                      return CommunityPostAction(
-                                        icon: saved
-                                            ? Icons.bookmark_rounded
-                                            : Icons.bookmark_border_rounded,
-                                        active: saved,
-                                        onTap: () async {
-                                          final messenger =
-                                              ScaffoldMessenger.of(context);
-                                          final nowSaved =
-                                              await repo.toggleSavePost(
-                                                  uid, post);
-                                          if (context.mounted) {
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  nowSaved
-                                                      ? l10n.communityPostSaved
-                                                      : l10n
-                                                          .communityPostUnsaved,
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      );
-                                    },
                                   ),
-                                  CommunityPostAction(
-                                    icon: Icons.ios_share_rounded,
-                                    onTap: () {
-                                      final lang =
-                                          Localizations.localeOf(context)
-                                              .languageCode;
-                                      final community =
-                                          CommunitySeed.byId(post.communityId);
-                                      final name = post.communityName ??
-                                          community?.nameForLocale(lang) ??
-                                          l10n.navCommunity;
-                                      shareCommunityPost(
-                                        post: post,
-                                        communityName: name,
-                                        shareLabel: l10n.communityShareVia,
-                                      );
-                                    },
+                                  TextSpan(
+                                    text: CommunityTextSanitize.forDisplay(
+                                      post.topCommentPreview!,
+                                    ),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ],
-                                CommunityPostAction(
-                                  icon: Icons.chat_bubble_outline_rounded,
-                                  label: post.commentCount > 0
-                                      ? '${post.commentCount}'
-                                      : null,
-                                  onTap: onTap,
-                                ),
-                                const Spacer(),
-                                if (post.postType == PostType.question &&
-                                    (post.hasBestAnswer ||
-                                        post.commentCount > 0))
-                                  Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.only(end: 8),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          post.hasBestAnswer
-                                              ? Icons.verified_rounded
-                                              : Icons.help_outline_rounded,
-                                          size: 15,
-                                          color: theme.colorScheme.tertiary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          post.hasBestAnswer
-                                              ? l10n.communityBestAnswer
-                                              : l10n.communityAnswered,
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                            color: theme.colorScheme.tertiary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
+                ],
+                // ── Action bar ──
+                const SizedBox(height: 12),
+                Divider(
+                  height: 1,
+                  indent: 14,
+                  endIndent: 14,
+                  color: theme.colorScheme.outline.withValues(alpha: 0.09),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 3,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      if (uid != null) _ReactionAction(post: post, uid: uid),
+                      CommunityPostAction(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        label: post.commentCount > 0
+                            ? '${post.commentCount}'
+                            : null,
+                        onTap: onTap,
+                      ),
+                      if (uid != null) ...[
+                        CommunityPostAction(
+                          icon: Icons.ios_share_rounded,
+                          onTap: () {
+                            final lang = Localizations.localeOf(
+                              context,
+                            ).languageCode;
+                            final community = CommunitySeed.byId(
+                              post.communityId,
+                            );
+                            final name =
+                                post.communityName ??
+                                community?.nameForLocale(lang) ??
+                                l10n.navCommunity;
+                            shareCommunityPost(
+                              post: post,
+                              communityName: name,
+                              shareLabel: l10n.communityShareVia,
+                            );
+                          },
+                        ),
+                        StreamBuilder<bool>(
+                          stream: repo.watchPostSaved(
+                            uid,
+                            post.communityId,
+                            post.id,
+                          ),
+                          builder: (context, savedSnap) {
+                            final saved = savedSnap.data ?? false;
+                            return CommunityPostAction(
+                              icon: saved
+                                  ? Icons.bookmark_rounded
+                                  : Icons.bookmark_border_rounded,
+                              active: saved,
+                              onTap: () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                final nowSaved = await repo.toggleSavePost(
+                                  uid,
+                                  post,
+                                );
+                                if (context.mounted) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        nowSaved
+                                            ? l10n.communityPostSaved
+                                            : l10n.communityPostUnsaved,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -585,11 +562,11 @@ class _ReactionAction extends StatelessWidget {
   };
 
   String _label(String kind, AppLocalizations l10n) => switch (kind) {
-        'hug' => l10n.reactionHug,
-        'celebrate' => l10n.reactionCelebrate,
-        'strong' => l10n.reactionStrong,
-        _ => l10n.reactionHeart,
-      };
+    'hug' => l10n.reactionHug,
+    'celebrate' => l10n.reactionCelebrate,
+    'strong' => l10n.reactionStrong,
+    _ => l10n.reactionHeart,
+  };
 
   Future<void> _react(
     BuildContext context,
@@ -672,7 +649,7 @@ class _ReactionAction extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -697,8 +674,9 @@ class _ReactionAction extends StatelessWidget {
                       '${reactions.total}',
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: color,
-                        fontWeight:
-                            mine != null ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: mine != null
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ],
@@ -775,6 +753,53 @@ class _ReactionPickerItem extends StatelessWidget {
   }
 }
 
+class _PostMetaBadge extends StatelessWidget {
+  const _PostMetaBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.62,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.09),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TypeBadge extends StatelessWidget {
   const _TypeBadge({
     required this.color,
@@ -790,7 +815,7 @@ class _TypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.pill),

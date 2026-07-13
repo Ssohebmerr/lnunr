@@ -35,9 +35,9 @@ class PremiumBadge extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AuraColors.peachGold.withValues(alpha: 0.45),
-            blurRadius: size * 0.35,
-            offset: Offset(0, size * 0.08),
+            color: AuraColors.peachGold.withValues(alpha: 0.26),
+            blurRadius: size * 0.28,
+            offset: Offset(0, size * 0.07),
           ),
         ],
         border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1),

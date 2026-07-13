@@ -30,7 +30,7 @@ class _StreamingBubble extends StatelessWidget {
           Flexible(
             child: Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.06)
@@ -47,26 +47,32 @@ class _StreamingBubble extends StatelessWidget {
                       : Colors.white.withValues(alpha: 0.65),
                 ),
               ),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(
+              child: Builder(
+                builder: (context) {
+                  final base = TextStyle(
                     color: theme.colorScheme.onSurface,
-                    height: 1.55,
-                    fontSize: 16.0,
-                  ),
-                  children: [
-                    TextSpan(text: text),
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: _BlinkingCaret(
-                          color: theme.colorScheme.primary,
+                    height: 1.68,
+                    fontSize: 16.5,
+                  );
+                  return RichText(
+                    text: TextSpan(
+                      style: base,
+                      children: [
+                        _LuneMarkdown.build(text, base),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding:
+                                const EdgeInsetsDirectional.only(start: 2),
+                            child: _BlinkingCaret(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),

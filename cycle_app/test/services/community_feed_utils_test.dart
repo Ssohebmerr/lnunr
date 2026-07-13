@@ -101,6 +101,41 @@ void main() {
       expect(result.last.id, '1');  // 0 comments
     });
 
+    test('sortByPopularity ranks by engagement with recency decay', () {
+      final now = DateTime(2026, 7, 14);
+      final result = sortByPopularity([
+        // Old megathread: 20 comments but 30 days old.
+        makePost(
+          id: 'old',
+          commentCount: 20,
+          createdAt: now.subtract(const Duration(days: 30)),
+        ),
+        // Fresh conversation: 5 comments, 1 day old — should win.
+        makePost(
+          id: 'fresh',
+          commentCount: 5,
+          createdAt: now.subtract(const Duration(days: 1)),
+        ),
+        // Fresh but silent post.
+        makePost(
+          id: 'silent',
+          commentCount: 0,
+          createdAt: now.subtract(const Duration(days: 1)),
+        ),
+      ], now: now);
+
+      expect(result.map((p) => p.id).toList(), ['fresh', 'old', 'silent']);
+    });
+
+    test('sortByPopularity does not mutate the input list', () {
+      final input = [
+        makePost(id: 'a', commentCount: 1),
+        makePost(id: 'b', commentCount: 9),
+      ];
+      sortByPopularity(input, now: DateTime(2025, 1, 2));
+      expect(input.map((p) => p.id).toList(), ['a', 'b']);
+    });
+
     test('authorUidFilter shows only matching posts', () {
       final result = filterAndSortCommunityPosts(
         posts: posts,

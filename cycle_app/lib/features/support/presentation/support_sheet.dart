@@ -142,7 +142,7 @@ class _SupportTile extends StatelessWidget {
                 width: 44, height: 44,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 22),
               ),

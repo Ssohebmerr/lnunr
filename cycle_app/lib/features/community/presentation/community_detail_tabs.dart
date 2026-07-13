@@ -162,7 +162,9 @@ class _PostsListState extends State<_PostsList> {
         ),
         Expanded(
           child: StreamBuilder<Set<String>>(
-            stream: uid != null ? repo.watchBlockedUids(uid) : Stream.value(const {}),
+            stream: uid != null
+                ? repo.watchBlockedUids(uid)
+                : Stream.value(const {}),
             builder: (context, blockedSnap) {
               final blocked = blockedSnap.data ?? const <String>{};
               final posts = filterAndSortCommunityPosts(
@@ -237,26 +239,29 @@ class _InlineComposer extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final initial = alias.trim().isNotEmpty ? alias.trim()[0].toUpperCase() : '?';
+    final initial = alias.trim().isNotEmpty
+        ? alias.trim()[0].toUpperCase()
+        : '?';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           child: Ink(
             decoration: BoxDecoration(
               color: isDark
-                  ? AuraColors.darkCard.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ? AuraColors.darkCard.withValues(alpha: 0.82)
+                  : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.22),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : theme.colorScheme.outline.withValues(alpha: 0.08),
               ),
-              boxShadow: AppShadows.softRose(opacity: 0.14),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
@@ -266,13 +271,15 @@ class _InlineComposer extends StatelessWidget {
                   height: 34,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: AuraDecorations.primaryGradient,
+                    color: theme.colorScheme.primary.withValues(
+                      alpha: isDark ? 0.2 : 0.12,
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     initial,
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -289,14 +296,17 @@ class _InlineComposer extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                DecoratedBox(
+                Container(
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
-                    gradient: AuraDecorations.primaryGradient,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(7),
-                    child: Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                  child: Icon(
+                    Icons.edit_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 18,
                   ),
                 ),
               ],
@@ -325,16 +335,20 @@ class _AboutTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final rules = community.rulesForLocale(lang).isNotEmpty
         ? community.rulesForLocale(lang)
-        : (lang.startsWith('ar') ? CommunitySeed.defaultRulesAr : CommunitySeed.defaultRulesEn);
+        : (lang.startsWith('ar')
+              ? CommunitySeed.defaultRulesAr
+              : CommunitySeed.defaultRulesEn);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(16, 16, 16, joined ? 132 : 16),
       children: [
-        AppGlassCard(
-          blur: false,
-          radius: AppRadius.xl,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: AuraDecorations.softCard(isDark, radius: AppRadius.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -358,15 +372,17 @@ class _AboutTab extends StatelessWidget {
                       children: [
                         Text(
                           community.nameForLocale(lang),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           community.descriptionForLocale(lang),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 height: 1.4,
                               ),
                         ),
@@ -379,12 +395,22 @@ class _AboutTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(l10n.communityRules, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        Text(
+          l10n.communityRules,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 8),
-        AppGlassCard(
-          blur: false,
-          radius: AppRadius.lg,
-          child: Text(rules, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: AuraDecorations.softCard(isDark, radius: AppRadius.md),
+          child: Text(
+            rules,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.45),
+          ),
         ),
         if (joined) ...[
           const SizedBox(height: 20),
@@ -404,11 +430,10 @@ class _AboutTab extends StatelessWidget {
         Text(
           l10n.communityDisclaimer,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
   }
 }
-

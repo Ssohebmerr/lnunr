@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/coordinators/data_refresh_coordinator.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/periods_repository.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/sex_repository.dart';
@@ -258,16 +259,14 @@ class _DataSettingsScreenState extends State<DataSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_dataManagement),
-        leading: _selectedAction != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() => _selectedAction = null),
-              )
-            : null,
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_dataManagement,
+      leading: _selectedAction != null
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => setState(() => _selectedAction = null),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : AnimatedSwitcher(

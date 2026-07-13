@@ -13,6 +13,7 @@ class CommunityInboxItem {
   });
 
   final String id;
+
   /// `comment`, `like`, or `reply`
   final String type;
   final String fromAlias;
@@ -22,10 +23,7 @@ class CommunityInboxItem {
   final bool read;
   final DateTime createdAt;
 
-  factory CommunityInboxItem.fromDoc(
-    String id,
-    Map<String, dynamic> data,
-  ) {
+  factory CommunityInboxItem.fromDoc(String id, Map<String, dynamic> data) {
     final ts = data['createdAt'];
     return CommunityInboxItem(
       id: id,

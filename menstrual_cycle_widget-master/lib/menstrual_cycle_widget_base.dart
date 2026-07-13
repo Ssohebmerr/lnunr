@@ -52,6 +52,10 @@ class MenstrualCycleWidget {
   // instance of  MenstrualCycleWidget object
   static MenstrualCycleWidget? instance;
 
+  /// Optional hook from the host app (cycle_app) to supply measured luteal
+  /// phase lengths derived from ovulation / LH logs.
+  static Future<List<int>> Function()? measuredLutealProvider;
+
   // Return previous period day into string
   String getPreviousPeriodDay() => _lastPeriodDate;
 
@@ -148,8 +152,7 @@ class MenstrualCycleWidget {
       );
       await dbHelper.clearPeriodLog(getCustomerId());
       final selectedPeriodsDate = <DateTime>[
-        for (int i = 0; i < periodDuration!; i++)
-          start.add(Duration(days: i)),
+        for (int i = 0; i < periodDuration; i++) start.add(Duration(days: i)),
       ];
       await dbHelper.insertPeriodLog(selectedPeriodsDate);
     }
@@ -157,7 +160,12 @@ class MenstrualCycleWidget {
   }
 
   setCurrentUserData(String customerId, int cycleLength, int periodDuration) {
-    _customerId = Encryption.instance.decrypt(customerId);
+    // Config rows written by older builds could hold a plaintext id;
+    // decrypt() returns "" for those. Never let a bad row blank the active
+    // customer id — that would make every stored log invisible.
+    final decrypted = Encryption.instance.decrypt(customerId);
+    if (decrypted.isEmpty) return;
+    _customerId = decrypted;
     _cycleLength = cycleLength;
     _periodDuration = periodDuration;
     calculateLastPeriodDate();
@@ -228,9 +236,8 @@ class MenstrualCycleWidget {
     final encryption = Encryption.instance;
     // SymptomsData is a Dart class — must map through toJson() or jsonEncode throws
     // and the whole daily log (mood/water/weight) never reaches SQLite.
-    final symptomsJson = (userSymptomsData ?? <SymptomsData>[])
-        .map((s) => s.toJson())
-        .toList();
+    final symptomsJson =
+        (userSymptomsData ?? <SymptomsData>[]).map((s) => s.toJson()).toList();
     String encryptedData = encryption.encrypt(json.encode(symptomsJson));
 
     Map<String, dynamic> userData = {
@@ -291,7 +298,8 @@ class MenstrualCycleWidget {
     List<SymptomsData> symptomsDataList = [];
     final encryption = Encryption.instance;
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnLogDate} = ? AND ${MenstrualCycleDbHelper.columnCustomerId} = ?", [logDate, customerId]);
+        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnLogDate} = ? AND ${MenstrualCycleDbHelper.columnCustomerId} = ?",
+        [logDate, customerId]);
     for (int i = 0; i < queryResponse.length; i++) {
       final row = queryResponse[i];
       final userDecryptData = encryption
@@ -316,10 +324,10 @@ class MenstrualCycleWidget {
         }
       }
 
-      userSymptomsLogs.meditationTime = encryption
-          .decrypt(row[MenstrualCycleDbHelper.columnMeditationTime]);
-      userSymptomsLogs.bodyTemperature = encryption
-          .decrypt(row[MenstrualCycleDbHelper.columnBodyTemperature]);
+      userSymptomsLogs.meditationTime =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnMeditationTime]);
+      userSymptomsLogs.bodyTemperature =
+          encryption.decrypt(row[MenstrualCycleDbHelper.columnBodyTemperature]);
       userSymptomsLogs.waterValue =
           encryption.decrypt(row[MenstrualCycleDbHelper.columnWater]);
       userSymptomsLogs.weight =
@@ -432,7 +440,6 @@ class MenstrualCycleWidget {
       UserLogReportData logReportData = usersLogDataList[i];
       double weightValue = double.parse(logReportData.weight!);
       if (logReportData.weightUnit!.isNotEmpty && weightValue > 0) {
-
         double weight = 0.0;
         if (logReportData.weightUnit == weightUnits.toString()) {
           weight = weightValue;
@@ -466,7 +473,8 @@ class MenstrualCycleWidget {
     String customerId = mInstance.getCustomerId();
 
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?", [customerId]);
+        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?",
+        [customerId]);
     final encryption = Encryption.instance;
 
     for (int i = 0; i < queryResponse.length; i++) {
@@ -533,7 +541,8 @@ class MenstrualCycleWidget {
     String customerId = mInstance.getCustomerId();
 
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?", [customerId]);
+        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?",
+        [customerId]);
     final encryption = Encryption.instance;
     for (int i = 0; i < queryResponse.length; i++) {
       String waterUnit = encryption
@@ -642,7 +651,8 @@ class MenstrualCycleWidget {
     String customerId = mInstance.getCustomerId();
 
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?", [customerId]);
+        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?",
+        [customerId]);
     final encryption = Encryption.instance;
 
     for (int i = 0; i < queryResponse.length; i++) {
@@ -866,9 +876,13 @@ class MenstrualCycleWidget {
       userLogsData.id = queryResponse[i][MenstrualCycleDbHelper.columnID];
       userLogsData.customerId =
           queryResponse[i][MenstrualCycleDbHelper.columnCustomerId];
-      String symptomsData = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData]);
-      List<dynamic> jsonData = json.decode(symptomsData.trim());
+      String symptomsData = encryption
+          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+          .trim();
+      // Period-only rows and the config row have no symptom payload —
+      // decoding "" used to throw and blank the whole log report.
+      List<dynamic> jsonData =
+          symptomsData.isEmpty ? [] : json.decode(symptomsData);
       userLogsData.symptomsData =
           jsonData.map((symptom) => SymptomsData.fromMap(symptom)).toList();
 
@@ -970,18 +984,97 @@ class MenstrualCycleWidget {
     return 0;
   }
 
-  /// get average cycle length. Default is 0
+  /// get average cycle length from completed cycles only (excludes current).
   Future<int> getAvgCycleLength() async {
-    List<PeriodsDateRange> allPeriodRange = await getAllPeriodsDetails();
-    int avgCycleLength = 0;
-    if (allPeriodRange.isNotEmpty) {
-      int totalCycleLength = 0;
-      for (int i = 0; i < allPeriodRange.length; i++) {
-        totalCycleLength = totalCycleLength + allPeriodRange[i].cycleLength!;
-      }
-      avgCycleLength = totalCycleLength ~/ allPeriodRange.length;
+    final completed = await _completedCycleLengths();
+    if (completed.isEmpty) return 0;
+    final total = completed.reduce((a, b) => a + b);
+    return total ~/ completed.length;
+  }
+
+  /// Learned cycle length — recent history weighted; median when irregular.
+  Future<int> getEffectiveCycleLength() async {
+    final completed = await _completedCycleLengths();
+    return SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: completed,
+      configuredFallback: getCycleLength(),
+    );
+  }
+
+  /// Pulls cycle lengths from finished cycles (skips the in-progress one).
+  Future<List<int>> _completedCycleLengths() async {
+    final all = await getAllPeriodsDetails();
+    if (all.length < 2) return [];
+    final lengths = <int>[];
+    // getAllPeriodsDetails() is newest → oldest. The predictor weights later
+    // list entries more heavily, so rebuild the history oldest → newest.
+    for (var i = all.length - 1; i >= 1; i--) {
+      final len = all[i].cycleLength;
+      if (len != null && len > 0) lengths.add(len);
     }
-    return avgCycleLength;
+    return SmartCyclePredictor.prepareCycleLengths(lengths);
+  }
+
+  Future<List<int>> _completedPeriodDurations() async {
+    final all = await getAllPeriodsDetails();
+    if (all.length < 2) return [];
+    final durations = <int>[];
+    for (var i = all.length - 1; i >= 1; i--) {
+      final d = all[i].periodDuration;
+      if (d != null && d > 0) durations.add(d);
+    }
+    return durations;
+  }
+
+  Future<List<int>> _measuredLutealLengths() async {
+    final provider = MenstrualCycleWidget.measuredLutealProvider;
+    if (provider == null) return [];
+    try {
+      return await provider();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<int> _resolvedLutealDays() async {
+    final completed = await _completedCycleLengths();
+    final effectiveLength = await getEffectiveCycleLength();
+    final measured = await _measuredLutealLengths();
+    return SmartCyclePredictor.lutealPhaseDays(
+      effectiveCycleLength: effectiveLength,
+      completedLengths: completed,
+      measuredLutealLengths: measured,
+    );
+  }
+
+  /// Updates stored cycle metrics from logged history without touching period days.
+  Future<void> applyLearnedCycleMetrics() async {
+    final completed = await _completedCycleLengths();
+    if (completed.isEmpty) return;
+
+    final learnedLength = SmartCyclePredictor.effectiveCycleLength(
+      completedLengths: completed,
+      configuredFallback: getCycleLength(),
+    );
+    final durations = await _completedPeriodDurations();
+    final learnedPeriod = SmartCyclePredictor.effectivePeriodDuration(
+      completedDurations: durations,
+      configuredFallback: getPeriodDuration(),
+    );
+
+    if (learnedLength == getCycleLength() &&
+        learnedPeriod == getPeriodDuration()) {
+      return;
+    }
+
+    _cycleLength = learnedLength;
+    _periodDuration = learnedPeriod;
+    final dbHelper = MenstrualCycleDbHelper.instance;
+    await dbHelper.insertCurrentUserDetails(
+      customerId: Encryption.instance.encrypt(_customerId),
+      cycleLength: _cycleLength,
+      periodDuration: _periodDuration,
+    );
   }
 
   /// get last period duration. Default is 0
@@ -1084,8 +1177,8 @@ class MenstrualCycleWidget {
           }
         }
         periodsDateRange.cycleLength = DateTime.now()
-                .difference(DateTime.parse(periodsDateRange.cycleStartDate!))
-                .inDays;
+            .difference(DateTime.parse(periodsDateRange.cycleStartDate!))
+            .inDays;
         listPeriodsDateRange.add(periodsDateRange);
       } else {
         periodsDateRange.id = indexId;
@@ -1151,19 +1244,13 @@ class MenstrualCycleWidget {
 
   /// check if today is ovulation day
   Future<bool> isOvulationDay() async {
-    bool ovulationDay = false;
-    if (_lastPeriodDate.isNotEmpty) {
-      DateTime lastPeriodDate = DateTime.parse(getPreviousPeriodDay());
-      int totalDiffCurrentLastPeriod =
-          DateTime.now().difference(lastPeriodDate).inDays;
-      int getOvulationDay = getPeriodDuration() +
-          getFollicularDayCounts() +
-          defaultOvulationDay ~/ 2;
-      if (getOvulationDay == totalDiffCurrentLastPeriod) {
-        ovulationDay = true;
-      }
-    }
-    return ovulationDay;
+    final raw = await getCurrentCycleOvulationEstimateDate();
+    if (raw.isEmpty) return false;
+    final ovulation = DateTime.parse(raw);
+    final today = DateTime.now();
+    return ovulation.year == today.year &&
+        ovulation.month == today.month &&
+        ovulation.day == today.day;
   }
 
   /// get current period day
@@ -1189,27 +1276,8 @@ class MenstrualCycleWidget {
 
   /// Calculate cycle regularity score
   Future<double> getCycleRegularityScore() async {
-    List<int> cycleLengths = [];
-    List<PeriodsDateRange> allPeriodRange = await getAllPeriodsDetails();
-
-    if (allPeriodRange.length > 1) {
-      for (int i = 1; i < allPeriodRange.length; i++) {
-        // printMenstrualCycleLogs("Len: ${allPeriodRange[i].cycleLength!}");
-        cycleLengths.add(allPeriodRange[i].cycleLength!);
-      }
-    }
-
-    if (cycleLengths.isNotEmpty) {
-      //Calculate Average Cycle Length (ACL)
-      double avgCycleLength = _average(cycleLengths);
-      //  Calculate Standard Deviation (SD)
-      double standardDeviation = _stdDev(cycleLengths, avgCycleLength);
-      //  Calculate Cycle Regularity Score (CRS)
-      double crs = 100 - ((standardDeviation / avgCycleLength) * 100);
-      // Ensure CRS is in the range of 0 to 100
-      return crs.clamp(0, 100);
-    }
-    return 0.0;
+    final cycleLengths = await _completedCycleLengths();
+    return SmartCyclePredictor.regularityScore(cycleLengths);
   }
 
   /// Calculate cycle regularity score status
@@ -1276,20 +1344,30 @@ class MenstrualCycleWidget {
   }
 
   /// get Next Predicted Period Date
+  Future<CyclePredictionEstimate?> getCurrentPeriodPrediction({
+    DateTime? now,
+  }) async {
+    if (_lastPeriodDate.isEmpty) return null;
+
+    final lastPeriod = CalenderDateUtils.dateFormat.parse(
+      getPreviousPeriodDay(),
+    );
+    final completed = await _completedCycleLengths();
+    return SmartCyclePredictor.estimateNextPeriod(
+      lastPeriodStart: lastPeriod,
+      completedLengths: completed,
+      configuredFallback: getCycleLength(),
+      now: now,
+    );
+  }
+
+  /// Returns the center of the current personalized prediction window. Unlike
+  /// the legacy rolling helper, this date remains stable when a period is late.
   Future<String> getNextPredictedPeriodDate() async {
-    if (_lastPeriodDate.isNotEmpty) {
-      int cycleLength = getCycleLength();
-      DateTime nextPeriodDate = CalenderDateUtils.dateFormat
-          .parse(getPreviousPeriodDay())
-          .add(Duration(days: cycleLength));
+    final prediction = await getCurrentPeriodPrediction();
+    if (prediction == null) return "";
 
-      String today = CalenderDateUtils.dateDayFormat(DateTime.now());
-      String nextDate = CalenderDateUtils.dateDayFormat(nextPeriodDate);
-      if (nextDate.compareTo(today) < 0) return "";
-
-      return nextDate;
-    }
-    return "";
+    return CalenderDateUtils.dateDayFormat(prediction.centerDate);
   }
 
   /// to check today is period day
@@ -1327,32 +1405,33 @@ class MenstrualCycleWidget {
     return false;
   }
 
-  /// get Next Predicted Period Date
+  /// get Next Ovulation Date
   Future<String> getNextOvulationDate() async {
-    if (_lastPeriodDate.isNotEmpty) {
-      int cycleLength = getCycleLength();
-      DateTime lastPeriod =
-          CalenderDateUtils.dateFormat.parse(getPreviousPeriodDay());
+    if (_lastPeriodDate.isEmpty) return "";
 
-      DateTime ovulationDate = lastPeriod
-          .add(Duration(days: cycleLength))
-          .add(const Duration(days: -14));
+    final lastPeriod =
+        CalenderDateUtils.dateFormat.parse(getPreviousPeriodDay());
+    final effectiveLength = await getEffectiveCycleLength();
+    final luteal = await _resolvedLutealDays();
+    final ovulationDate = SmartCyclePredictor.nextOvulation(
+      lastPeriodStart: lastPeriod,
+      effectiveCycleLength: effectiveLength,
+      lutealDays: luteal,
+    );
 
-      if (DateTime.now().isAfter(ovulationDate)) {
-        DateTime nextPeriodStart = lastPeriod
-            .add(Duration(days: cycleLength));
-        ovulationDate = nextPeriodStart
-            .add(Duration(days: cycleLength))
-            .add(const Duration(days: -14));
-      }
+    return CalenderDateUtils.dateDayFormat(ovulationDate);
+  }
 
-      String today = CalenderDateUtils.dateDayFormat(DateTime.now());
-      String ovDateStr = CalenderDateUtils.dateDayFormat(ovulationDate);
-      if (ovDateStr.compareTo(today) < 0) return "";
-
-      return ovDateStr;
-    }
-    return "";
+  /// Estimated ovulation belonging to the currently logged cycle. This can be
+  /// in the past during the luteal phase; it never invents a new unlogged cycle.
+  Future<String> getCurrentCycleOvulationEstimateDate() async {
+    final prediction = await getCurrentPeriodPrediction();
+    if (prediction == null) return "";
+    final luteal = await _resolvedLutealDays();
+    final ovulationDate = prediction.centerDate.subtract(
+      Duration(days: luteal),
+    );
+    return CalenderDateUtils.dateDayFormat(ovulationDate);
   }
 
   Future<List<SymptomsPatterns>> getSymptomsPatternForReport() async {
@@ -1484,9 +1563,11 @@ class MenstrualCycleWidget {
       final encryption = Encryption.instance;
 
       for (int i = 0; i < queryResponse.length; i++) {
-        String symptomsData = encryption.decrypt(
-            queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData]);
-        List<dynamic> jsonData = json.decode(symptomsData.trim());
+        String symptomsData = encryption
+            .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+            .trim();
+        if (symptomsData.isEmpty) continue; // period-only / config rows
+        List<dynamic> jsonData = json.decode(symptomsData);
         pastSymptomsData.addAll(
             jsonData.map((symptom) => SymptomsData.fromMap(symptom)).toList());
       }
@@ -1526,14 +1607,16 @@ class MenstrualCycleWidget {
     return symptomAnalysisData;
   }
 
-  /// get current phase name based on cycle day
+  /// get current phase name based on cycle day — scaled to actual cycle length.
   Future<String> getCurrentPhaseName() async {
     int currentCycleDay = await getCurrentCycleDay();
-    int cycleLength = getCycleLength();
+    final cycleLength = await getEffectiveCycleLength();
     int menstruationDayCount = getPeriodDuration();
 
-    int follicularEnd = menstruationDayCount + defaultFollicularDay;
-    int ovulationEnd = follicularEnd + defaultOvulationDay;
+    final luteal = await _resolvedLutealDays();
+    final ovulationDay = cycleLength - luteal;
+    final fertileStart = ovulationDay - 5;
+    final follicularEnd = fertileStart - 1;
 
     if (currentCycleDay <= 0) return "";
     if (currentCycleDay <= menstruationDayCount) {
@@ -1542,7 +1625,7 @@ class MenstrualCycleWidget {
     if (currentCycleDay <= follicularEnd) {
       return WidgetBaseLanguage.follicularPhaseLabel;
     }
-    if (currentCycleDay <= ovulationEnd) {
+    if (currentCycleDay <= ovulationDay) {
       return WidgetBaseLanguage.ovulationLabel;
     }
     if (currentCycleDay <= cycleLength) {
@@ -1561,16 +1644,21 @@ class MenstrualCycleWidget {
     String customerId = mInstance.getCustomerId();
 
     final encryption = Encryption.instance;
+    // Only rows that actually carry symptom data: the merged tblDailyLogs
+    // also holds period-only rows and the __CONFIG__ row (symptomData NULL),
+    // and json.decode("") on those used to crash every backup export.
     final List<Map<String, dynamic>> queryResponse = await db!.rawQuery(
-        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ?",
+        "Select * from ${MenstrualCycleDbHelper.tableDailyUserSymptomsLogsData} WHERE ${MenstrualCycleDbHelper.columnCustomerId} = ? AND ${MenstrualCycleDbHelper.columnUserEncryptData} IS NOT NULL AND ${MenstrualCycleDbHelper.columnUserEncryptData} != ''",
         [customerId]);
     for (int i = 0; i < queryResponse.length; i++) {
       UserSymptomsLogs userSymptomsLogs = UserSymptomsLogs(symptomData: []);
       List<SymptomsData> symptomsDataList = [];
-      String userDecryptData = encryption.decrypt(
-          queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData]);
+      String userDecryptData = encryption
+          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+          .trim();
 
-      List<dynamic> jsonData = json.decode(userDecryptData.trim());
+      List<dynamic> jsonData =
+          userDecryptData.isEmpty ? [] : json.decode(userDecryptData);
       //printMenstrualCycleLogs("jsonData ${jsonData}");
       symptomsDataList.addAll(
           jsonData.map((symptom) => SymptomsData.fromMap(symptom)).toList());
@@ -1596,8 +1684,10 @@ class MenstrualCycleWidget {
           .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnNotes]);
       userSymptomsLogs.logDate =
           queryResponse[i][MenstrualCycleDbHelper.columnLogDate];
+      // cycleDay is an INTEGER column but the model field is String? —
+      // assigning the raw int used to throw and fail every backup export.
       userSymptomsLogs.cycleDay =
-          queryResponse[i][MenstrualCycleDbHelper.columnCycleDay];
+          queryResponse[i][MenstrualCycleDbHelper.columnCycleDay]?.toString();
 
       userSymptomsLogs.symptomData!.addAll(symptomsDataList);
 
@@ -1611,16 +1701,15 @@ class MenstrualCycleWidget {
   Future<Map<String, dynamic>> getBackupOfMenstrualCycleData(
       {bool isEncryptData = true}) async {
     List<UserSymptomsLogs> userSymptomsLogsData = await getAllSymptomsData();
-    List<String> allPeriodsLogs = [];
-    if (_lastPeriodDate.isNotEmpty) {
-      final dbHelper = MenstrualCycleDbHelper.instance;
-      allPeriodsLogs = await dbHelper.getPastPeriodDates();
-    }
+    // Read period dates straight from the store: the in-memory
+    // _lastPeriodDate can be empty right after a restore or cold start,
+    // which used to silently drop every period date from the backup.
+    final dbHelper = MenstrualCycleDbHelper.instance;
+    List<String> allPeriodsLogs = await dbHelper.getPastPeriodDates();
 
     Map<String, dynamic> allSummaryData = {
       "allTableData": {
-        "symptoms_logs":
-            userSymptomsLogsData.map((e) => e.toJson()).toList(),
+        "symptoms_logs": userSymptomsLogsData.map((e) => e.toJson()).toList(),
         "periods_logs": allPeriodsLogs,
       },
       "cycleLength": getCycleLength(),
@@ -1639,6 +1728,10 @@ class MenstrualCycleWidget {
   }
 
   /// Restore backup of user's data
+  ///
+  /// [customerId] must be the *store* id — the exact value returned by
+  /// [getCustomerId] (already encrypted). Passing a plaintext id would file
+  /// the restored rows under a partition no query ever reads.
   Future<bool> restoreBackupOfMenstrualCycleData(
       {bool isDecryptData = true,
       required Map<String, dynamic> backupData,
@@ -1662,25 +1755,29 @@ class MenstrualCycleWidget {
     } else {
       decryptData = backupData;
     }
+
+    final allTableData = decryptData["allTableData"];
+    if (allTableData is! Map) return false;
+
     // Restore Symptom Logs Data
     // Support all backup key name versions
-    List<dynamic> symptomsLogsData =
-        decryptData["allTableData"]["symptoms_logs"] ??
-        decryptData["allTableData"]["tblDailyUserSymptomsLogs"] ??
-        decryptData["allTableData"]["tblDailyLogs"] ??
+    List<dynamic> symptomsLogsData = allTableData["symptoms_logs"] ??
+        allTableData["tblDailyUserSymptomsLogs"] ??
+        allTableData["tblDailyLogs"] ??
         [];
     final encryption = Encryption.instance;
 
     if (symptomsLogsData.isNotEmpty) {
-      dbHelper.clearSymptomsLog(customerId);
+      await dbHelper.clearSymptomsLog(customerId);
       for (var log in symptomsLogsData) {
         UserSymptomsLogs userSymptomLog = UserSymptomsLogs.fromJson(log);
         String encryptedData =
             encryption.encrypt(json.encode(userSymptomLog.symptomData!));
 
         Map<String, dynamic> userData = {
-          MenstrualCycleDbHelper.columnCustomerId:
-              encryption.encrypt(customerId),
+          // customerId is already the encrypted store id — encrypting it
+          // again would hide every restored row from all queries.
+          MenstrualCycleDbHelper.columnCustomerId: customerId,
           MenstrualCycleDbHelper.columnUserEncryptData: encryptedData,
           MenstrualCycleDbHelper.columnMeditationTime:
               encryption.encrypt(userSymptomLog.meditationTime ?? ""),
@@ -1712,13 +1809,12 @@ class MenstrualCycleWidget {
     }
 
     // Restore Period Logs Data (support all key name versions)
-    List<dynamic> periodLogsData =
-        decryptData["allTableData"]["periods_logs"] ??
-        decryptData["allTableData"]["tblUserPeriodsLogs"] ??
-        decryptData["allTableData"]["tblDailyLogs"] ??
+    List<dynamic> periodLogsData = allTableData["periods_logs"] ??
+        allTableData["tblUserPeriodsLogs"] ??
+        allTableData["tblDailyLogs"] ??
         [];
     if (periodLogsData.isNotEmpty) {
-      dbHelper.clearPeriodLog(customerId);
+      await dbHelper.clearPeriodLog(customerId);
       await dbHelper.insertOrUpdatePeriodLog(periodLogsData);
     }
 
@@ -1732,7 +1828,13 @@ class MenstrualCycleWidget {
         periodDuration: periodDuration,
         customerId: customerId);
 
-    return false;
+    // Bring the in-memory state in line with what was just written so the
+    // restored data is live immediately (no relaunch needed).
+    _cycleLength = cycleLength;
+    _periodDuration = periodDuration;
+    await calculateLastPeriodDate();
+
+    return true;
   }
 
   /// get matrix summary data btn two date

@@ -30,13 +30,13 @@ class CommunityProfile {
   }
 
   Map<String, dynamic> toMap() => {
-        'communityAlias': alias,
-        if (goal != null) 'communityGoal': goal,
-        if (birthYear != null) 'communityBirthYear': birthYear,
-        'communitySetupComplete': setupComplete,
-        'communityAvatarIndex': avatarIndex,
-        if (photoUrl != null) 'communityPhotoUrl': photoUrl,
-      };
+    'communityAlias': alias,
+    if (goal != null) 'communityGoal': goal,
+    if (birthYear != null) 'communityBirthYear': birthYear,
+    'communitySetupComplete': setupComplete,
+    'communityAvatarIndex': avatarIndex,
+    if (photoUrl != null) 'communityPhotoUrl': photoUrl,
+  };
 
   bool get isReady {
     final year = birthYear;
@@ -47,8 +47,7 @@ class CommunityProfile {
   }
 
   /// Alias already set (e.g. from app profile) — only birth year is missing.
-  bool get needsBirthYearOnly =>
-      alias.trim().length >= 2 && birthYear == null;
+  bool get needsBirthYearOnly => alias.trim().length >= 2 && birthYear == null;
 
   /// Under-18 users get a read-only, protected community experience.
   bool get isMinor {

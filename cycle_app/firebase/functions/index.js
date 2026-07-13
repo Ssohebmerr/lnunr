@@ -32,6 +32,7 @@
 //
 //   scheduled/
 //     cleanupStories.js       every 1h — prune expired stories
+//     drainModeration.js      every 30m — AI-resolve any pending_review content
 //     analytics.js            processScheduledBroadcasts (5m)
 //                            + dailyAnalyticsSnapshot (00:30 UTC)
 //                            + processScheduledContent (15m)
@@ -100,7 +101,10 @@ exports.onPostCreated = moderationTriggers.onPostCreated;
 exports.onCommentCreated = moderationTriggers.onCommentCreated;
 exports.onReportCreated = moderationTriggers.onReportCreated;
 exports.onCommentApproved = communityNotifications.onCommentApproved;
+exports.onCommentPublished = communityNotifications.onCommentPublished;
+exports.onCommentDeleted = communityNotifications.onCommentDeleted;
 exports.onPostLiked = communityNotifications.onPostLiked;
+exports.onUserFollowed = communityNotifications.onUserFollowed;
 
 // ---------------------------------------------------------------------------
 // Scheduled jobs
@@ -108,9 +112,11 @@ exports.onPostLiked = communityNotifications.onPostLiked;
 const cleanupStories = require('./scheduled/cleanupStories');
 const analytics = require('./scheduled/analytics');
 const resetDailyChatCount = require('./scheduled/resetDailyChatCount');
+const drainModeration = require('./scheduled/drainModeration');
 
 exports.cleanupExpiredStories = cleanupStories.cleanupExpiredStories;
 exports.processScheduledBroadcasts = analytics.processScheduledBroadcasts;
 exports.dailyAnalyticsSnapshot = analytics.dailyAnalyticsSnapshot;
 exports.processScheduledContent = analytics.processScheduledContent;
 exports.resetDailyChatCounts = resetDailyChatCount.resetDailyChatCounts;
+exports.drainPendingModeration = drainModeration.drainPendingModeration;

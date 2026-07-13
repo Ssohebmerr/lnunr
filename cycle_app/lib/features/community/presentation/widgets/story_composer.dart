@@ -29,72 +29,70 @@ Future<void> showStoryComposer({
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              l10n.storyCreate,
-              style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                l10n.storyCreate,
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
             ),
-          ),
-          if (kCommunityMediaUploadsEnabled) ...[
+            if (kCommunityMediaUploadsEnabled) ...[
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(l10n.storyPickImage),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final file = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 85,
+                  );
+                  if (file == null || !context.mounted) return;
+                  await _uploadStory(
+                    context: context,
+                    communityId: communityId,
+                    alias: alias,
+                    profile: profile,
+                    file: file,
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.burst_mode_outlined),
+                title: Text(l10n.storyPickMultiple),
+                subtitle: Text(l10n.storyTextOnlyHint),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final files = await picker.pickMultiImage(imageQuality: 85);
+                  if (files.isEmpty || !context.mounted) return;
+                  await _uploadMultipleStories(
+                    context: context,
+                    communityId: communityId,
+                    alias: alias,
+                    profile: profile,
+                    files: files,
+                  );
+                },
+              ),
+            ],
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.storyPickImage),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final file = await picker.pickImage(
-                  source: ImageSource.gallery,
-                  imageQuality: 85,
-                );
-                if (file == null || !context.mounted) return;
-                await _uploadStory(
-                  context: context,
-                  communityId: communityId,
-                  alias: alias,
-                  profile: profile,
-                  file: file,
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.burst_mode_outlined),
-              title: Text(l10n.storyPickMultiple),
+              leading: const Icon(Icons.text_fields_rounded),
+              title: Text(l10n.storyTextOnly),
               subtitle: Text(l10n.storyTextOnlyHint),
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final files = await picker.pickMultiImage(
-                  imageQuality: 85,
-                );
-                if (files.isEmpty || !context.mounted) return;
-                await _uploadMultipleStories(
+                _showTextStoryEditor(
                   context: context,
                   communityId: communityId,
                   alias: alias,
                   profile: profile,
-                  files: files,
                 );
               },
             ),
-          ],
-          ListTile(
-            leading: const Icon(Icons.text_fields_rounded),
-            title: Text(l10n.storyTextOnly),
-            subtitle: Text(l10n.storyTextOnlyHint),
-            onTap: () {
-              Navigator.pop(ctx);
-              _showTextStoryEditor(
-                context: context,
-                communityId: communityId,
-                alias: alias,
-                profile: profile,
-              );
-            },
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -125,9 +123,7 @@ Future<void> _uploadStory({
       authorAvatarIndex: profile.avatarIndex,
     );
     if (context.mounted) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.storyPublished)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.storyPublished)));
     }
   } on MediaRequiresPremiumException {
     if (context.mounted) {
@@ -137,9 +133,7 @@ Future<void> _uploadStory({
     }
   } catch (e) {
     if (context.mounted) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.errorGeneric)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
     }
   }
 }
@@ -183,7 +177,9 @@ Future<void> _uploadMultipleStories({
 
   if (context.mounted && successCount > 0) {
     messenger.showSnackBar(
-      SnackBar(content: Text('${l10n.storyPublished} ($successCount/${files.length})')),
+      SnackBar(
+        content: Text('${l10n.storyPublished} ($successCount/${files.length})'),
+      ),
     );
   }
 }
@@ -255,18 +251,13 @@ void _showTextStoryEditor({
                           border: isSelected
                               ? Border.all(color: Colors.white, width: 3)
                               : null,
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: c.withValues(alpha: 0.5),
-                                    blurRadius: 8,
-                                  ),
-                                ]
-                              : null,
                         ),
                         child: isSelected
-                            ? const Icon(Icons.check,
-                                color: Colors.white, size: 18)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              )
                             : null,
                       ),
                     );
@@ -277,9 +268,8 @@ void _showTextStoryEditor({
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Color(int.parse(selectedColor))
-                      .withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  color: Color(int.parse(selectedColor)).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: TextField(
                   controller: controller,
