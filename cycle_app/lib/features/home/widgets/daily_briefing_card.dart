@@ -182,7 +182,7 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(9),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -195,9 +195,9 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: visual.accent.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: visual.accent.withValues(alpha: 0.15),
+                      blurRadius: 9,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),

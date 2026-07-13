@@ -87,4 +87,56 @@ void main() {
       );
     });
   });
+
+  group('history', () {
+    test('metricHistory returns only days inside the window', () async {
+      final today = DateTime.now();
+      final old = today.subtract(const Duration(days: 20));
+      await ConditionLogStore.setMetric('hotflash_count', today, 4);
+      await ConditionLogStore.setMetric('hotflash_count', old, 9);
+
+      final recent =
+          await ConditionLogStore.metricHistory('hotflash_count', days: 14);
+      expect(recent, {ConditionLogStore.dayKey(today): 4});
+
+      final wide =
+          await ConditionLogStore.metricHistory('hotflash_count', days: 30);
+      expect(wide.length, 2);
+      expect(wide[ConditionLogStore.dayKey(old)], 9);
+    });
+
+    test('metricHistory of an unknown metric is empty', () async {
+      expect(await ConditionLogStore.metricHistory('nope'), isEmpty);
+    });
+
+    test('symptomHistory windows and maps day to slug set', () async {
+      final today = DateTime.now();
+      final yesterday = today.subtract(const Duration(days: 1));
+      final old = today.subtract(const Duration(days: 40));
+      await ConditionLogStore.toggleSymptom(today, 'hot_flashes');
+      await ConditionLogStore.toggleSymptom(today, 'night_sweats');
+      await ConditionLogStore.toggleSymptom(yesterday, 'cramps');
+      await ConditionLogStore.toggleSymptom(old, 'fatigue');
+
+      final history = await ConditionLogStore.symptomHistory(days: 30);
+      expect(history.length, 2);
+      expect(history[ConditionLogStore.dayKey(today)],
+          {'hot_flashes', 'night_sweats'});
+      expect(history[ConditionLogStore.dayKey(yesterday)], {'cramps'});
+    });
+
+    test('symptomHistory drops days whose set was toggled empty', () async {
+      final today = DateTime.now();
+      await ConditionLogStore.toggleSymptom(today, 'cramps');
+      await ConditionLogStore.toggleSymptom(today, 'cramps'); // now empty
+      expect(await ConditionLogStore.symptomHistory(days: 30), isEmpty);
+    });
+
+    test('ritualHistory returns the recent ritual sets', () async {
+      final today = DateTime.now();
+      await ConditionLogStore.toggleRitual(today, 'short_walks');
+      final history = await ConditionLogStore.ritualHistory(days: 7);
+      expect(history[ConditionLogStore.dayKey(today)], {'short_walks'});
+    });
+  });
 }

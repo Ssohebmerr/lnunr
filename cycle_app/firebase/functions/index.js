@@ -101,7 +101,10 @@ exports.onPostCreated = moderationTriggers.onPostCreated;
 exports.onCommentCreated = moderationTriggers.onCommentCreated;
 exports.onReportCreated = moderationTriggers.onReportCreated;
 exports.onCommentApproved = communityNotifications.onCommentApproved;
+exports.onCommentPublished = communityNotifications.onCommentPublished;
+exports.onCommentDeleted = communityNotifications.onCommentDeleted;
 exports.onPostLiked = communityNotifications.onPostLiked;
+exports.onUserFollowed = communityNotifications.onUserFollowed;
 
 // ---------------------------------------------------------------------------
 // Scheduled jobs

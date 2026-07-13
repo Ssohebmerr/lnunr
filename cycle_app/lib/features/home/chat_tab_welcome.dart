@@ -34,7 +34,7 @@ class _WelcomeState extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AuraDecorations.primaryGradient,
               shape: BoxShape.circle,
-              boxShadow: AppShadows.softRose(opacity: 0.25),
+              boxShadow: AppShadows.softRose(opacity: 0.18),
             ),
             child: const Icon(
               Icons.auto_awesome_rounded,
@@ -79,7 +79,7 @@ class _WelcomeState extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AuraDecorations.primaryGradient,
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              boxShadow: AppShadows.softRose(opacity: 0.2),
+              boxShadow: AppShadows.softRose(opacity: 0.14),
             ),
             child: Material(
               color: Colors.transparent,
@@ -236,7 +236,7 @@ class _FeatureCardsGrid extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(f.icon, size: 17, color: Colors.white),
+                    child: Icon(f.icon, size: 16, color: Colors.white),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -327,7 +327,7 @@ class _PersonalityPicker extends StatelessWidget {
                           ? [
                               BoxShadow(
                                 color: meta.gradient.first
-                                    .withValues(alpha: 0.30),
+                                    .withValues(alpha: 0.21),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),

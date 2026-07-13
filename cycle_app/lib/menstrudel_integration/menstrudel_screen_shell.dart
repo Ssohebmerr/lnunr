@@ -43,15 +43,20 @@ class _MenstrudelScreenShellState extends State<MenstrudelScreenShell> {
         builder: (localizedContext) {
           return Scaffold(
             backgroundColor: theme.scaffoldBackgroundColor,
+            // Transparent bar over the mesh (same shell as the modern
+            // account screens) — an opaque bar here left a visible seam
+            // between the app bar and the gradient below it.
+            extendBodyBehindAppBar: true,
             appBar: AppBar(
               title: Text(widget.title),
+              backgroundColor: Colors.transparent,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => Navigator.of(localizedContext).pop(),
               ),
             ),
             body: AppMeshBackground(
-              child: SizedBox.expand(child: widget.body),
+              child: SafeArea(child: SizedBox.expand(child: widget.body)),
             ),
             floatingActionButton:
                 widget.floatingActionButtonBuilder?.call(localizedContext),

@@ -8,7 +8,6 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle/data/cycle_sync_service.dart';
-import '../cycle/presentation/widgets/ovulation_log_card.dart';
 import 'widgets/daily_log_feedback.dart';
 
 /// Daily symptom / period logging — opened from the + FAB or embedded in a tab.
@@ -83,56 +82,6 @@ class _LogTabState extends State<LogTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: AuraDecorations.softCard(isDark),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary.withValues(alpha: 0.28),
-                        theme.colorScheme.primary.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(Icons.edit_calendar_rounded,
-                      color: theme.colorScheme.primary, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        MaterialLocalizations.of(context)
-                            .formatMediumDate(DateTime.now()),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.wellnessDailyLogDesc,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          const OvulationLogBar(),
-          const SizedBox(height: 10),
           Expanded(
             child: DecoratedBox(
               decoration: BoxDecoration(

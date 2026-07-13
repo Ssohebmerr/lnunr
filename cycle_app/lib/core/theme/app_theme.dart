@@ -98,9 +98,11 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: isDark ? scheme.primary : AuraColors.accentDeep,
           foregroundColor: isDark ? AuraColors.darkBg : Colors.white,
-          elevation: 3,
-          shadowColor: AuraColors.accent.withValues(alpha: 0.5),
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 17),
+          // Calm-premium: flatter buttons with a whisper of a shadow instead of
+          // a strong berry glow, so labels lead and the accent stays contained.
+          elevation: 1,
+          shadowColor: AuraColors.accent.withValues(alpha: 0.22),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
           shape: const StadiumBorder(),
           textStyle: GoogleFonts.cairo(
             fontWeight: FontWeight.w800,
@@ -114,7 +116,7 @@ class AppTheme {
           foregroundColor: scheme.primary,
           side: BorderSide(color: scheme.primary.withValues(alpha: 0.6), width: 1.6),
           shape: const StadiumBorder(),
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
           textStyle: GoogleFonts.cairo(
             fontWeight: FontWeight.w800,
             fontSize: 15,
@@ -133,7 +135,7 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: isDark ? scheme.primary : AuraColors.accentDeep,
         foregroundColor: isDark ? AuraColors.darkBg : Colors.white,
-        elevation: 4,
+        elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),

@@ -112,6 +112,28 @@
   "@conditionRitualsDoneToday": {
     "placeholders": { "done": {"type": "int"}, "total": {"type": "int"} }
   },
+  "conditionTrendsTitle": "Your trends",
+  "conditionTrendsEmpty": "Nothing logged yet — track your symptoms and rituals from the Home screen and your trends will appear here.",
+  "conditionTrendLast14Days": "Last 14 days",
+  "conditionTrendLast30Days": "Last 30 days",
+  "conditionTrendLast7Days": "Last 7 days",
+  "conditionTrendToday": "Today",
+  "conditionTrendHotFlashes": "Hot flashes",
+  "conditionTrendMood": "Mood check-ins",
+  "conditionTrendSymptomsPerDay": "Symptoms per day",
+  "conditionTopSymptoms": "Most frequent symptoms",
+  "conditionDaysLogged": "Days logged",
+  "conditionRitualCompletion": "Rituals done",
+  "conditionDoctorReportCta": "Doctor report (PDF)",
+  "conditionReportTitle": "Doctor summary report",
+  "conditionReportOverview": "Overview",
+  "conditionReportGoalLabel": "Health focus",
+  "conditionReportConsistency": "Tracking consistency",
+  "conditionReportNoLogs": "No daily logs in the last 30 days — track symptoms from the Home screen to enrich this report.",
+  "conditionReportTimes": "{count}×",
+  "@conditionReportTimes": {
+    "placeholders": { "count": {"type": "int"} }
+  },
   "conditionStreakDays": "{days}-day logging streak",
   "@conditionStreakDays": {
     "placeholders": { "days": {"type": "int"} }
@@ -500,7 +522,7 @@
   "doctorReportGenerating": "Preparing your report...",
   "doctorReportFailed": "Cycle data isn't ready yet. Open the home screen, then try again.",
   "doctorReportRetry": "Try again",
-  "doctorReportLimitedData": "This report is based on limited data. After about one month of logging, predictions and patterns become much more accurate.",
+  "doctorReportLimitedData": "This report is based on limited data. Logging several completed cycle starts enables personal accuracy measurement and a better prediction window.",
   "doctorReportAiTitle": "AI assistant notes",
   "doctorReportAiSubtitle": "Helpful context for your doctor visit — not a diagnosis.",
   "doctorReportAiLoading": "AI is reviewing your data…",
@@ -1037,13 +1059,13 @@
   "goalModeTodayFocus": "Today's focus",
   "goalModeChecklist": "Your checklist",
   "goalModeReportInsights": "Insights for your goal",
-  "goalModeFertilityToday": "Fertility today",
-  "goalModeFertilityHigh": "High",
-  "goalModeFertilityModerate": "Moderate",
-  "goalModeFertilityLow": "Low",
+  "goalModeFertilityToday": "Fertility estimate today",
+  "goalModeFertilityHigh": "Estimated high",
+  "goalModeFertilityModerate": "Estimated moderate",
+  "goalModeFertilityLow": "Estimated lower",
   "goalModeFertilityUnknown": "Track more",
   "goalModeTestDate": "Pregnancy test",
-  "goalModeOvulationToday": "Ovulation day today",
+  "goalModeOvulationToday": "Estimated ovulation window today",
   "goalModeConceiveSelfCare": "Fertility self-care",
   "goalModeConceiveSelfCareSub": "Small daily habits that support conception.",
   "goalModeAvoidSelfCare": "Protection self-care",
@@ -1240,8 +1262,32 @@
   "@communityActivityReply": {
     "placeholders": { "alias": { "type": "String" } }
   },
+  "communityActivityFollow": "{alias} started following you",
+  "@communityActivityFollow": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityActivityMention": "{alias} mentioned you in a comment",
+  "@communityActivityMention": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityFollow": "Follow",
+  "communityFollowingBtn": "Following",
+  "communityUnfollow": "Unfollow",
+  "communityUnfollowed": "Unfollowed",
+  "communityFollowedToast": "You're now following {alias}",
+  "@communityFollowedToast": {
+    "placeholders": { "alias": { "type": "String" } }
+  },
+  "communityFollowingTitle": "Following",
+  "communityFollowingSubtitle": "Members you follow",
+  "communityFollowingEmpty": "You aren't following anyone yet. Tap a member's name on a post to follow them.",
+  "communityCommentSortOldest": "Oldest first",
+  "communityCommentSortNewest": "Newest first",
+  "communityCommentSortTop": "Most liked",
   "communityMarkAllRead": "Mark all read",
   "communitySortNewest": "Newest",
+  "communityFeedPopular": "Popular",
+  "communityFeedMyComments": "My comments",
   "communitySortDiscussed": "Most discussed",
   "communityFilterMyPosts": "My posts",
   "communitySearchPosts": "Search posts...",
@@ -1539,6 +1585,28 @@
       "date": { "type": "String" }
     }
   },
+  "predictionConfidenceLabel": "Prediction confidence",
+  "predictionConfidenceLearning": "Still learning",
+  "predictionConfidenceModerate": "Moderate",
+  "predictionConfidenceStrong": "Strong",
+  "predictionAccuracyPersonal": "Within 2 days for {within} of your last {total} testable cycles",
+  "@predictionAccuracyPersonal": {
+    "placeholders": {
+      "within": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "predictionAccuracyLearning": "Complete 4 cycles to see your personal accuracy",
+  "predictionWindowActive": "You are currently inside the expected period window",
+  "periodPredictionLate": "{days} days past the end of your expected window",
+  "@periodPredictionLate": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "predictionPossibleMissingLog": "This may be a longer cycle, or a period log may be missing. Review your calendar before relying on the next estimate.",
+  "predictionEvidenceNote": "Personal range based on your history — an estimate, not a medical guarantee",
+  "ovulationEstimateHint": "Current-cycle estimate — do not use it alone for contraception",
 
   "ageGateTitle": "How old are you?",
   "ageGateBody": "Lune is designed for users aged 13 and older. Some features like community discussions are restricted to users 18+.",

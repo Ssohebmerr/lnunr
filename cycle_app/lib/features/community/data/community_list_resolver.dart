@@ -34,7 +34,8 @@ class CommunityListResolver {
   static Community? fromCatalogOnly(CommunityCatalogEntry entry) {
     final nameEn = entry.nameEn?.trim();
     final nameAr = entry.nameAr?.trim();
-    if ((nameEn == null || nameEn.isEmpty) && (nameAr == null || nameAr.isEmpty)) {
+    if ((nameEn == null || nameEn.isEmpty) &&
+        (nameAr == null || nameAr.isEmpty)) {
       return null;
     }
     return Community(

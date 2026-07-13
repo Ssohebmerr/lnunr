@@ -81,12 +81,21 @@ class ConditionLogStore {
     return streak;
   }
 
+  /// Day-keyed symptom sets for the last [days] days (today included).
+  /// Only days with at least one entry appear in the map.
+  static Future<Map<String, Set<String>>> symptomHistory({int days = 30}) =>
+      _setHistory(_symptomsKey, days);
+
   // ── Rituals (a checklist set per day) ────────────────────────────────────
   static Future<Set<String>> ritualsOn(DateTime day) =>
       _setFor(_ritualsKey, day);
 
   static Future<void> toggleRitual(DateTime day, String key) =>
       _toggle(_ritualsKey, day, key);
+
+  /// Day-keyed ritual sets for the last [days] days (today included).
+  static Future<Map<String, Set<String>>> ritualHistory({int days = 30}) =>
+      _setHistory(_ritualsKey, days);
 
   // ── Numeric metrics (name -> day -> int) ─────────────────────────────────
   static Future<int> metric(String name, DateTime day) async {
@@ -110,6 +119,25 @@ class ConditionLogStore {
     byDay[dayKey(day)] = value;
     map[name] = byDay;
     await p.setString(_metricsKey, jsonEncode(map));
+  }
+
+  /// Day-keyed values of one metric for the last [days] days (today
+  /// included). Only recorded days appear in the map.
+  static Future<Map<String, int>> metricHistory(
+    String name, {
+    int days = 30,
+  }) async {
+    final p = await SharedPreferences.getInstance();
+    final map = _decodeMap(p.getString(_metricsKey));
+    final byDay = map[name];
+    if (byDay is! Map) return <String, int>{};
+    final cutoff = _cutoffKey(days);
+    final result = <String, int>{};
+    byDay.forEach((k, v) {
+      final key = k.toString();
+      if (key.compareTo(cutoff) >= 0 && v is num) result[key] = v.toInt();
+    });
+    return result;
   }
 
   /// Consecutive recent days (ending today) whose metric is `<= threshold`
@@ -139,6 +167,28 @@ class ConditionLogStore {
   }
 
   // ── Internals ────────────────────────────────────────────────────────────
+
+  /// Earliest dayKey inside a window of [days] days ending today. dayKeys are
+  /// zero-padded ISO dates, so plain string comparison orders them correctly.
+  static String _cutoffKey(int days) =>
+      dayKey(DateTime.now().subtract(Duration(days: days - 1)));
+
+  static Future<Map<String, Set<String>>> _setHistory(
+    String storeKey,
+    int days,
+  ) async {
+    final p = await SharedPreferences.getInstance();
+    final map = _decodeMap(p.getString(storeKey));
+    final cutoff = _cutoffKey(days);
+    final result = <String, Set<String>>{};
+    map.forEach((k, v) {
+      if (k.compareTo(cutoff) >= 0 && v is List && v.isNotEmpty) {
+        result[k] = v.map((e) => e.toString()).toSet();
+      }
+    });
+    return result;
+  }
+
   static Future<Set<String>> _setFor(String storeKey, DateTime day) async {
     final p = await SharedPreferences.getInstance();
     final map = _decodeMap(p.getString(storeKey));

@@ -16,16 +16,16 @@ enum CommunityReportReason {
   final String code;
 
   String label(AppLocalizations l10n) => switch (this) {
-        CommunityReportReason.harassment => l10n.communityReportReasonHarassment,
-        CommunityReportReason.hateSpeech => l10n.communityReportReasonHate,
-        CommunityReportReason.spam => l10n.communityReportReasonSpam,
-        CommunityReportReason.inappropriate =>
-          l10n.communityReportReasonInappropriate,
-        CommunityReportReason.misinformation =>
-          l10n.communityReportReasonMisinformation,
-        CommunityReportReason.selfHarm => l10n.communityReportReasonSelfHarm,
-        CommunityReportReason.other => l10n.communityReportReasonOther,
-      };
+    CommunityReportReason.harassment => l10n.communityReportReasonHarassment,
+    CommunityReportReason.hateSpeech => l10n.communityReportReasonHate,
+    CommunityReportReason.spam => l10n.communityReportReasonSpam,
+    CommunityReportReason.inappropriate =>
+      l10n.communityReportReasonInappropriate,
+    CommunityReportReason.misinformation =>
+      l10n.communityReportReasonMisinformation,
+    CommunityReportReason.selfHarm => l10n.communityReportReasonSelfHarm,
+    CommunityReportReason.other => l10n.communityReportReasonOther,
+  };
 }
 
 /// Bottom sheet for choosing a report reason. Returns `null` if dismissed.

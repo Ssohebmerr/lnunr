@@ -7,6 +7,7 @@ part of 'chat_tab.dart';
 // ---------------------------------------------------------------------------
 class _ChatMessageRow extends StatelessWidget {
   const _ChatMessageRow({
+    super.key,
     required this.message,
     required this.theme,
     required this.showAvatar,
@@ -17,6 +18,8 @@ class _ChatMessageRow extends StatelessWidget {
     required this.onActionTap,
     required this.isSpeaking,
     required this.onTtsTap,
+    required this.isExpanded,
+    required this.onToggleExpand,
   });
 
   final ChatMessage message;
@@ -30,10 +33,17 @@ class _ChatMessageRow extends StatelessWidget {
   final bool isSpeaking;
   final Function(ChatMessage, String) onTtsTap;
 
+  /// Whether this AI reply is currently expanded past the "Read more" fold.
+  /// Held by the parent (keyed by message id) so it survives list recycling.
+  final bool isExpanded;
+  final VoidCallback onToggleExpand;
+
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     final maxW = MediaQuery.of(context).size.width * 0.78;
+    // AI replies get a touch more width for comfortable long-form reading.
+    final aiMaxW = MediaQuery.of(context).size.width * 0.84;
     final isDark = theme.brightness == Brightness.dark;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final timeText = DateFormat.Hm().format(message.timestamp);
@@ -63,7 +73,7 @@ class _ChatMessageRow extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.18),
                       blurRadius: 14,
                       offset: const Offset(0, 5),
                     ),
@@ -116,13 +126,13 @@ class _ChatMessageRow extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 12,
+                    vertical: 14,
                   ),
-                  constraints: BoxConstraints(maxWidth: maxW),
+                  constraints: BoxConstraints(maxWidth: aiMaxW),
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.white.withValues(alpha: 0.78),
+                        : Colors.white.withValues(alpha: 0.80),
                     borderRadius: BorderRadiusDirectional.only(
                       topStart: Radius.circular(showAvatar ? 6 : 20),
                       topEnd: const Radius.circular(20),
@@ -137,20 +147,25 @@ class _ChatMessageRow extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(
-                          alpha: isDark ? 0.18 : 0.04,
+                          alpha: isDark ? 0.14 : 0.03,
                         ),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: SelectableText(
-                    cleanText.isNotEmpty ? cleanText : message.text,
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      height: 1.55,
-                      fontSize: 16.0,
+                  child: _CollapsibleAiText(
+                    span: _LuneMarkdown.build(
+                      cleanText.isNotEmpty ? cleanText : message.text,
+                      TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        height: 1.68,
+                        fontSize: 16.5,
+                      ),
                     ),
+                    isArabic: isArabic,
+                    expanded: isExpanded,
+                    onToggle: onToggleExpand,
                   ),
                 ),
                 if (suggestedActions.isNotEmpty)
@@ -212,7 +227,7 @@ class _ChatMessageRow extends StatelessWidget {
                               ? [
                                   BoxShadow(
                                     color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.25,
+                                      alpha: 0.18,
                                     ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
@@ -249,7 +264,41 @@ class _ChatMessageRow extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
+                    // ── Copy button ───────────────────────────────────────
+                    GestureDetector(
+                      onTap: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final text = cleanText.isNotEmpty
+                            ? cleanText
+                            : message.text;
+                        await Clipboard.setData(ClipboardData(text: text));
+                        HapticFeedback.selectionClick();
+                        messenger.showSnackBar(
+                          SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                            content: Text(
+                              isArabic ? 'تم نسخ الرد' : 'Response copied',
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 5,
+                        ),
+                        child: Icon(
+                          Icons.copy_rounded,
+                          size: 15,
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
                     // ── Report button ─────────────────────────────────────
                     GestureDetector(
                       onTap: () => _showAiReportDialog(
@@ -263,7 +312,7 @@ class _ChatMessageRow extends StatelessWidget {
                         ),
                         child: Icon(
                           Icons.flag_outlined,
-                          size: 15,
+                          size: 14,
                           color: theme.colorScheme.outline.withValues(
                             alpha: 0.5,
                           ),
@@ -410,7 +459,7 @@ class _LuneAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: meta.gradient.first.withValues(alpha: 0.35),
+            color: meta.gradient.first.withValues(alpha: 0.24),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -448,7 +497,7 @@ class _AiActionChips extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -457,7 +506,7 @@ class _AiActionChips extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, size: 13, color: Colors.white),
+                  Icon(icon, size: 12, color: Colors.white),
                   const SizedBox(width: 6),
                   Text(
                     label,
@@ -502,5 +551,235 @@ class _AiActionChips extends StatelessWidget {
         a.label ?? l10n.aiActionOpenInsights,
       ),
     };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Collapsible AI reply text — ChatGPT/Claude-style comfortable reading.
+//
+// Long replies fold to [_collapsedLines] lines behind a "Read more" toggle
+// that expands with a smooth height animation and a soft fade at the fold.
+// Short replies render untouched.
+//
+// This widget is CONTROLLED: the expanded flag is owned by the parent (keyed
+// by message id), so scrolling the list never recycles a stale expand state
+// onto the wrong message and the text never "jumps open" on its own. Pure UI:
+// no message data, logic, or API is altered here.
+// ---------------------------------------------------------------------------
+class _CollapsibleAiText extends StatelessWidget {
+  const _CollapsibleAiText({
+    required this.span,
+    required this.isArabic,
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  /// Pre-built rich span for the reply (bold / bullets already applied).
+  final TextSpan span;
+  final bool isArabic;
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  /// Lines shown once a reply is folded behind "Read more".
+  static const _collapsedLines = 6;
+
+  /// Only fold when the reply is meaningfully longer than the fold — replies
+  /// up to this many lines render in full. Keeping this above [_collapsedLines]
+  /// avoids the awkward case of hiding just a line or two behind the toggle.
+  static const _foldThreshold = 9;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textDirection = Directionality.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.of(context).size.width * 0.84;
+
+        // Measure — at the exact render width — whether the reply exceeds the
+        // fold threshold. Uses the same span the SelectableText renders, so the
+        // decision is pixel-accurate.
+        final painter = TextPainter(
+          text: span,
+          textDirection: textDirection,
+          maxLines: _foldThreshold,
+        )..layout(maxWidth: maxWidth);
+        final overflows = painter.didExceedMaxLines;
+
+        final content = SelectableText.rich(
+          span,
+          maxLines: (!overflows || expanded) ? null : _collapsedLines,
+        );
+
+        // Short reply: render as-is, no toggle.
+        if (!overflows) return content;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSize(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? content
+                  : ShaderMask(
+                      shaderCallback: (bounds) {
+                        // Fade only the last ~28px so the fold reads as
+                        // "there's more", not a hard cut.
+                        final h = bounds.height;
+                        final stop = h <= 44 ? 0.55 : (h - 28) / h;
+                        return LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: const [
+                            Colors.white,
+                            Colors.white,
+                            Colors.transparent,
+                          ],
+                          stops: [0.0, stop.clamp(0.0, 1.0), 1.0],
+                        ).createShader(bounds);
+                      },
+                      blendMode: BlendMode.dstIn,
+                      child: content,
+                    ),
+            ),
+            _ReadMoreButton(
+              expanded: expanded,
+              isArabic: isArabic,
+              color: theme.colorScheme.primary,
+              onTap: onToggle,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReadMoreButton extends StatelessWidget {
+  const _ReadMoreButton({
+    required this.expanded,
+    required this.isArabic,
+    required this.color,
+    required this.onTap,
+  });
+
+  final bool expanded;
+  final bool isArabic;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = expanded
+        ? (isArabic ? 'عرض أقل' : 'Show less')
+        : (isArabic ? 'قراءة المزيد' : 'Read more');
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        // Generous hit area (≥40px tall) for comfortable tapping on mobile.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 40),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  expanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  size: 18,
+                  color: color,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lightweight inline markdown → rich text.
+//
+// Lune replies are prose-first but occasionally use **bold** for emphasis,
+// `#` headings, and `-`/`*` bullet lines. We render those as real formatting
+// (no external package, no dependency changes) instead of leaking raw
+// asterisks to the reader. Every leaf carries an explicit style so the span is
+// measured and rendered identically. Purely presentational — the underlying
+// message text is never modified.
+// ---------------------------------------------------------------------------
+class _LuneMarkdown {
+  _LuneMarkdown._();
+
+  static final _bold = RegExp(r'\*\*(.+?)\*\*|__(.+?)__');
+  static final _heading = RegExp(r'^\s{0,3}#{1,6}\s+');
+  static final _bullet = RegExp(r'^(\s*)[-*•]\s+');
+
+  static TextSpan build(String text, TextStyle base) {
+    final lines = text.split('\n');
+    final children = <InlineSpan>[];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var lineStyle = base;
+
+      // Heading marker → bold line, drop the leading hashes.
+      if (_heading.hasMatch(line)) {
+        line = line.replaceFirst(_heading, '');
+        lineStyle = base.copyWith(fontWeight: FontWeight.w700);
+      }
+
+      // Bullet marker → normalise to a real bullet glyph.
+      final bullet = _bullet.firstMatch(line);
+      if (bullet != null) {
+        final indent = bullet.group(1) ?? '';
+        line = '$indent•  ${line.substring(bullet.end)}';
+      }
+
+      children.addAll(_inline(line, lineStyle));
+      if (i != lines.length - 1) {
+        children.add(TextSpan(text: '\n', style: base));
+      }
+    }
+    return TextSpan(style: base, children: children);
+  }
+
+  static List<InlineSpan> _inline(String line, TextStyle lineStyle) {
+    final spans = <InlineSpan>[];
+    var last = 0;
+    for (final m in _bold.allMatches(line)) {
+      if (m.start > last) {
+        spans.add(TextSpan(text: line.substring(last, m.start), style: lineStyle));
+      }
+      final content = m.group(1) ?? m.group(2) ?? '';
+      spans.add(TextSpan(
+        text: content,
+        style: lineStyle.copyWith(fontWeight: FontWeight.w700),
+      ));
+      last = m.end;
+    }
+    if (last < line.length) {
+      spans.add(TextSpan(text: line.substring(last), style: lineStyle));
+    }
+    if (spans.isEmpty) spans.add(TextSpan(text: '', style: lineStyle));
+    return spans;
   }
 }

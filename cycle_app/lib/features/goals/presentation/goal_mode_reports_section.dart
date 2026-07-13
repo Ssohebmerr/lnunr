@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
+import '../data/condition_report_exporter.dart';
 import '../data/goal_mode_analytics.dart';
 import '../data/goal_mode_content.dart';
 import '../../home/widgets/reports_ui.dart';
+import 'condition_trends_section.dart';
 
 /// Goal-first reports — banner, readable metrics, insight card.
 class GoalModeReportsSection extends StatelessWidget {
@@ -32,6 +36,21 @@ class GoalModeReportsSection extends StatelessWidget {
         AppSectionHeader(title: _titleForGoal(goal, l10n)),
         _metricsForGoal(context, goal, l10n, theme),
         const SizedBox(height: 12),
+        // Life-stage goals get their logged-history trends (hot flashes,
+        // mood, symptom frequency) — the data captured on Home — plus a
+        // shareable PDF summary to bring to a doctor's appointment.
+        if (goal == UserGoalTypes.menopause ||
+            goal == UserGoalTypes.pcos ||
+            goal == UserGoalTypes.postpartum) ...[
+          ConditionTrendsSection(goal: goal),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => _exportConditionReport(context),
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+            label: Text(l10n.conditionDoctorReportCta),
+          ),
+          const SizedBox(height: 12),
+        ],
         ReportsExpansionPanel(
           icon: Icons.checklist_rounded,
           title: l10n.goalModeChecklist,
@@ -67,6 +86,44 @@ class GoalModeReportsSection extends StatelessWidget {
     );
   }
 
+  /// Generates the condition PDF and opens the system share sheet, mirroring
+  /// the general doctor-report export flow.
+  Future<void> _exportConditionReport(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.showSnackBar(SnackBar(content: Text(l10n.doctorReportExporting)));
+
+    try {
+      final now = DateTime.now();
+      final file = await ConditionReportExporter.exportPdf(
+        l10n: l10n,
+        goal: goal,
+        data: data,
+        lang: locale.languageCode,
+        rtl: locale.languageCode == 'ar',
+        exportedAt: now,
+        exportedDateLabel: DateFormat.yMMMMd(locale.toString()).format(now),
+      );
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: l10n.conditionReportTitle,
+        ),
+      );
+
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.doctorReportExportShared)),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.doctorReportExportFailed)),
+      );
+    }
+  }
+
   Widget _metricsForGoal(
     BuildContext context,
     UserGoalTypes goal,
@@ -79,7 +136,7 @@ class GoalModeReportsSection extends StatelessWidget {
           ReportsMetricTile(
             icon: Icons.favorite_rounded,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.ovulationDisplay,
             accent: theme.colorScheme.secondary,
           ),
           ReportsMetricTile(
@@ -117,13 +174,13 @@ class GoalModeReportsSection extends StatelessWidget {
           ReportsMetricTile(
             icon: Icons.favorite_outline,
             label: l10n.homeOvulation,
-            value: data.ovulation,
+            value: data.ovulationDisplay,
             accent: theme.colorScheme.secondary,
           ),
           ReportsMetricTile(
             icon: Icons.event_outlined,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: data.periodDisplay,
             accent: theme.colorScheme.primary,
           ),
           ReportsMetricTile(
@@ -187,7 +244,7 @@ class GoalModeReportsSection extends StatelessWidget {
           ReportsMetricTile(
             icon: Icons.event_outlined,
             label: l10n.nextPeriod,
-            value: data.nextPeriod,
+            value: data.periodDisplay,
             accent: theme.colorScheme.primary,
           ),
           ReportsMetricTile(
@@ -245,7 +302,7 @@ class GoalModeReportsSection extends StatelessWidget {
           ReportsMetricTile(
             icon: Icons.event_outlined,
             label: l10n.nextPeriod,
-            value: periodReturned ? data.nextPeriod : '—',
+            value: periodReturned ? data.periodDisplay : '—',
             accent: theme.colorScheme.primary,
           ),
           ReportsMetricTile(

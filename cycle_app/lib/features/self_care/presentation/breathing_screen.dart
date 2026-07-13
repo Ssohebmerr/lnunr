@@ -116,7 +116,7 @@ class _BreathingScreenState extends State<BreathingScreen> {
                   children: [
                     for (final p in BreathingPatterns.all)
                       Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsetsDirectional.only(end: 8),
                         child: _PatternChip(
                           label: p.name(lang),
                           selected: p.key == _pattern.key,
@@ -159,9 +159,9 @@ class _BreathingScreenState extends State<BreathingScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: _pattern.color.withValues(alpha: 0.35),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
+                            color: _pattern.color.withValues(alpha: 0.22),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),

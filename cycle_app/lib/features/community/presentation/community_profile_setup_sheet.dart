@@ -23,15 +23,21 @@ class CommunityProfileSetupSheet extends StatefulWidget {
   final int? initialBirthYear;
   final int initialAvatarIndex;
   final String? initialPhotoUrl;
-  final Future<void> Function(String alias, int birthYear, int avatarIndex, String? photoUrl)
-      onSaved;
+  final Future<void> Function(
+    String alias,
+    int birthYear,
+    int avatarIndex,
+    String? photoUrl,
+  )
+  onSaved;
 
   @override
   State<CommunityProfileSetupSheet> createState() =>
       _CommunityProfileSetupSheetState();
 }
 
-class _CommunityProfileSetupSheetState extends State<CommunityProfileSetupSheet> {
+class _CommunityProfileSetupSheetState
+    extends State<CommunityProfileSetupSheet> {
   late final TextEditingController _aliasController;
   final _media = MediaUploadService();
   int? _birthYear;
@@ -139,44 +145,44 @@ class _CommunityProfileSetupSheetState extends State<CommunityProfileSetupSheet>
             ),
           ],
           if (!onlyYear) ...[
-          const SizedBox(height: 16),
-          Center(
-            child: AppAvatar(
-              radius: 40,
-              avatarIndex: _avatarIndex,
-              networkUrl: _photoUrl,
+            const SizedBox(height: 16),
+            Center(
+              child: AppAvatar(
+                radius: 40,
+                avatarIndex: _avatarIndex,
+                networkUrl: _photoUrl,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(l10n.avatarPickTitle, style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
-          AvatarPickerRow(
-            selectedIndex: _avatarIndex,
-            onSelected: (i) => setState(() => _avatarIndex = i),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _uploading ? null : _pickPhoto,
-            icon: _uploading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.photo_camera_outlined),
-            label: Text(l10n.avatarUsePhoto),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _aliasController,
-            decoration: InputDecoration(
-              labelText: l10n.communityAliasLabel,
-              hintText: l10n.communityAliasHint,
-              errorText: _error,
-              prefixIcon: const Icon(Icons.badge_outlined),
+            const SizedBox(height: 12),
+            Text(l10n.avatarPickTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            AvatarPickerRow(
+              selectedIndex: _avatarIndex,
+              onSelected: (i) => setState(() => _avatarIndex = i),
             ),
-            textInputAction: TextInputAction.done,
-          ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _uploading ? null : _pickPhoto,
+              icon: _uploading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.photo_camera_outlined),
+              label: Text(l10n.avatarUsePhoto),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _aliasController,
+              decoration: InputDecoration(
+                labelText: l10n.communityAliasLabel,
+                hintText: l10n.communityAliasHint,
+                errorText: _error,
+                prefixIcon: const Icon(Icons.badge_outlined),
+              ),
+              textInputAction: TextInputAction.done,
+            ),
           ],
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
@@ -204,7 +210,10 @@ class _CommunityProfileSetupSheetState extends State<CommunityProfileSetupSheet>
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : Text(l10n.continueBtn),
           ),

@@ -95,13 +95,13 @@ class _AdminScreenState extends State<AdminScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: AuraDecorations.primaryGradient,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.16),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),

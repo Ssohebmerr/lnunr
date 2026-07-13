@@ -686,6 +686,120 @@ abstract class AppLocalizations {
   /// **'{done} of {total} done today'**
   String conditionRitualsDoneToday(int done, int total);
 
+  /// No description provided for @conditionTrendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trends'**
+  String get conditionTrendsTitle;
+
+  /// No description provided for @conditionTrendsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet — track your symptoms and rituals from the Home screen and your trends will appear here.'**
+  String get conditionTrendsEmpty;
+
+  /// No description provided for @conditionTrendLast14Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 14 days'**
+  String get conditionTrendLast14Days;
+
+  /// No description provided for @conditionTrendLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get conditionTrendLast30Days;
+
+  /// No description provided for @conditionTrendLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get conditionTrendLast7Days;
+
+  /// No description provided for @conditionTrendToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get conditionTrendToday;
+
+  /// No description provided for @conditionTrendHotFlashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot flashes'**
+  String get conditionTrendHotFlashes;
+
+  /// No description provided for @conditionTrendMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood check-ins'**
+  String get conditionTrendMood;
+
+  /// No description provided for @conditionTrendSymptomsPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Symptoms per day'**
+  String get conditionTrendSymptomsPerDay;
+
+  /// No description provided for @conditionTopSymptoms.
+  ///
+  /// In en, this message translates to:
+  /// **'Most frequent symptoms'**
+  String get conditionTopSymptoms;
+
+  /// No description provided for @conditionDaysLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Days logged'**
+  String get conditionDaysLogged;
+
+  /// No description provided for @conditionRitualCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Rituals done'**
+  String get conditionRitualCompletion;
+
+  /// No description provided for @conditionDoctorReportCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor report (PDF)'**
+  String get conditionDoctorReportCta;
+
+  /// No description provided for @conditionReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor summary report'**
+  String get conditionReportTitle;
+
+  /// No description provided for @conditionReportOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get conditionReportOverview;
+
+  /// No description provided for @conditionReportGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Health focus'**
+  String get conditionReportGoalLabel;
+
+  /// No description provided for @conditionReportConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking consistency'**
+  String get conditionReportConsistency;
+
+  /// No description provided for @conditionReportNoLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No daily logs in the last 30 days — track symptoms from the Home screen to enrich this report.'**
+  String get conditionReportNoLogs;
+
+  /// No description provided for @conditionReportTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}×'**
+  String conditionReportTimes(int count);
+
   /// No description provided for @conditionStreakDays.
   ///
   /// In en, this message translates to:
@@ -2717,7 +2831,7 @@ abstract class AppLocalizations {
   /// No description provided for @doctorReportLimitedData.
   ///
   /// In en, this message translates to:
-  /// **'This report is based on limited data. After about one month of logging, predictions and patterns become much more accurate.'**
+  /// **'This report is based on limited data. Logging several completed cycle starts enables personal accuracy measurement and a better prediction window.'**
   String get doctorReportLimitedData;
 
   /// No description provided for @doctorReportAiTitle.
@@ -5033,25 +5147,25 @@ abstract class AppLocalizations {
   /// No description provided for @goalModeFertilityToday.
   ///
   /// In en, this message translates to:
-  /// **'Fertility today'**
+  /// **'Fertility estimate today'**
   String get goalModeFertilityToday;
 
   /// No description provided for @goalModeFertilityHigh.
   ///
   /// In en, this message translates to:
-  /// **'High'**
+  /// **'Estimated high'**
   String get goalModeFertilityHigh;
 
   /// No description provided for @goalModeFertilityModerate.
   ///
   /// In en, this message translates to:
-  /// **'Moderate'**
+  /// **'Estimated moderate'**
   String get goalModeFertilityModerate;
 
   /// No description provided for @goalModeFertilityLow.
   ///
   /// In en, this message translates to:
-  /// **'Low'**
+  /// **'Estimated lower'**
   String get goalModeFertilityLow;
 
   /// No description provided for @goalModeFertilityUnknown.
@@ -5069,7 +5183,7 @@ abstract class AppLocalizations {
   /// No description provided for @goalModeOvulationToday.
   ///
   /// In en, this message translates to:
-  /// **'Ovulation day today'**
+  /// **'Estimated ovulation window today'**
   String get goalModeOvulationToday;
 
   /// No description provided for @goalModeConceiveSelfCare.
@@ -5888,6 +6002,84 @@ abstract class AppLocalizations {
   /// **'{alias} replied to your comment'**
   String communityActivityReply(String alias);
 
+  /// No description provided for @communityActivityFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'{alias} started following you'**
+  String communityActivityFollow(String alias);
+
+  /// No description provided for @communityActivityMention.
+  ///
+  /// In en, this message translates to:
+  /// **'{alias} mentioned you in a comment'**
+  String communityActivityMention(String alias);
+
+  /// No description provided for @communityFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get communityFollow;
+
+  /// No description provided for @communityFollowingBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get communityFollowingBtn;
+
+  /// No description provided for @communityUnfollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfollow'**
+  String get communityUnfollow;
+
+  /// No description provided for @communityUnfollowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfollowed'**
+  String get communityUnfollowed;
+
+  /// No description provided for @communityFollowedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now following {alias}'**
+  String communityFollowedToast(String alias);
+
+  /// No description provided for @communityFollowingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get communityFollowingTitle;
+
+  /// No description provided for @communityFollowingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Members you follow'**
+  String get communityFollowingSubtitle;
+
+  /// No description provided for @communityFollowingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You aren\'t following anyone yet. Tap a member\'s name on a post to follow them.'**
+  String get communityFollowingEmpty;
+
+  /// No description provided for @communityCommentSortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get communityCommentSortOldest;
+
+  /// No description provided for @communityCommentSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get communityCommentSortNewest;
+
+  /// No description provided for @communityCommentSortTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Most liked'**
+  String get communityCommentSortTop;
+
   /// No description provided for @communityMarkAllRead.
   ///
   /// In en, this message translates to:
@@ -5899,6 +6091,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Newest'**
   String get communitySortNewest;
+
+  /// No description provided for @communityFeedPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get communityFeedPopular;
+
+  /// No description provided for @communityFeedMyComments.
+  ///
+  /// In en, this message translates to:
+  /// **'My comments'**
+  String get communityFeedMyComments;
 
   /// No description provided for @communitySortDiscussed.
   ///
@@ -7225,6 +7429,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Best guess: {date}'**
   String predictionCenterDate(String date);
+
+  /// No description provided for @predictionConfidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Prediction confidence'**
+  String get predictionConfidenceLabel;
+
+  /// No description provided for @predictionConfidenceLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Still learning'**
+  String get predictionConfidenceLearning;
+
+  /// No description provided for @predictionConfidenceModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get predictionConfidenceModerate;
+
+  /// No description provided for @predictionConfidenceStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get predictionConfidenceStrong;
+
+  /// No description provided for @predictionAccuracyPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Within 2 days for {within} of your last {total} testable cycles'**
+  String predictionAccuracyPersonal(int within, int total);
+
+  /// No description provided for @predictionAccuracyLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 4 cycles to see your personal accuracy'**
+  String get predictionAccuracyLearning;
+
+  /// No description provided for @predictionWindowActive.
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently inside the expected period window'**
+  String get predictionWindowActive;
+
+  /// No description provided for @periodPredictionLate.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days past the end of your expected window'**
+  String periodPredictionLate(int days);
+
+  /// No description provided for @predictionPossibleMissingLog.
+  ///
+  /// In en, this message translates to:
+  /// **'This may be a longer cycle, or a period log may be missing. Review your calendar before relying on the next estimate.'**
+  String get predictionPossibleMissingLog;
+
+  /// No description provided for @predictionEvidenceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal range based on your history — an estimate, not a medical guarantee'**
+  String get predictionEvidenceNote;
+
+  /// No description provided for @ovulationEstimateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Current-cycle estimate — do not use it alone for contraception'**
+  String get ovulationEstimateHint;
 
   /// No description provided for @ageGateTitle.
   ///

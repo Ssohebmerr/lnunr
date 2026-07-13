@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BlockedUser {
-  const BlockedUser({
-    required this.uid,
-    this.authorAlias,
-    this.blockedAt,
-  });
+  const BlockedUser({required this.uid, this.authorAlias, this.blockedAt});
 
   final String uid;
   final String? authorAlias;

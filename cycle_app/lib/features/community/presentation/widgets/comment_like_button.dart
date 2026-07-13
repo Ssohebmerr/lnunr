@@ -32,8 +32,9 @@ class CommentLikeButton extends StatelessWidget {
       builder: (context, snap) {
         final count = snap.data?.count ?? 0;
         final liked = snap.data?.liked ?? false;
-        final color =
-            liked ? AuraColors.rose : theme.colorScheme.onSurfaceVariant;
+        final color = liked
+            ? AuraColors.rose
+            : theme.colorScheme.onSurfaceVariant;
 
         return InkWell(
           onTap: () {

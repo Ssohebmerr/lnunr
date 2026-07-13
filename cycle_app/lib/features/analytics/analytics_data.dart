@@ -129,12 +129,32 @@ class AnalyticsData {
   }
 
   static const List<String> _monthsAr = [
-    'ينا', 'فبر', 'مار', 'أبر', 'ماي', 'يون',
-    'يول', 'أغس', 'سبت', 'أكت', 'نوف', 'ديس',
+    'ينا',
+    'فبر',
+    'مار',
+    'أبر',
+    'ماي',
+    'يون',
+    'يول',
+    'أغس',
+    'سبت',
+    'أكت',
+    'نوف',
+    'ديس',
   ];
   static const List<String> _monthsEn = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   /// Short month label (1..12) for chart axes.
@@ -181,9 +201,8 @@ class AnalyticsData {
     if (lengths.length >= 2) {
       final mean = lengths.reduce((a, b) => a + b) / lengths.length;
       if (mean <= 0) return 0;
-      final variance = lengths
-              .map((l) => (l - mean) * (l - mean))
-              .reduce((a, b) => a + b) /
+      final variance =
+          lengths.map((l) => (l - mean) * (l - mean)).reduce((a, b) => a + b) /
           lengths.length;
       return (math.sqrt(variance) / mean) * 100;
     }
@@ -240,6 +259,29 @@ class AnalyticsData {
     return 55;
   }
 
+  /// Real-first wellness scores: when the user has actually logged feelings,
+  /// energy words, or sleep windows in the last 60 days (see
+  /// [AnalyticsHistory.wellness]), those drive the tiles; otherwise the
+  /// cycle-phase estimates above remain as the fallback.
+  static double moodScore(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) => history?.wellness?.mood ?? moodScoreFromCycle(data);
+
+  static double energyScore(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) => history?.wellness?.energy ?? energyScoreFromCycle(data);
+
+  static double sleepScore(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) => history?.wellness?.sleep ?? sleepQualityFromCycle(data);
+
+  /// Whether any real wellness dimension was logged in the window.
+  static bool hasRealWellness(AnalyticsHistory? history) =>
+      history?.wellness?.isEmpty == false;
+
   /// Pregnancy progress 0..100, with trim breakdown.
   static double pregnancyProgress(int week) {
     final w = week.clamp(0, 42);
@@ -284,17 +326,17 @@ class AnalyticsData {
       case UserGoalTypes.sexual:
         return _generalMetrics(data, history);
       case UserGoalTypes.conceive:
-        return _conceiveMetrics(data);
+        return _conceiveMetrics(data, history);
       case UserGoalTypes.avoid:
-        return _avoidMetrics(data);
+        return _avoidMetrics(data, history);
       case UserGoalTypes.pregnant:
-        return _pregnancyMetrics(data);
+        return _pregnancyMetrics(data, history);
       case UserGoalTypes.menopause:
         return _menopauseMetrics(data, history);
       case UserGoalTypes.pcos:
         return _pcosMetrics(data, history);
       case UserGoalTypes.postpartum:
-        return _postpartumMetrics(data);
+        return _postpartumMetrics(data, history);
     }
   }
 
@@ -308,7 +350,7 @@ class AnalyticsData {
     switch (goal) {
       case UserGoalTypes.general:
       case UserGoalTypes.sexual:
-        return _generalScores(data);
+        return _generalScores(data, history);
       case UserGoalTypes.conceive:
         return _conceiveScores(data);
       case UserGoalTypes.avoid:
@@ -316,11 +358,11 @@ class AnalyticsData {
       case UserGoalTypes.pregnant:
         return _pregnancyScores(data);
       case UserGoalTypes.menopause:
-        return _menopauseScores(data);
+        return _menopauseScores(data, history);
       case UserGoalTypes.pcos:
         return _pcosScores(data, history);
       case UserGoalTypes.postpartum:
-        return _postpartumScores(data);
+        return _postpartumScores(data, history);
     }
   }
 
@@ -331,8 +373,11 @@ class AnalyticsData {
     CycleDashboardData data, [
     AnalyticsHistory? history,
   ]) {
-    final variation =
-        realCycleVariation(history, data.avgCycleLength, data.cycleDay);
+    final variation = realCycleVariation(
+      history,
+      data.avgCycleLength,
+      data.cycleDay,
+    );
     return [
       AnalyticsMetric(
         id: 'cycle_day',
@@ -397,14 +442,14 @@ class AnalyticsData {
         status: variation < 10
             ? 'good'
             : variation < 20
-                ? 'warning'
-                : 'bad',
+            ? 'warning'
+            : 'bad',
       ),
       AnalyticsMetric(
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
       ),
@@ -412,7 +457,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
       ),
@@ -420,7 +465,7 @@ class AnalyticsData {
         id: 'sleep',
         labelAr: 'النوم',
         labelEn: 'Sleep',
-        value: sleepQualityFromCycle(data),
+        value: sleepScore(data, history),
         suffix: '%',
         icon: Icons.bedtime_outlined,
       ),
@@ -436,13 +481,16 @@ class AnalyticsData {
         id: 'ovulation',
         labelAr: 'الإباضة',
         labelEn: 'Ovulation',
-        value: data.ovulation.isEmpty ? '—' : data.ovulation,
+        value: data.ovulation.isEmpty ? '—' : data.ovulationDisplay,
         icon: Icons.favorite_outline,
       ),
     ];
   }
 
-  static List<AnalyticsScoreCard> _generalScores(CycleDashboardData data) {
+  static List<AnalyticsScoreCard> _generalScores(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsScoreCard(
         id: 'cycle_health',
@@ -458,6 +506,19 @@ class AnalyticsData {
             : 'Try logging daily to improve prediction accuracy.',
       ),
       AnalyticsScoreCard(
+        id: 'prediction_evidence',
+        titleAr: 'ثقة التنبؤ الشخصية',
+        titleEn: 'Personal prediction confidence',
+        score: data.predictionConfidenceScore * 100,
+        band: regularityBand(data.predictionConfidenceScore * 100),
+        descriptionAr: data.predictionAccuracy.hasPersonalEvidence
+            ? 'أصاب ضمن يومين في ${data.predictionAccuracy.withinTwoDays} من آخر ${data.predictionAccuracy.evaluatedCycles} دورات قابلة للاختبار.'
+            : 'نحتاج 4 دورات مكتملة لقياس الدقة الشخصية بصدق.',
+        descriptionEn: data.predictionAccuracy.hasPersonalEvidence
+            ? 'Within 2 days for ${data.predictionAccuracy.withinTwoDays} of the last ${data.predictionAccuracy.evaluatedCycles} testable cycles.'
+            : 'Complete 4 cycles to measure personal accuracy honestly.',
+      ),
+      AnalyticsScoreCard(
         id: 'tracking_streak',
         titleAr: 'الالتزام بالتسجيل',
         titleEn: 'Tracking consistency',
@@ -465,8 +526,8 @@ class AnalyticsData {
         band: data.totalCycles >= 4
             ? MetricBand.excellent
             : data.totalCycles >= 2
-                ? MetricBand.good
-                : MetricBand.fair,
+            ? MetricBand.good
+            : MetricBand.fair,
         descriptionAr: data.totalCycles >= 4
             ? 'تسجيل متواصل — أنتِ تقدري تلاحظي أنماط واضحة.'
             : 'استمري بالتسجيل لرؤية أنماط أعمق.',
@@ -478,18 +539,23 @@ class AnalyticsData {
         id: 'wellness',
         titleAr: 'الرفاهية العامة',
         titleEn: 'Overall wellness',
-        score: (moodScoreFromCycle(data) +
-                energyScoreFromCycle(data) +
-                sleepQualityFromCycle(data)) /
+        score:
+            (moodScore(data, history) +
+                energyScore(data, history) +
+                sleepScore(data, history)) /
             3,
         band: regularityBand(
-          (moodScoreFromCycle(data) +
-                  energyScoreFromCycle(data) +
-                  sleepQualityFromCycle(data)) /
+          (moodScore(data, history) +
+                  energyScore(data, history) +
+                  sleepScore(data, history)) /
               3,
         ),
-        descriptionAr: 'متوسط مزاجكِ، طاقتكِ، ونومكِ حسب المرحلة الحالية.',
-        descriptionEn: 'Your average mood, energy, and sleep by phase.',
+        descriptionAr: hasRealWellness(history)
+            ? 'متوسط مزاجكِ، طاقتكِ، ونومكِ من تسجيلاتكِ اليومية (آخر 60 يوماً).'
+            : 'تقدير حسب مرحلة الدورة — سجّلي مشاعركِ ونومكِ يومياً لأرقام حقيقية.',
+        descriptionEn: hasRealWellness(history)
+            ? 'Your average mood, energy, and sleep from your daily logs (last 60 days).'
+            : 'Phase-based estimate — log your feelings and sleep daily for real numbers.',
       ),
     ];
   }
@@ -497,20 +563,23 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // CONCEIVE (TTC)
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _conceiveMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _conceiveMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsMetric(
         id: 'pregnancy_chance',
-        labelAr: 'احتمال الحمل اليوم',
-        labelEn: 'Pregnancy chance today',
+        labelAr: 'احتمال الحمل التقديري',
+        labelEn: 'Estimated pregnancy chance',
         value: data.pregnancyChances.isEmpty ? '—' : data.pregnancyChances,
         icon: Icons.child_friendly,
         status: isHighFertility(data) ? 'good' : 'fair',
       ),
       AnalyticsMetric(
         id: 'ovulation_day',
-        labelAr: 'يوم الإباضة',
-        labelEn: 'Ovulation day',
+        labelAr: 'يوم الإباضة المقدّر',
+        labelEn: 'Estimated ovulation day',
         value: data.isOvulationDay ? 'Yes' : 'No',
         icon: Icons.favorite,
         status: data.isOvulationDay ? 'good' : 'fair',
@@ -525,8 +594,8 @@ class AnalyticsData {
       ),
       AnalyticsMetric(
         id: 'high_fertility',
-        labelAr: 'خصوبة عالية',
-        labelEn: 'High fertility',
+        labelAr: 'خصوبة مقدّرة مرتفعة',
+        labelEn: 'Estimated high fertility',
         value: isHighFertility(data) ? 'Yes' : 'No',
         icon: Icons.local_fire_department,
         status: isHighFertility(data) ? 'good' : 'fair',
@@ -568,9 +637,9 @@ class AnalyticsData {
       ),
       AnalyticsMetric(
         id: 'ovulation_date',
-        labelAr: 'تاريخ الإباضة القادم',
-        labelEn: 'Next ovulation',
-        value: data.ovulation.isEmpty ? '—' : data.ovulation,
+        labelAr: 'تاريخ الإباضة المقدّر',
+        labelEn: 'Estimated ovulation',
+        value: data.ovulation.isEmpty ? '—' : data.ovulationDisplay,
         icon: Icons.favorite_outline,
       ),
       AnalyticsMetric(
@@ -584,7 +653,7 @@ class AnalyticsData {
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
       ),
@@ -592,7 +661,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
       ),
@@ -609,11 +678,11 @@ class AnalyticsData {
         score: fert,
         band: regularityBand(fert),
         descriptionAr: isHighFertility(data)
-            ? 'أنتِ في نافذة الخصوبة — أفضل وقت للحمل.'
-            : 'اقتربي من نافذة الخصوبة خلال أيام.',
+            ? 'أنتِ ضمن نافذة خصوبة مقدّرة — أكّديها بإشارات مثل LH أو الحرارة.'
+            : 'قد تقتربين من نافذة الخصوبة المقدّرة خلال أيام.',
         descriptionEn: isHighFertility(data)
-            ? 'You\'re in your fertile window — best time to conceive.'
-            : 'Approaching your fertile window in a few days.',
+            ? 'You are in an estimated fertile window — confirm with signals such as LH or temperature.'
+            : 'You may be approaching your estimated fertile window.',
       ),
       AnalyticsScoreCard(
         id: 'cycle_quality',
@@ -630,12 +699,15 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // AVOID
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _avoidMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _avoidMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsMetric(
         id: 'fertility_today',
-        labelAr: 'الخصوبة اليوم',
-        labelEn: 'Fertility today',
+        labelAr: 'الخصوبة المقدّرة اليوم',
+        labelEn: 'Estimated fertility today',
         value: isHighFertility(data) ? 'High' : 'Low',
         icon: Icons.shield_outlined,
         status: isHighFertility(data) ? 'bad' : 'good',
@@ -650,8 +722,8 @@ class AnalyticsData {
       ),
       AnalyticsMetric(
         id: 'high_fert_days',
-        labelAr: 'أيام خصوبة عالية',
-        labelEn: 'High fertility days',
+        labelAr: 'أيام خصوبة مقدّرة',
+        labelEn: 'Estimated fertile days',
         value: 5,
         suffix: ' d/cycle',
         icon: Icons.warning_amber_rounded,
@@ -661,14 +733,14 @@ class AnalyticsData {
         id: 'ovulation',
         labelAr: 'الإباضة',
         labelEn: 'Ovulation',
-        value: data.ovulation.isEmpty ? '—' : data.ovulation,
+        value: data.ovulation.isEmpty ? '—' : data.ovulationDisplay,
         icon: Icons.favorite_outline,
       ),
       AnalyticsMetric(
         id: 'next_period',
         labelAr: 'الدورة القادمة',
         labelEn: 'Next period',
-        value: data.nextPeriod.isEmpty ? '—' : data.nextPeriod,
+        value: data.nextPeriod.isEmpty ? '—' : data.periodDisplay,
         icon: Icons.event,
       ),
       AnalyticsMetric(
@@ -716,21 +788,24 @@ class AnalyticsData {
         score: data.cycleRegularity,
         band: regularityBand(data.cycleRegularity),
         descriptionAr: isHighFertility(data)
-            ? 'خصوبة عالية — استخدمي حماية إضافية.'
-            : 'خصوبة منخفضة — استمري بالحماية.',
+            ? 'الخصوبة المقدّرة مرتفعة — استخدمي وسيلة منع حمل موثوقة.'
+            : 'لا توجد أيام آمنة مضمونة بالتقويم — استمري بوسيلة موثوقة.',
         descriptionEn: isHighFertility(data)
-            ? 'High fertility — use extra protection.'
-            : 'Low fertility — keep protection on.',
+            ? 'Estimated fertility is high — use reliable contraception.'
+            : 'Calendar estimates do not guarantee safe days — keep using reliable contraception.',
       ),
       AnalyticsScoreCard(
         id: 'cycle_predictability',
         titleAr: 'قابلية التنبؤ بالدورة',
         titleEn: 'Cycle predictability',
-        score: data.cycleRegularity,
-        band: regularityBand(data.cycleRegularity),
-        descriptionAr: 'كلما زاد الانتظام، زادت دقة تتبّع الأيام الآمنة.',
-        descriptionEn:
-            'More regular cycles = more accurate safe-day tracking.',
+        score: data.predictionConfidenceScore * 100,
+        band: regularityBand(data.predictionConfidenceScore * 100),
+        descriptionAr: data.predictionAccuracy.hasPersonalEvidence
+            ? 'ضمن يومين في ${data.predictionAccuracy.withinTwoDays} من ${data.predictionAccuracy.evaluatedCycles} دورات؛ ولا توجد أيام آمنة مضمونة.'
+            : 'الانتظام يحسّن التقدير، لكنه لا يصنع أيامًا آمنة مضمونة.',
+        descriptionEn: data.predictionAccuracy.hasPersonalEvidence
+            ? 'Within 2 days for ${data.predictionAccuracy.withinTwoDays} of ${data.predictionAccuracy.evaluatedCycles} cycles; no calendar day is guaranteed safe.'
+            : 'Regularity improves estimates, but it does not create guaranteed safe days.',
       ),
     ];
   }
@@ -738,7 +813,10 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // PREGNANT
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _pregnancyMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _pregnancyMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     final week = data.pregnancyWeek.clamp(0, 42);
     final trim = trimesterFromWeek(week);
     return [
@@ -798,7 +876,7 @@ class AnalyticsData {
         id: 'sleep',
         labelAr: 'جودة النوم',
         labelEn: 'Sleep quality',
-        value: sleepQualityFromCycle(data),
+        value: sleepScore(data, history),
         suffix: '%',
         icon: Icons.bedtime_outlined,
       ),
@@ -806,7 +884,7 @@ class AnalyticsData {
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
       ),
@@ -814,7 +892,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
       ),
@@ -838,8 +916,10 @@ class AnalyticsData {
         titleEn: 'Pregnancy progress',
         score: pregnancyProgress(week),
         band: regularityBand(pregnancyProgress(week)),
-        descriptionAr: 'الأسبوع $week من 42 — أنتِ في الثلث ${trimesterFromWeek(week)}.',
-        descriptionEn: 'Week $week of 42 — you\'re in trimester ${trimesterFromWeek(week)}.',
+        descriptionAr:
+            'الأسبوع $week من 42 — أنتِ في الثلث ${trimesterFromWeek(week)}.',
+        descriptionEn:
+            'Week $week of 42 — you\'re in trimester ${trimesterFromWeek(week)}.',
       ),
       AnalyticsScoreCard(
         id: 'prenatal_care',
@@ -917,7 +997,7 @@ class AnalyticsData {
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
       ),
@@ -925,7 +1005,7 @@ class AnalyticsData {
         id: 'sleep',
         labelAr: 'جودة النوم',
         labelEn: 'Sleep quality',
-        value: sleepQualityFromCycle(data),
+        value: sleepScore(data, history),
         suffix: '%',
         icon: Icons.bedtime_outlined,
         status: 'warning',
@@ -934,7 +1014,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
       ),
@@ -942,7 +1022,7 @@ class AnalyticsData {
         id: 'next_period',
         labelAr: 'الدورة القادمة',
         labelEn: 'Next period',
-        value: data.nextPeriod.isEmpty ? '—' : data.nextPeriod,
+        value: data.nextPeriod.isEmpty ? '—' : data.periodDisplay,
         icon: Icons.event,
         status: 'warning',
       ),
@@ -956,7 +1036,10 @@ class AnalyticsData {
     ];
   }
 
-  static List<AnalyticsScoreCard> _menopauseScores(CycleDashboardData data) {
+  static List<AnalyticsScoreCard> _menopauseScores(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsScoreCard(
         id: 'transition',
@@ -975,8 +1058,8 @@ class AnalyticsData {
         id: 'sleep_wellness',
         titleAr: 'صحة النوم',
         titleEn: 'Sleep wellness',
-        score: sleepQualityFromCycle(data),
-        band: regularityBand(sleepQualityFromCycle(data)),
+        score: sleepScore(data, history),
+        band: regularityBand(sleepScore(data, history)),
         descriptionAr: 'الهبّات الساخنة والتعرّق الليلي يؤثران على النوم.',
         descriptionEn: 'Hot flashes and night sweats affect sleep.',
       ),
@@ -984,8 +1067,8 @@ class AnalyticsData {
         id: 'mood_wellness',
         titleAr: 'توازن المزاج',
         titleEn: 'Mood balance',
-        score: moodScoreFromCycle(data),
-        band: regularityBand(moodScoreFromCycle(data)),
+        score: moodScore(data, history),
+        band: regularityBand(moodScore(data, history)),
         descriptionAr: 'تقلّبات المزاج طبيعية بسبب التغيّرات الهرمونية.',
         descriptionEn: 'Mood shifts are common with hormonal changes.',
       ),
@@ -1054,7 +1137,7 @@ class AnalyticsData {
         id: 'next_period',
         labelAr: 'الدورة القادمة',
         labelEn: 'Next period',
-        value: data.nextPeriod.isEmpty ? '—' : data.nextPeriod,
+        value: data.nextPeriod.isEmpty ? '—' : data.periodDisplay,
         icon: Icons.event,
         status: 'warning',
       ),
@@ -1062,7 +1145,7 @@ class AnalyticsData {
         id: 'ovulation',
         labelAr: 'الإباضة',
         labelEn: 'Ovulation',
-        value: data.ovulation.isEmpty ? '—' : data.ovulation,
+        value: data.ovulation.isEmpty ? '—' : data.ovulationDisplay,
         icon: Icons.favorite_outline,
         status: 'warning',
       ),
@@ -1070,7 +1153,7 @@ class AnalyticsData {
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
       ),
@@ -1078,7 +1161,7 @@ class AnalyticsData {
         id: 'sleep',
         labelAr: 'النوم',
         labelEn: 'Sleep',
-        value: sleepQualityFromCycle(data),
+        value: sleepScore(data, history),
         suffix: '%',
         icon: Icons.bedtime_outlined,
       ),
@@ -1086,7 +1169,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
       ),
@@ -1099,7 +1182,8 @@ class AnalyticsData {
   ]) {
     final metabolic = math.max(
       0.0,
-      100 - realCycleVariation(history, data.avgCycleLength, data.cycleDay).abs(),
+      100 -
+          realCycleVariation(history, data.avgCycleLength, data.cycleDay).abs(),
     );
     return [
       AnalyticsScoreCard(
@@ -1122,21 +1206,21 @@ class AnalyticsData {
         score: metabolic,
         band: regularityBand(metabolic),
         descriptionAr: 'الألياف، الحركة، والنوم يدعمان توازن الإنسولين.',
-        descriptionEn:
-            'Fiber, movement, and sleep support insulin balance.',
+        descriptionEn: 'Fiber, movement, and sleep support insulin balance.',
       ),
       AnalyticsScoreCard(
         id: 'wellness',
         titleAr: 'الرفاهية العامة',
         titleEn: 'Overall wellness',
-        score: (moodScoreFromCycle(data) +
-                energyScoreFromCycle(data) +
-                sleepQualityFromCycle(data)) /
+        score:
+            (moodScore(data, history) +
+                energyScore(data, history) +
+                sleepScore(data, history)) /
             3,
         band: regularityBand(
-          (moodScoreFromCycle(data) +
-                  energyScoreFromCycle(data) +
-                  sleepQualityFromCycle(data)) /
+          (moodScore(data, history) +
+                  energyScore(data, history) +
+                  sleepScore(data, history)) /
               3,
         ),
         descriptionAr: 'مزاجكِ، طاقتكِ، ونومكِ — كلها عوامل مؤثرة.',
@@ -1148,7 +1232,10 @@ class AnalyticsData {
   // -----------------------------------------------------------------------
   // POSTPARTUM
   // -----------------------------------------------------------------------
-  static List<AnalyticsMetric> _postpartumMetrics(CycleDashboardData data) {
+  static List<AnalyticsMetric> _postpartumMetrics(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     final recovery = recoveryDay(data);
     return [
       AnalyticsMetric(
@@ -1189,7 +1276,7 @@ class AnalyticsData {
         id: 'sleep',
         labelAr: 'جودة النوم',
         labelEn: 'Sleep quality',
-        value: sleepQualityFromCycle(data),
+        value: sleepScore(data, history),
         suffix: '%',
         icon: Icons.bedtime_outlined,
         status: 'warning',
@@ -1198,7 +1285,7 @@ class AnalyticsData {
         id: 'mood',
         labelAr: 'المزاج',
         labelEn: 'Mood',
-        value: moodScoreFromCycle(data),
+        value: moodScore(data, history),
         suffix: '%',
         icon: Icons.mood,
         status: 'warning',
@@ -1207,7 +1294,7 @@ class AnalyticsData {
         id: 'energy',
         labelAr: 'الطاقة',
         labelEn: 'Energy',
-        value: energyScoreFromCycle(data),
+        value: energyScore(data, history),
         suffix: '%',
         icon: Icons.bolt,
         status: 'warning',
@@ -1216,7 +1303,7 @@ class AnalyticsData {
         id: 'next_period',
         labelAr: 'الدورة القادمة',
         labelEn: 'Next period',
-        value: data.nextPeriod.isEmpty ? '—' : data.nextPeriod,
+        value: data.nextPeriod.isEmpty ? '—' : data.periodDisplay,
         icon: Icons.event,
         status: 'warning',
       ),
@@ -1230,7 +1317,10 @@ class AnalyticsData {
     ];
   }
 
-  static List<AnalyticsScoreCard> _postpartumScores(CycleDashboardData data) {
+  static List<AnalyticsScoreCard> _postpartumScores(
+    CycleDashboardData data, [
+    AnalyticsHistory? history,
+  ]) {
     return [
       AnalyticsScoreCard(
         id: 'recovery',
@@ -1245,14 +1335,15 @@ class AnalyticsData {
         id: 'wellness',
         titleAr: 'الرفاهية',
         titleEn: 'Wellness',
-        score: (moodScoreFromCycle(data) +
-                energyScoreFromCycle(data) +
-                sleepQualityFromCycle(data)) /
+        score:
+            (moodScore(data, history) +
+                energyScore(data, history) +
+                sleepScore(data, history)) /
             3,
         band: regularityBand(
-          (moodScoreFromCycle(data) +
-                  energyScoreFromCycle(data) +
-                  sleepQualityFromCycle(data)) /
+          (moodScore(data, history) +
+                  energyScore(data, history) +
+                  sleepScore(data, history)) /
               3,
         ),
         descriptionAr: 'الراحة، الرضاعة، والمزاج — كلها مهمة.',

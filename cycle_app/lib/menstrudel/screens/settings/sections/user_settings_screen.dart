@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/services/user_service.dart';
 import 'package:cycle_aura/menstrudel/widgets/goal_card.dart';
@@ -32,10 +33,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final user = userService.user;
     final birthDate = user?.birthDate;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_profile),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_profile,
       body: ListView(
         padding: const EdgeInsets.all(24.0),
         children: [

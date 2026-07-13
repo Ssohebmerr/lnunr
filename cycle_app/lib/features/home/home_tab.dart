@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:flutter/material.dart';
+import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 import '../../../core/app_home_refresh.dart';
 import '../../../core/cms/app_settings.dart';
@@ -458,6 +459,8 @@ class _HeroHeader extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 8),
+                    _HeroConfidenceChip(data: cycleData, l10n: l10n),
                   ],
                 ] else if (loading)
                   Text(l10n.homeLoadingStats, style: theme.textTheme.bodySmall),
@@ -520,12 +523,55 @@ class _HeroHeader extends StatelessWidget {
           : 'Healing, feeding, mood — every day is progress.';
     }
     if (data.nextPeriod.isNotEmpty && data.nextPeriod != '—') {
-      if (data.predictionWindowDays > 1 && data.nextPeriodRange.isNotEmpty) {
-        return '${l10n.nextPeriod}: ${data.nextPeriodRange}';
+      if (data.possibleMissingLog) {
+        return l10n.predictionPossibleMissingLog;
       }
-      return '${l10n.nextPeriod}: ${data.nextPeriod}';
+      if (data.isPeriodLate) {
+        return l10n.periodPredictionLate(data.daysLate);
+      }
+      return '${l10n.nextPeriod}: ${data.periodDisplay}';
     }
     return l10n.homeCycleDay(data.cycleDay);
+  }
+}
+
+class _HeroConfidenceChip extends StatelessWidget {
+  const _HeroConfidenceChip({required this.data, required this.l10n});
+
+  final CycleDashboardData data;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final (label, color) = switch (data.predictionConfidence) {
+      CyclePredictionConfidence.strong => (
+        l10n.predictionConfidenceStrong,
+        AuraColors.success,
+      ),
+      CyclePredictionConfidence.moderate => (
+        l10n.predictionConfidenceModerate,
+        AuraColors.warning,
+      ),
+      CyclePredictionConfidence.learning => (
+        l10n.predictionConfidenceLearning,
+        theme.colorScheme.outline,
+      ),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.11),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        '${l10n.predictionConfidenceLabel}: $label',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }
 

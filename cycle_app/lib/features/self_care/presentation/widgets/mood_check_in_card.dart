@@ -57,7 +57,7 @@ class MoodCheckInCard extends StatelessWidget {
               children: [
                 for (final mood in SelfCareContent.moods)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsetsDirectional.only(end: 8),
                     child: _MoodChip(
                       mood: mood,
                       lang: lang,

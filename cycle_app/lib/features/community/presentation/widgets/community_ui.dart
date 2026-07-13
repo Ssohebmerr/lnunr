@@ -290,7 +290,7 @@ class _ProfileChip extends StatelessWidget {
                 ),
                 Icon(
                   Icons.edit_outlined,
-                  size: 15,
+                  size: 14,
                   color: theme.colorScheme.outline,
                 ),
               ],
@@ -337,7 +337,7 @@ class _HeaderIconBtn extends StatelessWidget {
         onPressed: onTap,
         visualDensity: VisualDensity.compact,
         padding: EdgeInsets.zero,
-        icon: Icon(icon, size: 19, color: theme.colorScheme.onSurfaceVariant),
+        icon: Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -483,9 +483,8 @@ class CommunityChoiceChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: Ink(
             decoration: BoxDecoration(
-              gradient: selected ? AuraDecorations.primaryGradient : null,
               color: selected
-                  ? null
+                  ? theme.colorScheme.primary
                   : (isDark ? Colors.white : theme.colorScheme.surface)
                         .withValues(alpha: isDark ? 0.06 : 0.85),
               borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -495,15 +494,6 @@ class CommunityChoiceChip extends StatelessWidget {
                     : (isDark ? Colors.white : theme.colorScheme.outline)
                           .withValues(alpha: isDark ? 0.08 : 0.1),
               ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AuraColors.rose.withValues(alpha: 0.25),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
             ),
             padding: EdgeInsets.symmetric(
               horizontal: icon != null ? 12 : 16,
@@ -564,13 +554,6 @@ class CommunitySearchField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.025),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: TextField(
         controller: controller,
@@ -586,7 +569,7 @@ class CommunitySearchField extends StatelessWidget {
               ? AuraColors.darkCard
               : Colors.white.withValues(alpha: 0.94),
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 14, right: 10),
+            padding: const EdgeInsetsDirectional.only(start: 14, end: 10),
             child: Icon(
               Icons.search_rounded,
               size: 20,
@@ -698,40 +681,7 @@ class CommunityEmptyState extends StatelessWidget {
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: AuraDecorations.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AuraColors.rose.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: InkWell(
-                    onTap: onAction,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                      child: Text(
-                        actionLabel!,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),
@@ -773,7 +723,7 @@ class CommunityPostAction extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

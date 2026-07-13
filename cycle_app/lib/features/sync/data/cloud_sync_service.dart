@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 import '../../../core/premium/premium_gate.dart';
-import '../../../core/security/cycle_encryption_keys.dart';
+import 'backup_crypto.dart';
 
 enum CloudBackupResult {
   success,
@@ -16,12 +16,17 @@ enum CloudBackupResult {
 }
 
 class CloudSyncService {
-  CloudSyncService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+  CloudSyncService({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    BackupCrypto? backupCrypto,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _crypto = backupCrypto ?? BackupCrypto();
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final BackupCrypto _crypto;
 
   Future<CloudBackupResult> syncBackup() async {
     if (!await PremiumGate.hasPremium()) {
@@ -36,15 +41,32 @@ class CloudSyncService {
     if (api == null) return CloudBackupResult.cycleStoreUnavailable;
 
     try {
-      final backup = await api.getBackupOfMenstrualCycleData(
-        isEncryptData: true,
-      );
+      // Version 2 (portable): export decrypted, then encrypt with the
+      // account-scoped backup key so the backup survives a device change.
+      // Version 1 (legacy fallback when the key can't be escrowed): payload
+      // encrypted with the device keystore key — same-device restore only.
+      final keyB64 = await _crypto.loadOrCreateKey(user.uid);
+      final Map<String, dynamic> docData;
+      if (keyB64 != null) {
+        final plain = await api.getBackupOfMenstrualCycleData(
+          isEncryptData: false,
+        );
+        docData = {
+          ...BackupCrypto.encryptPayload(keyB64, plain),
+          'version': 2,
+        };
+      } else {
+        final legacy = await api.getBackupOfMenstrualCycleData(
+          isEncryptData: true,
+        );
+        docData = {'data': legacy, 'version': 1};
+      }
+
       final backups =
           _firestore.collection('users').doc(user.uid).collection('backups');
       await backups.add({
-        'data': backup,
+        ...docData,
         'syncedAt': FieldValue.serverTimestamp(),
-        'version': 1,
       });
       await _firestore.collection('users').doc(user.uid).set({
         'lastSyncAt': FieldValue.serverTimestamp(),
@@ -96,13 +118,37 @@ class CloudSyncService {
           .get();
 
       if (snap.docs.isEmpty) return CloudBackupResult.noBackupFound;
-      final data = snap.docs.first.data()['data'];
-      if (data is! Map<String, dynamic>) return CloudBackupResult.failed;
+      final doc = snap.docs.first.data();
 
-      final restored = await api.restoreBackupOfMenstrualCycleData(
-        backupData: data,
-        customerId: CycleEncryptionKeys.localCustomerId,
-      );
+      final bool restored;
+      if (doc['payload'] != null) {
+        // Version 2: decrypt with the account backup key (fetched from the
+        // Firestore escrow when this device has never seen it), then hand
+        // the plaintext to the store, which re-encrypts with THIS device's
+        // key. This is the path that survives device loss/reinstall.
+        final keyB64 = await _crypto.loadKey(user.uid);
+        if (keyB64 == null) return CloudBackupResult.failed;
+        final plain = BackupCrypto.decryptPayload(keyB64, doc);
+        restored = await api.restoreBackupOfMenstrualCycleData(
+          isDecryptData: false,
+          backupData: plain,
+          // Must be the *store* id (getCustomerId() = encrypted). Passing
+          // the plaintext id used to file restored rows under a partition no
+          // query reads, and poisoned the config row so data vanished on
+          // relaunch.
+          customerId: api.getCustomerId(),
+        );
+      } else {
+        // Version 1 legacy: payload encrypted with the ORIGINAL device's
+        // keystore key — only decryptable on that device.
+        final raw = doc['data'];
+        // Firestore may hand nested maps back as Map<Object?, Object?>.
+        if (raw is! Map) return CloudBackupResult.failed;
+        restored = await api.restoreBackupOfMenstrualCycleData(
+          backupData: Map<String, dynamic>.from(raw),
+          customerId: api.getCustomerId(),
+        );
+      }
       return restored ? CloudBackupResult.success : CloudBackupResult.failed;
     } catch (_) {
       return CloudBackupResult.failed;

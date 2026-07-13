@@ -400,7 +400,7 @@ class _ChallengeTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: AuraColors.gold.withValues(alpha: done ? 0.1 : 0.16),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -470,9 +470,9 @@ class _BadgeChip extends StatelessWidget {
               boxShadow: earned
                   ? [
                       BoxShadow(
-                        color: AuraColors.rose.withValues(alpha: 0.35),
-                        blurRadius: 14,
-                        offset: const Offset(0, 5),
+                        color: AuraColors.rose.withValues(alpha: 0.16),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ]
                   : null,

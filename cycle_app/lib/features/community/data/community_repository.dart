@@ -24,6 +24,7 @@ import 'models/post_reactions.dart';
 import 'models/post_type.dart';
 import 'models/community_inbox_item.dart';
 import 'models/blocked_user.dart';
+import 'models/followed_user.dart';
 import 'moderation_result.dart';
 
 class CommunityRepository {
@@ -119,12 +120,11 @@ class CommunityRepository {
   DocumentReference<Map<String, dynamic>> _privateAuthPostRef(
     String communityId,
     String postId,
-  ) =>
-      _firestore
-          .collection('communityPrivateAuth')
-          .doc(communityId)
-          .collection('posts')
-          .doc(postId);
+  ) => _firestore
+      .collection('communityPrivateAuth')
+      .doc(communityId)
+      .collection('posts')
+      .doc(postId);
 
   Future<bool> _userOwnsPost(
     Map<String, dynamic>? data,
@@ -142,11 +142,15 @@ class CommunityRepository {
     return false;
   }
 
-  Future<bool> _postVisibleToViewer(CommunityPost post, String? viewerUid) async {
+  Future<bool> _postVisibleToViewer(
+    CommunityPost post,
+    String? viewerUid,
+  ) async {
     if (!post.isPendingReview || !post.isAnonymous) {
       return post.isVisibleTo(viewerUid);
     }
-    final owned = viewerUid != null &&
+    final owned =
+        viewerUid != null &&
         await _userOwnsPost(
           {'isAnonymous': true},
           post.communityId,
@@ -579,6 +583,26 @@ class CommunityRepository {
     ),
   );
 
+  /// Like totals for a batch of comments (aggregate count queries), used by
+  /// the "most liked" comment sort.
+  Future<Map<String, int>> fetchCommentLikeCounts(
+    String communityId,
+    String postId,
+    List<String> commentIds,
+  ) async {
+    final entries = await Future.wait(
+      commentIds.map((id) async {
+        final agg = await _commentLikesRef(
+          communityId,
+          postId,
+          id,
+        ).count().get();
+        return MapEntry(id, agg.count ?? 0);
+      }),
+    );
+    return Map.fromEntries(entries);
+  }
+
   Future<void> toggleCommentLike({
     required String communityId,
     required String postId,
@@ -672,6 +696,62 @@ class CommunityRepository {
         (s) => s.docs.map((d) => BlockedUser.fromDoc(d.id, d.data())).toList(),
       );
 
+  // ── Following ────────────────────────────────────────────────────────────
+
+  CollectionReference<Map<String, dynamic>> _followingRef(String uid) =>
+      _firestore.collection('users').doc(uid).collection('following');
+
+  Future<void> followUser({
+    required String uid,
+    required String followedUid,
+    String? alias,
+    int avatarIndex = 0,
+  }) async {
+    if (uid == followedUid) return;
+    await _followingRef(uid).doc(followedUid).set({
+      'createdAt': FieldValue.serverTimestamp(),
+      'avatarIndex': avatarIndex,
+      if (alias != null && alias.isNotEmpty) 'alias': alias,
+    });
+  }
+
+  Future<void> unfollowUser({
+    required String uid,
+    required String followedUid,
+  }) async {
+    await _followingRef(uid).doc(followedUid).delete();
+  }
+
+  Stream<bool> watchIsFollowing(String uid, String otherUid) =>
+      _followingRef(uid).doc(otherUid).snapshots().map((d) => d.exists);
+
+  Stream<Set<String>> watchFollowingUids(String uid) => _followingRef(
+    uid,
+  ).snapshots().map((s) => s.docs.map((d) => d.id).toSet());
+
+  Stream<List<FollowedUser>> watchFollowing(String uid) => _followingRef(uid)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (s) => s.docs.map((d) => FollowedUser.fromDoc(d.id, d.data())).toList(),
+      );
+
+  /// Ids of posts the user has commented on, for the "my comments" feed
+  /// filter. Collection-group query constrained to the user's own comments
+  /// (rules require the authorUid filter); post id = comment's grandparent.
+  Stream<Set<String>> watchMyCommentedPostIds(String uid) => _firestore
+      .collectionGroup('comments')
+      .where('authorUid', isEqualTo: uid)
+      .limit(500)
+      .snapshots()
+      .map(
+        (s) => {
+          for (final d in s.docs)
+            if (d.reference.parent.parent != null)
+              d.reference.parent.parent!.id,
+        },
+      );
+
   Stream<List<CommunityPost>> watchPosts(String communityId) {
     final viewerUid = _auth.currentUser?.uid;
     return _postsRef(communityId)
@@ -704,8 +784,9 @@ class CommunityRepository {
     }
 
     final snap = await query.get();
-    final posts =
-        snap.docs.map((d) => CommunityPost.fromMap(d.id, d.data())).toList();
+    final posts = snap.docs
+        .map((d) => CommunityPost.fromMap(d.id, d.data()))
+        .toList();
     return _filterVisiblePosts(posts, viewerUid);
   }
 
@@ -949,10 +1030,7 @@ class CommunityRepository {
     if (user == null) return null;
 
     try {
-      final response = await _functions.post(
-        '/moderate',
-        body: {'text': text},
-      );
+      final response = await _functions.post('/moderate', body: {'text': text});
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ModerationResult(
@@ -1233,6 +1311,7 @@ class CommunityRepository {
     required String text,
     int authorAvatarIndex = 0,
     String? parentCommentId,
+    List<String> mentions = const [],
   }) async {
     await _ensureCanParticipate(uid);
     final member = await isMember(uid, communityId);
@@ -1252,6 +1331,7 @@ class CommunityRepository {
       'text': clean,
       'authorAvatarIndex': authorAvatarIndex,
       'parentCommentId': ?parentCommentId,
+      if (mentions.isNotEmpty) 'mentions': mentions.take(5).toList(),
     });
     return result['pendingReview'] as bool? ?? moderation.pendingReview;
   }

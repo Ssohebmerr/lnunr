@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/models/prefrences/day_of_week_enum.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
@@ -15,10 +16,8 @@ class PreferencesSettingsScreen extends StatelessWidget {
     final languageOptions = L10n.getLanguageOptions(l10n);
     final settingsService = context.watch<SettingsService>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_preferences),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_preferences,
       body: ListView(
         children: [
           ListTile(

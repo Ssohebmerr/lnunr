@@ -239,7 +239,7 @@ class _JournalEntryCardState extends State<_JournalEntryCard> {
           Row(
             children: [
               Icon(Icons.calendar_today_rounded,
-                  size: 13, color: theme.colorScheme.onSurfaceVariant),
+                  size: 12, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 6),
               Text(
                 _formatDate(entry.createdAt),

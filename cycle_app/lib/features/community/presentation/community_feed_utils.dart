@@ -1,7 +1,25 @@
+import 'dart:math' as math;
+
 import '../data/models/community_comment.dart';
 import '../data/models/community_post.dart';
 
 enum CommunityFeedSort { newest, discussed }
+
+/// Engagement-ranked ordering for the "popular" feed chip: comment volume
+/// dampened by age, so a fresh conversation can beat an old megathread.
+List<CommunityPost> sortByPopularity(
+  List<CommunityPost> posts, {
+  DateTime? now,
+}) {
+  final ref = now ?? DateTime.now();
+  double score(CommunityPost p) {
+    final ageDays = ref.difference(p.createdAt).inHours / 24.0;
+    return (p.commentCount + 1) / math.pow(ageDays.clamp(0, 3650) + 2, 1.4);
+  }
+
+  final list = [...posts]..sort((a, b) => score(b).compareTo(score(a)));
+  return list;
+}
 
 List<CommunityPost> filterAndSortCommunityPosts({
   required List<CommunityPost> posts,
@@ -29,7 +47,8 @@ List<CommunityPost> filterAndSortCommunityPosts({
 
   switch (sort) {
     case CommunityFeedSort.discussed:
-      list = [...list]..sort((a, b) {
+      list = [...list]
+        ..sort((a, b) {
           final byComments = b.commentCount.compareTo(a.commentCount);
           if (byComments != 0) return byComments;
           return b.createdAt.compareTo(a.createdAt);

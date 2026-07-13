@@ -145,9 +145,9 @@ class AiInsightsService {
     final limitedHint = limitedData
         ? (languageCode == 'ar'
               ? 'البيانات محدودة — أضيفي جملة واحدة احترافية في data_quality_note '
-                    'أن التتبع لمدة شهر تقريباً يحسّن دقة التقرير.'
+                    'أن تسجيل بدايات عدة دورات مكتملة يحسّن التنبؤ وقياس الدقة الشخصية.'
               : 'Data is limited — include one professional sentence in '
-                    'data_quality_note that ~one month of daily logging improves accuracy.')
+                    'data_quality_note that logging several completed cycle starts improves prediction and personal accuracy measurement.')
         : 'Omit data_quality_note or set it to null.';
 
     final isPregnant = snapshot.isPregnancyMode;
@@ -219,8 +219,8 @@ class AiInsightsService {
       if (note == null || note.isEmpty || note.toLowerCase() == 'null') {
         note = limitedData
             ? (languageCode == 'ar'
-                  ? 'البيانات ما زالت محدودة؛ التتبع اليومي لمدة شهر تقريباً يجعل هذا التقرير أدق.'
-                  : 'Data is still limited; about one month of daily logging will make this report more accurate.')
+                  ? 'البيانات ما زالت محدودة؛ تسجيل بدايات عدة دورات مكتملة يسمح بقياس الدقة الشخصية.'
+                  : 'Data is still limited; several completed cycle starts are needed to measure personal accuracy.')
             : null;
       }
 

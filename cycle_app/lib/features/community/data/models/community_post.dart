@@ -4,11 +4,7 @@ import 'post_type.dart';
 
 /// Aggregated live results for a poll post.
 class PollResults {
-  const PollResults({
-    this.counts = const {},
-    this.totalVotes = 0,
-    this.myVote,
-  });
+  const PollResults({this.counts = const {}, this.totalVotes = 0, this.myVote});
 
   /// Option index → number of votes.
   final Map<int, int> counts;
@@ -46,6 +42,9 @@ class CommunityPost {
     this.moderationStatus = 'approved',
     this.authorIsPremium = false,
     this.pollOptions,
+    this.topCommentAlias,
+    this.topCommentPreview,
+    this.topCommentAvatarIndex = 0,
   });
 
   final String id;
@@ -59,6 +58,7 @@ class CommunityPost {
   final String? communityName;
   final int authorAvatarIndex;
   final String? mediaUrl;
+
   /// `image` or `video`
   final String? mediaType;
   final bool hidden;
@@ -72,6 +72,16 @@ class CommunityPost {
 
   /// 2–4 choices when [postType] is [PostType.poll].
   final List<String>? pollOptions;
+
+  /// Latest approved top-level comment, denormalised onto the post by the
+  /// server so feed cards can show a live conversation preview without any
+  /// extra reads.
+  final String? topCommentAlias;
+  final String? topCommentPreview;
+  final int topCommentAvatarIndex;
+
+  bool get hasTopComment =>
+      topCommentPreview != null && topCommentPreview!.trim().isNotEmpty;
 
   bool get isPendingReview => moderationStatus == 'pending_review';
 
@@ -112,6 +122,11 @@ class CommunityPost {
 
   factory CommunityPost.fromMap(String id, Map<String, dynamic> data) {
     final ts = data['createdAt'];
+    // Firestore may hand nested maps back as Map<Object?, Object?>.
+    final rawTop = data['topComment'];
+    final topComment = rawTop is Map
+        ? Map<String, dynamic>.from(rawTop)
+        : const <String, dynamic>{};
     return CommunityPost(
       id: id,
       communityId: data['communityId'] as String? ?? '',
@@ -136,6 +151,9 @@ class CommunityPost {
       pollOptions: (data['pollOptions'] as List?)
           ?.map((e) => e.toString())
           .toList(),
+      topCommentAlias: topComment['alias'] as String?,
+      topCommentPreview: topComment['preview'] as String?,
+      topCommentAvatarIndex: topComment['avatarIndex'] as int? ?? 0,
     );
   }
 
@@ -153,20 +171,20 @@ class CommunityPost {
   }
 
   Map<String, dynamic> toMap() => {
-        'communityId': communityId,
-        'authorUid': authorUid,
-        'authorAlias': authorAlias,
-        'text': text,
-        'createdAt': FieldValue.serverTimestamp(),
-        'commentCount': commentCount,
-        'postType': postType.value,
-        if (communityName != null) 'communityName': communityName,
-        'authorAvatarIndex': authorAvatarIndex,
-        if (mediaUrl != null) 'mediaUrl': mediaUrl,
-        if (mediaType != null) 'mediaType': mediaType,
-        'isAnonymous': isAnonymous,
-        'authorIsPremium': authorIsPremium,
-        if (pollOptions != null && pollOptions!.isNotEmpty)
-          'pollOptions': pollOptions,
-      };
+    'communityId': communityId,
+    'authorUid': authorUid,
+    'authorAlias': authorAlias,
+    'text': text,
+    'createdAt': FieldValue.serverTimestamp(),
+    'commentCount': commentCount,
+    'postType': postType.value,
+    if (communityName != null) 'communityName': communityName,
+    'authorAvatarIndex': authorAvatarIndex,
+    if (mediaUrl != null) 'mediaUrl': mediaUrl,
+    if (mediaType != null) 'mediaType': mediaType,
+    'isAnonymous': isAnonymous,
+    'authorIsPremium': authorIsPremium,
+    if (pollOptions != null && pollOptions!.isNotEmpty)
+      'pollOptions': pollOptions,
+  };
 }

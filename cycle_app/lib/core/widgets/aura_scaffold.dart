@@ -21,6 +21,42 @@ class AppMeshBackground extends StatelessWidget {
   }
 }
 
+/// Full-screen scaffold for pushed settings/detail pages: transparent app
+/// bar over the mesh gradient — the same shell as the modern account
+/// screens, so legacy menstrudel pages read as one app with the rest of
+/// Lune. Visual wrapper only; pass the existing body through unchanged.
+class AuraSettingsScaffold extends StatelessWidget {
+  const AuraSettingsScaffold({
+    super.key,
+    required this.title,
+    required this.body,
+    this.actions,
+    this.leading,
+    this.centerTitle,
+  });
+
+  final String title;
+  final Widget body;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool? centerTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.transparent,
+        centerTitle: centerTitle,
+        leading: leading,
+        actions: actions,
+      ),
+      extendBodyBehindAppBar: true,
+      body: AppMeshBackground(child: SafeArea(child: body)),
+    );
+  }
+}
+
 /// Unified scaffold with mesh background and safe area.
 class AuraScaffold extends StatelessWidget {
   const AuraScaffold({
@@ -145,10 +181,13 @@ class _AppGradientButtonState extends State<AppGradientButton> {
           gradient: AuraDecorations.ctaGradient,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: [
+            // Calm-premium: the berry glow is dialled back ~60% (0.45→0.18) and
+            // the blur tightened so the button reads as a solid pill with a
+            // gentle lift, not a neon halo.
             BoxShadow(
-              color: AuraColors.accent.withValues(alpha: enabled ? 0.45 : 0.12),
-              blurRadius: _pressed ? 12 : 22,
-              offset: Offset(0, _pressed ? 4 : 10),
+              color: AuraColors.accent.withValues(alpha: enabled ? 0.18 : 0.06),
+              blurRadius: _pressed ? 8 : 14,
+              offset: Offset(0, _pressed ? 3 : 6),
               spreadRadius: -2,
             ),
           ],
@@ -167,7 +206,7 @@ class _AppGradientButtonState extends State<AppGradientButton> {
             onTapCancel: enabled ? () => setPressed(false) : null,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
               child: Row(
                 mainAxisSize:
                     widget.expanded ? MainAxisSize.max : MainAxisSize.min,
@@ -185,7 +224,7 @@ class _AppGradientButtonState extends State<AppGradientButton> {
                   else ...[
                     if (widget.icon != null) ...[
                       Icon(widget.icon, color: Colors.white, size: 20),
-                      const SizedBox(width: 9),
+                      const SizedBox(width: 8),
                     ],
                     Text(
                       widget.label,
@@ -254,7 +293,7 @@ class AppPhaseBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: theme.colorScheme.primary),
+          Icon(icon, size: 14, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             label,

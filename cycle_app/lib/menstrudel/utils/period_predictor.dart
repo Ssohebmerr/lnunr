@@ -18,7 +18,7 @@ class PeriodPredictor {
 
   /// Calculates a list of valid cycle lengths (in days) from the start date of
   /// one period to the start date of the next.
-  static List<int> _getValidCycleLengths(List<Period> periods) {
+  static List<int> getValidCycleLengths(List<Period> periods) {
     if (periods.length < _minPeriodsLogged) {
       return [];
     }
@@ -36,8 +36,11 @@ class PeriodPredictor {
         cycleLengths.add(days);
       }
     }
-    return SmartCyclePredictor.filterValidCycleLengths(cycleLengths);
+    return SmartCyclePredictor.prepareCycleLengths(cycleLengths);
   }
+
+  static List<int> _getValidCycleLengths(List<Period> periods) =>
+      getValidCycleLengths(periods);
 
   static List<int> _getValidPeriodDurations(List<Period> periods) {
     final List<int> durations = [];
@@ -65,10 +68,13 @@ class PeriodPredictor {
       return null;
     }
 
-    final averageCycleLength = SmartCyclePredictor.effectiveCycleLength(
+    final prediction = SmartCyclePredictor.estimateNextPeriod(
+      lastPeriodStart: sortedPeriods.last.startDate,
       completedLengths: validCycleLengths,
       configuredFallback: _defaultCycleLength,
+      now: now,
     );
+    final averageCycleLength = prediction.effectiveCycleLength;
 
     final List<int> periodDurations = _getValidPeriodDurations(sortedPeriods);
     if (periodDurations.isEmpty) {
@@ -83,12 +89,7 @@ class PeriodPredictor {
       return null;
     }
 
-    final lastPeriodStartDate = sortedPeriods.last.startDate;
-    final estimatedStartDate = SmartCyclePredictor.nextPeriodStart(
-      lastPeriodStart: lastPeriodStartDate,
-      effectiveCycleLength: averageCycleLength,
-      now: now,
-    );
+    final estimatedStartDate = prediction.centerDate;
 
     final estimatedEndDate = estimatedStartDate.add(
       Duration(days: averagePeriodDuration - 1),
@@ -109,6 +110,7 @@ class PeriodPredictor {
       daysUntilDue: daysUntilDue,
       averageCycleLength: averageCycleLength,
       averagePeriodDuration: averagePeriodDuration,
+      evidence: prediction,
     );
   }
 

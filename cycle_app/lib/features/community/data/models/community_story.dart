@@ -22,6 +22,7 @@ class CommunityStory {
   final String authorUid;
   final String authorAlias;
   final String mediaUrl;
+
   /// `image` | `video` | `text`
   final String mediaType;
   final DateTime createdAt;
@@ -55,12 +56,13 @@ class CommunityStory {
       expiresAt: expiresTs is Timestamp
           ? expiresTs.toDate()
           : DateTime.tryParse(expiresTs?.toString() ?? '') ??
-              DateTime.now().add(const Duration(hours: 24)),
+                DateTime.now().add(const Duration(hours: 24)),
       authorAvatarIndex: data['authorAvatarIndex'] as int? ?? 0,
       textOverlay: data['textOverlay'] as String?,
       backgroundColor: data['backgroundColor'] as String?,
       viewCount: data['viewCount'] as int? ?? 0,
-      viewedBy: (data['viewedBy'] as List<dynamic>?)
+      viewedBy:
+          (data['viewedBy'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -68,17 +70,17 @@ class CommunityStory {
   }
 
   Map<String, dynamic> toMap() => {
-        'communityId': communityId,
-        'authorUid': authorUid,
-        'authorAlias': authorAlias,
-        'mediaUrl': mediaUrl,
-        'mediaType': mediaType,
-        'createdAt': FieldValue.serverTimestamp(),
-        'expiresAt': Timestamp.fromDate(expiresAt),
-        'authorAvatarIndex': authorAvatarIndex,
-        if (textOverlay != null) 'textOverlay': textOverlay,
-        if (backgroundColor != null) 'backgroundColor': backgroundColor,
-        'viewCount': viewCount,
-        'viewedBy': viewedBy,
-      };
+    'communityId': communityId,
+    'authorUid': authorUid,
+    'authorAlias': authorAlias,
+    'mediaUrl': mediaUrl,
+    'mediaType': mediaType,
+    'createdAt': FieldValue.serverTimestamp(),
+    'expiresAt': Timestamp.fromDate(expiresAt),
+    'authorAvatarIndex': authorAvatarIndex,
+    if (textOverlay != null) 'textOverlay': textOverlay,
+    if (backgroundColor != null) 'backgroundColor': backgroundColor,
+    'viewCount': viewCount,
+    'viewedBy': viewedBy,
+  };
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -239,7 +240,10 @@ class _HomeShellState extends State<HomeShell> {
         child: Container(
           decoration: AppTheme.gradientBackground(context),
           child: Scaffold(
-            extendBody: false,
+            // The tab content must scroll BEHIND the bottom pill for the
+            // frosted-glass blur to have anything to sample — with false the
+            // bar sat on a dead strip and always rendered as a flat slab.
+            extendBody: true,
             backgroundColor: Colors.transparent,
             body: Container(
               decoration: AppTheme.gradientBackground(context),
@@ -387,30 +391,52 @@ class _HomeShellState extends State<HomeShell> {
                 16,
                 12 + MediaQuery.paddingOf(context).bottom,
               ),
-              child: Container(
+              child: SizedBox(
                 height: 64,
-                clipBehavior: Clip.none,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  color: isDark
-                      ? AuraColors.darkCard.withValues(alpha: 0.97)
-                      : Colors.white.withValues(alpha: 0.97),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.04),
-                  ),
-                  boxShadow: AppShadows.navFloat(isDark),
-                ),
-                child: Row(
-                  children: _bottomNavItems(
-                    context: context,
-                    labels: labels,
-                    selectedIndex: _index,
-                    communityEnabled: _communityEnabled,
-                    onSelect: _onTabSelected,
-                    onLog: _openLog,
-                  ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Frosted-glass pill — translucent fill over the app
+                    // gradient with a real blur, no glow/shadow halo. The
+                    // glass layer is clipped separately so the centred +
+                    // button can still overhang above the bar.
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
+                              // 62% fill so the blurred content actually shows
+                              // through; the light border is the glass edge —
+                              // deliberately zero shadow around the bar.
+                              color: isDark
+                                  ? AuraColors.darkCard.withValues(alpha: 0.62)
+                                  : Colors.white.withValues(alpha: 0.62),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.10)
+                                    : Colors.white.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: _bottomNavItems(
+                        context: context,
+                        labels: labels,
+                        selectedIndex: _index,
+                        communityEnabled: _communityEnabled,
+                        onSelect: _onTabSelected,
+                        onLog: _openLog,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -495,7 +521,16 @@ class _LogFabButton extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: AuraDecorations.ctaGradient,
-        boxShadow: AppShadows.softRose(opacity: 0.35),
+        // A tight berry lift instead of the wide rose halo that used to bleed
+        // over the glass bar.
+        boxShadow: [
+          BoxShadow(
+            color: AuraColors.accent.withValues(alpha: 0.22),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+            spreadRadius: -1,
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -525,7 +560,7 @@ class _AiHeaderChip extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsetsDirectional.only(start: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

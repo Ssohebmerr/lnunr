@@ -43,8 +43,9 @@ class UserSymptomsLogs {
     notes = json['notes'];
     weight = json['weight'];
     logDate = json['logDate'];
-    logDate = json['logDate'];
-    isCustomLog = json['isCustomLog'];
+    // cycleDay may arrive as int (SQLite INTEGER) or String (old backups).
+    cycleDay = json['cycleDay']?.toString();
+    isCustomLog = json['isCustomLog']?.toString();
     createdDate = json['createdDate'];
     bodyTemperature = json['bodyTemperature'];
     if (json['symptomData'] != null) {

@@ -51,9 +51,7 @@ List<Community> recommendedCommunities({
   required List<String> joinedIds,
   int limit = 3,
 }) {
-  final unjoined = communities
-      .where((c) => !joinedIds.contains(c.id))
-      .toList();
+  final unjoined = communities.where((c) => !joinedIds.contains(c.id)).toList();
   return sortCommunities(
     communities: unjoined,
     catalog: catalog,
@@ -70,8 +68,7 @@ List<Community> sortJoinedCommunities({
   required List<CommunityMembership> memberships,
 }) {
   final order = {
-    for (var i = 0; i < memberships.length; i++)
-      memberships[i].communityId: i,
+    for (var i = 0; i < memberships.length; i++) memberships[i].communityId: i,
   };
   final joined = communities.where((c) => order.containsKey(c.id)).toList();
   joined.sort((a, b) {
@@ -90,16 +87,9 @@ int _goalBoost(String id, UserGoalTypes? goal) {
       'contraception',
       'general-cycle',
     ],
-    UserGoalTypes.avoid => const [
-      'contraception',
-      'general-cycle',
-    ],
-    UserGoalTypes.pregnant => const [
-      'postpartum',
-      'general-cycle',
-    ],
-    UserGoalTypes.general ||
-    UserGoalTypes.sexual => const [
+    UserGoalTypes.avoid => const ['contraception', 'general-cycle'],
+    UserGoalTypes.pregnant => const ['postpartum', 'general-cycle'],
+    UserGoalTypes.general || UserGoalTypes.sexual => const [
       'general-cycle',
       'period-support',
       'mental-wellness',

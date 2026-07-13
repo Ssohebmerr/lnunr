@@ -325,6 +325,67 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get conditionTrendsTitle => 'اتجاهاتكِ';
+
+  @override
+  String get conditionTrendsEmpty =>
+      'لا تسجيلات بعد — سجّلي أعراضكِ وطقوسكِ من الشاشة الرئيسية وستظهر اتجاهاتكِ هنا.';
+
+  @override
+  String get conditionTrendLast14Days => 'آخر 14 يوماً';
+
+  @override
+  String get conditionTrendLast30Days => 'آخر 30 يوماً';
+
+  @override
+  String get conditionTrendLast7Days => 'آخر 7 أيام';
+
+  @override
+  String get conditionTrendToday => 'اليوم';
+
+  @override
+  String get conditionTrendHotFlashes => 'الهبّات الساخنة';
+
+  @override
+  String get conditionTrendMood => 'تسجيلات المزاج';
+
+  @override
+  String get conditionTrendSymptomsPerDay => 'الأعراض في اليوم';
+
+  @override
+  String get conditionTopSymptoms => 'أكثر الأعراض تكراراً';
+
+  @override
+  String get conditionDaysLogged => 'أيام مسجَّلة';
+
+  @override
+  String get conditionRitualCompletion => 'إنجاز الطقوس';
+
+  @override
+  String get conditionDoctorReportCta => 'تقرير للطبيبة (PDF)';
+
+  @override
+  String get conditionReportTitle => 'تقرير ملخّص للطبيبة';
+
+  @override
+  String get conditionReportOverview => 'نظرة عامة';
+
+  @override
+  String get conditionReportGoalLabel => 'الهدف الصحي';
+
+  @override
+  String get conditionReportConsistency => 'انتظام التسجيل';
+
+  @override
+  String get conditionReportNoLogs =>
+      'لا توجد تسجيلات يومية في آخر 30 يوماً — سجّلي الأعراض من الشاشة الرئيسية لإغناء هذا التقرير.';
+
+  @override
+  String conditionReportTimes(int count) {
+    return '$count×';
+  }
+
+  @override
   String conditionStreakDays(int days) {
     return '$days يوم متتالٍ من التسجيل';
   }
@@ -1397,7 +1458,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get doctorReportLimitedData =>
-      'هذا التقرير مبني على بيانات محدودة. بعد حوالي شهر من التسجيل اليومي، تصبح التوقعات والأنماط أدق بكثير.';
+      'هذا التقرير مبني على بيانات محدودة. تسجيل بدايات عدة دورات مكتملة يسمح بقياس الدقة الشخصية وتحسين نطاق التوقع.';
 
   @override
   String get doctorReportAiTitle => 'ملاحظات المساعد الذكي';
@@ -2679,16 +2740,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get goalModeReportInsights => 'رؤى لهدفك';
 
   @override
-  String get goalModeFertilityToday => 'الخصوبة اليوم';
+  String get goalModeFertilityToday => 'تقدير الخصوبة اليوم';
 
   @override
-  String get goalModeFertilityHigh => 'عالية';
+  String get goalModeFertilityHigh => 'مرتفعة تقديريًا';
 
   @override
-  String get goalModeFertilityModerate => 'متوسطة';
+  String get goalModeFertilityModerate => 'متوسطة تقديريًا';
 
   @override
-  String get goalModeFertilityLow => 'منخفضة';
+  String get goalModeFertilityLow => 'أقل تقديريًا';
 
   @override
   String get goalModeFertilityUnknown => 'سجّلي أكثر';
@@ -2697,7 +2758,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get goalModeTestDate => 'اختبار حمل';
 
   @override
-  String get goalModeOvulationToday => 'يوم الإباضة اليوم';
+  String get goalModeOvulationToday => 'نافذة إباضة مقدّرة اليوم';
 
   @override
   String get goalModeConceiveSelfCare => 'عناية الخصوبة';
@@ -3161,10 +3222,62 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String communityActivityFollow(String alias) {
+    return '$alias بدأت بمتابعتك';
+  }
+
+  @override
+  String communityActivityMention(String alias) {
+    return '$alias ذكرتك في تعليق';
+  }
+
+  @override
+  String get communityFollow => 'متابعة';
+
+  @override
+  String get communityFollowingBtn => 'متابَعة';
+
+  @override
+  String get communityUnfollow => 'إلغاء المتابعة';
+
+  @override
+  String get communityUnfollowed => 'أُلغيت المتابعة';
+
+  @override
+  String communityFollowedToast(String alias) {
+    return 'أصبحتِ تتابعين $alias';
+  }
+
+  @override
+  String get communityFollowingTitle => 'المتابَعات';
+
+  @override
+  String get communityFollowingSubtitle => 'العضوات اللواتي تتابعينهن';
+
+  @override
+  String get communityFollowingEmpty =>
+      'لا تتابعين أحداً بعد. اضغطي على اسم عضوة في أي منشور لمتابعتها.';
+
+  @override
+  String get communityCommentSortOldest => 'الأقدم أولاً';
+
+  @override
+  String get communityCommentSortNewest => 'الأحدث أولاً';
+
+  @override
+  String get communityCommentSortTop => 'الأكثر إعجاباً';
+
+  @override
   String get communityMarkAllRead => 'تعليم الكل كمقروء';
 
   @override
   String get communitySortNewest => 'الأحدث';
+
+  @override
+  String get communityFeedPopular => 'شائع';
+
+  @override
+  String get communityFeedMyComments => 'تعليقاتي';
 
   @override
   String get communitySortDiscussed => 'الأكثر نقاشاً';
@@ -3927,6 +4040,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String predictionCenterDate(String date) {
     return 'أفضل تخمين: $date';
   }
+
+  @override
+  String get predictionConfidenceLabel => 'ثقة التنبؤ';
+
+  @override
+  String get predictionConfidenceLearning => 'قيد التعلّم';
+
+  @override
+  String get predictionConfidenceModerate => 'متوسطة';
+
+  @override
+  String get predictionConfidenceStrong => 'قوية';
+
+  @override
+  String predictionAccuracyPersonal(int within, int total) {
+    return 'أصاب ضمن يومين في $within من آخر $total دورات قابلة للاختبار';
+  }
+
+  @override
+  String get predictionAccuracyLearning =>
+      'نحتاج 4 دورات مكتملة لعرض دقتكِ الشخصية';
+
+  @override
+  String get predictionWindowActive => 'أنتِ الآن داخل النطاق المتوقع للدورة';
+
+  @override
+  String periodPredictionLate(int days) {
+    return 'مرّ $days يوم بعد نهاية النطاق المتوقع';
+  }
+
+  @override
+  String get predictionPossibleMissingLog =>
+      'قد تكون هذه دورة أطول من المعتاد أو ربما فاتكِ تسجيل دورة. راجعي التقويم قبل اعتماد التوقع التالي.';
+
+  @override
+  String get predictionEvidenceNote =>
+      'نطاق شخصي مبني على سجلكِ — تقدير وليس ضمانًا طبيًا';
+
+  @override
+  String get ovulationEstimateHint =>
+      'تقدير للدورة الحالية — لا يُستخدم وحده لمنع الحمل';
 
   @override
   String get ageGateTitle => 'كم عمركِ؟';

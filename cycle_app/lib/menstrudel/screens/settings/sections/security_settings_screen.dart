@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:local_auth/local_auth.dart';
@@ -54,10 +55,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     final settingsService = context.watch<SettingsService>();
     final bool isBiometricEnabled = settingsService.areBiometricsEnabled;
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_security),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_security,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/community_seed.dart';
@@ -18,15 +19,19 @@ class CommunityActivityScreen extends StatelessWidget {
     return switch (item.type) {
       'like' => l10n.communityActivityLike(alias),
       'reply' => l10n.communityActivityReply(alias),
+      'follow' => l10n.communityActivityFollow(alias),
+      'mention' => l10n.communityActivityMention(alias),
       _ => l10n.communityActivityComment(alias),
     };
   }
 
   IconData _iconFor(String type) => switch (type) {
-        'like' => Icons.favorite_rounded,
-        'reply' => Icons.reply_rounded,
-        _ => Icons.chat_bubble_rounded,
-      };
+    'like' => Icons.favorite_rounded,
+    'reply' => Icons.reply_rounded,
+    'follow' => Icons.person_add_alt_1_rounded,
+    'mention' => Icons.alternate_email_rounded,
+    _ => Icons.chat_bubble_rounded,
+  };
 
   Future<void> _openItem(
     BuildContext context,
@@ -99,16 +104,29 @@ class CommunityActivityScreen extends StatelessWidget {
 
               return Material(
                 color: item.read
-                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-                    : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(16),
+                    ? (Theme.of(context).brightness == Brightness.dark
+                          ? AuraColors.darkCard.withValues(alpha: 0.72)
+                          : Colors.white.withValues(alpha: 0.8))
+                    : Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.28),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  side: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.07),
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
                 child: ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   leading: CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.15),
                     child: Icon(
                       _iconFor(item.type),
                       color: Theme.of(context).colorScheme.primary,

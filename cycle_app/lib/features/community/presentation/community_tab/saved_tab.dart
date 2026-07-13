@@ -38,11 +38,12 @@ class CommunitySavedTab extends StatelessWidget {
       builder: (context, blockedSnap) {
         final blocked = blockedSnap.data ?? const <String>{};
         return StreamBuilder<List<CommunityPost>>(
-          stream: repo.watchSavedPosts(uid).map(
-            (posts) => posts
-                .where((p) => !blocked.contains(p.authorUid))
-                .toList(),
-          ),
+          stream: repo
+              .watchSavedPosts(uid)
+              .map(
+                (posts) =>
+                    posts.where((p) => !blocked.contains(p.authorUid)).toList(),
+              ),
           builder: (context, snap) {
             final posts = snap.data ?? [];
             if (posts.isEmpty) {
@@ -65,7 +66,12 @@ class CommunitySavedTab extends StatelessWidget {
             return RefreshIndicator(
               onRefresh: onRefresh,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 24,
+                ),
                 itemCount: posts.length,
                 itemBuilder: (_, i) => PostCard(
                   post: posts[i],

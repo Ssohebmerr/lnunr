@@ -116,8 +116,9 @@ class _PollOptionRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: Ink(
           decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: isDark ? 0.05 : 0.03),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: isDark ? 0.05 : 0.03,
+            ),
             borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(
               color: isMine
@@ -141,8 +142,9 @@ class _PollOptionRow extends StatelessWidget {
                       heightFactor: 1,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: accentColor
-                              .withValues(alpha: isMine ? 0.28 : 0.14),
+                          color: accentColor.withValues(
+                            alpha: isMine ? 0.28 : 0.14,
+                          ),
                         ),
                       ),
                     ),
@@ -156,8 +158,11 @@ class _PollOptionRow extends StatelessWidget {
                   child: Row(
                     children: [
                       if (isMine) ...[
-                        Icon(Icons.check_circle_rounded,
-                            size: 16, color: accentColor),
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: accentColor,
+                        ),
                         const SizedBox(width: 6),
                       ],
                       Expanded(
@@ -166,8 +171,9 @@ class _PollOptionRow extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight:
-                                isMine ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight: isMine
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                           ),
                         ),
                       ),

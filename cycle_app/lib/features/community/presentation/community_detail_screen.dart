@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +9,6 @@ import '../../../core/premium/premium_badge.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
-import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/community_seed.dart';
@@ -70,14 +67,16 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
     _memberCount = widget.community.memberCount;
     _refreshMemberCount();
     if (widget.initialPostId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _openPostById(widget.initialPostId!));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _openPostById(widget.initialPostId!),
+      );
     }
   }
 
   Future<void> _refreshMemberCount() async {
-    final count = await context
-        .read<CommunityRepository>()
-        .fetchMemberCount(widget.community.id);
+    final count = await context.read<CommunityRepository>().fetchMemberCount(
+      widget.community.id,
+    );
     if (mounted) setState(() => _memberCount = count);
   }
 
@@ -98,22 +97,22 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
       if (post != null) {
         _openPostDetail(post);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityPostNotFound)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityPostNotFound)));
       }
     } on TimeoutException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     } catch (e, st) {
       debugPrint('CommunityDetailScreen._openPostById failed: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     }
   }
@@ -133,7 +132,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           HapticFeedback.lightImpact();
           setState(() => _joined = false);
           unawaited(_refreshMemberCount());
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communityLeft)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.communityLeft)));
         }
       } else {
         final uid = user.uid;
@@ -158,32 +159,35 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
           HapticFeedback.mediumImpact();
           setState(() => _joined = true);
           unawaited(_refreshMemberCount());
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.communityJoined)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.communityJoined)));
         }
       }
     } on MinorRestrictedException {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.communityMinorRestricted)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityMinorRestricted)));
       }
     } on CommunityBannedException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityBannedMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityBannedMessage)));
       }
     } on CommunityFullException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.communityFull)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.communityFull)));
       }
     } catch (e, st) {
       debugPrint('CommunityDetailScreen._toggleJoin failed: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -194,7 +198,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
     if (!_joined) return;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final profile = await context.read<CommunityRepository>().resolveProfile(user.uid);
+    final profile = await context.read<CommunityRepository>().resolveProfile(
+      user.uid,
+    );
     if (!mounted) return;
     await Navigator.push<bool>(
       context,
@@ -242,327 +248,290 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
       body: Container(
         decoration: AppTheme.gradientBackground(context),
         child: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
-            stretch: true,
-            backgroundColor: headerColors.first,
-            surfaceTintColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            iconTheme: const IconThemeData(color: Colors.white),
-            title: innerBoxIsScrolled
-                ? Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
-                      letterSpacing: -0.3,
-                    ),
-                  )
-                : null,
-            actions: [
-              if (!_joined)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverAppBar(
+              expandedHeight: 204,
+              pinned: true,
+              stretch: true,
+              backgroundColor: headerColors.first,
+              surfaceTintColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: innerBoxIsScrolled
+                  ? Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                        letterSpacing: -0.3,
                       ),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      child: InkWell(
-                        onTap: _busy ? null : _toggleJoin,
+                    )
+                  : null,
+              actions: [
+                if (!_joined)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
                         borderRadius: BorderRadius.circular(AppRadius.pill),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 7,
-                          ),
-                          child: Text(
-                            l10n.communityJoin,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        child: InkWell(
+                          onTap: _busy ? null : _toggleJoin,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
+                            ),
+                            child: Text(
+                              l10n.communityJoin,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                )
-              else
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-                  onSelected: (value) {
-                    if (value == 'leave') _toggleJoin();
-                  },
-                  itemBuilder: (ctx) => [
-                    PopupMenuItem(
-                      value: 'leave',
-                      child: Text(l10n.communityLeave),
+                  )
+                else
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Gradient background
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: headerColors,
+                    onSelected: (value) {
+                      if (value == 'leave') _toggleJoin();
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'leave',
+                        child: Text(l10n.communityLeave),
                       ),
-                    ),
+                    ],
                   ),
-                  // Community name — fixed at top so it never overlaps chips/tabs
-                  PositionedDirectional(
-                    start: 16,
-                    end: 88,
-                    top: kToolbarHeight + 12,
-                    child: Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                        letterSpacing: -0.4,
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x33000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Decorative large icon
-                  Positioned(
-                    right: -20,
-                    bottom: -20,
-                    child: Icon(
-                      widget.community.icon,
-                      size: 140,
-                      color: Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
-                  // Decorative circles
-                  Positioned(
-                    left: -40,
-                    top: -40,
-                    child: Container(
-                      width: 120,
-                      height: 120,
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Gradient background
+                    DecoratedBox(
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: headerColors,
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    right: 60,
-                    top: 20,
-                    child: Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 40,
-                      color: Colors.white.withValues(alpha: 0.08),
+                    // Community name — fixed at top so it never overlaps chips/tabs
+                    PositionedDirectional(
+                      start: 16,
+                      end: 88,
+                      top: kToolbarHeight + 12,
+                      child: Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                          letterSpacing: -0.4,
+                          shadows: const [
+                            Shadow(
+                              color: Color(0x33000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  // Info chips overlay
-                  Positioned(
-                    left: 16,
-                    bottom: 14,
-                    right: 16,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
+                    // Decorative large icon
+                    Positioned(
+                      right: -20,
+                      bottom: -20,
+                      child: Icon(
+                        widget.community.icon,
+                        size: 140,
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    // Decorative circles
+                    Positioned(
+                      left: -40,
+                      top: -40,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 60,
+                      top: 20,
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 40,
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    // Info chips overlay
+                    Positioned(
+                      left: 16,
+                      bottom: 14,
+                      right: 16,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.people_alt_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$_memberCount/${widget.community.maxMembers}',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (_joined)
+                            Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 5,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(AppRadius.pill),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                color: Colors.white.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
                                 ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.people_alt_rounded,
-                                      size: 14, color: Colors.white),
-                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 12,
+                                    color: CommunityTopicPalette.iconColor(
+                                      widget.community.topic,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    '$_memberCount/${widget.community.maxMembers}',
+                                    l10n.communityJoined,
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
+                                      color: CommunityTopicPalette.iconColor(
+                                        widget.community.topic,
+                                      ),
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (_joined)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.88),
-                                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: CommunityTopicPalette.iconColor(
-                                        widget.community.topic,
-                                      ).withValues(alpha: 0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.check_rounded,
-                                      size: 13,
-                                      color: CommunityTopicPalette.iconColor(
-                                        widget.community.topic,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      l10n.communityJoined,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: CommunityTopicPalette.iconColor(
-                                          widget.community.topic,
-                                        ),
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: ColoredBox(
-                color: headerColors.last.withValues(alpha: 0.92),
-                child: TabBar(
-                  controller: _tabs,
-                  indicatorWeight: 3,
-                  indicatorColor: Colors.white,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
-                  tabs: [
-                    Tab(
-                      icon: const Icon(Icons.article_outlined, size: 20),
-                      text: l10n.communityPostsTab,
-                    ),
-                    Tab(
-                      icon: const Icon(Icons.info_outline_rounded, size: 20),
-                      text: l10n.communityAboutTab,
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ],
-        body: TabBarView(
-          controller: _tabs,
-          children: [
-            _PostsList(
-              communityId: widget.community.id,
-              topic: widget.community.topic,
-              joined: _joined,
-              busy: _busy,
-              alias: widget.alias,
-              onJoin: _toggleJoin,
-              onPostTap: _openPostDetail,
-              onAnswerPrompt: _answerWeeklyQuestion,
-              onCompose: () => _createPost(),
-            ),
-            _AboutTab(
-              community: widget.community,
-              lang: lang,
-              joined: _joined,
-              busy: _busy,
-              onLeave: _toggleJoin,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: ColoredBox(
+                  color: theme.colorScheme.surface,
+                  child: TabBar(
+                    controller: _tabs,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    dividerColor: Colors.transparent,
+                    labelColor: theme.colorScheme.primary,
+                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                    tabs: [
+                      Tab(
+                        icon: const Icon(Icons.article_outlined, size: 20),
+                        text: l10n.communityPostsTab,
+                      ),
+                      Tab(
+                        icon: const Icon(Icons.info_outline_rounded, size: 20),
+                        text: l10n.communityAboutTab,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
+          body: TabBarView(
+            controller: _tabs,
+            children: [
+              _PostsList(
+                communityId: widget.community.id,
+                topic: widget.community.topic,
+                joined: _joined,
+                busy: _busy,
+                alias: widget.alias,
+                onJoin: _toggleJoin,
+                onPostTap: _openPostDetail,
+                onAnswerPrompt: _answerWeeklyQuestion,
+                onCompose: () => _createPost(),
+              ),
+              _AboutTab(
+                community: widget.community,
+                lang: lang,
+                joined: _joined,
+                busy: _busy,
+                onLeave: _toggleJoin,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
       floatingActionButton: _joined
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: AuraDecorations.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  boxShadow: AppShadows.softRose(opacity: 0.35),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: InkWell(
-                    onTap: _busy ? null : _createPost,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.edit_rounded, color: Colors.white),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.communityNewPost,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+              child: FloatingActionButton.extended(
+                onPressed: _busy ? null : _createPost,
+                icon: const Icon(Icons.edit_rounded),
+                label: Text(l10n.communityNewPost),
               ),
             )
           : null,
@@ -570,4 +539,3 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
     );
   }
 }
-

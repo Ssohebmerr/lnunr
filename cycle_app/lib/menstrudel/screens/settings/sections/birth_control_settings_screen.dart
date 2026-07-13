@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cycle_aura/core/widgets/aura_scaffold.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/pills_repository.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
 import 'package:cycle_aura/menstrudel/models/birth_control/reversible_contraceptives/reversible_contraceptive_types_enum.dart';
@@ -171,10 +172,8 @@ class _BirthControlSettingsScreenState extends State<BirthControlSettingsScreen>
 
     const Widget shortDivider = Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Divider());
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsScreen_birthControl),
-      ),
+    return AuraSettingsScaffold(
+      title: l10n.settingsScreen_birthControl,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

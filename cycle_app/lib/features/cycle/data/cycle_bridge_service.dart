@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/cycle/ovulation_log_service.dart';
 import '../../../core/cycle/prediction_display.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
+import '../../analytics/wellness_scores.dart';
 
 /// Bridges Cycle Aura app with menstrual_cycle_widget package APIs.
 class CycleBridgeService {
@@ -58,36 +59,34 @@ class CycleBridgeService {
   }
 
   Languages _mapLanguage(String code) => switch (code) {
-        'ar' => Languages.arabic,
-        'hi' => Languages.hindi,
-        'es' => Languages.spanish,
-        'zh' => Languages.mandarin,
-        'fr' => Languages.french,
-        'bn' => Languages.bengali,
-        'ru' => Languages.russian,
-        'pt' => Languages.portuguese,
-        'ja' => Languages.japanese,
-        'de' => Languages.german,
-        'pa' => Languages.punjabi,
-        'jv' => Languages.javanese,
-        'ko' => Languages.korean,
-        'ta' => Languages.tamil,
-        'tr' => Languages.turkish,
-        'ur' => Languages.urdu,
-        'vi' => Languages.vietnamese,
-        'it' => Languages.italian,
-        _ => Languages.english,
-      };
+    'ar' => Languages.arabic,
+    'hi' => Languages.hindi,
+    'es' => Languages.spanish,
+    'zh' => Languages.mandarin,
+    'fr' => Languages.french,
+    'bn' => Languages.bengali,
+    'ru' => Languages.russian,
+    'pt' => Languages.portuguese,
+    'ja' => Languages.japanese,
+    'de' => Languages.german,
+    'pa' => Languages.punjabi,
+    'jv' => Languages.javanese,
+    'ko' => Languages.korean,
+    'ta' => Languages.tamil,
+    'tr' => Languages.turkish,
+    'ur' => Languages.urdu,
+    'vi' => Languages.vietnamese,
+    'it' => Languages.italian,
+    _ => Languages.english,
+  };
 
-  static const supportedLanguageCodes = [
-    'en', 'ar',
-  ];
+  static const supportedLanguageCodes = ['en', 'ar'];
 
   static String languageLabel(String code) => switch (code) {
-        'en' => 'English',
-        'ar' => 'العربية',
-        _ => code,
-      };
+    'en' => 'English',
+    'ar' => 'العربية',
+    _ => code,
+  };
 
   Future<CycleDashboardData?> tryLoadDashboard() async {
     try {
@@ -121,15 +120,24 @@ class CycleBridgeService {
   Future<CycleDashboardData> loadDashboard({String? languageCode}) async {
     final lang = languageCode ?? await _readLocale();
     final history = await tryLoadAnalyticsHistory();
-    final completed =
-        SmartCyclePredictor.filterValidCycleLengths(history.cycleLengths);
-    final window = SmartCyclePredictor.predictionWindowDays(completed);
+    final completed = SmartCyclePredictor.prepareCycleLengths(
+      history.cycleLengths,
+    );
+    final prediction = await _safeField<CyclePredictionEstimate?>(
+      () => _api.getCurrentPeriodPrediction(),
+      null,
+    );
+    final window =
+        prediction?.windowDays ??
+        SmartCyclePredictor.predictionWindowDays(completed);
     final measured = await OvulationLogService().measuredLutealLengths();
     final ovulationCalibrated = measured.length >= 2;
 
-    final nextPeriod =
-        await _safeField(_api.getNextPredictedPeriodDate, '');
-    final ovulation = await _safeField(_api.getNextOvulationDate, '');
+    final nextPeriod = await _safeField(_api.getNextPredictedPeriodDate, '');
+    final ovulation = await _safeField(
+      _api.getCurrentCycleOvulationEstimateDate,
+      '',
+    );
 
     final nextDt = PredictionDisplay.tryParseDashboardDate(nextPeriod);
     final ovDt = PredictionDisplay.tryParseDashboardDate(ovulation);
@@ -140,10 +148,11 @@ class CycleBridgeService {
             languageCode: lang,
           )
         : '';
-    final ovulationRange = ovDt != null && window > 0
+    final ovulationWindow = ovulationCalibrated || window >= 3 ? window : 3;
+    final ovulationRange = ovDt != null && ovulationWindow > 0
         ? PredictionDisplay.formatPredictionRange(
             center: ovDt,
-            windowDays: window,
+            windowDays: ovulationWindow,
             languageCode: lang,
           )
         : '';
@@ -156,14 +165,28 @@ class CycleBridgeService {
       ovulationRange: ovulationRange,
       predictionWindowDays: window,
       ovulationCalibrated: ovulationCalibrated,
+      predictionConfidence:
+          prediction?.confidence ?? CyclePredictionConfidence.learning,
+      predictionConfidenceScore: prediction?.confidenceScore ?? 0,
+      predictionAccuracy: prediction?.accuracy ?? CyclePredictionAccuracy.empty,
+      completedCycleCount: prediction?.completedCycleCount ?? completed.length,
+      excludedCycleCount: prediction?.excludedCycleCount ?? 0,
+      isPredictionWindowActive: prediction?.isWithinExpectedWindow ?? false,
+      isPeriodLate: prediction?.isLate ?? false,
+      daysLate: prediction?.daysLate ?? 0,
+      possibleMissingLog: prediction?.possibleMissingLog ?? false,
       cycleDay: await _safeField(_api.getCurrentCycleDay, 0),
       periodDay: await _safeField(_api.getCurrentPeriodDay, 0),
       cycleRegularity: await _safeField(_api.getCycleRegularityScore, 0.0),
-      cycleRegularityStatus:
-          await _safeField(_api.getCycleRegularityScoreStatus, ''),
+      cycleRegularityStatus: await _safeField(
+        _api.getCycleRegularityScoreStatus,
+        '',
+      ),
       periodRegularity: await _safeField(_api.getPeriodRegularityScore, 0.0),
-      periodRegularityStatus:
-          await _safeField(_api.getPeriodRegularityScoreStatus, ''),
+      periodRegularityStatus: await _safeField(
+        _api.getPeriodRegularityScoreStatus,
+        '',
+      ),
       avgCycleLength: await _safeField(_api.getAvgCycleLength, 0),
       avgPeriodDuration: await _safeField(_api.getAvgPeriodDuration, 0),
       totalCycles: await _safeField(_api.getTotalNumberOfCycle, 0),
@@ -173,8 +196,10 @@ class CycleBridgeService {
       trimester: await _safeField(_api.getCurrentTrimester, 0),
       isPeriodStarted: await _safeField(_api.isPeriodStarted, false),
       isOvulationDay: await _safeField(_api.isOvulationDay, false),
-      expectedPregnancyTestDate:
-          await _safeField(_api.getExpectedPregnancyTestDate, ''),
+      expectedPregnancyTestDate: await _safeField(
+        _api.getExpectedPregnancyTestDate,
+        '',
+      ),
     );
   }
 
@@ -243,18 +268,18 @@ class CycleBridgeService {
 
   Future<CycleReportData> loadStructuredReport() async {
     final raw = await _api.getMenstrualCycleReportData();
-    final keyMatrix =
-        Map<String, dynamic>.from(raw['key_matrix'] as Map? ?? {});
-    final predictionMatrix =
-        Map<String, dynamic>.from(raw['prediction_matrix'] as Map? ?? {});
+    final keyMatrix = Map<String, dynamic>.from(
+      raw['key_matrix'] as Map? ?? {},
+    );
+    final predictionMatrix = Map<String, dynamic>.from(
+      raw['prediction_matrix'] as Map? ?? {},
+    );
     final cycleRaw = raw['cycle_summary'] as List? ?? [];
     final cycles = <PeriodsDateRange>[];
     for (final item in cycleRaw) {
       if (item is! Map) continue;
       try {
-        cycles.add(
-          PeriodsDateRange.fromJson(Map<String, dynamic>.from(item)),
-        );
+        cycles.add(PeriodsDateRange.fromJson(Map<String, dynamic>.from(item)));
       } catch (_) {}
     }
     final patternRaw = raw['symptom_patterns_summary'] as List? ?? [];
@@ -299,8 +324,10 @@ class CycleBridgeService {
   /// averages. Everything here comes from the user's own logged data — no
   /// synthetic or placeholder values.
   Future<AnalyticsHistory> loadAnalyticsHistory() async {
-    final periods =
-        await _safeField(_api.getAllPeriodsDetails, <PeriodsDateRange>[]);
+    final periods = await _safeField(
+      _api.getAllPeriodsDetails,
+      <PeriodsDateRange>[],
+    );
 
     // getAllPeriodsDetails() returns newest → oldest; flip to chronological so
     // charts read left (older) → right (newer).
@@ -309,8 +336,9 @@ class CycleBridgeService {
     // The most recent entry is the *ongoing* cycle: its cycleLength is only
     // "days elapsed so far", so it would render as an artificially short bar.
     // Drop it and keep only completed cycles for the length/duration history.
-    final completed =
-        chrono.length > 1 ? chrono.sublist(0, chrono.length - 1) : const [];
+    final completed = chrono.length > 1
+        ? chrono.sublist(0, chrono.length - 1)
+        : const [];
 
     final cycleLengths = <int>[];
     final periodDurations = <int>[];
@@ -321,14 +349,46 @@ class CycleBridgeService {
       if (dur > 0 && dur < 30) periodDurations.add(dur);
     }
 
-    final monthlyTemps =
-        await _safeField(_loadMonthlyTemperatures, <MonthlyTemperature>[]);
+    final monthlyTemps = await _safeField(
+      _loadMonthlyTemperatures,
+      <MonthlyTemperature>[],
+    );
+    final wellness = await _safeField(
+      _loadWellnessScores,
+      const RealWellnessScores(),
+    );
 
     return AnalyticsHistory(
       cycleLengths: _lastN(cycleLengths, 12),
       periodDurations: _lastN(periodDurations, 12),
       monthlyTemps: monthlyTemps,
+      wellness: wellness,
     );
+  }
+
+  /// Real mood/energy/sleep from the last 60 days of daily logs (feeling and
+  /// energy symptom selections + logged sleep windows). Empty scores when the
+  /// user never logs those dimensions — analytics falls back to the phase
+  /// estimates.
+  Future<RealWellnessScores> _loadWellnessScores() async {
+    final now = DateTime.now();
+    final logs = await _api.getSymptomsLogReport(
+      startDate: now.subtract(const Duration(days: 60)),
+      endDate: now,
+    );
+
+    final dayLogs = <WellnessDayLog>[
+      for (final log in logs)
+        WellnessDayLog(
+          symptomIds: {
+            for (final s in log.symptomsData ?? const <SymptomsData>[])
+              if (s.symptomId != null && s.symptomId != 0) s.symptomId!,
+          },
+          sleepTime: log.sleepTime,
+        ),
+    ];
+
+    return WellnessScoreEngine.fromLogs(dayLogs);
   }
 
   List<int> _lastN(List<int> list, int n) =>
@@ -377,9 +437,7 @@ class CycleBridgeService {
           ? a.year.compareTo(b.year)
           : a.month.compareTo(b.month),
     );
-    return result.length > 12
-        ? result.sublist(result.length - 12)
-        : result;
+    return result.length > 12 ? result.sublist(result.length - 12) : result;
   }
 }
 
@@ -408,6 +466,15 @@ class CycleDashboardData {
     required this.isPeriodStarted,
     required this.isOvulationDay,
     required this.expectedPregnancyTestDate,
+    this.predictionConfidence = CyclePredictionConfidence.learning,
+    this.predictionConfidenceScore = 0,
+    this.predictionAccuracy = CyclePredictionAccuracy.empty,
+    this.completedCycleCount = 0,
+    this.excludedCycleCount = 0,
+    this.isPredictionWindowActive = false,
+    this.isPeriodLate = false,
+    this.daysLate = 0,
+    this.possibleMissingLog = false,
   });
 
   final String phase;
@@ -433,6 +500,21 @@ class CycleDashboardData {
   final bool isPeriodStarted;
   final bool isOvulationDay;
   final String expectedPregnancyTestDate;
+  final CyclePredictionConfidence predictionConfidence;
+  final double predictionConfidenceScore;
+  final CyclePredictionAccuracy predictionAccuracy;
+  final int completedCycleCount;
+  final int excludedCycleCount;
+  final bool isPredictionWindowActive;
+  final bool isPeriodLate;
+  final int daysLate;
+  final bool possibleMissingLog;
+
+  String get periodDisplay =>
+      nextPeriodRange.isNotEmpty ? nextPeriodRange : nextPeriod;
+
+  String get ovulationDisplay =>
+      ovulationRange.isNotEmpty ? ovulationRange : ovulation;
 }
 
 class PredictedSymptom {
@@ -504,6 +586,7 @@ class AnalyticsHistory {
     required this.cycleLengths,
     required this.periodDurations,
     required this.monthlyTemps,
+    this.wellness,
   });
 
   /// Completed cycle lengths (days), oldest → newest. Excludes the ongoing
@@ -515,6 +598,10 @@ class AnalyticsHistory {
 
   /// Up to 12 most recent monthly body-temperature averages, oldest → newest.
   final List<MonthlyTemperature> monthlyTemps;
+
+  /// Real mood/energy/sleep scores from the last 60 days of daily logs;
+  /// null (or empty) when the user hasn't logged those dimensions.
+  final RealWellnessScores? wellness;
 
   bool get hasCycleHistory => cycleLengths.length >= 2;
   bool get hasPeriodHistory => periodDurations.length >= 2;

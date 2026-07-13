@@ -200,12 +200,14 @@ class CycleHealthReportDocument extends StatelessWidget {
                     children: [
                       _StatRow(
                         label: l10n.healthReportNextPeriodDay,
-                        value: _text(pm['next_period_day'] ?? dash?.nextPeriod),
+                        value: _text(
+                          dash?.periodDisplay ?? pm['next_period_day'],
+                        ),
                       ),
                       _StatRow(
                         label: l10n.healthReportNextOvulationDay,
                         value: _text(
-                          pm['next_ovulation_day'] ?? dash?.ovulation,
+                          dash?.ovulationDisplay ?? pm['next_ovulation_day'],
                         ),
                       ),
                     ],
@@ -723,7 +725,7 @@ class _RedFlagSection extends StatelessWidget {
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(top: 2),
-                    child: Icon(Icons.flag_outlined, size: 13, color: _accent),
+                    child: Icon(Icons.flag_outlined, size: 12, color: _accent),
                   ),
                   const SizedBox(width: 8),
                   Expanded(

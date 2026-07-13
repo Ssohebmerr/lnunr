@@ -41,18 +41,18 @@ class StoriesRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   StoryRing(
-                  group: StoryGroup(
-                    authorUid: uid ?? '',
-                    authorAlias: alias ?? 'You',
-                    authorAvatarIndex: avatarIndex,
-                    stories: const [],
-                    currentUid: uid,
+                    group: StoryGroup(
+                      authorUid: uid ?? '',
+                      authorAlias: alias ?? 'You',
+                      authorAvatarIndex: avatarIndex,
+                      stories: const [],
+                      currentUid: uid,
+                    ),
+                    isViewed: false,
+                    isCurrentUser: true,
+                    onTap: onCreateStory,
                   ),
-                  isViewed: false,
-                  isCurrentUser: true,
-                  onTap: onCreateStory,
-                ),
-              ],
+                ],
               ),
             ),
           );
@@ -97,45 +97,45 @@ class StoriesRow extends StatelessWidget {
           child: Semantics(
             label: 'Stories',
             child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: groups.length + (hasMyStory ? 0 : 1),
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              if (!hasMyStory && i == 0) {
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: groups.length + (hasMyStory ? 0 : 1),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                if (!hasMyStory && i == 0) {
+                  return StoryRing(
+                    group: StoryGroup(
+                      authorUid: uid ?? '',
+                      authorAlias: alias ?? 'You',
+                      authorAvatarIndex: avatarIndex,
+                      stories: const [],
+                      currentUid: uid,
+                    ),
+                    isViewed: false,
+                    isCurrentUser: true,
+                    onTap: onCreateStory,
+                  );
+                }
+
+                final groupIndex = hasMyStory ? i : i - 1;
+                final group = groups[groupIndex];
+                final isOwn = group.authorUid == uid;
+                final isViewed = isOwn ? false : group.allViewed;
+
                 return StoryRing(
-                  group: StoryGroup(
-                    authorUid: uid ?? '',
-                    authorAlias: alias ?? 'You',
-                    authorAvatarIndex: avatarIndex,
-                    stories: const [],
-                    currentUid: uid,
-                  ),
-                  isViewed: false,
-                  isCurrentUser: true,
-                  onTap: onCreateStory,
+                  group: group,
+                  isViewed: isViewed,
+                  isCurrentUser: isOwn && group.stories.isEmpty,
+                  onTap: () {
+                    if (isOwn && group.stories.isEmpty) {
+                      onCreateStory();
+                      return;
+                    }
+                    _openViewer(context, groups, groupIndex);
+                  },
                 );
-              }
-
-              final groupIndex = hasMyStory ? i : i - 1;
-              final group = groups[groupIndex];
-              final isOwn = group.authorUid == uid;
-              final isViewed = isOwn ? false : group.allViewed;
-
-              return StoryRing(
-                group: group,
-                isViewed: isViewed,
-                isCurrentUser: isOwn && group.stories.isEmpty,
-                onTap: () {
-                  if (isOwn && group.stories.isEmpty) {
-                    onCreateStory();
-                    return;
-                  }
-                  _openViewer(context, groups, groupIndex);
-                },
-              );
-            },
-          ),
+              },
+            ),
           ),
         );
       },

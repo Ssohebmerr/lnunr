@@ -15,6 +15,7 @@ import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../community/presentation/blocked_users_screen.dart';
+import '../../community/presentation/following_screen.dart';
 import '../../cycle/data/cycle_sync_service.dart';
 import '../../cycle/data/local_backup_service.dart';
 import '../../cycle/presentation/cycle_settings_sheet.dart';
@@ -295,6 +296,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               if (user != null)
                 AccountMenuCard(
                   children: [
+                    AccountMenuTile(
+                      icon: Icons.people_alt_outlined,
+                      title: l10n.communityFollowingTitle,
+                      subtitle: l10n.communityFollowingSubtitle,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const FollowingScreen(),
+                        ),
+                      ),
+                    ),
                     AccountMenuTile(
                       icon: Icons.block_outlined,
                       title: l10n.accountBlockedUsers,

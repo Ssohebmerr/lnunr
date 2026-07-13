@@ -17,16 +17,119 @@ class _PostDetailScreen extends StatefulWidget {
   State<_PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
+enum _CommentSort { oldest, newest, top }
+
 class _PostDetailScreenState extends State<_PostDetailScreen> {
   final _commentController = TextEditingController();
+  final _commentFocus = FocusNode();
   bool _sending = false;
   String? _replyToCommentId;
   String? _replyToAlias;
 
+  _CommentSort _commentSort = _CommentSort.oldest;
+  Future<Map<String, int>>? _likeCountsFuture;
+  String _likeCountsKey = '';
+
+  // Mention state: the @token being typed and aliases already picked from
+  // the suggestion strip (alias → uid), resolved against the final text on
+  // send so deleted mentions are dropped.
+  String? _mentionQuery;
+  int _mentionTokenStart = -1;
+  final Map<String, String> _pickedMentions = {};
+  List<CommunityComment> _latestComments = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _commentController.addListener(_onComposerChanged);
+  }
+
   @override
   void dispose() {
     _commentController.dispose();
+    _commentFocus.dispose();
     super.dispose();
+  }
+
+  void _onComposerChanged() {
+    final sel = _commentController.selection;
+    final text = _commentController.text;
+    if (!sel.isValid || !sel.isCollapsed) {
+      _clearMentionQuery();
+      return;
+    }
+    final upto = text.substring(0, sel.baseOffset);
+    final at = upto.lastIndexOf('@');
+    // Token must start the text or follow whitespace, and stay short and on
+    // one line — otherwise every later '@' in a long comment would reopen
+    // the suggestions.
+    if (at < 0 || (at > 0 && !RegExp(r'\s').hasMatch(upto[at - 1]))) {
+      _clearMentionQuery();
+      return;
+    }
+    final query = upto.substring(at + 1);
+    if (query.contains('\n') || query.length > 24) {
+      _clearMentionQuery();
+      return;
+    }
+    setState(() {
+      _mentionQuery = query.toLowerCase();
+      _mentionTokenStart = at;
+    });
+  }
+
+  void _clearMentionQuery() {
+    if (_mentionQuery == null) return;
+    setState(() {
+      _mentionQuery = null;
+      _mentionTokenStart = -1;
+    });
+  }
+
+  void _insertMention(String alias, String uid) {
+    final text = _commentController.text;
+    final sel = _commentController.selection;
+    final start = _mentionTokenStart;
+    if (start < 0 || !sel.isValid || !sel.isCollapsed) return;
+    final replaced =
+        '${text.substring(0, start)}@$alias ${text.substring(sel.baseOffset)}';
+    _pickedMentions[alias] = uid;
+    _commentController.value = TextEditingValue(
+      text: replaced,
+      selection: TextSelection.collapsed(offset: start + alias.length + 2),
+    );
+    _commentFocus.requestFocus();
+  }
+
+  /// Post author + commenters (never anonymous identities, never self),
+  /// filtered by the @query being typed.
+  List<({String uid, String alias, int avatarIndex})> _mentionCandidates() {
+    final query = _mentionQuery;
+    if (query == null) return const [];
+    final me = FirebaseAuth.instance.currentUser?.uid;
+    final byUid = <String, ({String uid, String alias, int avatarIndex})>{};
+
+    final post = widget.post;
+    if (!post.isAnonymous && post.authorUid.isNotEmpty && post.authorUid != me) {
+      byUid[post.authorUid] = (
+        uid: post.authorUid,
+        alias: post.authorAlias,
+        avatarIndex: post.authorAvatarIndex,
+      );
+    }
+    for (final c in _latestComments) {
+      if (c.authorUid.isEmpty || c.authorUid == me) continue;
+      byUid[c.authorUid] = (
+        uid: c.authorUid,
+        alias: c.authorAlias,
+        avatarIndex: c.authorAvatarIndex,
+      );
+    }
+
+    return byUid.values
+        .where((m) => m.alias.toLowerCase().contains(query))
+        .take(6)
+        .toList();
   }
 
   void _startReply(CommunityComment comment) {
@@ -34,6 +137,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       _replyToCommentId = comment.id;
       _replyToAlias = comment.authorAlias;
     });
+    _commentFocus.requestFocus();
   }
 
   void _cancelReply() {
@@ -51,6 +155,12 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     setState(() => _sending = true);
     final repo = context.read<CommunityRepository>();
 
+    // Only aliases still present in the final text count as mentions.
+    final mentionUids = <String>{
+      for (final e in _pickedMentions.entries)
+        if (text.contains('@${e.key}')) e.value,
+    };
+
     try {
       final profile = await repo.resolveProfile(user.uid);
       final pending = await repo.createComment(
@@ -60,8 +170,10 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         text: text,
         authorAvatarIndex: profile.avatarIndex,
         parentCommentId: _replyToCommentId,
+        mentions: mentionUids.take(5).toList(),
       );
       _commentController.clear();
+      _pickedMentions.clear();
       _cancelReply();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -251,6 +363,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     CommunityComment comment,
     CommunityPost post, {
     required bool isPostAuthor,
+    bool fromThreadSheet = false,
   }) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -265,12 +378,15 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.canComment && !isOwn)
+            if (widget.canComment)
               ListTile(
                 leading: const Icon(Icons.reply_outlined),
                 title: Text(l10n.communityReply),
                 onTap: () {
                   Navigator.of(ctx).pop();
+                  // The thread sheet would otherwise stay open and cover the
+                  // composer, so the reply banner would never be seen.
+                  if (fromThreadSheet) Navigator.of(context).pop();
                   _startReply(comment);
                 },
               ),
@@ -362,15 +478,49 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
   }
 
+  /// Aggregate like counts for the current top-level comments, cached until
+  /// the comment set changes so rebuilds don't refetch.
+  Future<Map<String, int>> _topLikeCounts(List<CommunityComment> comments) {
+    final ids =
+        comments
+            .where((c) => c.parentCommentId == null)
+            .map((c) => c.id)
+            .toList()
+          ..sort();
+    final key = ids.join(',');
+    if (key != _likeCountsKey || _likeCountsFuture == null) {
+      _likeCountsKey = key;
+      _likeCountsFuture = context
+          .read<CommunityRepository>()
+          .fetchCommentLikeCounts(widget.community.id, widget.post.id, ids);
+    }
+    return _likeCountsFuture!;
+  }
+
   List<Widget> _buildCommentTiles(
     List<CommunityComment> comments,
     CommunityPost post,
     String? bestAnswerId,
-    bool isPostAuthor,
-  ) {
+    bool isPostAuthor, {
+    Map<String, int> likeCounts = const {},
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final topLevel = comments.where((c) => c.parentCommentId == null).toList();
+    switch (_commentSort) {
+      case _CommentSort.oldest:
+        break; // stream order is already createdAt ascending
+      case _CommentSort.newest:
+        topLevel.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case _CommentSort.top:
+        topLevel.sort((a, b) {
+          final byLikes = (likeCounts[b.id] ?? 0).compareTo(
+            likeCounts[a.id] ?? 0,
+          );
+          if (byLikes != 0) return byLikes;
+          return a.createdAt.compareTo(b.createdAt);
+        });
+    }
     final widgets = <Widget>[];
 
     for (final c in topLevel) {
@@ -378,125 +528,157 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       final replyCount = threadReplyCount(c.id, comments);
 
       widgets.add(
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: AppAvatar(
-            radius: 16,
-            avatarIndex: c.authorAvatarIndex,
-            uidSeed: c.authorUid,
-            isPremium: c.authorIsPremium,
-          ),
-          title: Row(
-            children: [
-              Flexible(
-                child: Text(c.authorAlias, overflow: TextOverflow.ellipsis),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: theme.brightness == Brightness.dark
+                ? AuraColors.darkCard.withValues(alpha: 0.74)
+                : Colors.white.withValues(alpha: 0.82),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              side: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.07),
               ),
-              if (c.authorIsPremium) const PremiumNameBadge(),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 8),
-                child: Text(
-                  communityRelativeTime(context, c.createdAt),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              contentPadding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+              leading: AppAvatar(
+                radius: 16,
+                avatarIndex: c.authorAvatarIndex,
+                uidSeed: c.authorUid,
+                isPremium: c.authorIsPremium,
               ),
-              const Spacer(),
-              if (isBest)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 8),
-                  child: Icon(
-                    Icons.star,
-                    size: 16,
-                    color: theme.colorScheme.tertiary,
-                  ),
-                ),
-            ],
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isBest)
-                Text(
-                  l10n.communityBestAnswer,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.tertiary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              if (c.isEdited)
-                Text(
-                  l10n.communityEdited,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              if (c.isPendingReview)
-                Text(
-                  l10n.communityPendingReview,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.secondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              Text(c.text),
-              const SizedBox(height: 6),
-              Row(
+              title: Row(
                 children: [
-                  CommentLikeButton(
-                    communityId: widget.community.id,
-                    postId: widget.post.id,
-                    commentId: c.id,
+                  Flexible(
+                    child: Text(c.authorAlias, overflow: TextOverflow.ellipsis),
                   ),
-                  if (replyCount > 0) ...[
-                    const SizedBox(width: 10),
-                    TextButton.icon(
-                      onPressed: () => showCommentThreadSheet(
-                        context: context,
-                        root: c,
-                        allComments: comments,
-                        bestAnswerId: bestAnswerId,
-                        communityId: widget.community.id,
-                        postId: widget.post.id,
-                        onCommentTap: (comment) => _showCommentActions(
-                          comment,
-                          post,
-                          isPostAuthor: isPostAuthor,
-                        ),
-                      ),
-                      icon: const Icon(Icons.forum_outlined, size: 16),
-                      label: Text(l10n.communityViewReplies(replyCount)),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  if (c.authorIsPremium) const PremiumNameBadge(),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 8),
+                    child: Text(
+                      communityRelativeTime(context, c.createdAt),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ],
+                  ),
+                  const Spacer(),
+                  if (isBest)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 8),
+                      child: Icon(
+                        Icons.star,
+                        size: 16,
+                        color: theme.colorScheme.tertiary,
+                      ),
+                    ),
                 ],
               ),
-            ],
-          ),
-          onLongPress: () =>
-              _showCommentActions(c, post, isPostAuthor: isPostAuthor),
-          onTap: widget.canComment
-              ? () => _showCommentActions(c, post, isPostAuthor: isPostAuthor)
-              : replyCount > 0
-              ? () => showCommentThreadSheet(
-                  context: context,
-                  root: c,
-                  allComments: comments,
-                  bestAnswerId: bestAnswerId,
-                  communityId: widget.community.id,
-                  postId: widget.post.id,
-                  onCommentTap: (comment) => _showCommentActions(
-                    comment,
-                    post,
-                    isPostAuthor: isPostAuthor,
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isBest)
+                    Text(
+                      l10n.communityBestAnswer,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.tertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  if (c.isEdited)
+                    Text(
+                      l10n.communityEdited,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  if (c.isPendingReview)
+                    Text(
+                      l10n.communityPendingReview,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  Text(c.text),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      CommentLikeButton(
+                        communityId: widget.community.id,
+                        postId: widget.post.id,
+                        commentId: c.id,
+                      ),
+                      if (widget.canComment) ...[
+                        const SizedBox(width: 10),
+                        TextButton.icon(
+                          onPressed: () => _startReply(c),
+                          icon: const Icon(Icons.reply_outlined, size: 16),
+                          label: Text(l10n.communityReply),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                      if (replyCount > 0) ...[
+                        const SizedBox(width: 10),
+                        TextButton.icon(
+                          onPressed: () => showCommentThreadSheet(
+                            context: context,
+                            root: c,
+                            allComments: comments,
+                            bestAnswerId: bestAnswerId,
+                            communityId: widget.community.id,
+                            postId: widget.post.id,
+                            onReply: widget.canComment ? _startReply : null,
+                            onCommentTap: (comment) => _showCommentActions(
+                              comment,
+                              post,
+                              isPostAuthor: isPostAuthor,
+                              fromThreadSheet: true,
+                            ),
+                          ),
+                          icon: const Icon(Icons.forum_outlined, size: 16),
+                          label: Text(l10n.communityViewReplies(replyCount)),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                )
-              : null,
+                ],
+              ),
+              onLongPress: () =>
+                  _showCommentActions(c, post, isPostAuthor: isPostAuthor),
+              onTap: widget.canComment
+                  ? () =>
+                        _showCommentActions(c, post, isPostAuthor: isPostAuthor)
+                  : replyCount > 0
+                  ? () => showCommentThreadSheet(
+                      context: context,
+                      root: c,
+                      allComments: comments,
+                      bestAnswerId: bestAnswerId,
+                      communityId: widget.community.id,
+                      postId: widget.post.id,
+                      onCommentTap: (comment) => _showCommentActions(
+                        comment,
+                        post,
+                        isPostAuthor: isPostAuthor,
+                        fromThreadSheet: true,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
         ),
       );
     }
@@ -605,6 +787,11 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                                   .withValues(alpha: 0.4),
                             ),
                           ),
+                          _CommentSortMenu(
+                            current: _commentSort,
+                            onChanged: (sort) =>
+                                setState(() => _commentSort = sort),
+                          ),
                         ],
                       ),
                     ),
@@ -623,6 +810,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                             final comments = (snap.data ?? [])
                                 .where((c) => !blocked.contains(c.authorUid))
                                 .toList();
+                            _latestComments = comments;
                             if (comments.isEmpty) {
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -639,6 +827,20 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                                             context,
                                           ).colorScheme.onSurfaceVariant,
                                         ),
+                                  ),
+                                ),
+                              );
+                            }
+                            if (_commentSort == _CommentSort.top) {
+                              return FutureBuilder<Map<String, int>>(
+                                future: _topLikeCounts(comments),
+                                builder: (context, countsSnap) => Column(
+                                  children: _buildCommentTiles(
+                                    comments,
+                                    livePost,
+                                    livePost.bestAnswerCommentId,
+                                    isAuthor,
+                                    likeCounts: countsSnap.data ?? const {},
                                   ),
                                 ),
                               );
@@ -666,15 +868,13 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
   }
 
-  /// Transparent scaffold with the app's gradient background and a glass
-  /// back button — keeps the post detail consistent with the rest of the app.
+  /// Transparent scaffold with the app gradient and clean tonal actions.
   Widget _themedScaffold(
     BuildContext context, {
     required String title,
     required Widget body,
     List<Widget> actions = const [],
   }) {
-    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -684,14 +884,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         scrolledUnderElevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: AppGlassCard(
-            radius: AppRadius.pill,
-            padding: const EdgeInsets.all(8),
-            onTap: () => Navigator.of(context).pop(),
-            child: Icon(
-              Icons.arrow_back_rounded,
-              color: theme.colorScheme.onSurface,
-            ),
+          child: IconButton.filledTonal(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -709,6 +904,42 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     );
   }
 
+  /// Horizontal strip of member chips shown while an @token is being typed.
+  Widget _buildMentionStrip(BuildContext context, ThemeData theme) {
+    final candidates = _mentionCandidates();
+    if (candidates.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: candidates.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (context, i) {
+          final m = candidates[i];
+          return ActionChip(
+            avatar: AppAvatar(
+              radius: 11,
+              avatarIndex: m.avatarIndex,
+              uidSeed: m.uid,
+            ),
+            label: Text(m.alias, overflow: TextOverflow.ellipsis),
+            labelStyle: theme.textTheme.labelMedium,
+            visualDensity: VisualDensity.compact,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              side: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.15),
+              ),
+            ),
+            onPressed: () => _insertMention(m.alias, m.uid),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildCommentComposer(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -720,6 +951,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_mentionQuery != null) _buildMentionStrip(context, theme),
             if (_replyToAlias != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -757,69 +989,106 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   ],
                 ),
               ),
-            Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AuraColors.darkCard.withValues(alpha: 0.85)
-                    : Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.04),
+            Material(
+              color: isDark
+                  ? AuraColors.darkCard.withValues(alpha: 0.9)
+                  : Colors.white.withValues(alpha: 0.94),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                side: BorderSide(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.09),
                 ),
-                boxShadow: AppShadows.navFloat(isDark),
               ),
-              padding: const EdgeInsetsDirectional.only(start: 18, end: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: l10n.communityCommentHint,
-                        border: InputBorder.none,
-                        counterText: '',
-                        isCollapsed: true,
-                      ),
-                      maxLength: 300,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: AuraDecorations.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: _sending ? null : _sendComment,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: _sending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.send_rounded,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _commentController,
+                        focusNode: _commentFocus,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: l10n.communityCommentHint,
+                          border: InputBorder.none,
+                          counterText: '',
+                          isCollapsed: true,
                         ),
+                        maxLength: 300,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      onPressed: _sending ? null : _sendComment,
+                      icon: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, size: 18),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sort selector for the comments list (oldest / newest / most liked).
+class _CommentSortMenu extends StatelessWidget {
+  const _CommentSortMenu({required this.current, required this.onChanged});
+
+  final _CommentSort current;
+  final ValueChanged<_CommentSort> onChanged;
+
+  String _label(_CommentSort sort, AppLocalizations l10n) => switch (sort) {
+    _CommentSort.oldest => l10n.communityCommentSortOldest,
+    _CommentSort.newest => l10n.communityCommentSortNewest,
+    _CommentSort.top => l10n.communityCommentSortTop,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return PopupMenuButton<_CommentSort>(
+      tooltip: '',
+      initialValue: current,
+      onSelected: onChanged,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      itemBuilder: (ctx) => [
+        for (final sort in _CommentSort.values)
+          PopupMenuItem(value: sort, child: Text(_label(sort, l10n))),
+      ],
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.swap_vert_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              _label(current, l10n),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -843,12 +1112,9 @@ class _GlassAppBarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final button = AppGlassCard(
-      radius: AppRadius.pill,
-      padding: const EdgeInsets.all(8),
-      onTap: onTap,
-      child: Icon(icon, size: 20, color: theme.colorScheme.onSurface),
+    final button = IconButton.filledTonal(
+      onPressed: onTap,
+      icon: Icon(icon, size: 20),
     );
     if (tooltip == null) return button;
     return Tooltip(message: tooltip!, child: button);
@@ -879,6 +1145,7 @@ class _PostActionsMenu extends StatelessWidget {
 
     return PopupMenuButton<String>(
       tooltip: '',
+      icon: const Icon(Icons.more_horiz_rounded, size: 20),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
@@ -923,15 +1190,6 @@ class _PostActionsMenu extends StatelessWidget {
             ),
           ),
       ],
-      child: AppGlassCard(
-        radius: AppRadius.pill,
-        padding: const EdgeInsets.all(8),
-        child: Icon(
-          Icons.more_horiz_rounded,
-          size: 20,
-          color: theme.colorScheme.onSurface,
-        ),
-      ),
     );
   }
 
@@ -946,7 +1204,7 @@ class _PostActionsMenu extends StatelessWidget {
         : theme.colorScheme.onSurface;
     return Row(
       children: [
-        Icon(icon, size: 19, color: color),
+        Icon(icon, size: 18, color: color),
         const SizedBox(width: 12),
         Text(label, style: TextStyle(color: color)),
       ],

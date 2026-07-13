@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
-
 class CommunityComment {
-
   const CommunityComment({
-
     required this.id,
 
     required this.authorUid,
@@ -26,8 +22,6 @@ class CommunityComment {
     this.hidden = false,
     this.authorIsPremium = false,
   });
-
-
 
   final String id;
 
@@ -60,14 +54,10 @@ class CommunityComment {
     return viewerUid != null && viewerUid == authorUid;
   }
 
-
-
   factory CommunityComment.fromMap(String id, Map<String, dynamic> data) {
-
     final ts = data['createdAt'];
 
     return CommunityComment(
-
       id: id,
 
       authorUid: data['authorUid'] as String? ?? '',
@@ -77,9 +67,7 @@ class CommunityComment {
       text: data['text'] as String? ?? '',
 
       createdAt: ts is Timestamp
-
           ? ts.toDate()
-
           : DateTime.tryParse(ts?.toString() ?? '') ?? DateTime.now(),
 
       authorAvatarIndex: data['authorAvatarIndex'] as int? ?? 0,
@@ -92,39 +80,28 @@ class CommunityComment {
       hidden: data['hidden'] as bool? ?? false,
       authorIsPremium: data['authorIsPremium'] as bool? ?? false,
     );
-
   }
 
-
-
   static DateTime? _parseTs(dynamic ts) {
-
     if (ts == null) return null;
 
     if (ts is Timestamp) return ts.toDate();
 
     return DateTime.tryParse(ts.toString());
-
   }
 
-
-
   Map<String, dynamic> toMap() => {
+    'authorUid': authorUid,
 
-        'authorUid': authorUid,
+    'authorAlias': authorAlias,
 
-        'authorAlias': authorAlias,
+    'text': text,
 
-        'text': text,
+    'createdAt': FieldValue.serverTimestamp(),
 
-        'createdAt': FieldValue.serverTimestamp(),
+    'authorAvatarIndex': authorAvatarIndex,
+    'authorIsPremium': authorIsPremium,
 
-        'authorAvatarIndex': authorAvatarIndex,
-        'authorIsPremium': authorIsPremium,
-
-        if (parentCommentId != null) 'parentCommentId': parentCommentId,
-
-      };
-
+    if (parentCommentId != null) 'parentCommentId': parentCommentId,
+  };
 }
-

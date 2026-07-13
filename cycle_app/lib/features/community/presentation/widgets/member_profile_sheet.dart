@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -76,6 +77,11 @@ Future<void> showMemberProfileSheet(
                         ],
                       ),
                     ),
+                    _FollowButton(
+                      authorUid: authorUid,
+                      alias: alias,
+                      avatarIndex: avatarIndex,
+                    ),
                   ],
                 ),
               ),
@@ -133,6 +139,66 @@ Future<void> showMemberProfileSheet(
   );
 }
 
+/// Follow / following toggle for the member profile header. Hidden when
+/// viewing your own profile or signed out.
+class _FollowButton extends StatelessWidget {
+  const _FollowButton({
+    required this.authorUid,
+    required this.alias,
+    required this.avatarIndex,
+  });
+
+  final String authorUid;
+  final String alias;
+  final int avatarIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid == authorUid) return const SizedBox.shrink();
+
+    final repo = context.read<CommunityRepository>();
+    final l10n = AppLocalizations.of(context)!;
+
+    return StreamBuilder<bool>(
+      stream: repo.watchIsFollowing(uid, authorUid),
+      builder: (context, snap) {
+        if (!snap.hasData) return const SizedBox.shrink();
+        final following = snap.data!;
+
+        if (following) {
+          return OutlinedButton.icon(
+            onPressed: () => repo.unfollowUser(uid: uid, followedUid: authorUid),
+            icon: const Icon(Icons.check_rounded, size: 16),
+            label: Text(l10n.communityFollowingBtn),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+            ),
+          );
+        }
+
+        return FilledButton.icon(
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            await repo.followUser(
+              uid: uid,
+              followedUid: authorUid,
+              alias: alias,
+              avatarIndex: avatarIndex,
+            );
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.communityFollowedToast(alias))),
+            );
+          },
+          icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+          label: Text(l10n.communityFollow),
+          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+        );
+      },
+    );
+  }
+}
+
 class _MemberPostPreview extends StatelessWidget {
   const _MemberPostPreview({required this.post});
 
@@ -145,8 +211,10 @@ class _MemberPostPreview extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        color: theme.brightness == Brightness.dark
+            ? AuraColors.darkCard.withValues(alpha: 0.72)
+            : Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.08),
         ),
@@ -165,7 +233,7 @@ class _MemberPostPreview extends StatelessWidget {
             children: [
               Icon(
                 Icons.chat_bubble_outline_rounded,
-                size: 13,
+                size: 12,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),

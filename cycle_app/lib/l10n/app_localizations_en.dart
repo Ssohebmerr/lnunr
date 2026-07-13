@@ -326,6 +326,67 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get conditionTrendsTitle => 'Your trends';
+
+  @override
+  String get conditionTrendsEmpty =>
+      'Nothing logged yet — track your symptoms and rituals from the Home screen and your trends will appear here.';
+
+  @override
+  String get conditionTrendLast14Days => 'Last 14 days';
+
+  @override
+  String get conditionTrendLast30Days => 'Last 30 days';
+
+  @override
+  String get conditionTrendLast7Days => 'Last 7 days';
+
+  @override
+  String get conditionTrendToday => 'Today';
+
+  @override
+  String get conditionTrendHotFlashes => 'Hot flashes';
+
+  @override
+  String get conditionTrendMood => 'Mood check-ins';
+
+  @override
+  String get conditionTrendSymptomsPerDay => 'Symptoms per day';
+
+  @override
+  String get conditionTopSymptoms => 'Most frequent symptoms';
+
+  @override
+  String get conditionDaysLogged => 'Days logged';
+
+  @override
+  String get conditionRitualCompletion => 'Rituals done';
+
+  @override
+  String get conditionDoctorReportCta => 'Doctor report (PDF)';
+
+  @override
+  String get conditionReportTitle => 'Doctor summary report';
+
+  @override
+  String get conditionReportOverview => 'Overview';
+
+  @override
+  String get conditionReportGoalLabel => 'Health focus';
+
+  @override
+  String get conditionReportConsistency => 'Tracking consistency';
+
+  @override
+  String get conditionReportNoLogs =>
+      'No daily logs in the last 30 days — track symptoms from the Home screen to enrich this report.';
+
+  @override
+  String conditionReportTimes(int count) {
+    return '$count×';
+  }
+
+  @override
   String conditionStreakDays(int days) {
     return '$days-day logging streak';
   }
@@ -1406,7 +1467,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doctorReportLimitedData =>
-      'This report is based on limited data. After about one month of logging, predictions and patterns become much more accurate.';
+      'This report is based on limited data. Logging several completed cycle starts enables personal accuracy measurement and a better prediction window.';
 
   @override
   String get doctorReportAiTitle => 'AI assistant notes';
@@ -2697,16 +2758,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalModeReportInsights => 'Insights for your goal';
 
   @override
-  String get goalModeFertilityToday => 'Fertility today';
+  String get goalModeFertilityToday => 'Fertility estimate today';
 
   @override
-  String get goalModeFertilityHigh => 'High';
+  String get goalModeFertilityHigh => 'Estimated high';
 
   @override
-  String get goalModeFertilityModerate => 'Moderate';
+  String get goalModeFertilityModerate => 'Estimated moderate';
 
   @override
-  String get goalModeFertilityLow => 'Low';
+  String get goalModeFertilityLow => 'Estimated lower';
 
   @override
   String get goalModeFertilityUnknown => 'Track more';
@@ -2715,7 +2776,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalModeTestDate => 'Pregnancy test';
 
   @override
-  String get goalModeOvulationToday => 'Ovulation day today';
+  String get goalModeOvulationToday => 'Estimated ovulation window today';
 
   @override
   String get goalModeConceiveSelfCare => 'Fertility self-care';
@@ -3185,10 +3246,62 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String communityActivityFollow(String alias) {
+    return '$alias started following you';
+  }
+
+  @override
+  String communityActivityMention(String alias) {
+    return '$alias mentioned you in a comment';
+  }
+
+  @override
+  String get communityFollow => 'Follow';
+
+  @override
+  String get communityFollowingBtn => 'Following';
+
+  @override
+  String get communityUnfollow => 'Unfollow';
+
+  @override
+  String get communityUnfollowed => 'Unfollowed';
+
+  @override
+  String communityFollowedToast(String alias) {
+    return 'You\'re now following $alias';
+  }
+
+  @override
+  String get communityFollowingTitle => 'Following';
+
+  @override
+  String get communityFollowingSubtitle => 'Members you follow';
+
+  @override
+  String get communityFollowingEmpty =>
+      'You aren\'t following anyone yet. Tap a member\'s name on a post to follow them.';
+
+  @override
+  String get communityCommentSortOldest => 'Oldest first';
+
+  @override
+  String get communityCommentSortNewest => 'Newest first';
+
+  @override
+  String get communityCommentSortTop => 'Most liked';
+
+  @override
   String get communityMarkAllRead => 'Mark all read';
 
   @override
   String get communitySortNewest => 'Newest';
+
+  @override
+  String get communityFeedPopular => 'Popular';
+
+  @override
+  String get communityFeedMyComments => 'My comments';
 
   @override
   String get communitySortDiscussed => 'Most discussed';
@@ -3944,6 +4057,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String predictionCenterDate(String date) {
     return 'Best guess: $date';
   }
+
+  @override
+  String get predictionConfidenceLabel => 'Prediction confidence';
+
+  @override
+  String get predictionConfidenceLearning => 'Still learning';
+
+  @override
+  String get predictionConfidenceModerate => 'Moderate';
+
+  @override
+  String get predictionConfidenceStrong => 'Strong';
+
+  @override
+  String predictionAccuracyPersonal(int within, int total) {
+    return 'Within 2 days for $within of your last $total testable cycles';
+  }
+
+  @override
+  String get predictionAccuracyLearning =>
+      'Complete 4 cycles to see your personal accuracy';
+
+  @override
+  String get predictionWindowActive =>
+      'You are currently inside the expected period window';
+
+  @override
+  String periodPredictionLate(int days) {
+    return '$days days past the end of your expected window';
+  }
+
+  @override
+  String get predictionPossibleMissingLog =>
+      'This may be a longer cycle, or a period log may be missing. Review your calendar before relying on the next estimate.';
+
+  @override
+  String get predictionEvidenceNote =>
+      'Personal range based on your history — an estimate, not a medical guarantee';
+
+  @override
+  String get ovulationEstimateHint =>
+      'Current-cycle estimate — do not use it alone for contraception';
 
   @override
   String get ageGateTitle => 'How old are you?';

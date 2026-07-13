@@ -109,7 +109,8 @@ class CommunitySeed {
       nameAr: 'الصحة النفسية والمزاج',
       descriptionEn:
           'Talk about PMS mood, anxiety, and emotional self-care during your cycle.',
-      descriptionAr: 'ناقشي مزاج ما قبل الدورة والقلق والعناية النفسية خلال دورتك.',
+      descriptionAr:
+          'ناقشي مزاج ما قبل الدورة والقلق والعناية النفسية خلال دورتك.',
       topic: 'support',
       icon: Icons.psychology_outlined,
       maxMembers: 200,
@@ -153,7 +154,8 @@ class CommunitySeed {
       nameAr: 'دعم PMS و PMDD',
       descriptionEn:
           'A dedicated hub for sharing experiences and managing severe cycle mood swings.',
-      descriptionAr: 'ملتقى مخصص لمشاركة التجارب والتعامل مع تقلبات المزاج الحادة.',
+      descriptionAr:
+          'ملتقى مخصص لمشاركة التجارب والتعامل مع تقلبات المزاج الحادة.',
       topic: 'condition',
       icon: Icons.mood_bad_outlined,
       maxMembers: 200,
@@ -175,7 +177,8 @@ class CommunitySeed {
       nameAr: 'الحمل والانتظار',
       descriptionEn:
           'Share the journey week by week — symptoms, questions, and joy.',
-      descriptionAr: 'شاركي رحلة الحمل أسبوعاً بأسبوع — الأعراض والأسئلة والفرح.',
+      descriptionAr:
+          'شاركي رحلة الحمل أسبوعاً بأسبوع — الأعراض والأسئلة والفرح.',
       topic: 'support',
       icon: Icons.child_friendly_outlined,
       maxMembers: 200,
@@ -186,7 +189,8 @@ class CommunitySeed {
       nameAr: 'الدورة غير المنتظمة والمتأخرة',
       descriptionEn:
           'Support for late, missing, or unpredictable cycles — you are not alone.',
-      descriptionAr: 'دعم للدورة المتأخرة أو الغائبة أو غير المتوقعة — لستِ وحدك.',
+      descriptionAr:
+          'دعم للدورة المتأخرة أو الغائبة أو غير المتوقعة — لستِ وحدك.',
       topic: 'condition',
       icon: Icons.event_busy_outlined,
       maxMembers: 200,
@@ -219,7 +223,8 @@ class CommunitySeed {
       nameAr: 'الغدة الدرقية وصحة الهرمونات',
       descriptionEn:
           'Peer support for thyroid and hormone imbalances that affect cycles.',
-      descriptionAr: 'دعم جماعي لاضطرابات الغدة والهرمونات التي تؤثر على الدورة.',
+      descriptionAr:
+          'دعم جماعي لاضطرابات الغدة والهرمونات التي تؤثر على الدورة.',
       topic: 'condition',
       icon: Icons.healing_outlined,
       maxMembers: 150,
@@ -230,7 +235,8 @@ class CommunitySeed {
       nameAr: 'دعم الأورام الليفية',
       descriptionEn:
           'Share experiences with fibroids — symptoms, care, and questions.',
-      descriptionAr: 'شاركي تجاربك مع الأورام الليفية — الأعراض والعناية والأسئلة.',
+      descriptionAr:
+          'شاركي تجاربك مع الأورام الليفية — الأعراض والعناية والأسئلة.',
       topic: 'condition',
       icon: Icons.spa_outlined,
       maxMembers: 150,

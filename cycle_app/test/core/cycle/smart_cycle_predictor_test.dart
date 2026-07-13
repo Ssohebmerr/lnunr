@@ -39,6 +39,68 @@ void main() {
       expect(next.difference(last).inDays % 28, equals(0));
     });
 
+    test('user-facing estimate keeps original date and reports lateness', () {
+      final estimate = SmartCyclePredictor.estimateNextPeriod(
+        lastPeriodStart: DateTime(2026, 6, 1),
+        completedLengths: const [28, 28, 28, 28],
+        configuredFallback: 28,
+        now: DateTime(2026, 7, 10),
+      );
+
+      expect(estimate.centerDate, DateTime(2026, 6, 29));
+      expect(estimate.isLate, isTrue);
+      expect(estimate.daysLate, greaterThan(0));
+      expect(estimate.centerDate.isBefore(DateTime(2026, 7, 10)), isTrue);
+    });
+
+    test('walk-forward backtest exposes real personal evidence', () {
+      final accuracy = SmartCyclePredictor.backtest(
+        completedLengths: const [28, 28, 28, 28, 28],
+        configuredFallback: 28,
+      );
+
+      expect(accuracy.evaluatedCycles, 4);
+      expect(accuracy.withinTwoDays, 4);
+      expect(accuracy.medianAbsoluteError, 0);
+      expect(accuracy.hasPersonalEvidence, isTrue);
+    });
+
+    test('keeps a consistently long personal pattern', () {
+      final prepared = SmartCyclePredictor.prepareCycleLengths(const [
+        48,
+        50,
+        49,
+        51,
+      ]);
+      final predicted = SmartCyclePredictor.effectiveCycleLength(
+        completedLengths: prepared,
+        configuredFallback: 28,
+      );
+
+      expect(prepared, const [48, 50, 49, 51]);
+      expect(predicted, inInclusiveRange(48, 51));
+    });
+
+    test('removes an isolated likely logging artifact', () {
+      final prepared = SmartCyclePredictor.prepareCycleLengths(const [
+        28,
+        29,
+        62,
+        30,
+      ]);
+
+      expect(prepared, const [28, 29, 30]);
+    });
+
+    test('chronological input gives newer cycles more weight', () {
+      final predicted = SmartCyclePredictor.effectiveCycleLength(
+        completedLengths: const [40, 40, 34, 30, 28, 28],
+        configuredFallback: 28,
+      );
+
+      expect(predicted, lessThan(34));
+    });
+
     test('ovulation lands before next period by luteal length', () {
       final last = DateTime(2026, 7, 1);
       final next = SmartCyclePredictor.nextPeriodStart(
@@ -55,8 +117,18 @@ void main() {
     });
 
     test('wider prediction window for irregular history', () {
-      final regular = SmartCyclePredictor.predictionWindowDays([28, 29, 28, 27]);
-      final irregular = SmartCyclePredictor.predictionWindowDays([24, 35, 26, 33]);
+      final regular = SmartCyclePredictor.predictionWindowDays([
+        28,
+        29,
+        28,
+        27,
+      ]);
+      final irregular = SmartCyclePredictor.predictionWindowDays([
+        24,
+        35,
+        26,
+        33,
+      ]);
       expect(irregular, greaterThan(regular));
     });
 

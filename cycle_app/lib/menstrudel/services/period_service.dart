@@ -4,6 +4,7 @@ import 'package:cycle_aura/menstrudel/models/flows/flow_data.dart';
 import 'package:cycle_aura/menstrudel/models/flows/flow_enum.dart';
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
+import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/periods_repository.dart';
 import 'package:cycle_aura/menstrudel/models/period_logs/log_day.dart';
 import 'package:cycle_aura/menstrudel/models/periods/period.dart';
@@ -15,6 +16,7 @@ import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/services/wear_sync_service.dart';
 import 'package:cycle_aura/menstrudel/services/widget_controller.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
+import 'package:cycle_aura/core/cycle/ovulation_log_service.dart';
 
 class PeriodService extends ChangeNotifier {
   final SettingsService _settingsService;
@@ -48,10 +50,12 @@ class PeriodService extends ChangeNotifier {
   Period? get lastPeriod => _lastPeriod;
 
   /// Prediction for the immediate next period.
-  PeriodPredictionResult? get upcomingPeriodPrediction => _upcomingPeriodPrediction;
+  PeriodPredictionResult? get upcomingPeriodPrediction =>
+      _upcomingPeriodPrediction;
 
   /// Prediction for the period after the next one.
-  PeriodPredictionResult? get followingPeriodPrediction => _followingPeriodPrediction;
+  PeriodPredictionResult? get followingPeriodPrediction =>
+      _followingPeriodPrediction;
 
   /// The calculated phase predictions for current cycle.
   PredictedCycle? get predictedCurrentCycle => _predictedCurrentCycle;
@@ -85,7 +89,8 @@ class PeriodService extends ChangeNotifier {
 
     notifyListeners();
 
-    final oldCyclePredictionFertileStart = _predictedCurrentCycle?.fertileWindowStart;
+    final oldCyclePredictionFertileStart =
+        _predictedCurrentCycle?.fertileWindowStart;
     final oldCyclePredictionOvulationDay = _predictedCurrentCycle?.ovulationDay;
 
     try {
@@ -100,16 +105,20 @@ class PeriodService extends ChangeNotifier {
         _updateWidgetData(l10n, widgetController);
         _schedulePeriodNotifications(l10n);
 
-        if (_predictedCurrentCycle != null && _settingsService.isNaturalCycle){
-          if (oldCyclePredictionFertileStart != _predictedCurrentCycle?.fertileWindowStart && _settingsService.areFertileWindowNotificationsEnabled) {
+        if (_predictedCurrentCycle != null && _settingsService.isNaturalCycle) {
+          if (oldCyclePredictionFertileStart !=
+                  _predictedCurrentCycle?.fertileWindowStart &&
+              _settingsService.areFertileWindowNotificationsEnabled) {
             _scheduleFertileWindowNotification(l10n);
-          } 
-          if (oldCyclePredictionOvulationDay != _predictedCurrentCycle?.ovulationDay && _settingsService.areOvulationNotificationsEnabled) {
+          }
+          if (oldCyclePredictionOvulationDay !=
+                  _predictedCurrentCycle?.ovulationDay &&
+              _settingsService.areOvulationNotificationsEnabled) {
             _scheduleOvulationDayNotification(l10n);
           }
         }
       }
-      if(!_settingsService.isNaturalCycle){
+      if (!_settingsService.isNaturalCycle) {
         NotificationService.cancelFertileWindowNotification();
         NotificationService.cancelOvulationNotification();
       }
@@ -122,51 +131,66 @@ class PeriodService extends ChangeNotifier {
 
   /// Calculates the period predictions, cycle predictions and ongoing status.
   Future<void> _calculatePrediction() async {
-    final periods = await getPeriodsSince(DateTime.now().subtract(const Duration(days: _lastNMonthsToConsider * 30)));
+    final periods = await getPeriodsSince(
+      DateTime.now().subtract(
+        const Duration(days: _lastNMonthsToConsider * 30),
+      ),
+    );
 
     _upcomingPeriodPrediction = PeriodPredictor.estimateNextPeriod(
       periods,
       DateTime.now(),
     );
 
-    _isPeriodOngoing = _lastPeriod != null ? DateUtils.isSameDay(_lastPeriod!.endDate, DateTime.now()) : false;
-    
+    _isPeriodOngoing = _lastPeriod != null
+        ? DateUtils.isSameDay(_lastPeriod!.endDate, DateTime.now())
+        : false;
+
     if (_upcomingPeriodPrediction != null && _lastPeriod != null) {
       final lastPeriodStartDate = _lastPeriod!.startDate;
-      final averageCycleLength = _upcomingPeriodPrediction?.averageCycleLength ?? 0;
-      final averagePeriodDuration = _upcomingPeriodPrediction?.averagePeriodDuration ?? 0;
-      
-      _predictedCurrentCycle = CyclePhasePredictor.predictCycle(
-        lastPeriodStartDate: lastPeriodStartDate, 
-        averageCycleLength: averageCycleLength, 
-        averagePeriodDuration: averagePeriodDuration
+      final averageCycleLength =
+          _upcomingPeriodPrediction?.averageCycleLength ?? 0;
+      final averagePeriodDuration =
+          _upcomingPeriodPrediction?.averagePeriodDuration ?? 0;
+      final completedLengths = PeriodPredictor.getValidCycleLengths(periods);
+      final measuredLutealLengths = await OvulationLogService()
+          .measuredLutealLengths();
+      final lutealPhaseLength = SmartCyclePredictor.lutealPhaseDays(
+        effectiveCycleLength: averageCycleLength,
+        completedLengths: completedLengths,
+        measuredLutealLengths: measuredLutealLengths,
       );
 
-      final estimatedFollowingPeriodStartDate = _upcomingPeriodPrediction!.estimatedStartDate.add(
-        Duration(days: averageCycleLength),
+      _predictedCurrentCycle = CyclePhasePredictor.predictCycle(
+        lastPeriodStartDate: lastPeriodStartDate,
+        averageCycleLength: averageCycleLength,
+        averagePeriodDuration: averagePeriodDuration,
+        lutealPhaseLength: lutealPhaseLength,
       );
-      final estimatedFollowingPeriodEndDate = estimatedFollowingPeriodStartDate.add(
-        Duration(days: averagePeriodDuration -1),
-      );
-      final estimatedFollowingPeriodDaysUntilDue = estimatedFollowingPeriodStartDate.difference(DateTime.now()).inDays;
-      
+
+      final estimatedFollowingPeriodStartDate = _upcomingPeriodPrediction!
+          .estimatedStartDate
+          .add(Duration(days: averageCycleLength));
+      final estimatedFollowingPeriodEndDate = estimatedFollowingPeriodStartDate
+          .add(Duration(days: averagePeriodDuration - 1));
+      final estimatedFollowingPeriodDaysUntilDue =
+          estimatedFollowingPeriodStartDate.difference(DateTime.now()).inDays;
 
       _followingPeriodPrediction = PeriodPredictionResult(
         estimatedStartDate: estimatedFollowingPeriodStartDate,
-        estimatedEndDate: estimatedFollowingPeriodEndDate, 
-        daysUntilDue: estimatedFollowingPeriodDaysUntilDue, 
-        averageCycleLength: averageCycleLength, 
-        averagePeriodDuration: averagePeriodDuration
+        estimatedEndDate: estimatedFollowingPeriodEndDate,
+        daysUntilDue: estimatedFollowingPeriodDaysUntilDue,
+        averageCycleLength: averageCycleLength,
+        averagePeriodDuration: averagePeriodDuration,
       );
-    }else{
+    } else {
       _predictedCurrentCycle = null;
       _followingPeriodPrediction = null;
     }
 
-
-    if (lastPeriod == null){
+    if (lastPeriod == null) {
       _menstruationDay = 0;
-    }else{
+    } else {
       final today = DateUtils.dateOnly(DateTime.now());
       final start = DateUtils.dateOnly(_lastPeriod!.startDate);
       _menstruationDay = today.difference(start).inDays + 1;
@@ -175,7 +199,7 @@ class PeriodService extends ChangeNotifier {
 
   /// Recalculates periods based on the provided [logs] and returns a mapping of log IDs to period IDs.
   Future<Map<int, int>> recalculatePeriods(List<LogDay> logs) async {
-    final mapping = await _periodsRepo.recalculateAndAssignPeriods(logs);    
+    final mapping = await _periodsRepo.recalculateAndAssignPeriods(logs);
     return mapping;
   }
 
@@ -210,14 +234,14 @@ class PeriodService extends ChangeNotifier {
     if (_upcomingPeriodPrediction == null) return;
 
     // Period due notification
-    if (_settingsService.arePeriodDueNotificationsEnabled){
+    if (_settingsService.arePeriodDueNotificationsEnabled) {
       try {
         await NotificationService.schedulePeriodNotifications(
           scheduledTime: _upcomingPeriodPrediction!.estimatedStartDate,
           daysBefore: _settingsService.notificationDays,
           notificationTime: _settingsService.notificationTime,
           title: l10n.notification_periodTitle,
-          body: l10n.notification_periodBody(_settingsService.notificationDays)
+          body: l10n.notification_periodBody(_settingsService.notificationDays),
         );
       } catch (e) {
         debugPrint('Error creating period notification: $e');
@@ -225,7 +249,7 @@ class PeriodService extends ChangeNotifier {
     }
 
     // Overdue period notification
-    if (_settingsService.arePeriodOverdueNotificationsEnabled){
+    if (_settingsService.arePeriodOverdueNotificationsEnabled) {
       try {
         await NotificationService.schedulePeriodNotifications(
           scheduledTime: _upcomingPeriodPrediction!.estimatedStartDate,
@@ -234,7 +258,7 @@ class PeriodService extends ChangeNotifier {
           title: l10n.notification_periodOverdueTitle,
           body: l10n.notification_periodOverdueBody(
             _settingsService.periodOverdueNotificationDays,
-          )
+          ),
         );
       } catch (e) {
         debugPrint('Error creating period overdue notification: $e');
@@ -250,7 +274,9 @@ class PeriodService extends ChangeNotifier {
         daysBefore: _settingsService.fertileWindowReminderDaysBefore,
         notificationTime: _settingsService.fertileWindowReminderTime,
         title: l10n.notification_fertileWindowTitle,
-        body: l10n.notification_fertileWindowBody(_settingsService.fertileWindowReminderDaysBefore),
+        body: l10n.notification_fertileWindowBody(
+          _settingsService.fertileWindowReminderDaysBefore,
+        ),
       );
     } catch (e) {
       debugPrint('Error creating fertile window notification: $e');
@@ -265,7 +291,9 @@ class PeriodService extends ChangeNotifier {
         daysBefore: _settingsService.ovulationReminderDays,
         notificationTime: _settingsService.ovulationReminderTime,
         title: l10n.notification_ovulationDayReminderTitle,
-        body: l10n.notification_ovulationDayReminderBody(_settingsService.ovulationReminderDays),
+        body: l10n.notification_ovulationDayReminderBody(
+          _settingsService.ovulationReminderDays,
+        ),
       );
     } catch (e) {
       debugPrint('Error creating fertile window notification: $e');
@@ -314,12 +342,17 @@ class PeriodService extends ChangeNotifier {
       phase = 'Menstruation';
     } else if (_predictedCurrentCycle != null) {
       final today = DateUtils.dateOnly(DateTime.now());
-      final ovulation = DateUtils.dateOnly(_predictedCurrentCycle!.ovulationDay);
-      final nextPeriod = DateUtils.dateOnly(_predictedCurrentCycle!.nextPeriodStart);
+      final ovulation = DateUtils.dateOnly(
+        _predictedCurrentCycle!.ovulationDay,
+      );
+      final nextPeriod = DateUtils.dateOnly(
+        _predictedCurrentCycle!.nextPeriodStart,
+      );
 
       if (today.isBefore(ovulation)) {
         phase = 'Follicular';
-      } else if (today == ovulation || today == ovulation.subtract(const Duration(days: 1))) {
+      } else if (today == ovulation ||
+          today == ovulation.subtract(const Duration(days: 1))) {
         phase = 'Ovulation';
       } else if (today.isBefore(nextPeriod)) {
         phase = 'Luteal';
@@ -390,7 +423,9 @@ class PeriodService extends ChangeNotifier {
   }
 
   /// Fetches monthly flow data exclusively from logs that are part of a period.
-  Future<List<MonthlyFlowData>> getMonthlyPeriodFlowsSince(DateTime date) async {
+  Future<List<MonthlyFlowData>> getMonthlyPeriodFlowsSince(
+    DateTime date,
+  ) async {
     return _periodsRepo.getMonthlyPeriodFlowsSince(date);
   }
 }

@@ -147,7 +147,18 @@ class CycleReportFileExporter {
           'periodRegularity': dashboard.periodRegularity,
           'periodRegularityStatus': dashboard.periodRegularityStatus,
           'nextPeriod': dashboard.nextPeriod,
+          'nextPeriodRange': dashboard.nextPeriodRange,
           'ovulation': dashboard.ovulation,
+          'ovulationRange': dashboard.ovulationRange,
+          'predictionConfidence': dashboard.predictionConfidence.name,
+          'predictionConfidenceScore': dashboard.predictionConfidenceScore,
+          'predictionBacktestedCycles':
+              dashboard.predictionAccuracy.evaluatedCycles,
+          'predictionWithinTwoDays': dashboard.predictionAccuracy.withinTwoDays,
+          'predictionMedianAbsoluteErrorDays':
+              dashboard.predictionAccuracy.medianAbsoluteError,
+          'isPeriodLate': dashboard.isPeriodLate,
+          'daysPastExpectedWindow': dashboard.daysLate,
         },
       if (snapshot != null && !snapshot.isEmpty)
         'wellnessSnapshot': snapshot.toPromptMap(),
@@ -198,10 +209,10 @@ class CycleReportFileExporter {
       '${_cell(l10n.healthReportPeriodRegularityScore)},${_cell(_score(km['period_regularity_score'] ?? dash?.periodRegularity, km['period_regularity_score_status'] ?? dash?.periodRegularityStatus))}',
     );
     buf.writeln(
-      '${_cell(l10n.healthReportNextPeriodDay)},${_cell(_t(pm['next_period_day'] ?? dash?.nextPeriod))}',
+      '${_cell(l10n.healthReportNextPeriodDay)},${_cell(_t(dash?.periodDisplay ?? pm['next_period_day']))}',
     );
     buf.writeln(
-      '${_cell(l10n.healthReportNextOvulationDay)},${_cell(_t(pm['next_ovulation_day'] ?? dash?.ovulation))}',
+      '${_cell(l10n.healthReportNextOvulationDay)},${_cell(_t(dash?.ovulationDisplay ?? pm['next_ovulation_day']))}',
     );
     buf.writeln();
 
@@ -478,8 +489,8 @@ class CycleReportFileExporter {
       ]),
     );
 
-    final np = _t(pm['next_period_day'] ?? dash?.nextPeriod);
-    final no = _t(pm['next_ovulation_day'] ?? dash?.ovulation);
+    final np = _t(dash?.periodDisplay ?? pm['next_period_day']);
+    final no = _t(dash?.ovulationDisplay ?? pm['next_ovulation_day']);
     if (np.isNotEmpty || no.isNotEmpty) {
       sections.add(
         sectionBox(l10n.healthReportPredictions, [
