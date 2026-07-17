@@ -29,8 +29,8 @@ class _WelcomeState extends StatelessWidget {
         // Greeting icon
         Center(
           child: Container(
-            width: 80,
-            height: 80,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               gradient: AuraDecorations.primaryGradient,
               shape: BoxShape.circle,
@@ -38,12 +38,12 @@ class _WelcomeState extends StatelessWidget {
             ),
             child: const Icon(
               Icons.auto_awesome_rounded,
-              size: 36,
+              size: 28,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Text(
           l10n.aiWelcome,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -61,7 +61,7 @@ class _WelcomeState extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         // Feature cards — 2-column grid
         Text(
           l10n.aiQuickActionsTitle,
@@ -87,13 +87,18 @@ class _WelcomeState extends StatelessWidget {
                 onTap: onAnalyze,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 12,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.analytics_outlined,
-                          size: 18, color: Colors.white),
+                      const Icon(
+                        Icons.analytics_outlined,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.aiAnalyze,
@@ -117,16 +122,22 @@ class _WelcomeState extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Feature cards — 2-column grid with colored icons
 // ---------------------------------------------------------------------------
-class _FeatureCardsGrid extends StatelessWidget {
+class _FeatureCardsGrid extends StatefulWidget {
   const _FeatureCardsGrid({required this.onModeAction});
 
   final void Function(String prompt, String mode) onModeAction;
 
   @override
+  State<_FeatureCardsGrid> createState() => _FeatureCardsGridState();
+}
+
+class _FeatureCardsGridState extends State<_FeatureCardsGrid> {
+  bool _showAll = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final features = <_FeatureCardData>[
       _FeatureCardData(
@@ -194,68 +205,81 @@ class _FeatureCardsGrid extends StatelessWidget {
       ),
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2.6,
-      ),
-      itemCount: features.length,
-      itemBuilder: (context, i) {
-        final f = features[i];
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => onModeAction(f.prompt, f.mode),
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Ink(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: f.gradient,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(f.icon, size: 16, color: Colors.white),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      f.label,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+    final visibleCount = _showAll ? features.length : 4;
+    return Column(
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              mainAxisExtent: 64,
             ),
+            itemCount: visibleCount,
+            itemBuilder: (context, i) {
+              final f = features[i];
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => widget.onModeAction(f.prompt, f.mode),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  child: _ChatGlassSurface(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    accent: f.gradient.first,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 9,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: f.gradient),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(f.icon, size: 16, color: Colors.white),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            f.label,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 4),
+        TextButton.icon(
+          key: const ValueKey('ai-topics-toggle'),
+          onPressed: () => setState(() => _showAll = !_showAll),
+          icon: Icon(
+            _showAll
+                ? Icons.keyboard_arrow_up_rounded
+                : Icons.keyboard_arrow_down_rounded,
+            size: 19,
+          ),
+          label: Text(_showAll ? l10n.showLess : l10n.showMore),
+        ),
+      ],
     );
   }
 }
@@ -277,7 +301,7 @@ class _FeatureCardData {
 }
 
 // ---------------------------------------------------------------------------
-// Personality picker — three Lune personas as glass chips.
+// Personality picker — all three Lune styles stay visible at a glance.
 // ---------------------------------------------------------------------------
 class _PersonalityPicker extends StatelessWidget {
   const _PersonalityPicker({required this.current, required this.onSelect});
@@ -290,84 +314,100 @@ class _PersonalityPicker extends StatelessWidget {
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-      child: Row(
-        children: LunePersonality.values.map((p) {
-          final meta = kLunePersonalityMeta[p]!;
-          final selected = current == p;
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => onSelect(p),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: selected
-                          ? LinearGradient(colors: meta.gradient)
-                          : null,
-                      color: selected
-                          ? null
-                          : theme.colorScheme.surface.withValues(alpha: 0.5),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 5),
+      child: AppFloatingGlassPanel(
+        padding: const EdgeInsets.all(4),
+        radius: AppRadius.pill,
+        tint: theme.colorScheme.primary,
+        blurSigma: 18,
+        child: Row(
+          children: LunePersonality.values.map((personality) {
+            final meta = kLunePersonalityMeta[personality]!;
+            final selected = current == personality;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  label: '${meta.title(lang)}، ${meta.tag(lang)}',
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onSelect(personality),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(
-                        color: selected
-                            ? Colors.transparent
-                            : theme.colorScheme.outline.withValues(alpha: 0.12),
-                      ),
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                color: meta.gradient.first
-                                    .withValues(alpha: 0.21),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          meta.icon,
-                          size: 16,
-                          color: selected
-                              ? Colors.white
-                              : theme.colorScheme.onSurfaceVariant,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        constraints: const BoxConstraints(minHeight: 42),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 8,
                         ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            meta.title(lang),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelMedium?.copyWith(
+                        decoration: BoxDecoration(
+                          gradient: selected
+                              ? LinearGradient(colors: meta.gradient)
+                              : null,
+                          color: selected ? null : Colors.transparent,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(
+                            color: selected
+                                ? Colors.transparent
+                                : theme.colorScheme.outline.withValues(
+                                    alpha: 0.12,
+                                  ),
+                          ),
+                          boxShadow: selected
+                              ? [
+                                  BoxShadow(
+                                    color: meta.gradient.first.withValues(
+                                      alpha: 0.20,
+                                    ),
+                                    blurRadius: 9,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              meta.icon,
+                              size: 16,
                               color: selected
                                   ? Colors.white
                                   : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
                             ),
-                          ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Text(
+                                  meta.title(lang),
+                                  maxLines: 1,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: selected
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

@@ -37,10 +37,12 @@ class _DailyBriefingCardState extends State<DailyBriefingCard> {
     try {
       if (!mounted) return;
 
-      if (!await PremiumGate.hasPremium()) {
+      final access = await PremiumGate.checkAiChat();
+      if (access != PremiumAiAccess.allowed) {
         setState(() {
           _loading = false;
-          _needsPremium = true;
+          _needsPremium = access == PremiumAiAccess.needsPremium;
+          _failed = access != PremiumAiAccess.needsPremium;
         });
         return;
       }

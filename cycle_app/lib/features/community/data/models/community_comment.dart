@@ -21,6 +21,7 @@ class CommunityComment {
     this.moderationStatus = 'approved',
     this.hidden = false,
     this.authorIsPremium = false,
+    this.likeCount,
   });
 
   final String id;
@@ -42,6 +43,10 @@ class CommunityComment {
   final String moderationStatus;
   final bool hidden;
   final bool authorIsPremium;
+
+  /// Server-maintained aggregate. Null identifies legacy comments that still
+  /// need a one-time aggregate lookup when sorting by most liked.
+  final int? likeCount;
 
   bool get isPendingReview => moderationStatus == 'pending_review';
 
@@ -79,6 +84,7 @@ class CommunityComment {
       moderationStatus: data['moderationStatus'] as String? ?? 'approved',
       hidden: data['hidden'] as bool? ?? false,
       authorIsPremium: data['authorIsPremium'] as bool? ?? false,
+      likeCount: (data['likeCount'] as num?)?.toInt(),
     );
   }
 
@@ -101,6 +107,8 @@ class CommunityComment {
 
     'authorAvatarIndex': authorAvatarIndex,
     'authorIsPremium': authorIsPremium,
+
+    if (likeCount != null) 'likeCount': likeCount,
 
     if (parentCommentId != null) 'parentCommentId': parentCommentId,
   };

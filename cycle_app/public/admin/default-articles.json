@@ -10,7 +10,16 @@
     "titleEn": "What is a menstrual cycle?",
     "titleAr": "ما هي الدورة الشهرية؟",
     "bodyEn": "Your menstrual cycle is the monthly rhythm your body follows, counted from the first day of one period to the first day of the next. A typical cycle lasts 21 to 35 days — 28 is an average, not a rule.\n\nDuring each cycle, hormones rise and fall in a beautiful, coordinated pattern. They prepare the lining of the uterus, release an egg around the middle of the cycle, and — if there is no pregnancy — the lining is shed as your period.\n\nEvery body is different. Your \"normal\" is what is regular for YOU, and tracking your cycle in this app helps you discover that personal pattern over a few months.",
-    "bodyAr": "الدورة الشهرية هي الإيقاع الشهري الذي يتبعه جسمك، وتُحسب من أول يوم في الدورة إلى أول يوم في الدورة التالية. تستمر الدورة الطبيعية من 21 إلى 35 يومًا — والـ 28 يومًا متوسط وليس قاعدة.\n\nخلال كل دورة، ترتفع الهرمونات وتنخفض بنمط منسق وجميل: تجهز بطانة الرحم، وتطلق بويضة في منتصف الدورة تقريبًا، وإذا لم يحدث حمل تنزل البطانة على شكل دورة شهرية.\n\nكل جسم مختلف عن الآخر. \"الطبيعي\" هو ما هو منتظم بالنسبة لكِ أنتِ، وتتبّع دورتك في هذا التطبيق يساعدك على اكتشاف نمطك الشخصي خلال بضعة أشهر."
+    "bodyAr": "الدورة الشهرية هي الإيقاع الشهري الذي يتبعه جسمك، وتُحسب من أول يوم في الدورة إلى أول يوم في الدورة التالية. تستمر الدورة الطبيعية من 21 إلى 35 يومًا — والـ 28 يومًا متوسط وليس قاعدة.\n\nخلال كل دورة، ترتفع الهرمونات وتنخفض بنمط منسق وجميل: تجهز بطانة الرحم، وتطلق بويضة في منتصف الدورة تقريبًا، وإذا لم يحدث حمل تنزل البطانة على شكل دورة شهرية.\n\nكل جسم مختلف عن الآخر. \"الطبيعي\" هو ما هو منتظم بالنسبة لكِ أنتِ، وتتبّع دورتك في هذا التطبيق يساعدك على اكتشاف نمطك الشخصي خلال بضعة أشهر.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/what_is_cycle.webp",
+    "excerptAr": "الدورة الشهرية هي الإيقاع الشهري الذي يتبعه جسمك، وتُحسب من أول يوم في الدورة إلى أول يوم في الدورة التالية. تستمر الدورة الطبيعية من 21 إلى 35 يومًا — والـ 28 يومًا متوسط وليس قاعدة.",
+    "excerptEn": "Your menstrual cycle is the monthly rhythm your body follows, counted from the first day of one period to the first day of the next. A typical cycle lasts 21 to 35 days — 28 is an average, not a rule.",
+    "featured": true,
+    "slug": "what_is_cycle",
+    "sourceUrls": [
+      "https://www.nhs.uk/conditions/periods/"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "cycle_phases",
@@ -23,7 +32,16 @@
     "titleEn": "The four phases of your cycle",
     "titleAr": "مراحل الدورة الأربع",
     "bodyEn": "Your cycle has four phases, each with its own energy.\n\n1. Menstrual phase (your period): hormone levels are low. Many feel tired and inward — rest is productive here.\n\n2. Follicular phase: estrogen rises and so does energy, focus, and mood. A great time to start new things.\n\n3. Ovulation: around mid-cycle, an egg is released. Energy and confidence often peak.\n\n4. Luteal phase: progesterone takes over. Energy gradually softens, and some experience PMS in the last days. Slowing down and being gentle with yourself helps.\n\nKnowing your phase helps you plan workouts, work, and rest around your natural rhythm instead of fighting it.",
-    "bodyAr": "لدورتك أربع مراحل، ولكل مرحلة طاقتها الخاصة.\n\n1. مرحلة الحيض (الدورة): مستويات الهرمونات منخفضة. كثيرات يشعرن بالتعب والانطواء — الراحة هنا إنجاز بحد ذاتها.\n\n2. المرحلة الجريبية: يرتفع الإستروجين ومعه الطاقة والتركيز والمزاج. وقت رائع لبدء أشياء جديدة.\n\n3. الإباضة: في منتصف الدورة تقريبًا تنطلق البويضة. غالبًا تكون الطاقة والثقة في القمة.\n\n4. المرحلة الأصفرية: يتولى البروجستيرون القيادة. تهدأ الطاقة تدريجيًا، وقد تشعر بعضهن بأعراض ما قبل الدورة في الأيام الأخيرة. التمهل واللطف مع نفسك يساعدان كثيرًا.\n\nمعرفة مرحلتك تساعدك على تخطيط الرياضة والعمل والراحة حول إيقاعك الطبيعي بدل مقاومته."
+    "bodyAr": "لدورتك أربع مراحل، ولكل مرحلة طاقتها الخاصة.\n\n1. مرحلة الحيض (الدورة): مستويات الهرمونات منخفضة. كثيرات يشعرن بالتعب والانطواء — الراحة هنا إنجاز بحد ذاتها.\n\n2. المرحلة الجريبية: يرتفع الإستروجين ومعه الطاقة والتركيز والمزاج. وقت رائع لبدء أشياء جديدة.\n\n3. الإباضة: في منتصف الدورة تقريبًا تنطلق البويضة. غالبًا تكون الطاقة والثقة في القمة.\n\n4. المرحلة الأصفرية: يتولى البروجستيرون القيادة. تهدأ الطاقة تدريجيًا، وقد تشعر بعضهن بأعراض ما قبل الدورة في الأيام الأخيرة. التمهل واللطف مع نفسك يساعدان كثيرًا.\n\nمعرفة مرحلتك تساعدك على تخطيط الرياضة والعمل والراحة حول إيقاعك الطبيعي بدل مقاومته.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/cycle_phases.webp",
+    "excerptAr": "لدورتك أربع مراحل، ولكل مرحلة طاقتها الخاصة.",
+    "excerptEn": "Your cycle has four phases, each with its own energy.",
+    "featured": false,
+    "slug": "cycle_phases",
+    "sourceUrls": [
+      "https://www.nhs.uk/conditions/periods/"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "first_period",
@@ -36,7 +54,16 @@
     "titleEn": "Your first periods: a gentle guide",
     "titleAr": "دوراتك الأولى: دليل لطيف",
     "bodyEn": "If your periods started recently, welcome — your body is doing exactly what it should.\n\nIn the first year or two, cycles are often irregular: they may come early, late, or skip a month. This is completely normal while your hormones find their rhythm.\n\nKeep a small kit (pad, spare underwear) in your bag, track your days in this app, and remember: a period is not something to be ashamed of. Every woman you admire has one.\n\nTalk to a trusted adult or doctor if pain keeps you home from school, bleeding is very heavy, or you simply feel worried. Asking questions is a sign of strength.",
-    "bodyAr": "إذا بدأت دورتك مؤخرًا، أهلًا بك — جسمك يقوم بما يجب عليه تمامًا.\n\nفي السنة الأولى أو الثانية، غالبًا ما تكون الدورات غير منتظمة: قد تأتي مبكرًا أو متأخرًا أو تتخطى شهرًا. هذا طبيعي تمامًا بينما تجد هرموناتك إيقاعها.\n\nاحتفظي بمستلزمات صغيرة (فوطة، ملابس داخلية احتياطية) في حقيبتك، وتتبعي أيامك في هذا التطبيق، وتذكري: الدورة ليست شيئًا يُخجل منه. كل امرأة تعجبين بها تمر بها.\n\nتحدثي مع شخص بالغ تثقين به أو طبيبة إذا كان الألم يمنعك من المدرسة، أو كان النزيف غزيرًا جدًا، أو شعرتِ بالقلق. طرح الأسئلة دليل قوة."
+    "bodyAr": "إذا بدأت دورتك مؤخرًا، أهلًا بك — جسمك يقوم بما يجب عليه تمامًا.\n\nفي السنة الأولى أو الثانية، غالبًا ما تكون الدورات غير منتظمة: قد تأتي مبكرًا أو متأخرًا أو تتخطى شهرًا. هذا طبيعي تمامًا بينما تجد هرموناتك إيقاعها.\n\nاحتفظي بمستلزمات صغيرة (فوطة، ملابس داخلية احتياطية) في حقيبتك، وتتبعي أيامك في هذا التطبيق، وتذكري: الدورة ليست شيئًا يُخجل منه. كل امرأة تعجبين بها تمر بها.\n\nتحدثي مع شخص بالغ تثقين به أو طبيبة إذا كان الألم يمنعك من المدرسة، أو كان النزيف غزيرًا جدًا، أو شعرتِ بالقلق. طرح الأسئلة دليل قوة.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/first_period.webp",
+    "excerptAr": "إذا بدأت دورتك مؤخرًا، أهلًا بك — جسمك يقوم بما يجب عليه تمامًا.",
+    "excerptEn": "If your periods started recently, welcome — your body is doing exactly what it should.",
+    "featured": false,
+    "slug": "first_period",
+    "sourceUrls": [
+      "https://www.nhs.uk/conditions/periods/"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "pms_explained",
@@ -49,7 +76,16 @@
     "titleEn": "PMS: why it happens and what helps",
     "titleAr": "أعراض ما قبل الدورة: لماذا تحدث وما الذي يساعد",
     "bodyEn": "In the days before your period, falling estrogen and progesterone can affect mood, sleep, appetite, and energy. This is premenstrual syndrome — PMS — and it is very common.\n\nWhat helps: regular sleep, gentle movement, magnesium-rich foods (nuts, leafy greens, dark chocolate), less caffeine and salt, and planning lighter days when you can.\n\nTrack your symptoms in the app — seeing the pattern repeat makes it predictable, and predictable is manageable.\n\nIf PMS regularly disrupts your life, relationships, or work, mention it to a doctor. Severe forms are treatable, and you deserve support.",
-    "bodyAr": "في الأيام التي تسبق الدورة، يمكن لانخفاض الإستروجين والبروجستيرون أن يؤثر على المزاج والنوم والشهية والطاقة. هذه متلازمة ما قبل الدورة، وهي شائعة جدًا.\n\nما الذي يساعد: نوم منتظم، حركة لطيفة، أطعمة غنية بالمغنيسيوم (مكسرات، خضار ورقية، شوكولاتة داكنة)، تقليل الكافيين والملح، وتخطيط أيام أخف عندما تستطيعين.\n\nتتبعي أعراضك في التطبيق — رؤية النمط يتكرر تجعله متوقعًا، والمتوقع يمكن التعامل معه.\n\nإذا كانت الأعراض تعطل حياتك أو علاقاتك أو عملك بانتظام، اذكريها للطبيبة. الحالات الشديدة قابلة للعلاج، وأنتِ تستحقين الدعم."
+    "bodyAr": "في الأيام التي تسبق الدورة، يمكن لانخفاض الإستروجين والبروجستيرون أن يؤثر على المزاج والنوم والشهية والطاقة. هذه متلازمة ما قبل الدورة، وهي شائعة جدًا.\n\nما الذي يساعد: نوم منتظم، حركة لطيفة، أطعمة غنية بالمغنيسيوم (مكسرات، خضار ورقية، شوكولاتة داكنة)، تقليل الكافيين والملح، وتخطيط أيام أخف عندما تستطيعين.\n\nتتبعي أعراضك في التطبيق — رؤية النمط يتكرر تجعله متوقعًا، والمتوقع يمكن التعامل معه.\n\nإذا كانت الأعراض تعطل حياتك أو علاقاتك أو عملك بانتظام، اذكريها للطبيبة. الحالات الشديدة قابلة للعلاج، وأنتِ تستحقين الدعم.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/pms_explained.webp",
+    "excerptAr": "في الأيام التي تسبق الدورة، يمكن لانخفاض الإستروجين والبروجستيرون أن يؤثر على المزاج والنوم والشهية والطاقة. هذه متلازمة ما قبل الدورة، وهي شائعة جدًا.",
+    "excerptEn": "In the days before your period, falling estrogen and progesterone can affect mood, sleep, appetite, and energy. This is premenstrual syndrome — PMS — and it is very common.",
+    "featured": false,
+    "slug": "pms_explained",
+    "sourceUrls": [
+      "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "period_pain",
@@ -62,7 +98,16 @@
     "titleEn": "Period pain: what is normal?",
     "titleAr": "ألم الدورة: ما هو الطبيعي؟",
     "bodyEn": "Mild to moderate cramps in the first days of a period are common — the uterus contracts to shed its lining.\n\nComfort that works: a warm compress on the lower belly, gentle stretching or walking, staying hydrated, and rest.\n\nPain is NOT normal when it makes you miss school or work every month, does not improve with simple pain relief, or gets worse over time. These can be signs of treatable conditions like endometriosis.\n\nUse the pain tracking in this app — a clear record of \"how much, how long, how often\" is exactly what a doctor needs to help you.",
-    "bodyAr": "التقلصات الخفيفة إلى المتوسطة في أيام الدورة الأولى شائعة — فالرحم ينقبض ليتخلص من بطانته.\n\nوسائل راحة مجربة: كمادة دافئة على أسفل البطن، تمدد لطيف أو مشي، شرب الماء بانتظام، والراحة.\n\nالألم ليس طبيعيًا عندما يجعلك تتغيبين عن المدرسة أو العمل كل شهر، أو لا يتحسن مع مسكنات بسيطة، أو يزداد سوءًا مع الوقت. قد تكون هذه علامات على حالات قابلة للعلاج مثل بطانة الرحم المهاجرة.\n\nاستخدمي تتبع الألم في هذا التطبيق — سجل واضح عن \"كم، وكم مدة، وكم مرة\" هو بالضبط ما تحتاجه الطبيبة لمساعدتك."
+    "bodyAr": "التقلصات الخفيفة إلى المتوسطة في أيام الدورة الأولى شائعة — فالرحم ينقبض ليتخلص من بطانته.\n\nوسائل راحة مجربة: كمادة دافئة على أسفل البطن، تمدد لطيف أو مشي، شرب الماء بانتظام، والراحة.\n\nالألم ليس طبيعيًا عندما يجعلك تتغيبين عن المدرسة أو العمل كل شهر، أو لا يتحسن مع مسكنات بسيطة، أو يزداد سوءًا مع الوقت. قد تكون هذه علامات على حالات قابلة للعلاج مثل بطانة الرحم المهاجرة.\n\nاستخدمي تتبع الألم في هذا التطبيق — سجل واضح عن \"كم، وكم مدة، وكم مرة\" هو بالضبط ما تحتاجه الطبيبة لمساعدتك.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/period_pain.webp",
+    "excerptAr": "التقلصات الخفيفة إلى المتوسطة في أيام الدورة الأولى شائعة — فالرحم ينقبض ليتخلص من بطانته.",
+    "excerptEn": "Mild to moderate cramps in the first days of a period are common — the uterus contracts to shed its lining.",
+    "featured": false,
+    "slug": "period_pain",
+    "sourceUrls": [
+      "https://111.wales.nhs.uk/Periods%2Cpainful/"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "see_doctor",
@@ -75,7 +120,16 @@
     "titleEn": "Signs it is time to see a doctor",
     "titleAr": "علامات تستدعي زيارة الطبيبة",
     "bodyEn": "Most cycle variations are normal, but some signs deserve a professional look:\n\n• No period for 3 months (and no pregnancy)\n• Cycles consistently shorter than 21 or longer than 35 days\n• Bleeding so heavy you change protection every hour\n• Bleeding between periods\n• Pain that painkillers do not touch\n• Periods that suddenly change character\n\nNone of these mean something is definitely wrong — they simply mean \"worth checking\". Bring your app data to the appointment; the doctor report feature can summarize it for you.",
-    "bodyAr": "معظم تغيرات الدورة طبيعية، لكن بعض العلامات تستحق نظرة مختصة:\n\n• انقطاع الدورة 3 أشهر (دون حمل)\n• دورات أقصر من 21 يومًا أو أطول من 35 يومًا باستمرار\n• نزيف غزير لدرجة تغيير الفوطة كل ساعة\n• نزيف بين الدورات\n• ألم لا تؤثر فيه المسكنات\n• تغير مفاجئ في طبيعة الدورة\n\nلا تعني أي من هذه العلامات أن هناك خطبًا مؤكدًا — بل تعني فقط \"تستحق الفحص\". خذي بيانات التطبيق معك للموعد؛ ميزة تقرير الطبيبة تلخصها لك."
+    "bodyAr": "معظم تغيرات الدورة طبيعية، لكن بعض العلامات تستحق نظرة مختصة:\n\n• انقطاع الدورة 3 أشهر (دون حمل)\n• دورات أقصر من 21 يومًا أو أطول من 35 يومًا باستمرار\n• نزيف غزير لدرجة تغيير الفوطة كل ساعة\n• نزيف بين الدورات\n• ألم لا تؤثر فيه المسكنات\n• تغير مفاجئ في طبيعة الدورة\n\nلا تعني أي من هذه العلامات أن هناك خطبًا مؤكدًا — بل تعني فقط \"تستحق الفحص\". خذي بيانات التطبيق معك للموعد؛ ميزة تقرير الطبيبة تلخصها لك.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/see_doctor.webp",
+    "excerptAr": "معظم تغيرات الدورة طبيعية، لكن بعض العلامات تستحق نظرة مختصة:",
+    "excerptEn": "Most cycle variations are normal, but some signs deserve a professional look:",
+    "featured": false,
+    "slug": "see_doctor",
+    "sourceUrls": [
+      "https://www.acog.org/womens-health/faqs/heavy-menstrual-bleeding"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "cycle_nutrition",
@@ -88,7 +142,16 @@
     "titleEn": "Eating with your cycle",
     "titleAr": "التغذية مع دورتك",
     "bodyEn": "Your nutritional needs shift across the month.\n\nDuring your period: iron is lost with bleeding — lentils, spinach, red meat, and dates help. Pair iron with vitamin C for absorption.\n\nFollicular phase: your body handles carbs well; whole grains and fresh produce fuel rising energy.\n\nLuteal phase: cravings are real — hormones increase appetite. Magnesium (nuts, dark chocolate) and complex carbs steady mood and energy. Reducing salt eases bloating.\n\nNo food is forbidden. The goal is supporting your body, not restricting it.",
-    "bodyAr": "احتياجاتك الغذائية تتغير على مدار الشهر.\n\nأثناء الدورة: يُفقد الحديد مع النزيف — العدس والسبانخ واللحوم الحمراء والتمر تساعد. اجمعي الحديد مع فيتامين C لامتصاص أفضل.\n\nالمرحلة الجريبية: جسمك يتعامل مع الكربوهيدرات جيدًا؛ الحبوب الكاملة والخضار الطازجة تغذي طاقتك الصاعدة.\n\nالمرحلة الأصفرية: الرغبة الشديدة بالأكل حقيقية — الهرمونات تزيد الشهية. المغنيسيوم (المكسرات، الشوكولاتة الداكنة) والكربوهيدرات المعقدة يثبتان المزاج والطاقة. وتقليل الملح يخفف الانتفاخ.\n\nلا يوجد طعام ممنوع. الهدف دعم جسمك، لا تقييده."
+    "bodyAr": "احتياجاتك الغذائية تتغير على مدار الشهر.\n\nأثناء الدورة: يُفقد الحديد مع النزيف — العدس والسبانخ واللحوم الحمراء والتمر تساعد. اجمعي الحديد مع فيتامين C لامتصاص أفضل.\n\nالمرحلة الجريبية: جسمك يتعامل مع الكربوهيدرات جيدًا؛ الحبوب الكاملة والخضار الطازجة تغذي طاقتك الصاعدة.\n\nالمرحلة الأصفرية: الرغبة الشديدة بالأكل حقيقية — الهرمونات تزيد الشهية. المغنيسيوم (المكسرات، الشوكولاتة الداكنة) والكربوهيدرات المعقدة يثبتان المزاج والطاقة. وتقليل الملح يخفف الانتفاخ.\n\nلا يوجد طعام ممنوع. الهدف دعم جسمك، لا تقييده.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/cycle_nutrition.webp",
+    "excerptAr": "احتياجاتك الغذائية تتغير على مدار الشهر.",
+    "excerptEn": "Your nutritional needs shift across the month.",
+    "featured": false,
+    "slug": "cycle_nutrition",
+    "sourceUrls": [
+      "https://womenshealth.gov/a-z-topics/iron-deficiency-anemia"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "cycle_exercise",
@@ -101,7 +164,16 @@
     "titleEn": "Moving through your phases",
     "titleAr": "الحركة عبر مراحل دورتك",
     "bodyEn": "You do not need the same workout every day — your cycle suggests a natural training plan.\n\nPeriod days: gentle wins. Walking, stretching, and light yoga can actually ease cramps.\n\nFollicular phase: energy climbs — great for cardio, strength training, and trying new classes.\n\nAround ovulation: many hit personal bests now. Enjoy it, but warm up well.\n\nLuteal phase: shift toward moderate intensity — pilates, swimming, steady walks. In the final days, honor lower energy without guilt.\n\nThe best exercise is the one you actually do — your cycle just helps you choose when.",
-    "bodyAr": "لستِ بحاجة لنفس التمرين كل يوم — دورتك تقترح خطة تدريب طبيعية.\n\nأيام الدورة: اللطيف يكسب. المشي والتمدد واليوغا الخفيفة قد تخفف التقلصات فعلًا.\n\nالمرحلة الجريبية: الطاقة تتصاعد — ممتازة للكارديو وتمارين القوة وتجربة صفوف جديدة.\n\nحول الإباضة: كثيرات يحققن أفضل أرقامهن الآن. استمتعي، لكن أحسني الإحماء.\n\nالمرحلة الأصفرية: انتقلي لشدة معتدلة — بيلاتس، سباحة، مشي منتظم. وفي الأيام الأخيرة، احترمي طاقتك المنخفضة دون ذنب.\n\nأفضل تمرين هو الذي تمارسينه فعلًا — دورتك فقط تساعدك على اختيار التوقيت."
+    "bodyAr": "لستِ بحاجة لنفس التمرين كل يوم — دورتك تقترح خطة تدريب طبيعية.\n\nأيام الدورة: اللطيف يكسب. المشي والتمدد واليوغا الخفيفة قد تخفف التقلصات فعلًا.\n\nالمرحلة الجريبية: الطاقة تتصاعد — ممتازة للكارديو وتمارين القوة وتجربة صفوف جديدة.\n\nحول الإباضة: كثيرات يحققن أفضل أرقامهن الآن. استمتعي، لكن أحسني الإحماء.\n\nالمرحلة الأصفرية: انتقلي لشدة معتدلة — بيلاتس، سباحة، مشي منتظم. وفي الأيام الأخيرة، احترمي طاقتك المنخفضة دون ذنب.\n\nأفضل تمرين هو الذي تمارسينه فعلًا — دورتك فقط تساعدك على اختيار التوقيت.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/cycle_exercise.webp",
+    "excerptAr": "لستِ بحاجة لنفس التمرين كل يوم — دورتك تقترح خطة تدريب طبيعية.",
+    "excerptEn": "You do not need the same workout every day — your cycle suggests a natural training plan.",
+    "featured": false,
+    "slug": "cycle_exercise",
+    "sourceUrls": [
+      "https://111.wales.nhs.uk/Periods%2Cpainful/"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "hormones_mood",
@@ -114,7 +186,16 @@
     "titleEn": "Hormones and your mood",
     "titleAr": "الهرمونات ومزاجك",
     "bodyEn": "If your mood changes across the month, you are not \"moody\" — you are cyclical, and that is human biology.\n\nEstrogen supports serotonin, the \"good mood\" messenger. When it rises (follicular phase), many feel brighter and more social. When it falls (late luteal), sensitivity, irritability, or tearfulness can visit.\n\nWhat helps: naming it (\"this is day 26, not a life crisis\"), logging your mood in the app to see your pattern, sunlight and movement, and protecting sleep in the luteal phase.\n\nAnd if low mood is heavy, lasting, or scary at any point in the cycle — reach out to someone you trust or a professional. You never have to carry it alone.",
-    "bodyAr": "إذا كان مزاجك يتغير عبر الشهر، فأنتِ لست \"مزاجية\" — أنتِ دورية، وهذه بيولوجيا إنسانية.\n\nالإستروجين يدعم السيروتونين، رسول \"المزاج الجيد\". عندما يرتفع (المرحلة الجريبية) تشعر كثيرات بإشراق واجتماعية أكبر. وعندما ينخفض (أواخر المرحلة الأصفرية) قد تزور الحساسية أو الانفعال أو الدموع.\n\nما يساعد: تسمية الأمر (\"هذا اليوم 26، وليست أزمة حياة\")، تسجيل مزاجك في التطبيق لرؤية نمطك، الشمس والحركة، وحماية النوم في المرحلة الأصفرية.\n\nوإذا كان المزاج المنخفض ثقيلًا أو مستمرًا أو مخيفًا في أي وقت من الدورة — تواصلي مع شخص تثقين به أو مختصة. لا يجب أن تحملي ذلك وحدك أبدًا."
+    "bodyAr": "إذا كان مزاجك يتغير عبر الشهر، فأنتِ لست \"مزاجية\" — أنتِ دورية، وهذه بيولوجيا إنسانية.\n\nالإستروجين يدعم السيروتونين، رسول \"المزاج الجيد\". عندما يرتفع (المرحلة الجريبية) تشعر كثيرات بإشراق واجتماعية أكبر. وعندما ينخفض (أواخر المرحلة الأصفرية) قد تزور الحساسية أو الانفعال أو الدموع.\n\nما يساعد: تسمية الأمر (\"هذا اليوم 26، وليست أزمة حياة\")، تسجيل مزاجك في التطبيق لرؤية نمطك، الشمس والحركة، وحماية النوم في المرحلة الأصفرية.\n\nوإذا كان المزاج المنخفض ثقيلًا أو مستمرًا أو مخيفًا في أي وقت من الدورة — تواصلي مع شخص تثقين به أو مختصة. لا يجب أن تحملي ذلك وحدك أبدًا.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/hormones_mood.webp",
+    "excerptAr": "إذا كان مزاجك يتغير عبر الشهر، فأنتِ لست \"مزاجية\" — أنتِ دورية، وهذه بيولوجيا إنسانية.",
+    "excerptEn": "If your mood changes across the month, you are not \"moody\" — you are cyclical, and that is human biology.",
+    "featured": false,
+    "slug": "hormones_mood",
+    "sourceUrls": [
+      "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "self_kindness",
@@ -127,7 +208,16 @@
     "titleEn": "The art of being kind to yourself",
     "titleAr": "فن اللطف مع النفس",
     "bodyEn": "Productivity culture says every day should look the same. Your body says otherwise — and your body is right.\n\nBeing kind to yourself during your cycle is not laziness; it is strategy. Rest during your period is how you fund the energy of your follicular phase.\n\nTry this: on low days, lower the bar on purpose. Choose the gentlest version of your tasks. Say \"this is enough for today\" and mean it.\n\nThe challenges in this app are designed for exactly this — small, kind actions that count. A glass of water is a victory. Claim it.",
-    "bodyAr": "ثقافة الإنتاجية تقول إن كل الأيام يجب أن تتشابه. جسمك يقول غير ذلك — وجسمك على حق.\n\nاللطف مع نفسك خلال دورتك ليس كسلًا؛ إنه استراتيجية. الراحة أثناء الدورة هي ما يموّل طاقة مرحلتك الجريبية.\n\nجربي هذا: في الأيام المنخفضة، اخفضي السقف عمدًا. اختاري النسخة الألطف من مهامك. قولي \"هذا يكفي لليوم\" واقصديها.\n\nتحديات هذا التطبيق مصممة لهذا بالضبط — أفعال صغيرة لطيفة لها قيمة. كوب الماء انتصار. طالبي به."
+    "bodyAr": "ثقافة الإنتاجية تقول إن كل الأيام يجب أن تتشابه. جسمك يقول غير ذلك — وجسمك على حق.\n\nاللطف مع نفسك خلال دورتك ليس كسلًا؛ إنه استراتيجية. الراحة أثناء الدورة هي ما يموّل طاقة مرحلتك الجريبية.\n\nجربي هذا: في الأيام المنخفضة، اخفضي السقف عمدًا. اختاري النسخة الألطف من مهامك. قولي \"هذا يكفي لليوم\" واقصديها.\n\nتحديات هذا التطبيق مصممة لهذا بالضبط — أفعال صغيرة لطيفة لها قيمة. كوب الماء انتصار. طالبي به.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/self_kindness.webp",
+    "excerptAr": "ثقافة الإنتاجية تقول إن كل الأيام يجب أن تتشابه. جسمك يقول غير ذلك — وجسمك على حق.",
+    "excerptEn": "Productivity culture says every day should look the same. Your body says otherwise — and your body is right.",
+    "featured": false,
+    "slug": "self_kindness",
+    "sourceUrls": [
+      "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "fertility_window",
@@ -140,7 +230,16 @@
     "titleEn": "Understanding your fertile window",
     "titleAr": "فهم نافذة الخصوبة",
     "bodyEn": "The fertile window is the days in each cycle when pregnancy is possible — roughly the five days before ovulation plus ovulation day itself.\n\nOvulation usually happens about 14 days BEFORE the next period starts (not after the previous one). With irregular cycles, the timing shifts, which is why predictions improve the longer you track.\n\nSigns some notice near ovulation: clearer stretchy discharge, a slight rise in basal body temperature after ovulation, and mild one-sided twinges.\n\nWhether you are trying to conceive or to avoid pregnancy, remember app predictions are estimates, not guarantees — discuss reliable options with a healthcare provider.",
-    "bodyAr": "نافذة الخصوبة هي الأيام التي يكون فيها الحمل ممكنًا في كل دورة — تقريبًا الأيام الخمسة قبل الإباضة بالإضافة إلى يوم الإباضة نفسه.\n\nتحدث الإباضة عادة قبل 14 يومًا من بدء الدورة التالية (وليس بعد السابقة). مع الدورات غير المنتظمة يتغير التوقيت، ولهذا تتحسن التوقعات كلما تتبعتِ أكثر.\n\nعلامات تلاحظها بعضهن قرب الإباضة: إفرازات شفافة مطاطية، ارتفاع طفيف في حرارة الجسم الأساسية بعد الإباضة، ووخزات خفيفة في جانب واحد.\n\nسواء كنتِ تحاولين الحمل أو تجنبه، تذكري أن توقعات التطبيق تقديرات وليست ضمانات — ناقشي الخيارات الموثوقة مع مقدمة رعاية صحية."
+    "bodyAr": "نافذة الخصوبة هي الأيام التي يكون فيها الحمل ممكنًا في كل دورة — تقريبًا الأيام الخمسة قبل الإباضة بالإضافة إلى يوم الإباضة نفسه.\n\nتحدث الإباضة عادة قبل 14 يومًا من بدء الدورة التالية (وليس بعد السابقة). مع الدورات غير المنتظمة يتغير التوقيت، ولهذا تتحسن التوقعات كلما تتبعتِ أكثر.\n\nعلامات تلاحظها بعضهن قرب الإباضة: إفرازات شفافة مطاطية، ارتفاع طفيف في حرارة الجسم الأساسية بعد الإباضة، ووخزات خفيفة في جانب واحد.\n\nسواء كنتِ تحاولين الحمل أو تجنبه، تذكري أن توقعات التطبيق تقديرات وليست ضمانات — ناقشي الخيارات الموثوقة مع مقدمة رعاية صحية.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/fertility_window.webp",
+    "excerptAr": "نافذة الخصوبة هي الأيام التي يكون فيها الحمل ممكنًا في كل دورة — تقريبًا الأيام الخمسة قبل الإباضة بالإضافة إلى يوم الإباضة نفسه.",
+    "excerptEn": "The fertile window is the days in each cycle when pregnancy is possible — roughly the five days before ovulation plus ovulation day itself.",
+    "featured": false,
+    "slug": "fertility_window",
+    "sourceUrls": [
+      "https://www.acog.org/womens-health/faqs/fertility-awareness-based-methods-of-family-planning"
+    ],
+    "contentVersion": 2
   },
   {
     "id": "contraception_overview",
@@ -153,6 +252,148 @@
     "titleEn": "Contraception: an honest overview",
     "titleAr": "وسائل منع الحمل: نظرة صادقة",
     "bodyEn": "There is no single \"best\" contraception — only the best fit for your body, health history, and life.\n\nHormonal options (pill, patch, ring, injection, hormonal IUD, implant) prevent ovulation or thicken cervical mucus. They can also change bleeding patterns — lighter for some, irregular for others.\n\nNon-hormonal options include the copper IUD and barrier methods like condoms — the only method that also protects against infections.\n\nFertility-awareness methods rely on precise daily tracking and have higher real-world failure rates; they demand consistency.\n\nThis app can track whichever method you use, but the choice itself belongs in a conversation with a doctor who knows your history.",
-    "bodyAr": "لا توجد وسيلة منع حمل \"أفضل\" واحدة — فقط الأنسب لجسمك وتاريخك الصحي وحياتك.\n\nالخيارات الهرمونية (حبوب، لصقة، حلقة، حقن، لولب هرموني، غرسة) تمنع الإباضة أو تزيد كثافة مخاط عنق الرحم. وقد تغير أنماط النزيف — أخف لبعضهن، وغير منتظم لأخريات.\n\nالخيارات غير الهرمونية تشمل اللولب النحاسي والوسائل الحاجزة مثل الواقي — وهو الوسيلة الوحيدة التي تحمي أيضًا من العدوى.\n\nطرق الوعي بالخصوبة تعتمد على تتبع يومي دقيق ونسب فشلها الواقعية أعلى؛ فهي تتطلب التزامًا صارمًا.\n\nيستطيع هذا التطبيق تتبع أي وسيلة تستخدمينها، لكن الاختيار نفسه مكانه حوار مع طبيبة تعرف تاريخك."
+    "bodyAr": "لا توجد وسيلة منع حمل \"أفضل\" واحدة — فقط الأنسب لجسمك وتاريخك الصحي وحياتك.\n\nالخيارات الهرمونية (حبوب، لصقة، حلقة، حقن، لولب هرموني، غرسة) تمنع الإباضة أو تزيد كثافة مخاط عنق الرحم. وقد تغير أنماط النزيف — أخف لبعضهن، وغير منتظم لأخريات.\n\nالخيارات غير الهرمونية تشمل اللولب النحاسي والوسائل الحاجزة مثل الواقي — وهو الوسيلة الوحيدة التي تحمي أيضًا من العدوى.\n\nطرق الوعي بالخصوبة تعتمد على تتبع يومي دقيق ونسب فشلها الواقعية أعلى؛ فهي تتطلب التزامًا صارمًا.\n\nيستطيع هذا التطبيق تتبع أي وسيلة تستخدمينها، لكن الاختيار نفسه مكانه حوار مع طبيبة تعرف تاريخك.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/contraception_overview.webp",
+    "excerptAr": "لا توجد وسيلة منع حمل \"أفضل\" واحدة — فقط الأنسب لجسمك وتاريخك الصحي وحياتك.",
+    "excerptEn": "There is no single \"best\" contraception — only the best fit for your body, health history, and life.",
+    "featured": false,
+    "slug": "contraception_overview",
+    "sourceUrls": [
+      "https://www.acog.org/womens-health/faqs/birth-control"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "irregular_cycles",
+    "category": "basics",
+    "iconName": "calendar_month_outlined",
+    "minutes": 4,
+    "adultsOnly": false,
+    "published": true,
+    "order": 13,
+    "titleEn": "Irregular cycles: when is variation normal?",
+    "titleAr": "الدورة غير المنتظمة: متى يكون التغيّر طبيعيًا؟",
+    "bodyEn": "A cycle does not have to arrive on the same date every month. Small changes can happen, especially in the first years after periods begin, during stressful seasons, or when routines change.\n\nTracking gives you a clearer picture than memory alone. Record the first day of bleeding, how long it lasts, and any major changes in sleep, stress, exercise, or weight.\n\nA late period can also happen with pregnancy, some contraceptives, breastfeeding, perimenopause, or health conditions. One late cycle is not a diagnosis.\n\nTalk with a health professional if your periods become irregular after being predictable, you miss three in a row, or the change comes with symptoms that worry you. Your Lune history can help you explain the pattern clearly.",
+    "bodyAr": "لا يجب أن تبدأ الدورة في التاريخ نفسه تمامًا كل شهر. قد تحدث فروقات بسيطة، خصوصًا في السنوات الأولى بعد بدايتها، أو خلال فترات الضغط، أو عندما يتغير روتين الحياة.\n\nالتتبع يعطيك صورة أوضح من الاعتماد على الذاكرة. سجّلي أول يوم للنزيف، ومدته، وأي تغيّر واضح في النوم أو الضغط أو الرياضة أو الوزن.\n\nقد تتأخر الدورة أيضًا بسبب الحمل، وبعض وسائل منع الحمل، والرضاعة، ومرحلة ما قبل انقطاع الطمث، أو بعض الحالات الصحية. دورة واحدة متأخرة لا تعني تشخيصًا.\n\nتحدثي مع مختصة إذا أصبحت دورتك غير منتظمة بعد أن كانت متوقعة، أو غابت ثلاث مرات متتالية، أو صاحب التغيّر أعراض تقلقك. سجل Lune يساعدك على شرح النمط بوضوح.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/irregular_cycles.webp",
+    "excerptAr": "لا يجب أن تبدأ الدورة في التاريخ نفسه تمامًا كل شهر. قد تحدث فروقات بسيطة، خصوصًا في السنوات الأولى بعد بدايتها، أو خلال فترات الضغط، أو عندما يتغير روتين الحياة.",
+    "excerptEn": "A cycle does not have to arrive on the same date every month. Small changes can happen, especially in the first years after periods begin, during stressful seasons, or when routines change.",
+    "featured": false,
+    "slug": "irregular_cycles",
+    "sourceUrls": [
+      "https://www.nhs.uk/symptoms/missed-or-late-periods/"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "sleep_and_cycle",
+    "category": "mind",
+    "iconName": "bedtime_outlined",
+    "minutes": 3,
+    "adultsOnly": false,
+    "published": true,
+    "order": 14,
+    "titleEn": "Sleep and your cycle: a gentler routine",
+    "titleAr": "النوم ودورتك: روتين ألطف لأيام الشهر",
+    "bodyEn": "Some people notice that sleep feels different before a period: falling asleep may take longer, dreams may feel vivid, or tiredness may arrive earlier. Premenstrual symptoms can include sleeping too much or too little.\n\nStart with consistency rather than perfection. Keep wake-up time fairly steady, dim bright screens before bed, and make the room cool and comfortable. Caffeine late in the day can make an already restless night harder.\n\nUse Lune to note sleep beside mood and cycle day. After two or three cycles, you may see a repeatable pattern and can protect those nights with a lighter evening.\n\nIf poor sleep lasts beyond your cycle pattern, affects daily life, or comes with persistent low mood or anxiety, talk with a qualified professional.",
+    "bodyAr": "تلاحظ بعض النساء أن النوم يتغير قبل الدورة: قد يستغرق الدخول في النوم وقتًا أطول، أو تصبح الأحلام أوضح، أو يأتي التعب مبكرًا. وقد تشمل أعراض ما قبل الدورة النوم أكثر أو أقل من المعتاد.\n\nابدئي بالانتظام لا بالكمال. ثبتي وقت الاستيقاظ قدر الإمكان، وخففي الشاشات الساطعة قبل النوم، واجعلي الغرفة مريحة ومعتدلة الحرارة. وقد يزيد الكافيين المتأخر صعوبة ليلة مضطربة أصلًا.\n\nاستخدمي Lune لتسجيل النوم بجانب المزاج ويوم الدورة. بعد دورتين أو ثلاث قد يظهر نمط متكرر، وعندها يمكنك حماية تلك الليالي بأمسية أخف.\n\nإذا استمر اضطراب النوم خارج نمط الدورة، أو أثّر على حياتك اليومية، أو صاحبه مزاج منخفض أو قلق مستمر، فتحدثي مع مختصة مؤهلة.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/sleep_and_cycle.webp",
+    "excerptAr": "تلاحظ بعض النساء أن النوم يتغير قبل الدورة: قد يستغرق الدخول في النوم وقتًا أطول، أو تصبح الأحلام أوضح، أو يأتي التعب مبكرًا. وقد تشمل أعراض ما قبل الدورة النوم أكثر أو أقل من المعتاد.",
+    "excerptEn": "Some people notice that sleep feels different before a period: falling asleep may take longer, dreams may feel vivid, or tiredness may arrive earlier. Premenstrual symptoms can include sleeping too much or too little.",
+    "featured": false,
+    "slug": "sleep_and_cycle",
+    "sourceUrls": [
+      "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "heavy_periods_iron",
+    "category": "health",
+    "iconName": "bloodtype_outlined",
+    "minutes": 4,
+    "adultsOnly": false,
+    "published": true,
+    "order": 15,
+    "titleEn": "Heavy periods and iron: signs worth noticing",
+    "titleAr": "غزارة الدورة والحديد: علامات تستحق الانتباه",
+    "bodyEn": "Heavy menstrual bleeding can affect energy and may lead to iron-deficiency anemia. Signs can include unusual tiredness, weakness, dizziness, headaches, or shortness of breath. These symptoms have many possible causes, so they deserve assessment rather than self-diagnosis.\n\nBleeding may be considered heavy when it lasts more than seven days, soaks through protection every hour for several hours, requires changes during the night, or regularly disrupts school, work, or sleep.\n\nTrack flow level, duration, clots, and symptoms in Lune. A few cycles of clear records can help a clinician understand what is happening and decide whether blood tests are useful.\n\nIron-rich foods support general nutrition, but do not start high-dose iron supplements unless a clinician recommends them. Seek urgent care for very heavy bleeding with fainting, chest pain, severe weakness, or trouble breathing.",
+    "bodyAr": "قد تؤثر غزارة نزيف الدورة على الطاقة، وقد تؤدي إلى فقر الدم الناتج عن نقص الحديد. ومن علاماته التعب غير المعتاد، والضعف، والدوخة، والصداع، أو ضيق النفس. لهذه الأعراض أسباب متعددة، لذلك تحتاج تقييمًا لا تشخيصًا ذاتيًا.\n\nقد يُعد النزيف غزيرًا إذا استمر أكثر من سبعة أيام، أو أغرق الفوطة كل ساعة لعدة ساعات، أو تطلب التغيير ليلًا، أو عطّل المدرسة أو العمل أو النوم بانتظام.\n\nسجّلي مستوى التدفق ومدته والكتل الدموية والأعراض في Lune. سجل واضح لعدة دورات يساعد المختصة على فهم ما يحدث وتحديد الحاجة إلى فحوصات دم.\n\nالأطعمة الغنية بالحديد تدعم التغذية العامة، لكن لا تبدئي جرعات عالية من مكملات الحديد إلا بتوصية مختصة. واطلبي رعاية عاجلة عند نزيف شديد جدًا مع إغماء أو ألم صدر أو ضعف شديد أو صعوبة تنفس.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/heavy_periods_iron.webp",
+    "excerptAr": "قد تؤثر غزارة نزيف الدورة على الطاقة، وقد تؤدي إلى فقر الدم الناتج عن نقص الحديد. ومن علاماته التعب غير المعتاد، والضعف، والدوخة، والصداع، أو ضيق النفس. لهذه الأعراض أسباب متعددة، لذلك تحتاج تقييمًا لا تشخيصًا ذاتيًا.",
+    "excerptEn": "Heavy menstrual bleeding can affect energy and may lead to iron-deficiency anemia. Signs can include unusual tiredness, weakness, dizziness, headaches, or shortness of breath. These symptoms have many possible causes, so they deserve assessment rather than self-diagnosis.",
+    "featured": false,
+    "slug": "heavy_periods_iron",
+    "sourceUrls": [
+      "https://www.acog.org/womens-health/faqs/heavy-menstrual-bleeding",
+      "https://womenshealth.gov/a-z-topics/iron-deficiency-anemia"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "bloating_and_hydration",
+    "category": "nutrition",
+    "iconName": "water_drop_outlined",
+    "minutes": 3,
+    "adultsOnly": false,
+    "published": true,
+    "order": 16,
+    "titleEn": "Bloating before your period: small comforts",
+    "titleAr": "الانتفاخ قبل الدورة: خطوات صغيرة للراحة",
+    "bodyEn": "Bloating and a gassy feeling are common premenstrual symptoms. Hormone changes, digestion, salty meals, and individual food sensitivities can all shape how your body feels.\n\nGentle habits may help: drink regularly through the day, eat at a comfortable pace, keep meals balanced, and notice whether very salty foods or large late meals make your own symptoms worse. Light movement can also support comfort.\n\nThere is no need for a harsh detox or to fear normal foods. Track what you ate and how you felt without judging yourself; look for a repeated personal pattern instead of blaming one meal.\n\nSpeak with a clinician if bloating is severe, persistent throughout the month, suddenly different, or comes with unexplained weight loss, vomiting, blood in stool, or significant pain.",
+    "bodyAr": "الانتفاخ والشعور بالغازات من الأعراض الشائعة قبل الدورة. وقد تؤثر تغيرات الهرمونات والهضم والوجبات المالحة وحساسية الجسم لبعض الأطعمة في شعورك.\n\nقد تساعد عادات لطيفة: اشربي بانتظام خلال اليوم، وكلي بهدوء، وحافظي على توازن الوجبات، ولاحظي إن كانت الأطعمة شديدة الملوحة أو الوجبات الكبيرة المتأخرة تزيد أعراضك أنتِ. وقد تدعم الحركة الخفيفة الراحة أيضًا.\n\nلا حاجة إلى ديتوكس قاسٍ أو الخوف من الطعام الطبيعي. سجّلي ما أكلتِ وكيف شعرتِ من دون لوم، وابحثي عن نمط شخصي متكرر بدل اتهام وجبة واحدة.\n\nتحدثي مع مختصة إذا كان الانتفاخ شديدًا أو مستمرًا طوال الشهر أو تغيّر فجأة، أو صاحبه فقدان وزن غير مفسر أو قيء أو دم في البراز أو ألم واضح.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/bloating_and_hydration.webp",
+    "excerptAr": "الانتفاخ والشعور بالغازات من الأعراض الشائعة قبل الدورة. وقد تؤثر تغيرات الهرمونات والهضم والوجبات المالحة وحساسية الجسم لبعض الأطعمة في شعورك.",
+    "excerptEn": "Bloating and a gassy feeling are common premenstrual symptoms. Hormone changes, digestion, salty meals, and individual food sensitivities can all shape how your body feels.",
+    "featured": false,
+    "slug": "bloating_and_hydration",
+    "sourceUrls": [
+      "https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "stress_and_late_periods",
+    "category": "mind",
+    "iconName": "spa_outlined",
+    "minutes": 3,
+    "adultsOnly": false,
+    "published": true,
+    "order": 17,
+    "titleEn": "Can stress make a period late?",
+    "titleAr": "هل يمكن أن يؤخر الضغط النفسي الدورة؟",
+    "bodyEn": "Stress is one possible reason a period arrives late or is missed. The body systems involved in stress and reproduction influence one another, but stress is not the only explanation.\n\nIf pregnancy is possible, a pregnancy test is the practical first step. Changes in weight, intense exercise, breastfeeding, hormonal contraception, perimenopause, and some health conditions can also change timing.\n\nInstead of trying to force a period to start, support the basics: regular meals, enough rest, gentle movement, and a manageable routine. Log dates and major stressors so you can see whether the pattern settles.\n\nSee a health professional if you miss three periods in a row, your cycles become irregular after being predictable, or you also notice symptoms such as marked weight change, unusual hair growth, or ongoing fatigue.",
+    "bodyAr": "الضغط النفسي أحد الأسباب الممكنة لتأخر الدورة أو غيابها. فالأنظمة المسؤولة عن الضغط والتكاثر في الجسم تؤثر في بعضها، لكن الضغط ليس التفسير الوحيد.\n\nإذا كان الحمل ممكنًا، فاختبار الحمل هو الخطوة العملية الأولى. وقد يغيّر التوقيت أيضًا تغير الوزن، والرياضة الشديدة، والرضاعة، ووسائل منع الحمل الهرمونية، ومرحلة ما قبل انقطاع الطمث، وبعض الحالات الصحية.\n\nبدل محاولة إجبار الدورة على البدء، ادعمي الأساسيات: وجبات منتظمة، وراحة كافية، وحركة لطيفة، وروتين يمكن تحمله. سجّلي التواريخ وفترات الضغط الكبيرة لترَي إن كان النمط سيستقر.\n\nراجعي مختصة إذا غابت ثلاث دورات متتالية، أو أصبحت الدورات غير منتظمة بعد أن كانت متوقعة، أو ظهرت علامات مثل تغير واضح في الوزن أو نمو شعر غير معتاد أو تعب مستمر.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/stress_and_late_periods.webp",
+    "excerptAr": "الضغط النفسي أحد الأسباب الممكنة لتأخر الدورة أو غيابها. فالأنظمة المسؤولة عن الضغط والتكاثر في الجسم تؤثر في بعضها، لكن الضغط ليس التفسير الوحيد.",
+    "excerptEn": "Stress is one possible reason a period arrives late or is missed. The body systems involved in stress and reproduction influence one another, but stress is not the only explanation.",
+    "featured": false,
+    "slug": "stress_and_late_periods",
+    "sourceUrls": [
+      "https://www.nhs.uk/symptoms/missed-or-late-periods/"
+    ],
+    "contentVersion": 2
+  },
+  {
+    "id": "prepare_for_doctor_visit",
+    "category": "health",
+    "iconName": "medical_services_outlined",
+    "minutes": 3,
+    "adultsOnly": false,
+    "published": true,
+    "order": 18,
+    "titleEn": "How to prepare for a cycle health visit",
+    "titleAr": "كيف تستعدين لموعد صحة الدورة؟",
+    "bodyEn": "A useful appointment starts before you enter the clinic. Bring the dates of recent periods, how many days bleeding lasted, flow level, pain score, bleeding between periods, and symptoms that affect daily life.\n\nWrite down medicines, supplements, allergies, contraception, past conditions, and the questions you do not want to forget. Your Lune history can organize much of this information.\n\nIt is normal to feel nervous. You can say that at the start, ask what will happen before any examination, request privacy for part of the conversation, and ask for an explanation in words you understand.\n\nNot every visit requires a pelvic examination. What is appropriate depends on age, symptoms, history, and the purpose of the visit. You can ask why a test is recommended and what alternatives exist.",
+    "bodyAr": "يبدأ الموعد المفيد قبل دخول العيادة. خذي معك تواريخ الدورات الأخيرة، وعدد أيام النزيف، ومستوى التدفق، ودرجة الألم، وأي نزيف بين الدورات، والأعراض التي تؤثر على حياتك اليومية.\n\nاكتبي الأدوية والمكملات والحساسيات ووسيلة منع الحمل والحالات السابقة والأسئلة التي لا تريدين نسيانها. ويمكن لسجل Lune تنظيم كثير من هذه المعلومات.\n\nمن الطبيعي أن تشعري بالتوتر. يمكنك قول ذلك في البداية، والسؤال عما سيحدث قبل أي فحص، وطلب الخصوصية لجزء من الحديث، وطلب شرح بكلمات تفهمينها.\n\nلا يحتاج كل موعد إلى فحص للحوض. يعتمد المناسب على العمر والأعراض والتاريخ وسبب الزيارة. ومن حقك السؤال عن سبب اقتراح أي فحص والبدائل المتاحة.",
+    "coverImageUrl": "https://lune-7d956.web.app/images/magazine/prepare_for_doctor_visit.webp",
+    "excerptAr": "يبدأ الموعد المفيد قبل دخول العيادة. خذي معك تواريخ الدورات الأخيرة، وعدد أيام النزيف، ومستوى التدفق، ودرجة الألم، وأي نزيف بين الدورات، والأعراض التي تؤثر على حياتك اليومية.",
+    "excerptEn": "A useful appointment starts before you enter the clinic. Bring the dates of recent periods, how many days bleeding lasted, flow level, pain score, bleeding between periods, and symptoms that affect daily life.",
+    "featured": false,
+    "slug": "prepare_for_doctor_visit",
+    "sourceUrls": [
+      "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2018/10/well-woman-visit"
+    ],
+    "contentVersion": 2
   }
 ]

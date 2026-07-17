@@ -45,6 +45,7 @@ class CommunityPost {
     this.topCommentAlias,
     this.topCommentPreview,
     this.topCommentAvatarIndex = 0,
+    this.coverStyle,
   });
 
   final String id;
@@ -82,6 +83,9 @@ class CommunityPost {
 
   bool get hasTopComment =>
       topCommentPreview != null && topCommentPreview!.trim().isNotEmpty;
+
+  /// Designed gradient cover id for text posts (see PostCoverStyles).
+  final String? coverStyle;
 
   bool get isPendingReview => moderationStatus == 'pending_review';
 
@@ -154,6 +158,7 @@ class CommunityPost {
       topCommentAlias: topComment['alias'] as String?,
       topCommentPreview: topComment['preview'] as String?,
       topCommentAvatarIndex: topComment['avatarIndex'] as int? ?? 0,
+      coverStyle: data['coverStyle'] as String?,
     );
   }
 

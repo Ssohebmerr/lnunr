@@ -7,11 +7,15 @@ class CommunitySeed {
   CommunitySeed._();
 
   static const defaultRulesEn =
-      'Be kind and supportive. No medical advice, spam, or harassment. '
-      'Use nicknames only — never share personal contact info.';
+      'Be kind and supportive. No harassment, hate, threats, sexual '
+      'exploitation, child abuse or grooming, self-harm encouragement, '
+      'dangerous medical instructions, spam, scams, or illegal sales. '
+      'Use nicknames only — never share personal contact information.';
   static const defaultRulesAr =
-      'كوني لطيفة وداعمة. لا نصائح طبية ولا إزعاج ولا مضايقة. '
-      'استخدمي الأسماء المستعارة فقط — لا تشاركي بيانات التواصل.';
+      'كوني لطيفة وداعمة. يُمنع التحرش والكراهية والتهديد والاستغلال '
+      'الجنسي وإساءة الأطفال أو استدراجهم وتشجيع إيذاء النفس والتعليمات '
+      'الطبية الخطرة والإزعاج والاحتيال والبيع غير القانوني. استخدمي '
+      'الأسماء المستعارة فقط ولا تشاركي بيانات التواصل الشخصية.';
 
   static const List<Community> defaults = [
     Community(

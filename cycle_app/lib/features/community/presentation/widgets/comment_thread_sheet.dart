@@ -236,6 +236,7 @@ class _ThreadCommentTile extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final bestColor = theme.colorScheme.tertiary;
+    final isOptimistic = comment.id.startsWith('_local_');
 
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
@@ -288,7 +289,7 @@ class _ThreadCommentTile extends StatelessWidget {
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: onTap,
+                  onTap: isOptimistic ? null : onTap,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
                   child: Padding(
                     padding: EdgeInsets.all(isRoot ? 14 : 10),
@@ -361,6 +362,14 @@ class _ThreadCommentTile extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+                                  if (isOptimistic)
+                                    const SizedBox(
+                                      width: 13,
+                                      height: 13,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.7,
+                                      ),
+                                    ),
                                   if (isBest)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -447,8 +456,9 @@ class _ThreadCommentTile extends StatelessWidget {
                                   fontSize: isRoot ? null : 13,
                                 ),
                               ),
-                              if ((communityId != null && postId != null) ||
-                                  onReply != null) ...[
+                              if (!isOptimistic &&
+                                  ((communityId != null && postId != null) ||
+                                      onReply != null)) ...[
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [

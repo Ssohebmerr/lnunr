@@ -1,5 +1,8 @@
 /// Formats CRL / head-to-heel length for display (cm or mm).
 String formatPregnancyLength(double lengthCm, String lang) {
+  if (lengthCm < 0.1) {
+    return lang.startsWith('ar') ? 'أقل من 1 مم' : '< 1 mm';
+  }
   if (lengthCm < 1) {
     final mm = (lengthCm * 10).round().clamp(1, 999);
     return lang.startsWith('ar') ? '$mm مم' : '$mm mm';
@@ -47,11 +50,9 @@ class PregnancyWeekInfo {
   final String fruitEn;
   final String fruitAr;
 
-  String lengthDisplay(String lang) =>
-      formatPregnancyLength(lengthCm, lang);
+  String lengthDisplay(String lang) => formatPregnancyLength(lengthCm, lang);
 
-  String weightDisplay(String lang) =>
-      formatPregnancyWeight(weightGrams, lang);
+  String weightDisplay(String lang) => formatPregnancyWeight(weightGrams, lang);
 
   String bodyFor(String lang) => lang.startsWith('ar') ? bodyAr : bodyEn;
   String maternalFor(String lang) =>
@@ -100,7 +101,7 @@ String fruitForWeek(int week, String lang) {
     39: (' Small watermelon', 'بطيخ صغير'),
     40: (' Mini watermelon', 'بطيخ مصغر'),
   };
-  final f = fruit[week.clamp(4, 40)];
+  final f = fruit[week.clamp(3, 40)];
   if (f == null) return '';
   return lang.startsWith('ar') ? f.$2 : f.$1;
 }
@@ -110,6 +111,13 @@ class PregnancyDevelopmentContent {
 
   /// Approximate length (cm) and weight (g) + development line per week.
   static const _weeks = <(int, double, int, String, String)>[
+    (
+      3,
+      0.02,
+      0,
+      'Fertilization creates a zygote that divides as it travels toward the uterus.',
+      'يحدث الإخصاب وتتكوّن اللاقحة، ثم تنقسم خلاياها في طريقها نحو الرحم.',
+    ),
     (
       4,
       0.2,
@@ -408,7 +416,7 @@ class PregnancyDevelopmentContent {
   }
 
   static PregnancyWeekInfo forWeek(int week, String lang) {
-    final w = week.clamp(4, 40);
+    final w = week.clamp(3, 40);
     for (var i = _weeks.length - 1; i >= 0; i--) {
       if (_weeks[i].$1 <= w) return _fromRow(_weeks[i]);
     }

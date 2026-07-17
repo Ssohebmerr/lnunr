@@ -1,4 +1,3 @@
-import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart' as md;
 import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -20,9 +19,10 @@ import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../core/widgets/avatar_picker_row.dart';
-import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_sync_service.dart';
+import '../../goals/data/user_goal_experience.dart';
+import '../../goals/presentation/goal_choice_card.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -126,7 +126,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       helpText: AppLocalizations.of(context)!.onboardingBirthDateLabel,
     );
     if (picked != null) {
-      setState(() => _birthDate = DateTime(picked.year, picked.month, picked.day));
+      setState(
+        () => _birthDate = DateTime(picked.year, picked.month, picked.day),
+      );
     }
   }
 
@@ -138,7 +140,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() => _lastPeriod = DateTime(picked.year, picked.month, picked.day));
+      setState(
+        () => _lastPeriod = DateTime(picked.year, picked.month, picked.day),
+      );
     }
   }
 
@@ -203,9 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
         router.go('/home');
       } else if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -215,7 +217,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final mdL10n = md.AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     if (_blockedUnder13) {
@@ -272,7 +273,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Row(
                   children: [
                     if (_step > 0)
-                      IconButton(onPressed: _back, icon: const Icon(Icons.arrow_back))
+                      IconButton(
+                        onPressed: _back,
+                        icon: const Icon(Icons.arrow_back),
+                      )
                     else
                       const SizedBox(width: 48),
                     Expanded(
@@ -318,7 +322,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     _GoalStep(
                       selected: _goal,
-                      mdL10n: mdL10n,
                       l10n: l10n,
                       onChanged: (g) => setState(() => _goal = g),
                     ),
@@ -330,7 +333,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       lastPeriod: _lastPeriod,
                       dateFormat: _dateFormat,
                       onCycleLength: (v) => setState(() => _cycleLength = v),
-                      onPeriodDuration: (v) => setState(() => _periodDuration = v),
+                      onPeriodDuration: (v) =>
+                          setState(() => _periodDuration = v),
                       onPickDate: _pickDate,
                       onDateFormat: (v) => setState(() => _dateFormat = v),
                     ),
@@ -417,61 +421,72 @@ class _ProfileStep extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Center(child: AppAvatar(radius: 44, avatarIndex: avatarIndex)),
-          const SizedBox(height: 16),
-          Text(l10n.avatarPickTitle, style: theme.textTheme.labelLarge),
-          const SizedBox(height: 8),
-          AvatarPickerRow(
-            selectedIndex: avatarIndex,
-            onSelected: onAvatarChanged,
-          ),
-          const SizedBox(height: 20),
-          Text(l10n.onboardingProfileTitle, style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 8),
-          Text(l10n.onboardingProfileSubtitle, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          Text(
-            l10n.onboardingNoEmailNote,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+            Center(child: AppAvatar(radius: 44, avatarIndex: avatarIndex)),
+            const SizedBox(height: 16),
+            Text(l10n.avatarPickTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            AvatarPickerRow(
+              selectedIndex: avatarIndex,
+              onSelected: onAvatarChanged,
             ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: nameController,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: l10n.onboardingNameLabel,
-              hintText: l10n.onboardingNameHint,
-              prefixIcon: const Icon(Icons.badge_outlined),
+            const SizedBox(height: 20),
+            Text(
+              l10n.onboardingProfileTitle,
+              style: theme.textTheme.headlineSmall,
             ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: onPickBirthDate,
-            icon: const Icon(Icons.cake_outlined),
-            label: Text(
-              birthDate == null
-                  ? l10n.onboardingBirthDateHint
-                  : MaterialLocalizations.of(context).formatMediumDate(birthDate!),
+            const SizedBox(height: 8),
+            Text(
+              l10n.onboardingProfileSubtitle,
+              style: theme.textTheme.bodyMedium,
             ),
-            style: OutlinedButton.styleFrom(
-              alignment: AlignmentDirectional.centerStart,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const SizedBox(height: 8),
+            Text(
+              l10n.onboardingNoEmailNote,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          if (birthDate == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6, left: 4),
-              child: Text(
-                l10n.onboardingBirthDateRequired,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
+            const SizedBox(height: 20),
+            TextField(
+              controller: nameController,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: l10n.onboardingNameLabel,
+                hintText: l10n.onboardingNameHint,
+                prefixIcon: const Icon(Icons.badge_outlined),
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: onPickBirthDate,
+              icon: const Icon(Icons.cake_outlined),
+              label: Text(
+                birthDate == null
+                    ? l10n.onboardingBirthDateHint
+                    : MaterialLocalizations.of(
+                        context,
+                      ).formatMediumDate(birthDate!),
+              ),
+              style: OutlinedButton.styleFrom(
+                alignment: AlignmentDirectional.centerStart,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),
-        ],
+            if (birthDate == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
+                child: Text(
+                  l10n.onboardingBirthDateRequired,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -481,23 +496,11 @@ class _ProfileStep extends StatelessWidget {
 class _GoalStep extends StatelessWidget {
   const _GoalStep({
     required this.selected,
-    required this.mdL10n,
     required this.l10n,
     required this.onChanged,
   });
 
-  static const _displayGoals = [
-    UserGoalTypes.general,
-    UserGoalTypes.pregnant,
-    UserGoalTypes.conceive,
-    UserGoalTypes.avoid,
-    UserGoalTypes.menopause,
-    UserGoalTypes.pcos,
-    UserGoalTypes.postpartum,
-  ];
-
   final UserGoalTypes selected;
-  final md.AppLocalizations? mdL10n;
   final AppLocalizations l10n;
   final ValueChanged<UserGoalTypes> onChanged;
 
@@ -514,83 +517,17 @@ class _GoalStep extends StatelessWidget {
           Text(l10n.onboardingGoalSubtitle, style: theme.textTheme.bodyMedium),
           const SizedBox(height: 20),
           Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.05,
-              children: _displayGoals.map((goal) {
-                final isSelected = goal == selected;
-                return AppGlassCard(
+            child: ListView.separated(
+              itemCount: visibleUserGoals.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final goal = visibleUserGoals[index];
+                return GoalChoiceCard(
+                  goal: goal,
+                  selected: goal == selected,
                   onTap: () => onChanged(goal),
-                  padding: const EdgeInsets.all(14),
-                  radius: AppRadius.lg,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      color: isSelected
-                          ? theme.colorScheme.primary.withValues(alpha: 0.06)
-                          : null,
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      theme.colorScheme.primary
-                                          .withValues(alpha: isSelected ? 0.22 : 0.12),
-                                      theme.colorScheme.secondary
-                                          .withValues(alpha: isSelected ? 0.14 : 0.08),
-                                    ],
-                                  ),
-                                ),
-                                child: FeminineIconView(
-                                  goal.femIcon,
-                                  size: 30,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                mdL10n != null
-                                    ? goal.getDisplayName(mdL10n!)
-                                    : goal.dbName,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isSelected)
-                          PositionedDirectional(
-                            top: 0,
-                            end: 0,
-                            child: Icon(
-                              Icons.check_circle_rounded,
-                              color: theme.colorScheme.primary,
-                              size: 20,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
                 );
-              }).toList(),
+              },
             ),
           ),
         ],
@@ -668,9 +605,17 @@ class _CycleStep extends StatelessWidget {
         Text(subtitle, style: theme.textTheme.bodyMedium),
         const SizedBox(height: 20),
         if (isCycleMode) ...[
-          _StepperCard(label: l10n.cycleLength, value: cycleLength, onChanged: onCycleLength),
+          _StepperCard(
+            label: l10n.cycleLength,
+            value: cycleLength,
+            onChanged: onCycleLength,
+          ),
           const SizedBox(height: 12),
-          _StepperCard(label: l10n.periodDuration, value: periodDuration, onChanged: onPeriodDuration),
+          _StepperCard(
+            label: l10n.periodDuration,
+            value: periodDuration,
+            onChanged: onPeriodDuration,
+          ),
           const SizedBox(height: 12),
         ],
         AppGlassCard(
@@ -694,9 +639,18 @@ class _CycleStep extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             ),
             items: [
-              DropdownMenuItem(value: DateFormats.dmy, child: Text(l10n.dateFormatDDMMYYYY)),
-              DropdownMenuItem(value: DateFormats.mdy, child: Text(l10n.dateFormatMMDDYYYY)),
-              DropdownMenuItem(value: DateFormats.ymd, child: Text(l10n.dateFormatYYYYMMDD)),
+              DropdownMenuItem(
+                value: DateFormats.dmy,
+                child: Text(l10n.dateFormatDDMMYYYY),
+              ),
+              DropdownMenuItem(
+                value: DateFormats.mdy,
+                child: Text(l10n.dateFormatMMDDYYYY),
+              ),
+              DropdownMenuItem(
+                value: DateFormats.ymd,
+                child: Text(l10n.dateFormatYYYYMMDD),
+              ),
             ],
             onChanged: (v) {
               if (v != null) onDateFormat(v);
@@ -727,7 +681,11 @@ class _PrivacyStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, size: 64, color: theme.colorScheme.primary),
+          Icon(
+            Icons.shield_outlined,
+            size: 64,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(height: 20),
           Text(l10n.privacyTitle, style: theme.textTheme.headlineSmall),
           const SizedBox(height: 12),
@@ -799,11 +757,31 @@ class _WelcomeStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _WelcomeBullet(icon: Icons.person_outline, text: l10n.onboardingWelcomeTrack, theme: theme),
-          _WelcomeBullet(icon: Icons.auto_awesome_rounded, text: l10n.onboardingWelcomeAi, theme: theme),
-          _WelcomeBullet(icon: Icons.groups_rounded, text: l10n.onboardingWelcomeCommunity, theme: theme),
-          _WelcomeBullet(icon: Icons.pregnant_woman_rounded, text: l10n.onboardingWelcomePregnancy, theme: theme),
-          _WelcomeBullet(icon: Icons.favorite_rounded, text: l10n.onboardingWelcomeSelfCare, theme: theme),
+          _WelcomeBullet(
+            icon: Icons.person_outline,
+            text: l10n.onboardingWelcomeTrack,
+            theme: theme,
+          ),
+          _WelcomeBullet(
+            icon: Icons.auto_awesome_rounded,
+            text: l10n.onboardingWelcomeAi,
+            theme: theme,
+          ),
+          _WelcomeBullet(
+            icon: Icons.groups_rounded,
+            text: l10n.onboardingWelcomeCommunity,
+            theme: theme,
+          ),
+          _WelcomeBullet(
+            icon: Icons.pregnant_woman_rounded,
+            text: l10n.onboardingWelcomePregnancy,
+            theme: theme,
+          ),
+          _WelcomeBullet(
+            icon: Icons.favorite_rounded,
+            text: l10n.onboardingWelcomeSelfCare,
+            theme: theme,
+          ),
         ],
       ),
     );
@@ -811,7 +789,11 @@ class _WelcomeStep extends StatelessWidget {
 }
 
 class _WelcomeBullet extends StatelessWidget {
-  const _WelcomeBullet({required this.icon, required this.text, required this.theme});
+  const _WelcomeBullet({
+    required this.icon,
+    required this.text,
+    required this.theme,
+  });
   final IconData icon;
   final String text;
   final ThemeData theme;
@@ -845,12 +827,16 @@ class _FeaturesStep extends StatelessWidget {
         children: [
           Text(
             l10n.onboardingFeaturesTitle,
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.onboardingFeaturesSubtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -939,9 +925,19 @@ class _FeatureCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(desc, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                Text(
+                  desc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),

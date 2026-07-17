@@ -62,7 +62,7 @@
                     <li><strong>Account Information:</strong> Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.</li>
                     <li><strong>Community Content:</strong> Posts, comments, reactions, and profile information you share in community features (if you opt in).</li>
                     <li><strong>Device Information:</strong> Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.</li>
-                    <li><strong>AI Chat Data:</strong> Messages you send to our AI assistant are processed by third-party AI providers to generate responses. <em>Guest users:</em> chat history stays on your device only. <em>Registered users:</em> chat history may be stored in your cloud account (Firebase) to restore conversations.</li>
+                    <li><strong>AI Data:</strong> If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. <em>Guest users:</em> chat history stays on your device only. <em>Registered users:</em> chat history may be stored in your cloud account (Firebase) to restore conversations.</li>
                     <li><strong>Usage &amp; Diagnostics:</strong> Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.</li>
                 </ul>
 
@@ -85,8 +85,8 @@
                 <p>We use the following third-party services:</p>
                 <ul>
                     <li><strong>Google Firebase</strong> (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.</li>
-                    <li><strong>Google Gemini AI:</strong> AI chat and content processing. Messages are sent to Google for processing per Google's API terms.</li>
-                    <li><strong>DeepSeek AI:</strong> Alternative AI provider for chat and analysis when used by our backend. Messages are sent to DeepSeek for processing per their API terms.</li>
+                    <li><strong>Google Gemini AI:</strong> AI chat and content processing. Submitted content and relevant cycle context may be sent to Google for processing per Google's API terms.</li>
+                    <li><strong>DeepSeek AI:</strong> Alternative AI provider for chat and analysis when used by our backend. Submitted content and relevant cycle context may be sent to DeepSeek for processing per its API terms.</li>
                     <li><strong>Google Play Billing:</strong> Premium subscription payments on Android (processed by Google).</li>
                 </ul>
                 <p>Each provider has its own privacy policy. We encourage you to review them. <strong>We do not sell your personal data.</strong></p>
@@ -140,7 +140,7 @@
                     <li><strong>معلومات الحساب:</strong> البريد الإلكتروني والاسم وطريقة تسجيل الدخول عند التسجيل (بريد/كلمة مرور، Google، أو Apple). عند استخدام التطبيق كضيفة، ننشئ حساباً مجهولاً عبر Firebase مرتبطاً بجهازكِ دون جمع بريدك الإلكتروني.</li>
                     <li><strong>محتوى المجتمع:</strong> المنشورات والتعليقات والتفاعلات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع (إذا اخترتِ المشاركة).</li>
                     <li><strong>معلومات الجهاز:</strong> معرفات الجهاز الأساسية المطلوبة للإشعارات وأمان التطبيق (Firebase App Check) وعمل التطبيق.</li>
-                    <li><strong>بيانات المحادثة الذكية:</strong> الرسائل التي ترسلينها للمساعد الذكي تُعالَج عبر مزوّدي ذكاء اصطناعي من أطراف ثالثة. <em>الضيفات:</em> سجل المحادثة يبقى على الجهاز فقط. <em>المسجّلات:</em> قد يُخزَّن سجل المحادثة في حسابكِ السحابي (Firebase) لاستعادة المحادثات.</li>
+                    <li><strong>بيانات الذكاء الاصطناعي:</strong> إذا فعّلتِ الذكاء الاصطناعي بموافقة صريحة، يُعالَج النص أو المحتوى الذي تقدمينه وسياق الدورة المرتبط به—مثل الأعراض والمزاج والطور والتفضيلات المحفوظة—عبر DeepSeek و/أو Google لتوليد رد شخصي. وقد يتضمن النص معلومات تختارين الإفصاح عنها. <em>الضيفات:</em> سجل المحادثة يبقى على الجهاز فقط. <em>المسجّلات:</em> قد يُخزَّن سجل المحادثة في حسابكِ السحابي (Firebase) لاستعادة المحادثات.</li>
                     <li><strong>الاستخدام والتشخيص:</strong> وقت آخر نشاط تقريبي وتقارير الأعطال عبر Firebase Crashlytics في الإصدارات النهائية لمساعدتنا على إصلاح الأخطاء. لا نستخدم متتبعات إعلانات من أطراف ثالثة.</li>
                 </ul>
 
@@ -163,8 +163,8 @@
                 <p>نستخدم خدمات الطرف الثالث التالية:</p>
                 <ul>
                     <li><strong>Google Firebase</strong> (المصادقة، Firestore، الدوال السحابية، Cloud Messaging، الاستضافة، App Check، Crashlytics): الحسابات وتخزين البيانات والإشعارات والأمان وتقارير الأعطال.</li>
-                    <li><strong>Google Gemini AI:</strong> محادثة الذكاء الاصطناعي ومعالجة المحتوى.</li>
-                    <li><strong>DeepSeek AI:</strong> مزوّد ذكاء اصطناعي بديل للمحادثة والتحليل عند استخدامه من الواجهة الخلفية.</li>
+                    <li><strong>Google Gemini AI:</strong> محادثة الذكاء الاصطناعي ومعالجة المحتوى؛ قد يُرسل المحتوى المقدّم وسياق الدورة المرتبط به إلى Google وفق شروط واجهة API الخاصة بها.</li>
+                    <li><strong>DeepSeek AI:</strong> مزوّد بديل للمحادثة والتحليل؛ قد يُرسل المحتوى المقدّم وسياق الدورة المرتبط به إلى DeepSeek وفق شروط واجهة API الخاصة به.</li>
                     <li><strong>Google Play Billing:</strong> مدفوعات الاشتراك المميز على Android (تُعالَج عبر Google).</li>
                 </ul>
                 <p>لكل مزوّد سياسة خصوصية خاصة. <strong>لا نبيع بياناتكِ الشخصية.</strong></p>

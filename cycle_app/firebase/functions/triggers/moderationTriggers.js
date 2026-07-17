@@ -108,21 +108,37 @@ exports.onReportCreated = onDocumentCreated(
 
     const reports = await admin.firestore()
       .collection('communityReports')
+      .where('communityId', '==', data.communityId)
       .where('postId', '==', data.postId)
-      .where('status', '==', 'pending')
       .get();
 
-    if (reports.size >= 3) {
-      await admin.firestore()
+    const sameTarget = reports.docs.filter((doc) => {
+      const report = doc.data();
+      return report.status === 'pending' &&
+        (report.commentId || null) === (data.commentId || null);
+    });
+    const uniqueReporters = new Set(
+      sameTarget.map((doc) => doc.data().reporterUid).filter(Boolean),
+    );
+
+    if (uniqueReporters.size >= 3) {
+      const postRef = admin.firestore()
         .collection('communities').doc(data.communityId)
-        .collection('posts').doc(data.postId)
+        .collection('posts').doc(data.postId);
+      const targetRef = data.commentId
+        ? postRef.collection('comments').doc(data.commentId)
+        : postRef;
+      await targetRef
         .update({
           hidden: true,
           moderationStatus: 'pending_review',
-          autoHiddenReason: `Auto-hidden: ${reports.size} reports`,
+          autoHiddenReason: `Auto-hidden: ${uniqueReporters.size} unique reports`,
           autoHiddenAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-      console.log(`Auto-hidden post ${data.postId} (${reports.size} reports)`);
+      console.log(
+        `Auto-hidden ${data.commentId ? 'comment' : 'post'} ` +
+        `${data.commentId || data.postId} (${uniqueReporters.size} reports)`,
+      );
     }
   },
 );

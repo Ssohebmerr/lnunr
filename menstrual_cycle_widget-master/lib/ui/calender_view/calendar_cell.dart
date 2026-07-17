@@ -63,11 +63,17 @@ class _CalendarCellState extends State<CalendarCell> {
   }
 
   Widget _renderDayOfWeek() {
-    return Container(
-      alignment: Alignment.center,
-      child: Text(
-        widget.dayOfWeek!,
-        style: widget.dayOfWeekStyle,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            widget.dayOfWeek!,
+            maxLines: 1,
+            style: widget.dayOfWeekStyle,
+          ),
+        ),
       ),
     );
   }
@@ -92,8 +98,8 @@ class _CalendarCellState extends State<CalendarCell> {
     } else {
       return InkWell(
         onTap: widget.onDateSelected,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 5, top: 5),
+        borderRadius: BorderRadius.circular(999),
+        child: Center(
           child: _renderDecoratedDay(
             isPeriodDay: isPeriodDay,
             isPeriodDayAfterCurrentDate: isPeriodDayAfterCurrentDate,
@@ -126,19 +132,23 @@ class _CalendarCellState extends State<CalendarCell> {
         isFutureDateOfPeriod;
 
     if (shouldUseDottedBorder) {
-      return DottedBorder(
-        color: (isPeriodDayAfterCurrentDate || isFutureDateOfPeriod)
-            ? defaultMenstruationColor
-            : defaultOvulationColor,
-        borderType: BorderType.circle,
-        strokeWidth: 1,
-        child: Center(
-          child: renderDayView(
-            isOvulationDay: false,
-            isPeriodDay: false,
-            isFutureOvulationDay: isFutureOvulationDay,
-            isToday: isToday,
-            isAfterPeriodDay: true,
+      return SizedBox.square(
+        dimension: 34,
+        child: DottedBorder(
+          color: (isPeriodDayAfterCurrentDate || isFutureDateOfPeriod)
+              ? defaultMenstruationColor
+              : defaultOvulationColor,
+          borderType: BorderType.circle,
+          strokeWidth: 1.4,
+          padding: const EdgeInsets.all(2),
+          child: Center(
+            child: renderDayView(
+              isOvulationDay: false,
+              isPeriodDay: false,
+              isFutureOvulationDay: isFutureOvulationDay,
+              isToday: isToday,
+              isAfterPeriodDay: true,
+            ),
           ),
         ),
       );
@@ -156,7 +166,7 @@ class _CalendarCellState extends State<CalendarCell> {
     if (widget.isDayOfWeek) {
       return _renderDayOfWeek();
     } else {
-      return widget.isBlankDay ? const Text("") : _renderDateView();
+      return widget.isBlankDay ? const SizedBox.shrink() : _renderDateView();
 
       /* bool isPeriodDay = checkIsPeriodDay();
       bool isOvulationDay = checkIsOvulationDay();
@@ -223,6 +233,7 @@ class _CalendarCellState extends State<CalendarCell> {
     _updateCheckState(isPeriodDay, isPastPeriodDay);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildDayText(),
         _buildCheckbox(),
@@ -247,10 +258,10 @@ class _CalendarCellState extends State<CalendarCell> {
       child: Text(
         '${widget.currentDay!.day}', // Display the day of the month
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.normal,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
           fontFamily: getFontFamily(),
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
@@ -258,13 +269,19 @@ class _CalendarCellState extends State<CalendarCell> {
 
 // Helper to build the checkbox
   Widget _buildCheckbox() {
-    return Expanded(
+    return SizedBox(
+      width: 30,
+      height: 26,
       child: Checkbox(
         value: isChecked,
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         fillColor: isChecked
             ? WidgetStateProperty.all(defaultMenstruationColor)
             : WidgetStateProperty.all(Colors.white),
-        activeColor: isChecked ? defaultMenstruationColor : Colors.black,
+        activeColor: isChecked
+            ? defaultMenstruationColor
+            : Theme.of(context).colorScheme.onSurface,
         onChanged: (value) {
           widget.multipleDateSelectionCallBack.call(value);
           isChanged = true;
@@ -348,8 +365,8 @@ class _CalendarCellState extends State<CalendarCell> {
     );
 
     return Container(
-      height: isAfterPeriodDay ? 25 : 30,
-      width: isAfterPeriodDay ? 25 : 30,
+      height: isAfterPeriodDay ? 28 : 34,
+      width: isAfterPeriodDay ? 28 : 34,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: selectedColor,
@@ -384,7 +401,7 @@ class _CalendarCellState extends State<CalendarCell> {
         widget.currentDay!, DateTime.now())) {
       return widget.todayColor ?? Colors.transparent;
     } else if (isAfterPeriodDay || isFutureOvulationDay) {
-      return Colors.white;
+      return Theme.of(context).colorScheme.surface.withValues(alpha: 0.78);
     }
     return Colors.transparent;
   }
@@ -401,8 +418,8 @@ class _CalendarCellState extends State<CalendarCell> {
       return isFutureOvulationDay
           ? widget.dateStyles
           : TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
               fontFamily: getFontFamily(),
               color:
                   (isPeriodDay || isToday || isOvulationDay || isPastPeriodDay)
@@ -410,7 +427,10 @@ class _CalendarCellState extends State<CalendarCell> {
                       : Colors.black,
             );
     }
-    return widget.dateStyles;
+    return widget.dateStyles?.copyWith(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+    );
   }
 
   /*Widget renderDayView(

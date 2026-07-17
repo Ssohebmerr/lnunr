@@ -27,11 +27,15 @@ Future<bool> showCommunityGuidelinesDialog(
 }) async {
   final l10n = AppLocalizations.of(context)!;
   final lang = Localizations.localeOf(context).languageCode;
-  final rules = community.rulesForLocale(lang).isNotEmpty
-      ? community.rulesForLocale(lang)
-      : (lang.startsWith('ar')
-            ? CommunitySeed.defaultRulesAr
-            : CommunitySeed.defaultRulesEn);
+  final baseline = lang.startsWith('ar')
+      ? CommunitySeed.defaultRulesAr
+      : CommunitySeed.defaultRulesEn;
+  final topicRules = community.rulesForLocale(lang).trim();
+  // Community-specific rules supplement the mandatory safety baseline; they
+  // can never replace it with a weaker catalog override.
+  final rules = topicRules.isEmpty || topicRules == baseline
+      ? baseline
+      : '$baseline\n\n$topicRules';
 
   var agreed = false;
   final result = await showDialog<bool>(

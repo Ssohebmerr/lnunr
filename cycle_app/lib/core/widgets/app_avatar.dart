@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_design_tokens.dart';
 import '../profile/avatar_catalog.dart';
 import '../premium/premium_badge.dart';
+import 'lune_avatar_artwork.dart';
 
 /// App-wide avatar: stylized character, custom photo, or network image.
 class AppAvatar extends StatelessWidget {
@@ -33,7 +34,9 @@ class AppAvatar extends StatelessWidget {
     final size = radius * 2;
     Widget child;
 
-    if (photoPath != null && photoPath!.isNotEmpty && File(photoPath!).existsSync()) {
+    if (photoPath != null &&
+        photoPath!.isNotEmpty &&
+        File(photoPath!).existsSync()) {
       child = ClipOval(
         child: Image.file(
           File(photoPath!),
@@ -54,21 +57,11 @@ class AppAvatar extends StatelessWidget {
         ),
       );
     } else {
-      final index = avatarIndex ??
+      final index =
+          avatarIndex ??
           (uidSeed != null ? AvatarCatalog.indexFromSeed(uidSeed!) : 0);
-      final url = AvatarCatalog.imageUrl(
-        index: index,
-        size: (size * 2).clamp(64, 256).toInt(),
-      );
       child = ClipOval(
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          placeholder: (_, _) => _loading(size),
-          errorWidget: (_, _, _) => _fallback(context, size),
-        ),
+        child: LuneAvatarArtwork(avatarIndex: index, size: size),
       );
     }
 
@@ -103,12 +96,10 @@ class AppAvatar extends StatelessWidget {
   }
 
   Widget _loading(double size) => SizedBox(
-        width: size,
-        height: size,
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
+    width: size,
+    height: size,
+    child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+  );
 
   Widget _fallback(BuildContext context, double size) {
     final theme = Theme.of(context);

@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../data/community_repository.dart';
 import '../../data/community_seed.dart';
 import '../../data/models/community_post.dart';
+import '../../data/post_cover_styles.dart';
 import '../../data/models/post_reactions.dart';
 import '../../data/models/post_type.dart';
 import '../community_clipboard.dart';
@@ -28,11 +29,53 @@ class PostCard extends StatelessWidget {
     required this.post,
     required this.onTap,
     this.showCommunity = false,
+    this.savedOverride,
   });
 
   final CommunityPost post;
   final VoidCallback onTap;
   final bool showCommunity;
+
+  /// Feed screens can provide their single saved-posts subscription here.
+  /// Other screens keep the card's self-contained document listener.
+  final bool? savedOverride;
+
+  /// Resolved cover style — only for media-free text posts.
+  static PostCoverStyle? _coverFor(CommunityPost post) {
+    if (post.hasImage || post.hasVideo) return null;
+    return PostCoverStyles.byId(post.coverStyle);
+  }
+
+  Widget _savedAction({
+    required BuildContext context,
+    required CommunityRepository repo,
+    required String uid,
+    required bool saved,
+    required AppLocalizations l10n,
+    bool savedLoaded = true,
+  }) {
+    return CommunityPostAction(
+      icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+      active: saved,
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final nowSaved = await repo.toggleSavePost(
+          uid,
+          post,
+          currentlySaved: savedLoaded ? saved : null,
+        );
+        if (context.mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                nowSaved ? l10n.communityPostSaved : l10n.communityPostUnsaved,
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
 
   Color _typeColor(PostType type) => switch (type) {
     PostType.support => AuraColors.rose,
@@ -70,6 +113,10 @@ class PostCard extends StatelessWidget {
     final repo = context.read<CommunityRepository>();
     final time = communityRelativeTime(context, post.createdAt);
     final typeColor = _typeColor(post.postType);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final community = CommunitySeed.byId(post.communityId);
+    final communityLabel =
+        post.communityName ?? community?.nameForLocale(languageCode);
 
     return Semantics(
       button: true,
@@ -97,10 +144,65 @@ class PostCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(height: 3, color: typeColor.withValues(alpha: 0.78)),
+                Container(height: 2, color: typeColor.withValues(alpha: 0.7)),
+                // Feed context comes first, as in a modern multi-community
+                // timeline: members immediately know which group a post
+                // belongs to before reading the author and content.
+                if (showCommunity && communityLabel != null) ...[
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      12,
+                      10,
+                      10,
+                      9,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: typeColor.withValues(
+                              alpha: isDark ? 0.16 : 0.09,
+                            ),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(
+                            community?.icon ?? Icons.groups_rounded,
+                            size: 17,
+                            color: typeColor,
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            communityLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.15,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 19,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.62,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    height: 1,
+                    color: theme.colorScheme.outline.withValues(alpha: 0.07),
+                  ),
+                ],
                 // ── Header ──
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(14, 13, 8, 0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(14, 11, 8, 0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -295,10 +397,10 @@ class PostCard extends StatelessWidget {
                         icon: _typeIcon(post.postType),
                         label: _typeLabel(post.postType, l10n),
                       ),
-                      if (showCommunity && post.communityName != null)
+                      if (!showCommunity && communityLabel != null)
                         _PostMetaBadge(
                           icon: Icons.groups_rounded,
-                          label: post.communityName!,
+                          label: communityLabel,
                           color: theme.colorScheme.primary,
                         ),
                       if (post.postType == PostType.question &&
@@ -360,26 +462,35 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                // ── Text ──
+                // ── Text (inside a designed gradient cover when one is set) ──
                 if (post.text.isNotEmpty &&
                     post.text != '📷' &&
                     post.text != '🎬') ...[
                   const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      CommunityTextSanitize.forDisplay(post.text),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        height: 1.5,
-                        letterSpacing: 0.05,
-                        fontWeight: post.postType == PostType.milestone
-                            ? FontWeight.w600
-                            : null,
+                  if (_coverFor(post) != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: _PostCoverView(
+                        style: _coverFor(post)!,
+                        text: CommunityTextSanitize.forDisplay(post.text),
                       ),
-                      maxLines: 6,
-                      overflow: TextOverflow.ellipsis,
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        CommunityTextSanitize.forDisplay(post.text),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          height: 1.5,
+                          letterSpacing: 0.05,
+                          fontWeight: post.postType == PostType.milestone
+                              ? FontWeight.w600
+                              : null,
+                        ),
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
                 ],
                 // ── Poll ──
                 if (post.isPoll) ...[
@@ -498,40 +609,30 @@ class PostCard extends StatelessWidget {
                             );
                           },
                         ),
-                        StreamBuilder<bool>(
-                          stream: repo.watchPostSaved(
-                            uid,
-                            post.communityId,
-                            post.id,
+                        if (savedOverride != null)
+                          _savedAction(
+                            context: context,
+                            repo: repo,
+                            uid: uid,
+                            saved: savedOverride!,
+                            l10n: l10n,
+                          )
+                        else
+                          StreamBuilder<bool>(
+                            stream: repo.watchPostSaved(
+                              uid,
+                              post.communityId,
+                              post.id,
+                            ),
+                            builder: (context, savedSnap) => _savedAction(
+                              context: context,
+                              repo: repo,
+                              uid: uid,
+                              saved: savedSnap.data ?? false,
+                              l10n: l10n,
+                              savedLoaded: savedSnap.hasData,
+                            ),
                           ),
-                          builder: (context, savedSnap) {
-                            final saved = savedSnap.data ?? false;
-                            return CommunityPostAction(
-                              icon: saved
-                                  ? Icons.bookmark_rounded
-                                  : Icons.bookmark_border_rounded,
-                              active: saved,
-                              onTap: () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                final nowSaved = await repo.toggleSavePost(
-                                  uid,
-                                  post,
-                                );
-                                if (context.mounted) {
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        nowSaved
-                                            ? l10n.communityPostSaved
-                                            : l10n.communityPostUnsaved,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        ),
                       ],
                     ],
                   ),
@@ -572,6 +673,8 @@ class _ReactionAction extends StatelessWidget {
     BuildContext context,
     CommunityRepository repo,
     String reaction,
+    String? currentReaction,
+    bool currentReactionLoaded,
   ) async {
     HapticFeedback.selectionClick();
     try {
@@ -580,6 +683,8 @@ class _ReactionAction extends StatelessWidget {
         postId: post.id,
         uid: uid,
         reaction: reaction,
+        currentReaction: currentReaction,
+        currentReactionLoaded: currentReactionLoaded,
       );
     } catch (e) {
       debugPrint('_ReactionAction failed: $e');
@@ -595,6 +700,7 @@ class _ReactionAction extends StatelessWidget {
     BuildContext context,
     CommunityRepository repo,
     PostReactions reactions,
+    bool reactionsLoaded,
   ) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
@@ -614,7 +720,13 @@ class _ReactionAction extends StatelessWidget {
                     selected: reactions.myReaction == kind,
                     onTap: () {
                       Navigator.pop(ctx);
-                      _react(context, repo, kind);
+                      _react(
+                        context,
+                        repo,
+                        kind,
+                        reactions.myReaction,
+                        reactionsLoaded,
+                      );
                     },
                   ),
                 ),
@@ -642,10 +754,11 @@ class _ReactionAction extends StatelessWidget {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => _react(context, repo, mine ?? 'heart'),
+            onTap: () =>
+                _react(context, repo, mine ?? 'heart', mine, snap.hasData),
             onLongPress: () {
               HapticFeedback.mediumImpact();
-              _showPicker(context, repo, reactions);
+              _showPicker(context, repo, reactions, snap.hasData);
             },
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: Padding(
@@ -834,6 +947,67 @@ class _TypeBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Full-width designed cover for text posts: gradient background, faint
+/// oversized watermark icon, and the post text centered in white — the
+/// magazine look without shipping or moderating any imagery.
+class _PostCoverView extends StatelessWidget {
+  const _PostCoverView({required this.style, required this.text});
+
+  final PostCoverStyle style;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 150),
+        decoration: BoxDecoration(gradient: style.gradient),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            PositionedDirectional(
+              end: -18,
+              bottom: -22,
+              child: Icon(
+                style.icon,
+                size: 120,
+                color: Colors.white.withValues(alpha: 0.12),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 26,
+              ),
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  height: 1.45,
+                  fontWeight: FontWeight.w800,
+                  shadows: [
+                    Shadow(
+                      color: Color(0x33000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

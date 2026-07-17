@@ -18,6 +18,10 @@ IconData articleIconFromName(String name) {
     'menu_book_outlined' => Icons.menu_book_outlined,
     'spa_outlined' => Icons.spa_outlined,
     'self_improvement_outlined' => Icons.self_improvement_outlined,
+    'calendar_month_outlined' => Icons.calendar_month_outlined,
+    'bedtime_outlined' => Icons.bedtime_outlined,
+    'bloodtype_outlined' => Icons.bloodtype_outlined,
+    'water_drop_outlined' => Icons.water_drop_outlined,
     _ => Icons.article_outlined,
   };
 }
@@ -36,6 +40,11 @@ String articleIconName(IconData icon) {
     Icons.volunteer_activism_outlined => 'volunteer_activism_outlined',
     Icons.favorite_outline => 'favorite_outline',
     Icons.medication_outlined => 'medication_outlined',
+    Icons.calendar_month_outlined => 'calendar_month_outlined',
+    Icons.bedtime_outlined => 'bedtime_outlined',
+    Icons.bloodtype_outlined => 'bloodtype_outlined',
+    Icons.water_drop_outlined => 'water_drop_outlined',
+    Icons.spa_outlined => 'spa_outlined',
     _ => 'article_outlined',
   };
 }

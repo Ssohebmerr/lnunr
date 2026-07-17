@@ -2,13 +2,14 @@
 // lib/chat_quota.js — strict server-side paywall gate for AI endpoints.
 // ----------------------------------------------------------------------------
 // Security contract (enforced HERE, never trusted from the client):
-//   1. users/{uid} MUST exist and carry `isPremium == true`, otherwise the
+//   1. users/{uid} MUST confirm an adult age group and explicit AI consent.
+//   2. users/{uid} MUST exist and carry `isPremium == true`, otherwise the
 //      request is rejected with 403 `premium_required`. The server NEVER
 //      grants premium as a side effect of calling AI.
-//   2. `daily_chat_count` MUST be below DAILY_PREMIUM_CHAT_LIMIT. The check
+//   3. `daily_chat_count` MUST be below DAILY_PREMIUM_CHAT_LIMIT. The check
 //      and the increment happen inside ONE Firestore transaction so parallel
 //      requests cannot race past the limit.
-//   3. The slot is reserved BEFORE the external AI call (DeepSeek/Gemini).
+//   4. The slot is reserved BEFORE the external AI call (DeepSeek/Gemini).
 //      If every provider fails, callers roll the reservation back with
 //      `releaseChatSlot()` so users are not billed a message for our failure.
 // ============================================================================
@@ -22,7 +23,7 @@ const DAILY_PREMIUM_CHAT_LIMIT = 30;
 
 class QuotaError extends Error {
   /**
-   * @param {'premium_required'|'daily_limit_reached'} code
+   * @param {'adult_required'|'consent_required'|'premium_required'|'daily_limit_reached'} code
    * @param {number} status HTTP status
    * @param {string} message
    */
@@ -32,6 +33,43 @@ class QuotaError extends Error {
     this.code = code;
     this.status = status;
   }
+}
+
+/**
+ * Verifies the privacy/age state mirrored from the app before any prompt is
+ * sent to an external AI provider.
+ *
+ * @param {object} data users/{uid} document data
+ * @throws {QuotaError} 403 adult_required | consent_required
+ */
+function assertAiEligibility(data) {
+  if (data.aiAgeGroup !== 'adult') {
+    throw new QuotaError(
+      'adult_required',
+      403,
+      'AI features are available to adults only.',
+    );
+  }
+  if (data.aiConsentGranted !== true || data.aiConsentVersion !== 1) {
+    throw new QuotaError(
+      'consent_required',
+      403,
+      'Explicit AI processing consent is required.',
+    );
+  }
+}
+
+/**
+ * Checks eligibility before the endpoint reads or evaluates submitted health
+ * content. The quota transaction checks it again to prevent a race with
+ * consent revocation between this read and the external provider call.
+ *
+ * @param {string} uid authenticated Firebase uid
+ * @returns {Promise<void>}
+ */
+async function requireAiEligibility(uid) {
+  const snap = await admin.firestore().collection('users').doc(uid).get();
+  assertAiEligibility(snap.exists ? (snap.data() || {}) : {});
 }
 
 /**
@@ -52,6 +90,8 @@ async function reservePremiumChatSlot(uid) {
   const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const data = snap.exists ? (snap.data() || {}) : {};
+
+    assertAiEligibility(data);
 
     if (!snap.exists || data.isPremium !== true) {
       throw new QuotaError(
@@ -106,6 +146,8 @@ async function releaseChatSlot(ref) {
 module.exports = {
   DAILY_PREMIUM_CHAT_LIMIT,
   QuotaError,
+  assertAiEligibility,
+  requireAiEligibility,
   reservePremiumChatSlot,
   releaseChatSlot,
 };

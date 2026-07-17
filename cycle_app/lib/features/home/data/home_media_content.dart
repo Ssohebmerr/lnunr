@@ -97,11 +97,13 @@ class HomeMediaContent {
       preferred = ArticleCategory.mind;
     }
 
-    final preferredArticles = EducationContent.filterByCategory(
-      articles,
-      preferred,
-      includeAdult: includeAdult,
-    );
+    final preferredArticles = articles
+        .where(
+          (article) =>
+              article.category == preferred &&
+              (includeAdult || !article.adultsOnly),
+        )
+        .toList();
     final pool = preferredArticles.isNotEmpty ? preferredArticles : articles;
 
     Article? featured;

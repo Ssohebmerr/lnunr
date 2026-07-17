@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/premium/play_billing_coordinator.dart';
 import '../../../core/premium/premium_activation_service.dart';
-import '../../../core/premium/premium_badge.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
@@ -69,8 +69,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       if (mounted) setState(() => _loadingPlans = false);
       return;
     }
-    final products =
-        await PlayBillingCoordinator.instance.billing.loadProducts();
+    final products = await PlayBillingCoordinator.instance.billing
+        .loadProducts();
     if (!mounted) return;
     setState(() {
       _products = products;
@@ -97,13 +97,31 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     return pct > 0 ? pct : null;
   }
 
+  String? _yearlyMonthlyEquivalent(BuildContext context) {
+    final yearly = _products[PlayBillingService.yearlyProductId];
+    if (yearly == null || yearly.rawPrice <= 0) return null;
+    try {
+      return NumberFormat.simpleCurrency(
+        locale: Localizations.localeOf(context).toLanguageTag(),
+        name: yearly.currencyCode,
+      ).format(yearly.rawPrice / 12);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _retryPlans() async {
+    setState(() => _loadingPlans = true);
+    await _loadPlans();
+  }
+
   Future<void> _subscribe() async {
     final l10n = AppLocalizations.of(context)!;
 
     if (!Platform.isAndroid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.premiumPlayOnly)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.premiumPlayOnly)));
       return;
     }
 
@@ -113,9 +131,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
       return;
     }
@@ -125,9 +143,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     if (product == null) {
       if (mounted) {
         setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.premiumProductUnavailable)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.premiumProductUnavailable)));
       }
       return;
     }
@@ -136,9 +154,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     if (mounted) {
       setState(() => _busy = false);
       if (!started) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneric)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
       // On success the Play sheet takes over; the app-wide purchase listener
       // verifies + flips premium, which fires [_onPremiumChanged].
@@ -155,9 +173,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     // purchase stream, which flips premium via the app-wide listener. We only
     // acknowledge the request; if a subscription is found, the paywall closes
     // automatically via [_onPremiumChanged].
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.restorePurchasesChecking)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.restorePurchasesChecking)));
   }
 
   /// DEBUG builds only — grants premium via the QA-gated server endpoint so
@@ -170,9 +188,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     setState(() => _busy = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          result.ok ? l10n.premiumActivated : l10n.errorGeneric,
-        ),
+        content: Text(result.ok ? l10n.premiumActivated : l10n.errorGeneric),
       ),
     );
     if (result.ok) widget.onSubscribed?.call();
@@ -183,154 +199,276 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final savings = _yearlySavingsPercent();
+    final yearly = _products[PlayBillingService.yearlyProductId];
+    final monthly = _products[PlayBillingService.monthlyProductId];
+    final yearlyEquivalent = _yearlyMonthlyEquivalent(context);
+    final selectedPlanName = _selectedSku == PlayBillingService.yearlyProductId
+        ? l10n.planYearlyTitle
+        : l10n.planMonthlyTitle;
+    final selectedPlanAvailable = _products.containsKey(_selectedSku);
 
     final body = SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        20,
-        widget.embedded ? 8 : 24,
-        20,
+        16,
+        widget.embedded ? 8 : 12,
+        16,
         widget.embedded ? 24 : 40,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!widget.embedded)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.arrow_back_rounded),
-              ),
-            ),
-          const SizedBox(height: 8),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: AuraDecorations.primaryGradient,
-                boxShadow: AppShadows.softRose(opacity: 0.35),
-              ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                color: Colors.white,
-                size: 44,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const PremiumBadge(size: 28),
-              const SizedBox(width: 10),
-              Text(
-                l10n.subscriptionPlansTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
+            Row(
+              children: [
+                IconButton.filledTonal(
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
                 ),
-              ),
-            ],
-          ),
+                Expanded(
+                  child: Text(
+                    l10n.subscriptionPlansTitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
           const SizedBox(height: 12),
-          Text(
-            l10n.subscriptionPlansHeadline,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.primary,
+
+          // Premium hero: value first, then the plan choice. This keeps the
+          // paywall understandable even before Play returns localized prices.
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              gradient: const LinearGradient(
+                begin: AlignmentDirectional.topStart,
+                end: AlignmentDirectional.bottomEnd,
+                colors: [
+                  Color(0xFF8F2F62),
+                  AuraColors.accentDeep,
+                  Color(0xFF7652A8),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              boxShadow: [
+                BoxShadow(
+                  color: AuraColors.accent.withValues(alpha: 0.2),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(17),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Colors.white,
+                        size: 31,
+                      ),
+                    ),
+                    const SizedBox(width: 13),
+                    Expanded(
+                      child: Text(
+                        l10n.subscriptionPlansTitle,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  l10n.subscriptionPlansHeadline,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  l10n.subscriptionPlansSubtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.86),
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _PlanFeature(
+                  icon: Icons.chat_bubble_rounded,
+                  text: l10n.premiumFeature1,
+                  onDark: true,
+                ),
+                _PlanFeature(
+                  icon: Icons.cloud_done_rounded,
+                  text: l10n.premiumFeature2,
+                  onDark: true,
+                ),
+                _PlanFeature(
+                  icon: Icons.support_agent_rounded,
+                  text: l10n.premiumFeature3,
+                  onDark: true,
+                  isLast: true,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 26),
           Text(
-            l10n.subscriptionPlansSubtitle,
-            textAlign: TextAlign.center,
+            l10n.subscriptionChoosePlanTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.subscriptionChoosePlanSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // ── Benefits ────────────────────────────────────────────────────
-          AppGlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          // Both choices remain visible while loading or temporarily
+          // unavailable. Prices are never hard-coded: Google Play supplies the
+          // localized amount/currency configured for the user's country.
+          if (Platform.isAndroid) ...[
+            _PlanCard(
+              title: l10n.planYearlyTitle,
+              price:
+                  yearly?.price ??
+                  (_loadingPlans
+                      ? l10n.subscriptionLoadingPrice
+                      : l10n.planUnavailable),
+              period: l10n.planPerYear,
+              supportingText: yearlyEquivalent == null
+                  ? null
+                  : l10n.planMonthlyEquivalent(yearlyEquivalent),
+              badge: savings != null
+                  ? '${l10n.planBestValue} · ${l10n.planSaveBadge(savings)}'
+                  : l10n.planBestValue,
+              selected:
+                  yearly != null &&
+                  _selectedSku == PlayBillingService.yearlyProductId,
+              enabled: yearly != null && !_busy,
+              onTap: () => setState(
+                () => _selectedSku = PlayBillingService.yearlyProductId,
+              ),
+            ),
+            _PlanCard(
+              title: l10n.planMonthlyTitle,
+              price:
+                  monthly?.price ??
+                  (_loadingPlans
+                      ? l10n.subscriptionLoadingPrice
+                      : l10n.planUnavailable),
+              period: l10n.planPerMonth,
+              selected:
+                  monthly != null &&
+                  _selectedSku == PlayBillingService.monthlyProductId,
+              enabled: monthly != null && !_busy,
+              onTap: () => setState(
+                () => _selectedSku = PlayBillingService.monthlyProductId,
+              ),
+            ),
+            if (!_loadingPlans && _products.isEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 2, bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer.withValues(
+                    alpha: 0.42,
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.premiumProductUnavailable,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.onErrorContainer,
+                      ),
+                      onPressed: _retryPlans,
+                      child: Text(l10n.retry),
+                    ),
+                  ],
+                ),
+              ),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: selectedPlanAvailable ? 1 : 0.45,
+              child: AppGradientButton(
+                label: selectedPlanAvailable
+                    ? l10n.subscriptionSelectedCta(selectedPlanName)
+                    : l10n.subscriptionPlansCta,
+                icon: Icons.lock_rounded,
+                loading: _busy,
+                onPressed: (_busy || !selectedPlanAvailable)
+                    ? null
+                    : _subscribe,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  l10n.premiumTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Icon(
+                  Icons.verified_user_outlined,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    l10n.subscriptionSecurePayment,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.premiumSubtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _PlanFeature(
-                  icon: Icons.chat_bubble_rounded,
-                  text: l10n.premiumFeature1,
-                ),
-                _PlanFeature(
-                  icon: Icons.insights_rounded,
-                  text: l10n.premiumFeature2,
-                ),
-                _PlanFeature(
-                  icon: Icons.cloud_done_rounded,
-                  text: l10n.premiumFeature3,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Plan selector ───────────────────────────────────────────────
-          if (Platform.isAndroid) ...[
-            if (_loadingPlans)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_products.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  l10n.premiumProductUnavailable,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              )
-            else ...[
-              if (_products.containsKey(PlayBillingService.yearlyProductId))
-                _PlanCard(
-                  title: l10n.planYearlyTitle,
-                  price: _products[PlayBillingService.yearlyProductId]!.price,
-                  period: l10n.planPerYear,
-                  badge: savings != null ? l10n.planSaveBadge(savings) : null,
-                  selected: _selectedSku == PlayBillingService.yearlyProductId,
-                  onTap: () => setState(
-                    () => _selectedSku = PlayBillingService.yearlyProductId,
-                  ),
-                ),
-              if (_products.containsKey(PlayBillingService.monthlyProductId))
-                _PlanCard(
-                  title: l10n.planMonthlyTitle,
-                  price: _products[PlayBillingService.monthlyProductId]!.price,
-                  period: l10n.planPerMonth,
-                  selected: _selectedSku == PlayBillingService.monthlyProductId,
-                  onTap: () => setState(
-                    () => _selectedSku = PlayBillingService.monthlyProductId,
-                  ),
-                ),
-            ],
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: _busy ? null : _restore,
+              icon: const Icon(Icons.restore_rounded, size: 20),
+              label: Text(l10n.restorePurchases),
+            ),
             Text(
               l10n.premiumPlayHint,
               textAlign: TextAlign.center,
@@ -338,7 +476,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 4,
@@ -360,30 +498,21 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               ],
             ),
           ] else
-            Text(
-              l10n.premiumPlayOnly,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-            ),
-
-          const SizedBox(height: 20),
-          AppGradientButton(
-            label: l10n.subscriptionPlansCta,
-            icon: Icons.diamond_rounded,
-            loading: _busy,
-            onPressed:
-                (_busy || (Platform.isAndroid && _products.isEmpty))
-                    ? null
-                    : _subscribe,
-          ),
-          const SizedBox(height: 10),
-          if (Platform.isAndroid)
-            TextButton.icon(
-              onPressed: _busy ? null : _restore,
-              icon: const Icon(Icons.restore_rounded, size: 20),
-              label: Text(l10n.restorePurchases),
+              child: Text(
+                l10n.premiumPlayOnly,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
 
           // Debug-only tester activation (never present in release builds).
@@ -417,7 +546,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             end: Alignment.bottomCenter,
             colors: [
               theme.colorScheme.surface,
-              theme.colorScheme.primary.withValues(alpha: 0.06),
+              Color.alphaBlend(
+                theme.colorScheme.primary.withValues(alpha: 0.06),
+                theme.colorScheme.surface,
+              ),
             ],
           ),
         ),
@@ -433,106 +565,147 @@ class _PlanCard extends StatelessWidget {
     required this.price,
     required this.period,
     required this.selected,
+    required this.enabled,
     required this.onTap,
     this.badge,
+    this.supportingText,
   });
 
   final String title;
   final String price;
   final String period;
   final bool selected;
+  final bool enabled;
   final VoidCallback onTap;
   final String? badge;
+  final String? supportingText;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              color: selected
-                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                  : theme.colorScheme.surface.withValues(alpha: 0.5),
-              border: Border.all(
-                color: selected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-                width: selected ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: enabled,
+      label: '$title, $price, $period',
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: enabled ? 1 : 0.62,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(17),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
                   color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline,
+                      ? theme.colorScheme.primary.withValues(alpha: 0.09)
+                      : theme.colorScheme.surface.withValues(alpha: 0.82),
+                  border: Border.all(
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                    width: selected ? 2 : 1,
+                  ),
+                  boxShadow: selected
+                      ? AppShadows.softRose(opacity: 0.09)
+                      : AppShadows.softPlum(opacity: 0.035),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
                             title,
                             style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          selected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
+                          size: 23,
+                        ),
+                      ],
+                    ),
+                    if (badge != null) ...[
+                      const SizedBox(height: 9),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: AuraDecorations.ctaGradient,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            badge!,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          if (badge != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: AuraDecorations.primaryGradient,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
-                              ),
-                              child: Text(
-                                badge!,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        period,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            price,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: enabled
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Text(
+                            period,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (supportingText != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        supportingText!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                Text(
-                  price,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -542,25 +715,50 @@ class _PlanCard extends StatelessWidget {
 }
 
 class _PlanFeature extends StatelessWidget {
-  const _PlanFeature({required this.icon, required this.text});
+  const _PlanFeature({
+    required this.icon,
+    required this.text,
+    this.onDark = false,
+    this.isLast = false,
+  });
 
   final IconData icon;
   final String text;
+  final bool onDark;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          Container(
+            width: 27,
+            height: 27,
+            decoration: BoxDecoration(
+              color: onDark
+                  ? Colors.white.withValues(alpha: 0.14)
+                  : theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 17,
+              color: onDark ? Colors.white : theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: onDark ? Colors.white : null,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

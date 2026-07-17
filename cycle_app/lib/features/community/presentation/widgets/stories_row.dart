@@ -8,7 +8,7 @@ import '../../data/models/community_story.dart';
 import 'story_widgets.dart';
 
 /// Horizontal scrollable row of story circles — shown at top of community feed.
-class StoriesRow extends StatelessWidget {
+class StoriesRow extends StatefulWidget {
   const StoriesRow({
     super.key,
     required this.joinedIds,
@@ -23,12 +23,30 @@ class StoriesRow extends StatelessWidget {
   final VoidCallback onCreateStory;
 
   @override
+  State<StoriesRow> createState() => _StoriesRowState();
+}
+
+class _StoriesRowState extends State<StoriesRow> {
+  Stream<List<CommunityStory>>? _storiesStream;
+  String _joinedKey = '';
+
+  void _ensureStableStream(CommunityStoryRepository repo) {
+    final ids = [...widget.joinedIds]..sort();
+    final key = ids.join('|');
+    if (_storiesStream == null || key != _joinedKey) {
+      _joinedKey = key;
+      _storiesStream = repo.watchJoinedStories(ids);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final repo = context.read<CommunityStoryRepository>();
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    _ensureStableStream(repo);
 
     return StreamBuilder<List<CommunityStory>>(
-      stream: repo.watchJoinedStories(joinedIds),
+      stream: _storiesStream,
       builder: (context, snap) {
         if (snap.hasError) {
           debugPrint('StoriesRow stream error: ${snap.error}');
@@ -43,14 +61,14 @@ class StoriesRow extends StatelessWidget {
                   StoryRing(
                     group: StoryGroup(
                       authorUid: uid ?? '',
-                      authorAlias: alias ?? 'You',
-                      authorAvatarIndex: avatarIndex,
+                      authorAlias: widget.alias ?? 'You',
+                      authorAvatarIndex: widget.avatarIndex,
                       stories: const [],
                       currentUid: uid,
                     ),
                     isViewed: false,
                     isCurrentUser: true,
-                    onTap: onCreateStory,
+                    onTap: widget.onCreateStory,
                   ),
                 ],
               ),
@@ -59,7 +77,7 @@ class StoriesRow extends StatelessWidget {
         }
 
         final stories = snap.data ?? [];
-        if (stories.isEmpty && joinedIds.isEmpty) {
+        if (stories.isEmpty && widget.joinedIds.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -106,14 +124,14 @@ class StoriesRow extends StatelessWidget {
                   return StoryRing(
                     group: StoryGroup(
                       authorUid: uid ?? '',
-                      authorAlias: alias ?? 'You',
-                      authorAvatarIndex: avatarIndex,
+                      authorAlias: widget.alias ?? 'You',
+                      authorAvatarIndex: widget.avatarIndex,
                       stories: const [],
                       currentUid: uid,
                     ),
                     isViewed: false,
                     isCurrentUser: true,
-                    onTap: onCreateStory,
+                    onTap: widget.onCreateStory,
                   );
                 }
 
@@ -128,7 +146,7 @@ class StoriesRow extends StatelessWidget {
                   isCurrentUser: isOwn && group.stories.isEmpty,
                   onTap: () {
                     if (isOwn && group.stories.isEmpty) {
-                      onCreateStory();
+                      widget.onCreateStory();
                       return;
                     }
                     _openViewer(context, groups, groupIndex);

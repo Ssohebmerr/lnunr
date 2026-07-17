@@ -8,10 +8,8 @@
 //   1. the one-time backlog left by the old (pre-fix) stranding bug, and
 //   2. posts auto-hidden after 3+ user reports (see onReportCreated).
 //
-// `evaluateModeration` never returns `pending_review` anymore, so every item
-// is resolved in a single pass (approved+unhidden, or rejected+hidden). A
-// transient Gemini outage just leaves the item for the next run (fail-open on
-// submit already published it, so nothing is user-visibly stuck).
+// A transient Gemini outage leaves an item pending for the next run. Pending
+// content remains private to its author and is also available to admins.
 // ============================================================================
 
 'use strict';
@@ -31,6 +29,9 @@ const BATCH_LIMIT = 40;
 async function resolveOne(ref, text, kind) {
   try {
     const decision = await evaluateModeration(GEMINI_API_KEY.value(), text || '');
+    if (decision.moderationStatus === 'pending_review') {
+      return 'pending';
+    }
     if (decision.moderationStatus === 'approved') {
       await ref.update({
         moderationStatus: 'approved',
@@ -76,7 +77,7 @@ exports.drainPendingModeration = onSchedule(
         .get(),
     ]);
 
-    const tally = { approved: 0, rejected: 0, error: 0 };
+    const tally = { approved: 0, rejected: 0, pending: 0, error: 0 };
     for (const doc of postsSnap.docs) {
       const outcome = await resolveOne(doc.ref, doc.data().text, 'post');
       tally[outcome] += 1;
@@ -88,7 +89,8 @@ exports.drainPendingModeration = onSchedule(
 
     console.log(
       `drainPendingModeration: posts=${postsSnap.size} comments=${commentsSnap.size} ` +
-      `→ approved=${tally.approved} rejected=${tally.rejected} errors=${tally.error}`,
+      `→ approved=${tally.approved} rejected=${tally.rejected} ` +
+      `pending=${tally.pending} errors=${tally.error}`,
     );
   },
 );

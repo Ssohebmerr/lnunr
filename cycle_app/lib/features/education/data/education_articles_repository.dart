@@ -2,7 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'education_content.dart';
 
-/// Loads education / magazine articles from Firestore, with bundled fallback.
+/// Loads education / magazine articles from Firestore.
+///
+/// Magazine content intentionally has no bundled fallback: editors can update
+/// it without shipping a new app build, and article text/images never add to
+/// the application binary size.
 class EducationArticlesRepository {
   EducationArticlesRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -19,9 +23,7 @@ class EducationArticlesRepository {
           .orderBy('order')
           .get();
       if (snap.docs.isEmpty) {
-        return _sortArticles(
-          EducationContent.visible(includeAdult: includeAdult),
-        );
+        return const [];
       }
       final articles = snap.docs
           .map((doc) => Article.fromMap(doc.id, doc.data()))
@@ -29,30 +31,30 @@ class EducationArticlesRepository {
           .toList();
       return _sortArticles(articles);
     } catch (_) {
-      return _sortArticles(
-        EducationContent.visible(includeAdult: includeAdult),
-      );
+      return const [];
     }
   }
 
-  Stream<List<Article>> watchPublished({required bool includeAdult}) {
-    return _firestore
-        .collection(collection)
-        .where('published', isEqualTo: true)
-        .orderBy('order')
-        .snapshots()
-        .map((snap) {
-      if (snap.docs.isEmpty) {
-        return _sortArticles(
-          EducationContent.visible(includeAdult: includeAdult),
-        );
+  Stream<List<Article>> watchPublished({required bool includeAdult}) async* {
+    try {
+      await for (final snap in _firestore
+          .collection(collection)
+          .where('published', isEqualTo: true)
+          .orderBy('order')
+          .snapshots()) {
+        if (snap.docs.isEmpty) {
+          yield const [];
+          continue;
+        }
+        final articles = snap.docs
+            .map((doc) => Article.fromMap(doc.id, doc.data()))
+            .where((a) => includeAdult || !a.adultsOnly)
+            .toList();
+        yield _sortArticles(articles);
       }
-      final articles = snap.docs
-          .map((doc) => Article.fromMap(doc.id, doc.data()))
-          .where((a) => includeAdult || !a.adultsOnly)
-          .toList();
-      return _sortArticles(articles);
-    });
+    } catch (_) {
+      yield const [];
+    }
   }
 
   Future<Article?> fetchFeatured({required bool includeAdult}) async {

@@ -13,7 +13,10 @@ void main() {
   });
 
   group('PremiumGate.checkAiChat', () {
+    // AI chat now fail-closes unless the user explicitly confirmed they are an
+    // adult, so the premium/consent scenarios must first clear the age gate.
     test('requires premium for AI chat', () async {
+      await saveAgeGroup(AgeGroup.adult);
       expect(
         await PremiumGate.checkAiChat(),
         PremiumAiAccess.needsPremium,
@@ -21,6 +24,7 @@ void main() {
     });
 
     test('needs consent when premium but AI consent is missing', () async {
+      await saveAgeGroup(AgeGroup.adult);
       await UserPrefs.setPremium(true);
       await ConsentManager.setAiConsent(false);
       expect(
@@ -30,6 +34,7 @@ void main() {
     });
 
     test('allows premium users with AI consent', () async {
+      await saveAgeGroup(AgeGroup.adult);
       await UserPrefs.setPremium(true);
       await ConsentManager.setAiConsent(true);
       expect(await PremiumGate.checkAiChat(), PremiumAiAccess.allowed);
@@ -39,6 +44,13 @@ void main() {
       await UserPrefs.setPremium(true);
       await ConsentManager.setAiConsent(true);
       await saveAgeGroup(AgeGroup.teen);
+      expect(await PremiumGate.checkAiChat(), PremiumAiAccess.needsAdult);
+    });
+
+    test('blocks AI chat when the adult age is not confirmed', () async {
+      // No age group selected — must fail closed even for premium + consent.
+      await UserPrefs.setPremium(true);
+      await ConsentManager.setAiConsent(true);
       expect(await PremiumGate.checkAiChat(), PremiumAiAccess.needsAdult);
     });
   });

@@ -1,5 +1,6 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 import '../../../../core/theme/app_design_tokens.dart';
 
@@ -8,9 +9,17 @@ class LuneCycleRing extends StatelessWidget {
   const LuneCycleRing({
     super.key,
     this.size = 240,
+    this.phase,
+    this.cycleDay,
+    this.cycleLength,
+    this.periodDuration,
   });
 
   final double size;
+  final String? phase;
+  final int? cycleDay;
+  final int? cycleLength;
+  final int? periodDuration;
 
   @override
   Widget build(BuildContext context) {
@@ -18,59 +27,193 @@ class LuneCycleRing extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final palette = _LuneCyclePalette.forTheme(isDark);
+    final totalDays = math.max(10, cycleLength ?? 28);
+    final selectedDay = (cycleDay ?? 1).clamp(1, totalDays).toInt();
+    final periodDays = (periodDuration ?? 5)
+        .clamp(2, math.min(8, totalDays - 4))
+        .toInt();
+    final phaseLabel = phase?.trim().isNotEmpty == true
+        ? phase!.trim()
+        : _fallbackPhase(
+            isAr: isAr,
+            day: selectedDay,
+            totalDays: totalDays,
+            periodDays: periodDays,
+          );
 
     return Semantics(
-      label: isAr ? 'حلقة تتبع الدورة الشهرية' : 'Cycle tracking ring',
+      label: isAr
+          ? 'اليوم $selectedDay من دورة مدتها $totalDays يومًا، $phaseLabel'
+          : 'Cycle day $selectedDay of $totalDays, $phaseLabel',
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MenstrualCyclePhaseView(
-          key: ValueKey(
-            'lune-ring-${Localizations.localeOf(context).languageCode}',
+          SizedBox.square(
+            dimension: size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: Size.square(size),
+                  painter: _LuneCycleRingPainter(
+                    palette: palette,
+                    totalDays: totalDays,
+                    selectedDay: selectedDay,
+                    periodDays: periodDays,
+                  ),
+                ),
+                Container(
+                  width: size * 0.53,
+                  height: size * 0.53,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: palette.centerFill,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: palette.centerBorder, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: palette.centerBorder.withValues(alpha: 0.14),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        phaseLabel,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: palette.messageText,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '$selectedDay',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: palette.titleText,
+                          fontWeight: FontWeight.w900,
+                          height: 1.05,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isAr ? 'من $totalDays يومًا' : 'of $totalDays days',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: palette.messageText,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          size: size,
-          isAutoSetData: true,
-          viewType: MenstrualCycleViewType.circleText,
-          theme: MenstrualCycleTheme.arcs,
-          // Outside arc labels break Arabic (drawn char-by-char). Use legend.
-          phaseTextBoundaries: PhaseTextBoundaries.none,
-          arcStrokeWidth: 22,
-          isRemoveBackgroundPhaseColor: false,
-          dayTitle: isAr ? 'يوم' : null,
-          menstruationColor: palette.menstruation,
-          menstruationBackgroundColor: palette.menstruationBg,
-          menstruationDayTextColor: Colors.white,
-          follicularPhaseColor: palette.follicular,
-          follicularBackgroundColor: palette.follicularBg,
-          follicularPhaseDayTextColor: isDark ? Colors.white : AuraColors.plum,
-          ovulationColor: palette.ovulation,
-          ovulationBackgroundColor: palette.ovulationBg,
-          ovulationDayTextColor: isDark ? AuraColors.plum : Colors.white,
-          lutealPhaseColor: palette.luteal,
-          lutealPhaseBackgroundColor: palette.lutealBg,
-          lutealPhaseDayTextColor: palette.lutealText,
-          centralCircleBackgroundColor: palette.centerFill,
-          centralCircleBorderColor: palette.centerBorder,
-          centralCircleBorderSize: 2,
-          centralCircleSize: 28,
-          selectedDayBackgroundColor: palette.selectedFill,
-          selectedDayTextColor: palette.selectedText,
-          selectedDayCircleBorderColor: palette.selectedBorder,
-          selectedDayCircleSize: 20,
-          dayTextColor: palette.dayText,
-          titleTextColor: palette.titleText,
-          titleTextSize: isAr ? 19 : 22,
-          titleFontWeight: FontWeight.w800,
-          messageTextColor: palette.messageText,
-          messageTextSize: isAr ? 11.5 : 12,
-          messageFontWeight: FontWeight.w500,
-          spaceBtnTitleMessage: 5,
-        ),
-        const SizedBox(height: 12),
-        _LunePhaseLegend(isAr: isAr, palette: palette, theme: theme),
+          const SizedBox(height: 14),
+          _LunePhaseLegend(isAr: isAr, palette: palette, theme: theme),
         ],
       ),
     );
+  }
+
+  String _fallbackPhase({
+    required bool isAr,
+    required int day,
+    required int totalDays,
+    required int periodDays,
+  }) {
+    final ovulationDay = math.max(periodDays + 2, totalDays - 14);
+    if (day <= periodDays) return isAr ? 'مرحلة الحيض' : 'Menstruation';
+    if (day < ovulationDay - 1) {
+      return isAr ? 'الطور الجُريبي' : 'Follicular phase';
+    }
+    if (day <= ovulationDay + 1) return isAr ? 'الإباضة' : 'Ovulation';
+    return isAr ? 'الطور الأصفري' : 'Luteal phase';
+  }
+}
+
+class _LuneCycleRingPainter extends CustomPainter {
+  const _LuneCycleRingPainter({
+    required this.palette,
+    required this.totalDays,
+    required this.selectedDay,
+    required this.periodDays,
+  });
+
+  final _LuneCyclePalette palette;
+  final int totalDays;
+  final int selectedDay;
+  final int periodDays;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 - 25;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    const startAngle = -math.pi / 2;
+    const gap = 0.045;
+    const strokeWidth = 21.0;
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = palette.centerBorder.withValues(alpha: 0.18)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
+    );
+
+    final remainingDays = totalDays - periodDays;
+    final ovulationDays = math.min(3, math.max(1, remainingDays ~/ 4));
+    final lutealDays = math.min(12, math.max(1, remainingDays ~/ 2));
+    final follicularDays = remainingDays - ovulationDays - lutealDays;
+    final segments = <(int, Color)>[
+      (periodDays, palette.menstruation),
+      (follicularDays, palette.follicular),
+      (ovulationDays, palette.ovulation),
+      (lutealDays, palette.luteal),
+    ];
+
+    var angle = startAngle;
+    for (final segment in segments) {
+      final sweep = segment.$1 / totalDays * math.pi * 2;
+      canvas.drawArc(
+        rect,
+        angle + gap / 2,
+        math.max(0.01, sweep - gap),
+        false,
+        Paint()
+          ..color = segment.$2
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+      angle += sweep;
+    }
+
+    final markerAngle =
+        startAngle + ((selectedDay - 0.5) / totalDays) * math.pi * 2;
+    final marker = Offset(
+      center.dx + radius * math.cos(markerAngle),
+      center.dy + radius * math.sin(markerAngle),
+    );
+    canvas.drawCircle(marker, 10, Paint()..color = palette.selectedBorder);
+    canvas.drawCircle(marker, 7, Paint()..color = palette.selectedFill);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LuneCycleRingPainter oldDelegate) {
+    return oldDelegate.totalDays != totalDays ||
+        oldDelegate.selectedDay != selectedDay ||
+        oldDelegate.periodDays != periodDays ||
+        oldDelegate.palette != palette;
   }
 }
 
@@ -90,15 +233,15 @@ class _LunePhaseLegend extends StatelessWidget {
     final items = isAr
         ? [
             (palette.menstruation, 'الحيض'),
-            (palette.follicular, 'جريبية'),
+            (palette.follicular, 'الطور الجُريبي'),
             (palette.ovulation, 'الإباضة'),
-            (palette.lutealText, 'اللوتئية'),
+            (palette.luteal, 'الطور الأصفري'),
           ]
         : [
             (palette.menstruation, 'Period'),
             (palette.follicular, 'Follicular'),
             (palette.ovulation, 'Ovulation'),
-            (palette.lutealText, 'Luteal'),
+            (palette.luteal, 'Luteal'),
           ];
 
     return Wrap(
@@ -106,13 +249,7 @@ class _LunePhaseLegend extends StatelessWidget {
       spacing: 10,
       runSpacing: 8,
       children: items
-          .map(
-            (e) => _LegendChip(
-              color: e.$1,
-              label: e.$2,
-              theme: theme,
-            ),
-          )
+          .map((e) => _LegendChip(color: e.$1, label: e.$2, theme: theme))
           .toList(),
     );
   }
@@ -138,9 +275,7 @@ class _LegendChip extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.07)
             : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: color.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -148,10 +283,7 @@ class _LegendChip extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(

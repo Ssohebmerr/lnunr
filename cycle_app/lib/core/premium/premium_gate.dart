@@ -18,10 +18,12 @@ class PremiumGate {
       await hasPremium() && await ConsentManager.hasCloudSyncConsent();
 
   static Future<bool> canUseAdvancedAi() async =>
-      await hasPremium() && await ConsentManager.hasAiConsent();
+      !(await blocksAiByAgeGate()) &&
+      await hasPremium() &&
+      await ConsentManager.hasAiConsent();
 
   static Future<PremiumAiAccess> checkAiChat() async {
-    if (await blocksCommunityByAgeGate()) {
+    if (await blocksAiByAgeGate()) {
       return PremiumAiAccess.needsAdult;
     }
     if (!await hasPremium()) {

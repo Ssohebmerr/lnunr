@@ -481,6 +481,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get planPerMonth => 'شهرياً';
 
   @override
+  String get planBestValue => 'الأوفر والأفضل';
+
+  @override
+  String get planUnavailable => 'غير متاحة حالياً';
+
+  @override
+  String planMonthlyEquivalent(String price) {
+    return 'ما يعادل $price / شهرياً';
+  }
+
+  @override
   String planSaveBadge(int percent) {
     return 'وفّري $percent%';
   }
@@ -765,7 +776,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get subscriptionPlansTitle => 'Lune Premium';
 
   @override
-  String get subscriptionPlansHeadline => 'Lune AI مخصصة لحسابات Premium';
+  String get subscriptionPlansHeadline => 'فهم أعمق، خصوصية أكبر، ودعم أفضل';
 
   @override
   String get subscriptionPlansSubtitle =>
@@ -776,6 +787,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get subscriptionPlansAccountHint => 'إدارة الاشتراك من الحساب';
+
+  @override
+  String get subscriptionChoosePlanTitle => 'اختاري الخطة المناسبة لكِ';
+
+  @override
+  String get subscriptionChoosePlanSubtitle =>
+      'كل الخطط تفتح مزايا Premium نفسها، ويمكنكِ الإلغاء في أي وقت عبر Google Play.';
+
+  @override
+  String subscriptionSelectedCta(String plan) {
+    return 'المتابعة مع الخطة $plan';
+  }
+
+  @override
+  String get subscriptionLoadingPrice => 'جارٍ تحميل السعر…';
+
+  @override
+  String get subscriptionSecurePayment =>
+      'دفع آمن عبر Google Play • إلغاء في أي وقت';
 
   @override
   String get logTabTitle => 'التسجيل اليومي';
@@ -2396,7 +2426,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'تُرسل رسائل المحادثة وسياق الدورة المجهول (الأعراض، المزاج، الطور) إلى مزوّدي ذكاء اصطناعي موثوقين (DeepSeek / Google) عبر خادمنا الآمن. ليست نصيحة طبية. بدون إعلانات. يمكنك الإيقاف في أي وقت.';
+      'عند تفعيل الذكاء الاصطناعي، يُرسل النص أو المحتوى الذي تقدمينه وسياق الدورة المرتبط به (مثل الأعراض والمزاج والطور والتفضيلات المحفوظة) إلى DeepSeek و/أو Google عبر خادمنا الآمن لتقديم رد شخصي. لا تضيفي معلومات تعريفية لا تريدين معالجتها. هذه ليست نصيحة طبية، ويمكنك إيقاف الذكاء الاصطناعي في أي وقت.';
 
   @override
   String get aiAdultsOnly => 'Lune AI للبالغات 18+ فقط.';
@@ -2587,7 +2617,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingGoalSubtitle =>
-      'تتبّعي دورتك أو حملك أو خطّطي للحمل أو تجنّبيه — التطبيق كله يتكيّف مع اختيارك.';
+      'اختاري ما يهمكِ الآن — الدورة، الحمل، الخصوبة، التكيس، سنّ الأمل أو التعافي — وسيتكيّف التطبيق معكِ.';
 
   @override
   String get onboardingCycleTitle => 'أساسيات دورتك';
@@ -3280,6 +3310,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get communityFeedMyComments => 'تعليقاتي';
 
   @override
+  String get communityCoverTitle => 'غلاف المنشور';
+
+  @override
+  String get communityCoverNone => 'بدون';
+
+  @override
   String get communitySortDiscussed => 'الأكثر نقاشاً';
 
   @override
@@ -3818,7 +3854,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacyP2Body =>
-      'نجمع الأنواع التالية من المعلومات:\n\n• بيانات الصحة والدورة: تواريخ الدورة الشهرية والأعراض والمزاج ومستويات النزف والبيانات الصحية الأخرى التي تسجلينها طوعاً.\n• معلومات الحساب: البريد الإلكتروني والاسم وطريقة تسجيل الدخول عند التسجيل (بريد/كلمة مرور، Google، أو Apple). عند استخدام التطبيق كضيفة، ننشئ حساباً مجهولاً عبر Firebase مرتبطاً بجهازكِ دون جمع بريدك الإلكتروني.\n• محتوى المجتمع: المنشورات والتعليقات والتفاعلات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع (إذا اخترتِ المشاركة).\n• معلومات الجهاز: معرفات الجهاز الأساسية المطلوبة للإشعارات وأمان التطبيق (Firebase App Check) وعمل التطبيق.\n• بيانات المحادثة الذكية: الرسائل التي ترسلينها للمساعد الذكي تُعالَج عبر مزوّدي ذكاء اصطناعي من أطراف ثالثة. الضيفات: سجل المحادثة يبقى على الجهاز فقط. المسجّلات: قد يُخزَّن سجل المحادثة في حسابكِ السحابي (Firebase) لاستعادة المحادثات.\n• الاستخدام والتشخيص: وقت آخر نشاط تقريبي وتقارير الأعطال عبر Firebase Crashlytics في الإصدارات النهائية لمساعدتنا على إصلاح الأخطاء. لا نستخدم متتبعات إعلانات من أطراف ثالثة.';
+      'نجمع الأنواع التالية من المعلومات:\n\n• بيانات الصحة والدورة: تواريخ الدورة الشهرية والأعراض والمزاج ومستويات النزف والبيانات الصحية الأخرى التي تسجلينها طوعاً.\n• معلومات الحساب: البريد الإلكتروني والاسم وطريقة تسجيل الدخول عند التسجيل (بريد/كلمة مرور، Google، أو Apple). عند استخدام التطبيق كضيفة، ننشئ حساباً مجهولاً عبر Firebase مرتبطاً بجهازكِ دون جمع بريدك الإلكتروني.\n• محتوى المجتمع: المنشورات والتعليقات والتفاعلات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع (إذا اخترتِ المشاركة).\n• معلومات الجهاز: معرفات الجهاز الأساسية المطلوبة للإشعارات وأمان التطبيق (Firebase App Check) وعمل التطبيق.\n• بيانات الذكاء الاصطناعي: إذا فعّلتِ الذكاء الاصطناعي بموافقة صريحة، يُعالَج النص أو المحتوى الذي تقدمينه وسياق الدورة المرتبط به—مثل الأعراض والمزاج والطور والتفضيلات المحفوظة—عبر DeepSeek و/أو Google لتوليد رد شخصي. وقد يتضمن النص معلومات تختارين الإفصاح عنها. الضيفات: سجل المحادثة يبقى على الجهاز فقط. المسجّلات: قد يُخزَّن سجل المحادثة في حسابكِ السحابي (Firebase) لاستعادة المحادثات.\n• الاستخدام والتشخيص: وقت آخر نشاط تقريبي وتقارير الأعطال عبر Firebase Crashlytics في الإصدارات النهائية لمساعدتنا على إصلاح الأخطاء. لا نستخدم متتبعات إعلانات من أطراف ثالثة.';
 
   @override
   String get privacyP3Title => '٣. كيف نستخدم معلوماتك';
@@ -4421,7 +4457,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountSectionPremium => 'بريميوم';
 
   @override
-  String get accountViewPlans => 'عرض خطط الاشتراك';
+  String get accountViewPlans => 'عرض الخطط والأسعار';
 
   @override
   String get accountPremiumThanks => 'أنتِ عضوة بريميوم — شكراً لدعمك Lune!';

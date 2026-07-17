@@ -58,6 +58,10 @@ bool _hasEmailAccount(User? user) {
   return email != null && email.isNotEmpty && !user.isAnonymous;
 }
 
+String _compactAccountId(String id) => id.length > 14
+    ? '${id.substring(0, 8)}…${id.substring(id.length - 4)}'
+    : id;
+
 class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
 
@@ -497,7 +501,7 @@ class _AccountTabState extends State<AccountTab> {
               AccountMenuTile(
                 icon: Icons.badge_outlined,
                 title: l10n.accountIdTitle,
-                subtitle: _accountUid,
+                subtitle: _compactAccountId(_accountUid!),
                 trailing: Icon(
                   Icons.copy_rounded,
                   size: 18,
@@ -738,10 +742,6 @@ class _ProfileCard extends StatelessWidget {
     return email != null && email.isNotEmpty && user?.isAnonymous != true;
   }
 
-  String _shortId(String id) => id.length > 14
-      ? '${id.substring(0, 10)}…${id.substring(id.length - 4)}'
-      : id;
-
   String _subtitleLine() {
     if (_hasEmail) return user!.email!.trim();
     return l10n.accountEmailNotLinked;
@@ -790,7 +790,7 @@ class _ProfileCard extends StatelessWidget {
       l10n: l10n,
       theme: theme,
       accountUid: accountUid,
-      shortId: accountUid != null ? _shortId(accountUid!) : null,
+      shortId: accountUid != null ? _compactAccountId(accountUid!) : null,
       onCopyAccountId: onCopyAccountId,
       onLinkEmail: (!_hasEmail && onLinkEmail != null) ? onLinkEmail : null,
     );
@@ -829,150 +829,190 @@ class _AccountHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
-      padding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.10),
-              theme.colorScheme.secondary.withValues(alpha: 0.04),
-              Colors.transparent,
+    return AppFloatingGlassPanel(
+      padding: const EdgeInsets.all(18),
+      radius: AppRadius.xl,
+      tint: theme.colorScheme.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              avatar,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    if (username != null && username!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '@$username',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: TextDirection.ltr,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: subtitle.contains('@')
+                          ? TextDirection.ltr
+                          : null,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-        child: Column(
-          children: [
-            avatar,
-            const SizedBox(height: 14),
-            Text(
-              name,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _AccountStatusPill(
+                premium: premium,
+                label: premium ? l10n.premiumActive : l10n.notPremium,
+                theme: theme,
               ),
-              textAlign: TextAlign.center,
-            ),
-            if (username != null && username!.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                '@$username',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
+              if (accountUid != null && accountUid!.isNotEmpty)
+                _AccountIdPill(
+                  label: l10n.accountUserId(shortId ?? ''),
+                  theme: theme,
+                  onTap: onCopyAccountId,
                 ),
-                textAlign: TextAlign.center,
-                textDirection: TextDirection.ltr,
-              ),
             ],
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-            // Status pill — Premium (gradient) or Free (muted).
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-              decoration: BoxDecoration(
-                gradient: premium ? AuraDecorations.primaryGradient : null,
-                color: premium
-                    ? null
-                    : theme.colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.6,
-                      ),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                boxShadow: premium ? AppShadows.softRose(opacity: 0.25) : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    premium
-                        ? Icons.workspace_premium_rounded
-                        : Icons.lock_open_rounded,
-                    size: 16,
-                    color: premium
-                        ? Colors.white
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    premium ? l10n.premiumActive : l10n.notPremium,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: premium
-                          ? Colors.white
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (onLinkEmail != null) ...[
-              const SizedBox(height: 10),
-              TextButton.icon(
+          ),
+          if (onLinkEmail != null) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
                 onPressed: onLinkEmail,
                 icon: const Icon(Icons.email_outlined, size: 18),
                 label: Text(l10n.accountLinkEmail),
               ),
-            ],
-            if (accountUid != null && accountUid!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              // Subtle copyable ID chip — for support, not front-and-center.
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onCopyAccountId,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.4,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.badge_outlined,
-                          size: 12,
-                          color: theme.colorScheme.outline,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.accountUserId(shortId ?? ''),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.copy_rounded,
-                          size: 12,
-                          color: theme.colorScheme.outline,
-                        ),
-                      ],
-                    ),
-                  ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountStatusPill extends StatelessWidget {
+  const _AccountStatusPill({
+    required this.premium,
+    required this.label,
+    required this.theme,
+  });
+
+  final bool premium;
+  final String label;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        gradient: premium ? AuraDecorations.ctaGradient : null,
+        color: premium
+            ? null
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        boxShadow: premium ? AppShadows.softRose(opacity: 0.18) : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            premium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+            size: 15,
+            color: premium ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: premium
+                  ? Colors.white
+                  : theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountIdPill extends StatelessWidget {
+  const _AccountIdPill({required this.label, required this.theme, this.onTap});
+
+  final String label;
+  final ThemeData theme;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.badge_outlined,
+                size: 13,
+                color: theme.colorScheme.outline,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                textDirection: TextDirection.ltr,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              const SizedBox(width: 5),
+              Icon(
+                Icons.copy_rounded,
+                size: 13,
+                color: theme.colorScheme.outline,
+              ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1005,87 +1045,213 @@ class _PremiumStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
-      padding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          gradient: LinearGradient(
-            begin: AlignmentDirectional.topStart,
-            end: AlignmentDirectional.bottomEnd,
-            colors: [
-              AuraColors.peachGold.withValues(alpha: premium ? 0.12 : 0.2),
-              AuraColors.rose.withValues(alpha: premium ? 0.08 : 0.15),
-              AuraColors.lavenderSoft.withValues(alpha: 0.1),
+    final isDark = theme.brightness == Brightness.dark;
+    return AppFloatingGlassPanel(
+      padding: const EdgeInsets.all(20),
+      radius: AppRadius.xl,
+      tint: premium ? AuraColors.accentDeep : theme.colorScheme.primary,
+      gradient: LinearGradient(
+        begin: AlignmentDirectional.topStart,
+        end: AlignmentDirectional.bottomEnd,
+        colors: premium
+            ? [
+                const Color(0xFF8F2F62).withValues(alpha: 0.90),
+                AuraColors.accentDeep.withValues(alpha: 0.86),
+                const Color(0xFF7652A8).withValues(alpha: 0.84),
+              ]
+            : [
+                theme.colorScheme.surface.withValues(
+                  alpha: isDark ? 0.76 : 0.72,
+                ),
+                AuraColors.rose.withValues(alpha: isDark ? 0.16 : 0.14),
+                AuraColors.lavenderSoft.withValues(alpha: isDark ? 0.12 : 0.14),
+              ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: premium
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: premium
+                      ? const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        )
+                      : const PremiumBadge(size: 27),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      premium ? l10n.premiumActive : l10n.premiumTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: premium ? Colors.white : null,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      premium
+                          ? l10n.accountPremiumThanks
+                          : l10n.premiumSubtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: premium
+                            ? Colors.white.withValues(alpha: 0.88)
+                            : theme.colorScheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const PremiumBadge(size: 28),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    premium ? l10n.premiumActive : l10n.premiumTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              premium ? l10n.accountPremiumThanks : l10n.premiumSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.4,
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PremiumBenefitChip(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: l10n.premiumFeature1,
+                premium: premium,
+                theme: theme,
               ),
-            ),
-            const SizedBox(height: 16),
-            if (premium) ...[
-              if (onManage != null)
-                OutlinedButton.icon(
+              _PremiumBenefitChip(
+                icon: Icons.cloud_done_outlined,
+                label: l10n.premiumFeature2,
+                premium: premium,
+                theme: theme,
+              ),
+              _PremiumBenefitChip(
+                icon: Icons.support_agent_rounded,
+                label: l10n.premiumFeature3,
+                premium: premium,
+                theme: theme,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          if (premium) ...[
+            if (onManage != null)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AuraColors.accentDeep,
+                  ),
                   onPressed: onManage,
                   icon: const Icon(Icons.manage_accounts_outlined, size: 20),
                   label: Text(l10n.accountManageSubscription),
                 ),
-              if (onRefreshStatus != null)
-                TextButton.icon(
+              ),
+            if (onRefreshStatus != null)
+              Center(
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
                   onPressed: onRefreshStatus,
                   icon: const Icon(Icons.refresh_rounded, size: 18),
                   label: Text(l10n.premiumRefreshStatus),
                 ),
-            ] else ...[
-              AppGradientButton(
-                label: l10n.accountViewPlans,
-                icon: Icons.diamond_rounded,
-                onPressed: onViewPlans,
               ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 4,
-                children: [
-                  if (onRestore != null)
-                    TextButton(
+          ] else ...[
+            AppGradientButton(
+              label: l10n.accountViewPlans,
+              icon: Icons.diamond_rounded,
+              onPressed: onViewPlans,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (onRestore != null)
+                  Flexible(
+                    child: TextButton(
                       onPressed: onRestore,
                       child: Text(l10n.restorePurchases),
                     ),
-                  if (onRefreshStatus != null)
-                    TextButton(
+                  ),
+                if (onRefreshStatus != null)
+                  Flexible(
+                    child: TextButton(
                       onPressed: onRefreshStatus,
                       child: Text(l10n.premiumRefreshStatus),
                     ),
-                ],
-              ),
-            ],
+                  ),
+              ],
+            ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PremiumBenefitChip extends StatelessWidget {
+  const _PremiumBenefitChip({
+    required this.icon,
+    required this.label,
+    required this.premium,
+    required this.theme,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool premium;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 34),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: premium
+            ? Colors.white.withValues(alpha: 0.14)
+            : theme.colorScheme.surface.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: premium
+              ? Colors.white.withValues(alpha: 0.18)
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.28),
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 15,
+            color: premium ? Colors.white : theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 210),
+            child: Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: premium ? Colors.white : null,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

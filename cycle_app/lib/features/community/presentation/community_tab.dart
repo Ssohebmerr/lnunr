@@ -11,6 +11,7 @@ import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
+import '../../education/data/education_content.dart';
 import '../data/community_catalog_repository.dart';
 import '../data/community_list_resolver.dart';
 import '../data/community_repository.dart';
@@ -19,7 +20,9 @@ import '../data/models/community.dart';
 import '../data/models/community_membership.dart';
 import '../data/models/community_post.dart';
 import '../data/models/community_profile.dart';
+import '../data/models/post_type.dart';
 import 'community_activity_screen.dart';
+import 'compose_post_screen.dart';
 import 'community_detail_screen.dart';
 import 'community_profile_setup_sheet.dart';
 import 'community_tab/community_prompts.dart';
@@ -53,6 +56,7 @@ class _CommunityTabState extends State<CommunityTab>
   final _searchController = TextEditingController();
   StreamSubscription<User?>? _authSub;
   bool _loadInProgress = false;
+  int _loadGeneration = 0;
   bool _initialTabPicked = false;
   bool _ageGateBlocksCommunity = false;
 
@@ -88,6 +92,7 @@ class _CommunityTabState extends State<CommunityTab>
   Future<void> _load() async {
     if (_loadInProgress) return;
     _loadInProgress = true;
+    final generation = ++_loadGeneration;
 
     if (mounted) setState(() => _loading = true);
 
@@ -113,22 +118,45 @@ class _CommunityTabState extends State<CommunityTab>
         return;
       }
 
-      final profile = await repo.resolveProfile(user.uid);
-      final canReadMemberCounts = profile.isReady && !profile.isMinor;
-      final goal = await CycleSyncService().getUserGoal();
-      final catalog = await repo.fetchCommunityCatalog();
-      final joinedIds = await repo
+      // Start independent reads together. The previous sequential chain made
+      // the first community paint wait for every network round trip.
+      final profileFuture = repo.resolveProfile(user.uid);
+      final goalFuture = CycleSyncService().getUserGoal();
+      final catalogFuture = repo.fetchCommunityCatalog();
+      final joinedIdsFuture = repo
           .watchJoinedCommunityIds(user.uid)
           .first
           .timeout(const Duration(seconds: 5), onTimeout: () => const []);
+
+      final profile = await profileFuture;
+      final canReadMemberCounts = profile.isReady && !profile.isMinor;
+
+      // Paint the safe local catalog as soon as identity/age is known. Goal,
+      // catalog overrides and counts enrich the page afterward without
+      // keeping the user on a full-screen spinner.
+      if (mounted && generation == _loadGeneration) {
+        setState(() {
+          _communityConsent = true;
+          _ageGateBlocksCommunity = false;
+          _profile = profile;
+          _alias = profile.alias;
+          if (_communities.isEmpty) {
+            _communities = CommunitySeed.defaults;
+          }
+        });
+      }
+
+      final goal = await goalFuture;
+      final catalog = await catalogFuture;
+      final joinedIds = await joinedIdsFuture;
       final communities = await repo.fetchCommunitiesWithCounts(
-        fetchCounts: canReadMemberCounts,
+        fetchCounts: false,
         languageCode: lang,
         goal: goal,
         joinedIds: joinedIds,
       );
 
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _communityConsent = true;
           _ageGateBlocksCommunity = false;
@@ -140,6 +168,18 @@ class _CommunityTabState extends State<CommunityTab>
               ? CommunitySeed.defaults
               : communities;
         });
+      }
+
+      if (canReadMemberCounts && generation == _loadGeneration) {
+        unawaited(
+          _hydrateMemberCounts(
+            repo: repo,
+            languageCode: lang,
+            goal: goal,
+            joinedIds: joinedIds,
+            generation: generation,
+          ),
+        );
       }
     } catch (e, st) {
       debugPrint('CommunityTab._load failed: $e\n$st');
@@ -153,6 +193,22 @@ class _CommunityTabState extends State<CommunityTab>
       _loadInProgress = false;
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _hydrateMemberCounts({
+    required CommunityRepository repo,
+    required String languageCode,
+    required UserGoalTypes? goal,
+    required List<String> joinedIds,
+    required int generation,
+  }) async {
+    final counted = await repo.fetchCommunitiesWithCounts(
+      languageCode: languageCode,
+      goal: goal,
+      joinedIds: joinedIds,
+    );
+    if (!mounted || generation != _loadGeneration || counted.isEmpty) return;
+    setState(() => _communities = counted);
   }
 
   Future<void> _openLogin() async {
@@ -283,6 +339,35 @@ class _CommunityTabState extends State<CommunityTab>
           alias: _alias ?? 'User',
           isJoined: true,
           initialPostId: post.id,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _discussMagazineArticle(
+    BuildContext context,
+    Article article,
+    String communityId,
+  ) async {
+    final profile = _profile;
+    final community = CommunitySeed.byId(communityId);
+    if (profile == null ||
+        !profile.isReady ||
+        profile.isMinor ||
+        community == null) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ComposePostScreen(
+          community: community,
+          alias: _alias ?? 'User',
+          profile: profile,
+          initialText: '${l10n.magazineFromLune}: «${article.title(lang)}»\n\n',
+          initialType: PostType.question,
         ),
       ),
     );
@@ -523,6 +608,8 @@ class _CommunityTabState extends State<CommunityTab>
                 onJoinPrompt: () => _tabs.animateTo(1),
                 onRefresh: _load,
                 onCreateStory: () => _openStoryComposer(context, memberships),
+                onDiscussArticle: (article, communityId) =>
+                    _discussMagazineArticle(context, article, communityId),
               ),
               CommunityDiscoverTab(
                 l10n: l10n,

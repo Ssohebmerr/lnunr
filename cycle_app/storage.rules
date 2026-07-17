@@ -54,11 +54,29 @@ service firebase.storage {
       );
     }
 
+    function isAdmin() {
+      return isSignedIn() && firestore.exists(
+        /databases/(default)/documents/admins/$(request.auth.uid)
+      );
+    }
+
+    function isCommunityMediaApproved(communityId, uid, fileName) {
+      return firestore.exists(
+        /databases/(default)/documents/communityMediaApprovals/$(communityId)/owners/$(uid)/files/$(fileName)
+      );
+    }
+
 
 
     // Community post media uploads are enabled for premium users.
     match /community_media/{communityId}/{uid}/{fileName} {
-      allow read: if isCommunityAdult() && isCommunityMember(communityId);
+      // The uploader may preview a pending upload. Everyone else can read it
+      // only after the trusted Function writes a moderation approval record.
+      allow read: if isOwner(uid) || (
+        isCommunityAdult()
+        && isCommunityMember(communityId)
+        && isCommunityMediaApproved(communityId, uid, fileName)
+      );
       allow create, update: if isOwner(uid)
         && isCommunityAdult()
         && isCommunityPremium()
@@ -85,6 +103,16 @@ service firebase.storage {
 
       allow delete: if isOwner(uid);
 
+    }
+
+    // Public editorial covers. Only trusted admins can upload/replace them;
+    // public read keeps magazine images cacheable on app and website clients.
+    match /magazine_covers/{articleId}/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow delete: if isAdmin();
     }
 
   }

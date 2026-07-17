@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,7 @@ import '../../../core/premium/premium_upsell_dialog.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../premium/presentation/subscription_plans_screen.dart';
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../chat/bloc/chat_bloc.dart';
 import '../chat/data/chat_message.dart';
@@ -60,6 +63,7 @@ class _ChatTabState extends State<ChatTab> {
     PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
     _checkConsent();
     _controller.addListener(_onTextChanged);
+    _focusNode.addListener(_onTextChanged);
 
     // ── TTS quality settings ──────────────────────────────────────────────
     // Rate: 0.45 = comfortable listening pace (0.0 slowest, 1.0 fastest)
@@ -175,6 +179,7 @@ class _ChatTabState extends State<ChatTab> {
     _tts.stop();
     PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
     _controller.removeListener(_onTextChanged);
+    _focusNode.removeListener(_onTextChanged);
     _controller.dispose();
     _scroll.dispose();
     _focusNode.dispose();
@@ -199,14 +204,14 @@ class _ChatTabState extends State<ChatTab> {
 
   String _cleanForSpeech(String text) {
     return text
-        .replaceAll(RegExp(r'\*{1,3}'), '')      // bold/italic asterisks
-        .replaceAll(RegExp(r'_+'), '')             // underscores
+        .replaceAll(RegExp(r'\*{1,3}'), '') // bold/italic asterisks
+        .replaceAll(RegExp(r'_+'), '') // underscores
         .replaceAll(RegExp(r'^#+\s*', multiLine: true), '') // headings
         .replaceAll(RegExp(r'^[-*•]\s+', multiLine: true), '') // bullets
         .replaceAll(RegExp(r'\[([^\]]+)\]\([^)]+\)'), r'$1') // links → label
         .replaceAll(RegExp(r'`{1,3}[^`]*`{1,3}'), '') // code blocks
-        .replaceAll(RegExp(r'\n{2,}'), '. ')       // double newlines → pause
-        .replaceAll('\n', ', ')                    // single newlines → comma
+        .replaceAll(RegExp(r'\n{2,}'), '. ') // double newlines → pause
+        .replaceAll('\n', ', ') // single newlines → comma
         .trim();
   }
 
@@ -243,9 +248,9 @@ class _ChatTabState extends State<ChatTab> {
     if (!mounted) return;
 
     if (access == PremiumAiAccess.needsAdult) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.aiAdultsOnly)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.aiAdultsOnly)));
       return;
     }
     if (access == PremiumAiAccess.needsConsent) {
@@ -290,9 +295,9 @@ class _ChatTabState extends State<ChatTab> {
           if (mounted) _checkConsent();
         });
       case ChatNoticeType.adultRequired:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.aiAdultsOnly)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.aiAdultsOnly)));
     }
     bloc.add(ClearChatNotice());
   }
@@ -325,138 +330,147 @@ class _ChatTabState extends State<ChatTab> {
       );
     }
 
-    return Column(
-      children: [
-        _PersonalityPicker(
-          current: _personality,
-          onSelect: _onPersonalitySelected,
-        ),
-        Expanded(
-          child: BlocConsumer<ChatBloc, ChatState>(
-            listener: (context, state) {
-              if (state is ChatLoaded) {
-                if (state.notice != null) {
-                  _handleNotice(state.notice!);
-                }
-                _checkConsent();
-                _scrollToBottom();
-              }
-            },
-            builder: (context, state) {
-              if (state is ChatLoading) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 12),
-                      Text(l10n.loading),
-                    ],
-                  ),
-                );
-              }
-
-              final messages =
-                  state is ChatLoaded ? state.messages : <ChatMessage>[];
-              final sending = state is ChatLoaded && state.isSending;
-
-              if (messages.isEmpty && !sending) {
-                return _WelcomeState(
-                  l10n: l10n,
-                  theme: theme,
-                  personality: _personality,
-                  onModeAction: (prompt, mode) => _send(prompt, mode),
-                  onAnalyze: () =>
-                      context.read<ChatBloc>().add(AnalyzeCycleRequested()),
-                );
-              }
-
-              final items = _buildTimeline(messages, sending: sending);
-              return ListView.builder(
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                itemCount: items.length,
-                itemBuilder: (context, i) {
-                  final item = items[i];
-                  if (item is _TimelineDayHeader) {
-                    return _DaySeparator(label: item.label);
-                  }
-                  if (item is _TimelineMessage) {
-                    final isAi = !item.message.isUser;
-                    final actions = isAi
-                        ? AiActionParser.parse(item.message.text)
-                        : const AiActionParseResult(
-                            cleanText: '', actions: []);
-                    return _ChatMessageRow(
-                      key: ValueKey('msg-${item.message.id}'),
-                      message: item.message,
-                      theme: theme,
-                      showAvatar: item.showAvatar,
-                      showTime: item.showTime,
-                      personality: _personality,
-                      cleanText: isAi ? actions.cleanText : item.message.text,
-                      suggestedActions: actions.actions,
-                      onActionTap: _handleAction,
-                      isSpeaking: _speakingMessageId == item.message.id,
-                      onTtsTap: _toggleTts,
-                      isExpanded: _expandedMessages.contains(item.message.id),
-                      onToggleExpand: () => _toggleExpanded(item.message.id),
-                    );
-                  }
-                  if (item is _TimelineTyping) {
-                    return _TypingBubble(personality: _personality);
-                  }
-                  if (item is _TimelineStreaming) {
-                    return _StreamingBubble(
-                      text: item.text,
-                      theme: theme,
-                      personality: _personality,
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              );
-            },
+    return BackdropGroup(
+      child: Column(
+        children: [
+          _PersonalityPicker(
+            current: _personality,
+            onSelect: _onPersonalitySelected,
           ),
-        ),
-        BlocBuilder<ChatBloc, ChatState>(
-          builder: (context, state) {
-            final messages =
-                state is ChatLoaded ? state.messages : <ChatMessage>[];
-            final sending = state is ChatLoaded && state.isSending;
-            if (messages.isEmpty || sending || _controller.text.isNotEmpty) {
-              return const SizedBox.shrink();
-            }
-            return _SuggestionStrip(
-              l10n: l10n,
-              personality: _personality,
-              onTap: (text) => _send(text),
-            );
-          },
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: BlocBuilder<ChatBloc, ChatState>(
+          Expanded(
+            child: BlocConsumer<ChatBloc, ChatState>(
+              listener: (context, state) {
+                if (state is ChatLoaded) {
+                  if (state.notice != null) {
+                    _handleNotice(state.notice!);
+                  }
+                  _checkConsent();
+                  _scrollToBottom();
+                }
+              },
               builder: (context, state) {
+                if (state is ChatLoading) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 12),
+                        Text(l10n.loading),
+                      ],
+                    ),
+                  );
+                }
+
+                final messages = state is ChatLoaded
+                    ? state.messages
+                    : <ChatMessage>[];
                 final sending = state is ChatLoaded && state.isSending;
-                return _ChatInputBar(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  sending: sending,
-                  hasText: _controller.text.trim().isNotEmpty,
-                  theme: theme,
-                  l10n: l10n,
-                  onSend: () => _send(),
-                  onEmergency: () =>
-                      _send(l10n.aiEmergencyPrompt, 'emergency'),
+
+                if (messages.isEmpty && !sending) {
+                  return _WelcomeState(
+                    l10n: l10n,
+                    theme: theme,
+                    personality: _personality,
+                    onModeAction: (prompt, mode) => _send(prompt, mode),
+                    onAnalyze: () =>
+                        context.read<ChatBloc>().add(AnalyzeCycleRequested()),
+                  );
+                }
+
+                final items = _buildTimeline(messages, sending: sending);
+                return ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  itemCount: items.length,
+                  itemBuilder: (context, i) {
+                    final item = items[i];
+                    if (item is _TimelineDayHeader) {
+                      return _DaySeparator(label: item.label);
+                    }
+                    if (item is _TimelineMessage) {
+                      final isAi = !item.message.isUser;
+                      final actions = isAi
+                          ? AiActionParser.parse(item.message.text)
+                          : const AiActionParseResult(
+                              cleanText: '',
+                              actions: [],
+                            );
+                      return _ChatMessageRow(
+                        key: ValueKey('msg-${item.message.id}'),
+                        message: item.message,
+                        theme: theme,
+                        showAvatar: item.showAvatar,
+                        showTime: item.showTime,
+                        personality: _personality,
+                        cleanText: isAi ? actions.cleanText : item.message.text,
+                        suggestedActions: actions.actions,
+                        onActionTap: _handleAction,
+                        isSpeaking: _speakingMessageId == item.message.id,
+                        onTtsTap: _toggleTts,
+                        isExpanded: _expandedMessages.contains(item.message.id),
+                        onToggleExpand: () => _toggleExpanded(item.message.id),
+                      );
+                    }
+                    if (item is _TimelineTyping) {
+                      return _TypingBubble(personality: _personality);
+                    }
+                    if (item is _TimelineStreaming) {
+                      return _StreamingBubble(
+                        text: item.text,
+                        theme: theme,
+                        personality: _personality,
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 );
               },
             ),
           ),
-        ),
-      ],
+          BlocBuilder<ChatBloc, ChatState>(
+            builder: (context, state) {
+              final messages = state is ChatLoaded
+                  ? state.messages
+                  : <ChatMessage>[];
+              final sending = state is ChatLoaded && state.isSending;
+              if (messages.isEmpty || sending || _controller.text.isNotEmpty) {
+                return const SizedBox.shrink();
+              }
+              return _SuggestionStrip(
+                l10n: l10n,
+                personality: _personality,
+                onTap: (text) => _send(text),
+              );
+            },
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) {
+                  final sending = state is ChatLoaded && state.isSending;
+                  return _ChatInputBar(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    sending: sending,
+                    hasText: _controller.text.trim().isNotEmpty,
+                    theme: theme,
+                    l10n: l10n,
+                    onSend: () => _send(),
+                    onAnalyze: () =>
+                        context.read<ChatBloc>().add(AnalyzeCycleRequested()),
+                    onOpenLog: () => HomeShellActions.openLog?.call(),
+                    onUrgentGuidance: () =>
+                        _send(l10n.aiEmergencyPrompt, 'emergency'),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -473,7 +487,11 @@ class _ChatTabState extends State<ChatTab> {
 
     for (var i = 0; i < messages.length; i++) {
       final m = messages[i];
-      final day = DateTime(m.timestamp.year, m.timestamp.month, m.timestamp.day);
+      final day = DateTime(
+        m.timestamp.year,
+        m.timestamp.month,
+        m.timestamp.day,
+      );
       if (lastDay == null || day != lastDay) {
         items.add(_TimelineDayHeader(_dayLabel(day)));
         lastDay = day;
@@ -483,24 +501,31 @@ class _ChatTabState extends State<ChatTab> {
 
       final isUser = m.isUser;
       final senderChanged = lastIsUser != isUser;
-      final timeGap = lastSenderTime == null ||
+      final timeGap =
+          lastSenderTime == null ||
           m.timestamp.difference(lastSenderTime).inMinutes >= 4;
       final showAvatar = senderChanged || timeGap;
 
       // Determine if this is the last message of its block.
       final next = i + 1 < messages.length ? messages[i + 1] : null;
-      final blockEnds = next == null ||
+      final blockEnds =
+          next == null ||
           next.isUser != isUser ||
           next.timestamp.difference(m.timestamp).inMinutes >= 4 ||
-          DateTime(next.timestamp.year, next.timestamp.month,
-                  next.timestamp.day) !=
+          DateTime(
+                next.timestamp.year,
+                next.timestamp.month,
+                next.timestamp.day,
+              ) !=
               day;
 
-      items.add(_TimelineMessage(
-        message: m,
-        showAvatar: showAvatar,
-        showTime: blockEnds,
-      ));
+      items.add(
+        _TimelineMessage(
+          message: m,
+          showAvatar: showAvatar,
+          showTime: blockEnds,
+        ),
+      );
 
       lastIsUser = isUser;
       lastSenderTime = m.timestamp;
@@ -563,6 +588,8 @@ class _TimelineStreaming {
 // ---------------------------------------------------------------------------
 // Input bar — clean, modern design
 // ---------------------------------------------------------------------------
+enum _ComposerAction { analyze, openLog, urgentGuidance }
+
 class _ChatInputBar extends StatelessWidget {
   const _ChatInputBar({
     required this.controller,
@@ -572,7 +599,9 @@ class _ChatInputBar extends StatelessWidget {
     required this.theme,
     required this.l10n,
     required this.onSend,
-    required this.onEmergency,
+    required this.onAnalyze,
+    required this.onOpenLog,
+    required this.onUrgentGuidance,
   });
 
   final TextEditingController controller;
@@ -582,64 +611,87 @@ class _ChatInputBar extends StatelessWidget {
   final ThemeData theme;
   final AppLocalizations l10n;
   final VoidCallback onSend;
-  final VoidCallback onEmergency;
+  final VoidCallback onAnalyze;
+  final VoidCallback onOpenLog;
+  final VoidCallback onUrgentGuidance;
 
   @override
   Widget build(BuildContext context) {
     final isDark = theme.brightness == Brightness.dark;
     final canSend = hasText && !sending;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: focusNode.hasFocus
-              ? theme.colorScheme.primary.withValues(alpha: 0.45)
-              : (isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : theme.colorScheme.outline.withValues(alpha: 0.10)),
-          width: focusNode.hasFocus ? 1.4 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: focusNode.hasFocus
-                ? theme.colorScheme.primary.withValues(alpha: 0.07)
-                : Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppFloatingGlassPanel(
+      padding: EdgeInsets.zero,
+      radius: AppRadius.lg,
+      tint: theme.colorScheme.primary,
+      highlighted: focusNode.hasFocus,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Padding(
-            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 4),
-            child: Tooltip(
-              message: l10n.aiEmergencyTooltip,
-              child: Material(
-                color: Colors.transparent,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: sending ? null : onEmergency,
-                  customBorder: const CircleBorder(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Icon(
-                      Icons.medical_services_outlined,
-                      color: sending
-                          ? theme.colorScheme.outline
-                          : AuraColors.danger,
-                      size: 18,
-                    ),
+            padding: const EdgeInsetsDirectional.only(start: 2, bottom: 2),
+            child: PopupMenuButton<_ComposerAction>(
+              enabled: !sending,
+              tooltip: Localizations.localeOf(context).languageCode == 'ar'
+                  ? 'إجراءات إضافية'
+                  : 'More actions',
+              icon: Icon(
+                Icons.add_rounded,
+                color: sending
+                    ? theme.colorScheme.outline
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              onSelected: (action) {
+                switch (action) {
+                  case _ComposerAction.analyze:
+                    onAnalyze();
+                  case _ComposerAction.openLog:
+                    onOpenLog();
+                  case _ComposerAction.urgentGuidance:
+                    onUrgentGuidance();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: _ComposerAction.analyze,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.analytics_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(l10n.aiAnalyze),
+                    ],
                   ),
                 ),
-              ),
+                PopupMenuItem(
+                  value: _ComposerAction.openLog,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit_note_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(l10n.aiActionOpenLog),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _ComposerAction.urgentGuidance,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.health_and_safety_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(l10n.aiEmergencyTooltip),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -654,8 +706,9 @@ class _ChatInputBar extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: l10n.aiPlaceholder,
                 hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant
-                      .withValues(alpha: 0.55),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.55,
+                  ),
                 ),
                 border: InputBorder.none,
                 isCollapsed: true,
@@ -680,8 +733,8 @@ class _ChatInputBar extends StatelessWidget {
                   customBorder: const CircleBorder(),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
-                    width: 42,
-                    height: 42,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       gradient: canSend
                           ? AuraDecorations.primaryGradient
@@ -689,15 +742,16 @@ class _ChatInputBar extends StatelessWidget {
                       color: canSend
                           ? null
                           : (isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.7)),
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : theme.colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.7)),
                       shape: BoxShape.circle,
                       boxShadow: canSend
                           ? [
                               BoxShadow(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.24),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.24,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -754,8 +808,7 @@ class _DaySeparator extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -802,20 +855,20 @@ class _SuggestionStrip extends StatelessWidget {
   List<({IconData icon, String label})> _items() {
     return switch (personality) {
       LunePersonality.doctor => [
-          (icon: Icons.spa_outlined, label: l10n.aiSuggestExplainPhase),
-          (icon: Icons.science_outlined, label: l10n.aiSuggestSymptomCheck),
-          (icon: Icons.medical_information_outlined, label: l10n.aiSuggestPrep),
-        ],
+        (icon: Icons.spa_outlined, label: l10n.aiSuggestExplainPhase),
+        (icon: Icons.science_outlined, label: l10n.aiSuggestSymptomCheck),
+        (icon: Icons.medical_information_outlined, label: l10n.aiSuggestPrep),
+      ],
       LunePersonality.coach => [
-          (icon: Icons.bolt_outlined, label: l10n.aiSuggestEnergyBoost),
-          (icon: Icons.fitness_center_outlined, label: l10n.aiSuggestMoveToday),
-          (icon: Icons.flag_outlined, label: l10n.aiSuggestSetGoal),
-        ],
+        (icon: Icons.bolt_outlined, label: l10n.aiSuggestEnergyBoost),
+        (icon: Icons.fitness_center_outlined, label: l10n.aiSuggestMoveToday),
+        (icon: Icons.flag_outlined, label: l10n.aiSuggestSetGoal),
+      ],
       LunePersonality.friend => [
-          (icon: Icons.wb_sunny_outlined, label: l10n.aiSuggestHowsMyDay),
-          (icon: Icons.mood_outlined, label: l10n.aiSuggestMoodCheck),
-          (icon: Icons.restaurant_outlined, label: l10n.aiSuggestFoodIdeas),
-        ],
+        (icon: Icons.wb_sunny_outlined, label: l10n.aiSuggestHowsMyDay),
+        (icon: Icons.mood_outlined, label: l10n.aiSuggestMoodCheck),
+        (icon: Icons.restaurant_outlined, label: l10n.aiSuggestFoodIdeas),
+      ],
     };
   }
 
@@ -839,8 +892,10 @@ class _SuggestionStrip extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.pill),
               onTap: () => onTap(item.label),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.06)
@@ -853,11 +908,7 @@ class _SuggestionStrip extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      item.icon,
-                      size: 14,
-                      color: theme.colorScheme.primary,
-                    ),
+                    Icon(item.icon, size: 14, color: theme.colorScheme.primary),
                     const SizedBox(width: 6),
                     Text(
                       item.label,
@@ -876,7 +927,6 @@ class _SuggestionStrip extends StatelessWidget {
     );
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // Streaming bubble — shows the live partial reply being generated.

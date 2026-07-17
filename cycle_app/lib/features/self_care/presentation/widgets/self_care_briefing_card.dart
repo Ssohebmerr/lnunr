@@ -68,11 +68,12 @@ class _SelfCareBriefingCardState extends State<SelfCareBriefingCard> {
       });
     }
     try {
-      if (!await PremiumGate.hasPremium()) {
+      final access = await PremiumGate.checkAiChat();
+      if (access != PremiumAiAccess.allowed) {
         if (mounted) {
           setState(() {
             _loading = false;
-            _locked = true;
+            _locked = access == PremiumAiAccess.needsPremium;
             _whisper = null;
           });
         }

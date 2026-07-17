@@ -877,7 +877,8 @@ class MenstrualCycleWidget {
       userLogsData.customerId =
           queryResponse[i][MenstrualCycleDbHelper.columnCustomerId];
       String symptomsData = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+          .decrypt(
+              queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
           .trim();
       // Period-only rows and the config row have no symptom payload —
       // decoding "" used to throw and blank the whole log report.
@@ -1564,7 +1565,8 @@ class MenstrualCycleWidget {
 
       for (int i = 0; i < queryResponse.length; i++) {
         String symptomsData = encryption
-            .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+            .decrypt(
+                queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
             .trim();
         if (symptomsData.isEmpty) continue; // period-only / config rows
         List<dynamic> jsonData = json.decode(symptomsData);
@@ -1654,7 +1656,8 @@ class MenstrualCycleWidget {
       UserSymptomsLogs userSymptomsLogs = UserSymptomsLogs(symptomData: []);
       List<SymptomsData> symptomsDataList = [];
       String userDecryptData = encryption
-          .decrypt(queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
+          .decrypt(
+              queryResponse[i][MenstrualCycleDbHelper.columnUserEncryptData])
           .trim();
 
       List<dynamic> jsonData =

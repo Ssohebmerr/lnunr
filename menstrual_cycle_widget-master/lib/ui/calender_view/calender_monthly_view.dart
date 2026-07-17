@@ -14,6 +14,7 @@ class CalenderMonthlyView extends StatefulWidget {
   final Function? onDataChanged;
   final int cycleLength;
   final Color themeColor;
+  final Color? backgroundColor;
   final int periodLength;
   final bool isFromCalender;
   final bool hideInfoView;
@@ -22,6 +23,7 @@ class CalenderMonthlyView extends StatefulWidget {
     super.key,
     this.onDateSelected,
     required this.themeColor,
+    this.backgroundColor,
     this.selectedColor,
     this.todayColor,
     this.initialDate,
@@ -88,7 +90,7 @@ class _CalenderMonthlyViewState extends State<CalenderMonthlyView> {
     pastAllPeriodsDays = _instance.pastAllPeriodDays;
     futurePeriodDays = await initFuturePeriodDay();
     futureOvulationDays = await initFutureOvulationDay();
-    /*setState(() {});*/
+    if (mounted) setState(() {});
   }
 
   DateTime getDateTimeFromMonthsAgo(int monthsAgo) {
@@ -140,17 +142,11 @@ class _CalenderMonthlyViewState extends State<CalenderMonthlyView> {
 
   List<DateTime> _daysInMonth(DateTime month) {
     var first = CalenderDateUtils.firstDayOfMonth(month);
-    var daysBefore = first.weekday;
+    var daysBefore = first.weekday % 7;
     var firstToDisplay = first.subtract(Duration(days: daysBefore));
     var last = CalenderDateUtils.lastDayOfMonth(month);
-
-    var daysAfter = 7 - last.weekday;
-
-    if (daysAfter == 0) {
-      daysAfter = 7;
-    }
-
-    var lastToDisplay = last.add(const Duration(days: 1));
+    var daysAfter = (7 - (last.weekday % 7)) % 7;
+    var lastToDisplay = last.add(Duration(days: daysAfter + 1));
     return CalenderDateUtils.daysInRange(firstToDisplay, lastToDisplay)
         .toList();
   }
@@ -172,10 +168,11 @@ class _CalenderMonthlyViewState extends State<CalenderMonthlyView> {
           isDayOfWeek: true,
           multipleDateSelectionCallBack: () {},
           dayOfWeekStyle: TextStyle(
-              color: widget.themeColor,
-              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
               fontFamily: getFontFamily(),
-              fontSize: 11),
+              fontSize: 10.5,
+              height: 1.2),
           dayOfWeek: day,
         ),
       );
@@ -242,7 +239,7 @@ class _CalenderMonthlyViewState extends State<CalenderMonthlyView> {
       await dbHelper.clearPeriodLog(encryptedUserid);
     }
     isChangedData = true;
-    widget.onDataChanged!.call(isChangedData);
+    widget.onDataChanged?.call(isChangedData);
     isEditMode = false;
     generateMonthData(true);
 
@@ -256,6 +253,246 @@ class _CalenderMonthlyViewState extends State<CalenderMonthlyView> {
 
   @override
   Widget build(BuildContext context) {
+    final background =
+        widget.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.isFromCalender)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: IconButton(
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              onPressed: () => Navigator.pop(context, isChangedData),
+              icon: Icon(Icons.close_rounded, color: widget.themeColor),
+            ),
+          ),
+        if (!widget.hideInfoView) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+            child: getInformationView(
+              widget.selectedColor ?? Colors.grey,
+              widget.themeColor,
+            ),
+          ),
+          Divider(
+            height: 1,
+            indent: 12,
+            endIndent: 12,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ],
+        SizedBox(
+          height: 40,
+          child: GridView.count(
+            childAspectRatio: 1.2,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 7,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            children: titleCalendarBuilder(),
+          ),
+        ),
+        Expanded(child: _modernMonthList()),
+        _modernFooter(),
+      ],
+    );
+
+    if (widget.isFromCalender) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && context.mounted) {
+            Navigator.pop(context, isChangedData);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: background,
+          body: SafeArea(child: content),
+        ),
+      );
+    }
+
+    return Material(color: background, child: content);
+  }
+
+  Widget _modernMonthList() {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleModernScroll,
+      child: ListView.builder(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+        physics: const ClampingScrollPhysics(),
+        itemCount: monthWidgets.length,
+        itemBuilder: (context, index) {
+          final days = monthWidgets[index];
+          if (days.isEmpty) return const SizedBox.shrink();
+          final targetMonth = days.firstWhere(
+            (date) => date.day == 1,
+            orElse: () => days.first,
+          );
+          final theme = Theme.of(context);
+
+          return AutoScrollTag(
+            key: ValueKey('month-${targetMonth.year}-${targetMonth.month}'),
+            controller: controller,
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      MaterialLocalizations.of(
+                        context,
+                      ).formatMonthYear(targetMonth),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontFamily: getFontFamily(),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  GridView.count(
+                    childAspectRatio: 1.15,
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    crossAxisCount: 7,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    children: [
+                      for (final rawDay in days)
+                        _modernDayCell(rawDay, targetMonth, theme),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _modernDayCell(
+    DateTime rawDay,
+    DateTime targetMonth,
+    ThemeData theme,
+  ) {
+    final day = CalenderDateUtils.getDay(rawDay);
+    final isOutsideMonth =
+        day.year != targetMonth.year || day.month != targetMonth.month;
+    return CalendarCell(
+      themeColor: widget.themeColor,
+      selectedColor: widget.selectedColor,
+      todayColor: widget.todayColor,
+      isEditMode: isEditMode,
+      multipleDateSelectionCallBack: (value) {
+        dateSelectionCallBack(rawDay, value == true);
+      },
+      onDateSelected: () => _launchDateSelectionCallback(rawDay),
+      currentDay: rawDay,
+      isBlankDay: isOutsideMonth,
+      previousPeriodDate: _instance.getPreviousPeriodDay(),
+      pastAllPeriodsDays: pastAllPeriodsDays,
+      futurePeriodDays: futurePeriodDays,
+      futureOvulationDays: futureOvulationDays,
+      cycleLength: widget.cycleLength,
+      periodDuration: widget.periodLength,
+      dateStyles: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: getFontFamily(),
+        fontWeight: FontWeight.w600,
+      ),
+      isSelected: CalenderDateUtils.isSameDay(_selectedDate, rawDay),
+    );
+  }
+
+  bool _handleModernScroll(ScrollNotification notification) {
+    if (notification is! ScrollEndNotification) return false;
+    if (notification.metrics.pixels < 10) {
+      pastMonthCount += 1;
+      final month = getDateTimeFromMonthsAgo(pastMonthCount);
+      monthTitle.insert(0, CalenderDateUtils.displayMonthYear.format(month));
+      monthWidgets.insert(0, monthCalendarBuilder(month, false));
+      setState(() {});
+    } else if (notification.metrics.pixels + 80 >=
+            notification.metrics.maxScrollExtent &&
+        !isEditMode &&
+        nextMonthCount <= futureMonthCount) {
+      var nextMonth = DateTime.now();
+      for (var index = 0; index <= nextMonthCount; index++) {
+        nextMonth = CalenderDateUtils.nextMonth(nextMonth);
+      }
+      for (var index = 0; index < nextMonthIncrementCount; index++) {
+        monthTitle.add(CalenderDateUtils.displayMonthYear.format(nextMonth));
+        monthWidgets.add(monthCalendarBuilder(nextMonth, true));
+        nextMonth = CalenderDateUtils.nextMonth(nextMonth);
+      }
+      nextMonthCount += nextMonthIncrementCount;
+      setState(() {});
+    }
+    return false;
+  }
+
+  Widget _modernFooter() {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.56),
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
+      child: isEditMode
+          ? Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      generateMonthData(true);
+                      setState(() => isEditMode = false);
+                    },
+                    child: Text(WidgetBaseLanguage.cancelLabel),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: saveSelectedPeriodDate,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: widget.themeColor,
+                    ),
+                    child: Text(WidgetBaseLanguage.saveLabel),
+                  ),
+                ),
+              ],
+            )
+          : SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  generateMonthData(false);
+                  setState(() => isEditMode = true);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: widget.themeColor,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.edit_calendar_outlined, size: 19),
+                label: Text(WidgetBaseLanguage.editPeriodDateLabel),
+              ),
+            ),
+    );
+  }
+
+  // Kept temporarily as an internal fallback for package-level consumers.
+  // ignore: unused_element
+  Widget _legacyBuild(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, d) {

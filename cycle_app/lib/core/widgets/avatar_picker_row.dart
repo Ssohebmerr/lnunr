@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../profile/avatar_catalog.dart';
 import '../theme/app_design_tokens.dart';
+import 'lune_avatar_artwork.dart';
 
 class AvatarPickerRow extends StatelessWidget {
   const AvatarPickerRow({
@@ -28,7 +28,6 @@ class AvatarPickerRow extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (_, i) {
           final selected = i == selectedIndex;
-          final url = AvatarCatalog.imageUrl(index: i, size: 128);
 
           return GestureDetector(
             onTap: () => onSelected(i),
@@ -46,12 +45,7 @@ class AvatarPickerRow extends StatelessWidget {
                 boxShadow: selected ? AppShadows.softRose(opacity: 0.2) : null,
               ),
               child: ClipOval(
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  width: itemSize,
-                  height: itemSize,
-                  fit: BoxFit.cover,
-                ),
+                child: LuneAvatarArtwork(avatarIndex: i, size: itemSize),
               ),
             ),
           );

@@ -9,6 +9,7 @@ import '../../../core/premium/premium_badge.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/community_seed.dart';

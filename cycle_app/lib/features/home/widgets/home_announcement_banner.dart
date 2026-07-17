@@ -19,7 +19,7 @@ class HomeAnnouncementBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: AppGlassCard(
-        blur: false,
+        blur: true,
         padding: const EdgeInsets.all(14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

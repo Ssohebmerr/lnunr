@@ -55,18 +55,34 @@ class CommunityCatalogRepository {
 
   final FirebaseFirestore _firestore;
 
+  Map<String, CommunityCatalogEntry>? _memoryCache;
+  DateTime? _memoryCacheAt;
+
+  static const _memoryCacheTtl = Duration(minutes: 5);
+
   static const collection = 'communityCatalog';
 
   Future<Map<String, CommunityCatalogEntry>> fetchAll() async {
+    final cached = _memoryCache;
+    final cachedAt = _memoryCacheAt;
+    if (cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _memoryCacheTtl) {
+      return cached;
+    }
+
     try {
       final snap = await _firestore.collection(collection).get();
-      return {
+      final resolved = <String, CommunityCatalogEntry>{
         for (final d in snap.docs)
           d.id: CommunityCatalogEntry.fromMap(d.id, d.data()),
       };
+      _memoryCache = resolved;
+      _memoryCacheAt = DateTime.now();
+      return resolved;
     } catch (e, st) {
       debugPrint('CommunityCatalogRepository.fetchAll failed: $e\n$st');
-      return {};
+      return cached ?? const {};
     }
   }
 }

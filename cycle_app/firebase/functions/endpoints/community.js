@@ -11,6 +11,12 @@ const admin = require('firebase-admin');
 
 const { guardRequest, setCors, bearerToken } = require('../lib/http');
 const { evaluateModeration } = require('../lib/moderation');
+const {
+  parseFirebaseMediaUrl,
+  moderateCommunityImage,
+  approveMedia,
+  deleteMediaAndApproval,
+} = require('../lib/mediaModeration');
 const { sanitizePostText, sanitizeCommentText } = require('../lib/text_sanitize');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
@@ -52,16 +58,6 @@ function pollOptions(value) {
   if (options.length < 2) return null;
   const unique = new Set(options.map((item) => item.toLowerCase()));
   return unique.size === options.length ? options : null;
-}
-
-function isOwnedMediaUrl(value, communityId, uid) {
-  try {
-    const decoded = decodeURIComponent(value);
-    return decoded.startsWith('https://firebasestorage.googleapis.com/') &&
-      decoded.includes(`/o/community_media/${communityId}/${uid}/`);
-  } catch (_) {
-    return false;
-  }
 }
 
 async function requireParticipant(db, uid, communityId) {
@@ -164,10 +160,22 @@ async function submitPost(db, uid, body) {
   const anonymous = body.isAnonymous === true;
   const mediaUrl = text(body.mediaUrl, 2000) || null;
   const mediaType = text(body.mediaType, 12) || null;
+  // Designed gradient cover for text posts — free feature, fixed catalogue
+  // (mirrors PostCoverStyles in the app). Ignored when media is attached.
+  const COVER_STYLES = new Set([
+    'berry', 'lavender', 'sunset', 'ocean', 'forest', 'blush',
+  ]);
+  const coverStyleRaw = text(body.coverStyle, 20) || null;
+  const coverStyle =
+    coverStyleRaw && COVER_STYLES.has(coverStyleRaw) && !mediaUrl
+      ? coverStyleRaw
+      : null;
+  const media = mediaUrl
+    ? parseFirebaseMediaUrl(mediaUrl, communityId, uid)
+    : null;
   if ((mediaUrl || mediaType) &&
       (user.isPremium !== true || !mediaUrl ||
-        !['image', 'video'].includes(mediaType) ||
-        !isOwnedMediaUrl(mediaUrl, communityId, uid))) {
+        mediaType !== 'image' || !media)) {
     throw new CommunitySubmissionError(
       'media_premium_required', 403, 'Premium media is unavailable.',
     );
@@ -179,11 +187,34 @@ async function submitPost(db, uid, body) {
     );
   }
 
-  await reserveSubmission(db, uid, 'post', bodyText, 10);
-  const moderation = await evaluateModeration(GEMINI_API_KEY.value(), bodyText);
+  // The quota transaction and AI review are independent. Running them
+  // together removes one full serial network step from every submission
+  // while keeping the same server-authoritative checks and fail-safe result.
+  const [, moderation, mediaModeration] = await Promise.all([
+    reserveSubmission(db, uid, 'post', bodyText, 10),
+    evaluateModeration(GEMINI_API_KEY.value(), bodyText),
+    media
+      ? moderateCommunityImage(GEMINI_API_KEY.value(), media)
+      : Promise.resolve(null),
+  ]);
   if (moderation.reject) {
+    if (media) await deleteMediaAndApproval(db, media);
     throw new CommunitySubmissionError(
       'content_rejected', 400, moderation.reason || 'Content not allowed.',
+    );
+  }
+  if (mediaModeration?.status === 'rejected') {
+    await deleteMediaAndApproval(db, media);
+    throw new CommunitySubmissionError(
+      'content_rejected', 400,
+      mediaModeration.reason || 'Image not allowed.',
+    );
+  }
+  if (mediaModeration?.status === 'unavailable') {
+    await deleteMediaAndApproval(db, media);
+    throw new CommunitySubmissionError(
+      'media_review_unavailable', 503,
+      'Image safety review is temporarily unavailable. Please try again.',
     );
   }
 
@@ -197,7 +228,12 @@ async function submitPost(db, uid, body) {
     postType,
     communityName: text(body.communityName, 100) || null,
     authorAvatarIndex: anonymous ? 0 : avatarIndex(user.communityAvatarIndex),
-    ...(mediaUrl ? { mediaUrl, mediaType } : {}),
+    ...(mediaUrl ? {
+      mediaUrl,
+      mediaType,
+      mediaModerationStatus: 'approved',
+    } : {}),
+    ...(coverStyle ? { coverStyle } : {}),
     isAnonymous: anonymous,
     authorIsPremium: !anonymous && user.isPremium === true,
     ...(options ? { pollOptions: options } : {}),
@@ -211,14 +247,24 @@ async function submitPost(db, uid, body) {
   if (!anonymous) {
     postPayload.authorUid = uid;
   }
-  await ref.set(postPayload);
+  const batch = db.batch();
+  batch.set(ref, postPayload);
+  if (media) approveMedia(batch, db, media, mediaModeration);
   if (anonymous) {
-    await db.collection('communityPrivateAuth').doc(communityId)
-      .collection('posts').doc(ref.id)
-      .set({
+    batch.set(
+      db.collection('communityPrivateAuth').doc(communityId)
+        .collection('posts').doc(ref.id),
+      {
         authorUid: uid,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      },
+    );
+  }
+  try {
+    await batch.commit();
+  } catch (error) {
+    if (media) await deleteMediaAndApproval(db, media);
+    throw error;
   }
   return { id: ref.id, pendingReview: moderation.pendingReview };
 }
@@ -243,8 +289,10 @@ async function submitComment(db, uid, body) {
         typeof m === 'string' && m.length > 0 && m.length <= 128 && m !== uid,
       ))].slice(0, 5)
     : [];
-  await reserveSubmission(db, uid, 'comment', bodyText, 20);
-  const moderation = await evaluateModeration(GEMINI_API_KEY.value(), bodyText);
+  const [, moderation] = await Promise.all([
+    reserveSubmission(db, uid, 'comment', bodyText, 20),
+    evaluateModeration(GEMINI_API_KEY.value(), bodyText),
+  ]);
   if (moderation.reject) {
     throw new CommunitySubmissionError(
       'content_rejected', 400, moderation.reason || 'Content not allowed.',
@@ -267,6 +315,7 @@ async function submitComment(db, uid, body) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       authorAvatarIndex: avatarIndex(user.communityAvatarIndex),
       authorIsPremium: user.isPremium === true,
+      likeCount: 0,
       ...(parentCommentId ? { parentCommentId } : {}),
       ...(mentions.length ? { mentions } : {}),
       moderationStatus: moderation.moderationStatus,
@@ -295,19 +344,48 @@ async function submitStory(db, uid, body) {
   const textOverlay = text(body.textOverlay, 500) || null;
   const backgroundColor = text(body.backgroundColor, 40) || null;
 
+  const media = mediaType === 'image'
+    ? parseFirebaseMediaUrl(mediaUrl, communityId, uid)
+    : null;
   if (mediaType === 'image') {
-    if (!mediaUrl || !isOwnedMediaUrl(mediaUrl, communityId, uid)) {
+    if (user.isPremium !== true || !mediaUrl || !media) {
       throw new CommunitySubmissionError(
         'media_premium_required', 403, 'Story media is unavailable.',
       );
     }
+  } else if (mediaType !== 'text' || mediaUrl) {
+    throw new CommunitySubmissionError('invalid_story', 400, 'Invalid story media.');
   }
 
   const fingerprint = mediaUrl || textOverlay || 'text-story';
-  await reserveSubmission(db, uid, 'story', fingerprint, 5);
+  const [, textModeration, mediaModeration] = await Promise.all([
+    reserveSubmission(db, uid, 'story', fingerprint, 5),
+    evaluateModeration(GEMINI_API_KEY.value(), textOverlay || ''),
+    media
+      ? moderateCommunityImage(GEMINI_API_KEY.value(), media)
+      : Promise.resolve(null),
+  ]);
+  if (textModeration.reject || mediaModeration?.status === 'rejected') {
+    if (media) await deleteMediaAndApproval(db, media);
+    throw new CommunitySubmissionError(
+      'content_rejected', 400,
+      textModeration.reject
+        ? (textModeration.reason || 'Story text not allowed.')
+        : (mediaModeration.reason || 'Image not allowed.'),
+    );
+  }
+  if (textModeration.pendingReview || mediaModeration?.status === 'unavailable') {
+    if (media) await deleteMediaAndApproval(db, media);
+    throw new CommunitySubmissionError(
+      'media_review_unavailable', 503,
+      'Safety review is temporarily unavailable. Please try again.',
+    );
+  }
+
   const ref = db.collection('communities').doc(communityId).collection('stories').doc();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  await ref.set({
+  const batch = db.batch();
+  batch.set(ref, {
     communityId,
     authorUid: uid,
     authorAlias: text(user.communityAlias, 100),
@@ -319,12 +397,28 @@ async function submitStory(db, uid, body) {
     ...(textOverlay ? { textOverlay } : {}),
     ...(backgroundColor ? { backgroundColor } : {}),
     viewCount: 0,
+    moderationStatus: 'approved',
+    moderationReviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+    moderationReviewedBy: media ? (mediaModeration.provider || 'vision') :
+      (textModeration.reviewedBy || 'auto_short'),
   });
+  if (media) approveMedia(batch, db, media, mediaModeration);
+  try {
+    await batch.commit();
+  } catch (error) {
+    if (media) await deleteMediaAndApproval(db, media);
+    throw error;
+  }
   return { id: ref.id };
 }
 
 exports.submitCommunity = onRequest(
-  { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 30 },
+  {
+    cors: true,
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 45,
+    memory: '512MiB',
+  },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'community', appCheck: 'required' }))) return;
     const token = bearerToken(req, res);

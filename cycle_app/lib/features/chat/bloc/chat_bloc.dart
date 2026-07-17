@@ -217,6 +217,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (e.isPremiumRequired || e.isProfileRequired) {
       _emitNotice(emit, ChatNoticeType.premiumRequired);
     }
+    if (e.isConsentRequired) {
+      _emitNotice(emit, ChatNoticeType.consent);
+    }
+    if (e.isAdultRequired) {
+      _emitNotice(emit, ChatNoticeType.adultRequired);
+    }
     await _saveAssistantReply(e.userMessage);
   }
 

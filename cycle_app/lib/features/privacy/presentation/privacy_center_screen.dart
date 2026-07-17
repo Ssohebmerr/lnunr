@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/age/age_gate.dart';
 import '../../../core/privacy/consent_data_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
@@ -542,6 +543,21 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                       onChanged: _purging
                           ? null
                           : (v) async {
+                              if (v) {
+                                if (!await isAdult()) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(l10n.aiAdultsOnly)),
+                                  );
+                                  return;
+                                }
+                                if (!context.mounted) return;
+                                final accepted =
+                                    await showAiConsentDialog(context);
+                                if (!accepted || !context.mounted) return;
+                                setState(() => _ai = true);
+                                return;
+                              }
                               if (!v) {
                                 final ok = await _confirmRevoke();
                                 if (!ok) return;

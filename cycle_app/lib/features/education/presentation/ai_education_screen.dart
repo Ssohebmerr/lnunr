@@ -1,14 +1,19 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
+import '../../../core/premium/premium_gate.dart';
+import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/education_articles_repository.dart';
 import '../data/education_content.dart';
 import 'widgets/magazine_article_card.dart';
+import 'widgets/magazine_ui.dart';
 
 /// Education hub — browse articles by category + AI Q&A.
 class AiEducationScreen extends StatefulWidget {
@@ -62,6 +67,22 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
     if (question.trim().isEmpty || _aiLoading) return;
 
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final access = await PremiumGate.checkAiChat();
+    if (!mounted) return;
+    if (access == PremiumAiAccess.needsAdult) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.aiAdultsOnly)));
+      return;
+    }
+    if (access == PremiumAiAccess.needsPremium ||
+        access == PremiumAiAccess.limitReached) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.premiumRequiredAi)));
+      return;
+    }
+    if (access == PremiumAiAccess.needsConsent) {
+      final accepted = await showAiConsentDialog(context);
+      if (!accepted || !mounted) return;
+    }
 
     setState(() {
       _aiLoading = true;
@@ -83,10 +104,9 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
       if (mounted) {
         setState(() {
           _aiLoading = false;
-          _messages.add(_ChatMessage(
-            text: reply ?? l10n.errorGeneric,
-            isUser: false,
-          ));
+          _messages.add(
+            _ChatMessage(text: reply ?? l10n.errorGeneric, isUser: false),
+          );
         });
         _scrollChatToBottom();
       }
@@ -94,10 +114,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
       if (mounted) {
         setState(() {
           _aiLoading = false;
-          _messages.add(_ChatMessage(
-            text: l10n.errorGeneric,
-            isUser: false,
-          ));
+          _messages.add(_ChatMessage(text: l10n.errorGeneric, isUser: false));
         });
       }
     }
@@ -128,7 +145,26 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(l10n.magazineTitle),
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.44 : 0.48,
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.11 : 0.50,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        title: MagazineBrandBadge(label: l10n.magazineTitle, compact: true),
         actions: [
           IconButton(
             tooltip: l10n.anonymousQaTooltip,
@@ -160,8 +196,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
   // ---------------------------------------------------------------------------
   // Article hub — browse by category
   // ---------------------------------------------------------------------------
-  Widget _buildArticleHub(
-      AppLocalizations l10n, ThemeData theme, String lang) {
+  Widget _buildArticleHub(AppLocalizations l10n, ThemeData theme, String lang) {
     final categories = <_CategoryItem>[
       _CategoryItem(
         icon: Icons.all_inclusive_rounded,
@@ -198,50 +233,90 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
     return Column(
       children: [
         SizedBox(height: _topInset),
-        // Category chips
-        SizedBox(
-          height: 48,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, i) {
-              final cat = categories[i];
-              final selected = _selectedCategory == cat.category;
-              return FilterChip(
-                avatar: Icon(cat.icon,
-                    size: 16,
-                    color: selected ? Colors.white : cat.color),
-                label: Text(cat.label),
-                selected: selected,
-                onSelected: (_) =>
-                    setState(() => _selectedCategory = cat.category),
-                selectedColor: cat.color,
-                labelStyle: TextStyle(
-                  color: selected ? Colors.white : theme.colorScheme.onSurface,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 13,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+          child: AppGlassCard(
+            blur: false,
+            radius: AppRadius.xl,
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 4,
+                      end: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MagazineBrandBadge(
+                          label: l10n.magazineFromLune,
+                          compact: true,
+                        ),
+                        const SizedBox(height: 9),
+                        Text(
+                          l10n.magazineTitle,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            height: 1.15,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.educationSubtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                backgroundColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
-                side: BorderSide.none,
-                showCheckmark: false,
-              );
-            },
+                const _MagazineMastheadArt(),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AppFloatingGlassPanel(
+            padding: const EdgeInsets.all(5),
+            radius: AppRadius.pill,
+            blurSigma: 18,
+            child: SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 4),
+                itemBuilder: (context, i) {
+                  final cat = categories[i];
+                  return _MagazineCategoryChip(
+                    item: cat,
+                    selected: _selectedCategory == cat.category,
+                    onTap: () =>
+                        setState(() => _selectedCategory = cat.category),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         Expanded(
           child: StreamBuilder<List<Article>>(
             stream: _repo.watchPublished(includeAdult: false),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting &&
                   !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return const _MagazineLoadingState();
               }
-              final articles = snapshot.data ??
-                  EducationContent.visible(includeAdult: false);
+              final articles = snapshot.data ?? const <Article>[];
               final filtered = _filteredList(articles);
               final featured = _featuredArticle(articles);
 
@@ -260,12 +335,16 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
                               ),
                               child: Text(
                                 '${filtered.length} ${l10n.educationArticles}',
@@ -281,8 +360,9 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                                 l10n.educationSubtitle,
                                 textAlign: TextAlign.end,
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.outline
-                                      .withValues(alpha: 0.7),
+                                  color: theme.colorScheme.outline.withValues(
+                                    alpha: 0.7,
+                                  ),
                                   height: 1.35,
                                 ),
                                 maxLines: 2,
@@ -304,11 +384,31 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                     if (filtered.isEmpty)
                       SliverFillRemaining(
                         hasScrollBody: false,
-                        child: Center(
-                          child: Text(
-                            l10n.educationNoArticles,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.outline,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
+                          child: Center(
+                            child: AppGlassCard(
+                              blur: false,
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.auto_stories_outlined,
+                                    size: 38,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    l10n.educationNoArticles,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -337,8 +437,7 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
   // ---------------------------------------------------------------------------
   // AI chat — ask health questions
   // ---------------------------------------------------------------------------
-  Widget _buildAiChat(
-      AppLocalizations l10n, ThemeData theme, String lang) {
+  Widget _buildAiChat(AppLocalizations l10n, ThemeData theme, String lang) {
     return Column(
       children: [
         SizedBox(height: _topInset),
@@ -391,9 +490,11 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.school_outlined,
-                          size: 56,
-                          color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+                      Icon(
+                        Icons.school_outlined,
+                        size: 56,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         l10n.educationAskAnything,
@@ -427,18 +528,45 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                 Expanded(
                   child: TextField(
                     controller: _questionController,
+                    style: theme.textTheme.bodyMedium,
                     decoration: InputDecoration(
                       hintText: l10n.educationAskHint,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                       filled: true,
                       fillColor: theme.brightness == Brightness.dark
                           ? Colors.white.withValues(alpha: 0.06)
                           : Colors.white.withValues(alpha: 0.78),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        borderSide: BorderSide(
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : theme.colorScheme.outline.withValues(
+                                  alpha: 0.1,
+                                ),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.4,
+                          ),
+                          width: 1.5,
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        borderSide: BorderSide.none,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: _askAi,
@@ -451,8 +579,11 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded,
-                        color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     onPressed: () => _askAi(_questionController.text),
                   ),
                 ),
@@ -461,6 +592,134 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Magazine loading state
+// ---------------------------------------------------------------------------
+class _MagazineMastheadArt extends StatelessWidget {
+  const _MagazineMastheadArt();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 92,
+      height: 108,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [AuraColors.rose, AuraColors.lavenderSoft],
+        ),
+      ),
+      child: Stack(
+        children: [
+          PositionedDirectional(
+            top: -20,
+            end: -18,
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.18),
+              ),
+            ),
+          ),
+          const Center(
+            child: Icon(
+              Icons.auto_stories_rounded,
+              size: 38,
+              color: Colors.white,
+            ),
+          ),
+          const PositionedDirectional(
+            end: 10,
+            bottom: 9,
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MagazineLoadingState extends StatelessWidget {
+  const _MagazineLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fill = theme.colorScheme.onSurface.withValues(alpha: 0.07);
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+      itemCount: 3,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (_, index) => AppGlassCard(
+        blur: false,
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            Container(
+              width: 106,
+              height: 128,
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _LoadingLine(widthFactor: 0.35, color: fill),
+                  const SizedBox(height: 12),
+                  _LoadingLine(widthFactor: 0.92, color: fill, height: 14),
+                  const SizedBox(height: 8),
+                  _LoadingLine(widthFactor: 0.70, color: fill, height: 14),
+                  const SizedBox(height: 14),
+                  _LoadingLine(widthFactor: 0.82, color: fill),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingLine extends StatelessWidget {
+  const _LoadingLine({
+    required this.widthFactor,
+    required this.color,
+    this.height = 10,
+  });
+
+  final double widthFactor;
+  final Color color;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+      ),
     );
   }
 }
@@ -483,6 +742,73 @@ class _CategoryItem {
 }
 
 // ---------------------------------------------------------------------------
+// Category chip — segmented pill inside the glass filter panel. Matches the
+// app's chip language (transparent when idle, filled in its category colour
+// when selected) instead of a raw Material FilterChip.
+// ---------------------------------------------------------------------------
+class _MagazineCategoryChip extends StatelessWidget {
+  const _MagazineCategoryChip({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _CategoryItem item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? item.color : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: item.color.withValues(alpha: 0.26),
+                      blurRadius: 9,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                item.icon,
+                size: 16,
+                color: selected ? Colors.white : item.color,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                item.label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: selected
+                      ? Colors.white
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Quick topic chip for AI chat
 // ---------------------------------------------------------------------------
 class _QuickTopic extends StatelessWidget {
@@ -499,13 +825,39 @@ class _QuickTopic extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ActionChip(
-      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
-      label: Text(label, style: const TextStyle(fontSize: 13)),
-      onPressed: onTap,
-      backgroundColor: theme.colorScheme.surfaceContainerHighest
-          .withValues(alpha: 0.5),
-      side: BorderSide.none,
+    final isDark = theme.brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : theme.colorScheme.surface)
+                .withValues(alpha: isDark ? 0.06 : 0.7),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: (isDark ? Colors.white : theme.colorScheme.outline)
+                  .withValues(alpha: isDark ? 0.08 : 0.1),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -535,8 +887,9 @@ class _ChatBubble extends StatelessWidget {
     final maxW = MediaQuery.of(context).size.width * 0.8;
 
     return Align(
-      alignment:
-          isUser ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
+      alignment: isUser
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -546,8 +899,8 @@ class _ChatBubble extends StatelessWidget {
           color: isUser
               ? null
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.white.withValues(alpha: 0.78)),
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.78)),
           border: isUser
               ? null
               : Border.all(

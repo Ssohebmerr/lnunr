@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/education_content.dart';
 import 'widgets/magazine_article_helpers.dart';
+import 'widgets/magazine_ui.dart';
 
 class ArticleScreen extends StatelessWidget {
   const ArticleScreen({super.key, required this.article});
@@ -20,146 +22,354 @@ class ArticleScreen extends StatelessWidget {
     final categoryLabel = articleCategoryLabel(article.category, l10n);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: article.hasCover ? 240 : 120,
-            pinned: true,
-            stretch: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                article.title(lang),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 6,
-                      color: Colors.black45,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      body: AppMeshBackground(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 350,
+              pinned: true,
+              stretch: true,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: theme.colorScheme.surface.withValues(
+                alpha: 0.12,
+              ),
+              surfaceTintColor: Colors.transparent,
+              leadingWidth: 64,
+              leading: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 12),
+                child: Center(
+                  child: _GlassBackButton(
+                    onTap: () => Navigator.maybePop(context),
+                  ),
+                ),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                stretchModes: const [StretchMode.zoomBackground],
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    MagazineArticleCover(
+                      article: article,
+                      color: categoryColor,
+                      overlay: true,
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(AppRadius.xl),
+                      ),
+                    ),
+                    PositionedDirectional(
+                      start: 18,
+                      end: 18,
+                      bottom: 34,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          MagazineBrandBadge(
+                            label: l10n.magazineTitle,
+                            onDark: true,
+                          ),
+                          const Spacer(),
+                          MagazineCategoryBadge(
+                            label: categoryLabel,
+                            color: categoryColor,
+                            onDark: true,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              background: article.hasCover
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          article.coverImageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _CoverFallback(
-                            icon: article.icon,
-                            color: categoryColor,
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.55),
+            ),
+            SliverToBoxAdapter(
+              child: Transform.translate(
+                offset: const Offset(0, -20),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppGlassCard(
+                        radius: AppRadius.xl,
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                MagazineCategoryBadge(
+                                  label: categoryLabel,
+                                  color: categoryColor,
+                                ),
+                                const Spacer(),
+                                MagazineReadingTime(minutes: article.minutes),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 14),
+                            Text(
+                              article.title(lang),
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                height: 1.28,
+                                letterSpacing: -0.35,
+                              ),
+                            ),
+                            if (article.excerpt(lang).trim().isNotEmpty) ...[
+                              const SizedBox(height: 11),
+                              Text(
+                                article.excerpt(lang),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.6,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      AppGlassCard(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                        child: _ArticleBody(
+                          body: article.body(lang),
+                          accent: categoryColor,
+                        ),
+                      ),
+                      if (article.sourceUrls.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        _ArticleSources(
+                          urls: article.sourceUrls,
+                          isArabic: lang == 'ar',
                         ),
                       ],
-                    )
-                  : _CoverFallback(icon: article.icon, color: categoryColor),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: categoryColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          categoryLabel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: categoryColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 14,
-                        color: theme.colorScheme.outline,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.educationMinutes(article.minutes),
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.outline,
+                      const SizedBox(height: 14),
+                      AppGlassCard(
+                        blur: false,
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.10,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.health_and_safety_outlined,
+                                size: 18,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Text(
+                                l10n.educationDisclaimer,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.55,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 42),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  AppGlassCard(
-                    child: Text(
-                      article.body(lang),
-                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.65),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.educationDisclaimer,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArticleSources extends StatelessWidget {
+  const _ArticleSources({required this.urls, required this.isArabic});
+
+  final List<String> urls;
+  final bool isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppGlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_outlined,
+                size: 19,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isArabic ? 'مصادر موثوقة' : 'Trusted sources',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 9),
+          for (final rawUrl in urls)
+            Builder(
+              builder: (context) {
+                final uri = Uri.tryParse(rawUrl);
+                if (uri == null || uri.scheme != 'https') {
+                  return const SizedBox.shrink();
+                }
+                return TextButton.icon(
+                  onPressed: () => launchUrl(
+                    uri,
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: Text(
+                    uri.host.replaceFirst('www.', ''),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
   }
 }
 
-class _CoverFallback extends StatelessWidget {
-  const _CoverFallback({required this.icon, required this.color});
+class _GlassBackButton extends StatelessWidget {
+  const _GlassBackButton({required this.onTap});
 
-  final IconData icon;
-  final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.55),
-            AuraColors.lavender.withValues(alpha: 0.35),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.70),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const IconTheme(
+            data: IconThemeData(color: AuraColors.ink),
+            child: BackButtonIcon(),
+          ),
         ),
       ),
-      child: Center(
-        child: Icon(icon, size: 56, color: Colors.white.withValues(alpha: 0.9)),
-      ),
+    );
+  }
+}
+
+class _ArticleBody extends StatelessWidget {
+  const _ArticleBody({required this.body, required this.accent});
+
+  final String body;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final paragraphs = body
+        .split(RegExp(r'\n\s*\n'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < paragraphs.length; i++) ...[
+          _ReaderParagraph(text: paragraphs[i], accent: accent),
+          if (i != paragraphs.length - 1) const SizedBox(height: 19),
+        ],
+      ],
+    );
+  }
+}
+
+class _ReaderParagraph extends StatelessWidget {
+  const _ReaderParagraph({required this.text, required this.accent});
+
+  final String text;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final numbered = RegExp(
+      r'^(\d+)[\.)]\s*(.+)$',
+      dotAll: true,
+    ).firstMatch(text);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.90),
+      height: 1.85,
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    );
+
+    if (numbered == null) {
+      return SelectableText(text, style: textStyle);
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          margin: const EdgeInsets.only(top: 3),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: accent.withValues(alpha: 0.12),
+            border: Border.all(color: accent.withValues(alpha: 0.22)),
+          ),
+          child: Text(
+            numbered.group(1)!,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: SelectableText(numbered.group(2)!, style: textStyle)),
+      ],
     );
   }
 }

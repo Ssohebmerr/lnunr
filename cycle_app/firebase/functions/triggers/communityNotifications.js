@@ -307,3 +307,42 @@ exports.onPostLiked = onDocumentCreated(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// Comment-like aggregates — keeps "most liked" sorting to one comment query
+// instead of one count request per comment. Transactions make rapid likes and
+// unlikes safe, while existing comments are initialized on their next change.
+// ---------------------------------------------------------------------------
+async function adjustCommentLikeCount(event, delta) {
+  const { communityId, postId, commentId } = event.params;
+  const ref = admin.firestore()
+    .collection('communities').doc(communityId)
+    .collection('posts').doc(postId)
+    .collection('comments').doc(commentId);
+
+  let legacy = false;
+  await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    if (!Number.isFinite(snap.data()?.likeCount)) {
+      legacy = true;
+      return;
+    }
+    const current = Number(snap.data()?.likeCount) || 0;
+    tx.update(ref, { likeCount: Math.max(0, current + delta) });
+  });
+  if (legacy) {
+    const aggregate = await ref.collection('likes').count().get();
+    await ref.update({ likeCount: aggregate.data().count || 0 });
+  }
+}
+
+exports.onCommentLiked = onDocumentCreated(
+  'communities/{communityId}/posts/{postId}/comments/{commentId}/likes/{likeUid}',
+  (event) => adjustCommentLikeCount(event, 1),
+);
+
+exports.onCommentUnliked = onDocumentDeleted(
+  'communities/{communityId}/posts/{postId}/comments/{commentId}/likes/{likeUid}',
+  (event) => adjustCommentLikeCount(event, -1),
+);

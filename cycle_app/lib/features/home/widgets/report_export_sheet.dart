@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../cycle_report_file_exporter.dart';
 
@@ -11,7 +12,8 @@ class ReportExportSheet extends StatelessWidget {
   static Future<CycleReportExportFormat?> show(BuildContext context) {
     return showModalBottomSheet<CycleReportExportFormat>(
       context: context,
-      showDragHandle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (_) => const ReportExportSheet(),
     );
   }
@@ -21,54 +23,51 @@ class ReportExportSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.doctorReportExportTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AuraColors.plum,
-              ),
+    return AppGlassSheetSurface(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.doctorReportExportTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.doctorReportExportSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.doctorReportExportSubtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 12),
-            _ExportTile(
-              icon: Icons.picture_as_pdf_outlined,
-              title: l10n.doctorReportExportPdf,
-              subtitle: l10n.doctorReportExportPdfHint,
-              onTap: () => Navigator.pop(context, CycleReportExportFormat.pdf),
-            ),
-            _ExportTile(
-              icon: Icons.description_outlined,
-              title: l10n.doctorReportExportTxt,
-              subtitle: l10n.doctorReportExportTxtHint,
-              onTap: () => Navigator.pop(context, CycleReportExportFormat.txt),
-            ),
-            _ExportTile(
-              icon: Icons.table_chart_outlined,
-              title: l10n.doctorReportExportCsv,
-              subtitle: l10n.doctorReportExportCsvHint,
-              onTap: () => Navigator.pop(context, CycleReportExportFormat.csv),
-            ),
-            _ExportTile(
-              icon: Icons.data_object_outlined,
-              title: l10n.doctorReportExportJson,
-              subtitle: l10n.doctorReportExportJsonHint,
-              onTap: () => Navigator.pop(context, CycleReportExportFormat.json),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          _ExportTile(
+            icon: Icons.picture_as_pdf_outlined,
+            title: l10n.doctorReportExportPdf,
+            subtitle: l10n.doctorReportExportPdfHint,
+            onTap: () => Navigator.pop(context, CycleReportExportFormat.pdf),
+          ),
+          _ExportTile(
+            icon: Icons.description_outlined,
+            title: l10n.doctorReportExportTxt,
+            subtitle: l10n.doctorReportExportTxtHint,
+            onTap: () => Navigator.pop(context, CycleReportExportFormat.txt),
+          ),
+          _ExportTile(
+            icon: Icons.table_chart_outlined,
+            title: l10n.doctorReportExportCsv,
+            subtitle: l10n.doctorReportExportCsvHint,
+            onTap: () => Navigator.pop(context, CycleReportExportFormat.csv),
+          ),
+          _ExportTile(
+            icon: Icons.data_object_outlined,
+            title: l10n.doctorReportExportJson,
+            subtitle: l10n.doctorReportExportJsonHint,
+            onTap: () => Navigator.pop(context, CycleReportExportFormat.json),
+          ),
+        ],
       ),
     );
   }

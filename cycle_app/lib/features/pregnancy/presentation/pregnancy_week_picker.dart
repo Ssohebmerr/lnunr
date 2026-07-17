@@ -4,8 +4,8 @@ import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/pregnancy_development_content.dart';
+import '../data/pregnancy_fetal_stage.dart';
 import '../data/pregnancy_growth_display.dart';
-import 'fetal_week_illustration.dart';
 import 'pregnancy_baby_hero_3d.dart';
 
 /// Horizontal week scrubber (Flo-style) centered on current gestational week.
@@ -25,7 +25,10 @@ class PregnancyWeekPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final week = currentWeek.clamp(4, 40);
+    final week = currentWeek.clamp(
+      minPregnancyVisualWeek,
+      maxPregnancyVisualWeek,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,10 +45,10 @@ class PregnancyWeekPicker extends StatelessWidget {
           child: ListView.separated(
             primary: false,
             scrollDirection: Axis.horizontal,
-            itemCount: 37,
+            itemCount: maxPregnancyVisualWeek - minPregnancyVisualWeek + 1,
             separatorBuilder: (_, _) => const SizedBox(width: 6),
             itemBuilder: (context, index) {
-              final w = index + 4;
+              final w = index + minPregnancyVisualWeek;
               final isCurrent = w == week;
               final isSelected = w == selectedWeek;
               return ChoiceChip(
@@ -81,51 +84,21 @@ class PregnancyBabyHeroCard extends StatelessWidget {
     super.key,
     required this.week,
     required this.lang,
+    this.gestationalDay = 7,
+    this.onGestationalDaySelected,
   });
 
   final int week;
   final String lang;
-
-  String _fruitEmoji(String fruitEn) {
-    switch (fruitEn.toLowerCase()) {
-      case 'poppy seed': return '🌱';
-      case 'sesame seed': return '🌰';
-      case 'lentil': return '🫘';
-      case 'blueberry': return '🫐';
-      case 'raspberry': return '🍓';
-      case 'olive': return '🫒';
-      case 'prune': return '🍇';
-      case 'lime': return '🍋';
-      case 'lemon': return '🍋';
-      case 'apple': return '🍎';
-      case 'peach': return '🍑';
-      case 'pear': return '🍐';
-      case 'avocado': return '🥑';
-      case 'onion': return '🧅';
-      case 'sweet potato': return '🥔';
-      case 'mango': return '🥭';
-      case 'banana': return '🍌';
-      case 'coconut': return '🥥';
-      case 'grapefruit': return '🍊';
-      case 'cantaloupe': return '🍈';
-      case 'papaya': return '🍍';
-      case 'cabbage': return '🥬';
-      case 'cauliflower': return '🥦';
-      case 'cucumber': return '🥒';
-      case 'pineapple': return '🍍';
-      case 'squash': return '🎃';
-      case 'watermelon': return '🍉';
-      case 'pumpkin': return '🎃';
-      default: return '🍊';
-    }
-  }
+  final int gestationalDay;
+  final ValueChanged<int>? onGestationalDaySelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final info = PregnancyDevelopmentContent.forWeek(week, lang);
-    final stageLabel = FetalVisualStageLabels.forWeek(week).labelFor(lang);
+    final stage = fetalStageForGestationalAge(week, day: gestationalDay);
 
     return AppGlassCard(
       blur: false,
@@ -142,19 +115,33 @@ class PregnancyBabyHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${l10n.pregnancyWeekLabel(week)} · $stageLabel',
+            '${l10n.pregnancyWeekLabel(week)} · ${stage.labelFor(lang)}',
             textAlign: TextAlign.center,
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w700,
             ),
           ),
+          if (week == minPregnancyVisualWeek &&
+              onGestationalDaySelected != null) ...[
+            const SizedBox(height: 12),
+            _EarlyDevelopmentSelector(
+              day: gestationalDay,
+              lang: lang,
+              onSelected: onGestationalDaySelected!,
+            ),
+          ],
           const SizedBox(height: 14),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 320),
               child: RepaintBoundary(
-                child: PregnancyBabyHero3DCard(week: week, size: 240),
+                child: PregnancyBabyHero3DCard(
+                  week: week,
+                  gestationalDay: gestationalDay,
+                  lang: lang,
+                  size: 300,
+                ),
               ),
             ),
           ),
@@ -162,41 +149,178 @@ class PregnancyBabyHeroCard extends StatelessWidget {
           Center(
             child: PregnancyGrowthStatsRow(info: info, lang: lang),
           ),
-          const SizedBox(height: 10),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
+          const SizedBox(height: 14),
+          _WeeklyDevelopmentCard(week: week, body: info.bodyFor(lang)),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyDevelopmentCard extends StatelessWidget {
+  const _WeeklyDevelopmentCard({required this.week, required this.body});
+
+  final int week;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final progress =
+        (week.clamp(1, maxPregnancyVisualWeek) / maxPregnancyVisualWeek).clamp(
+          0.0,
+          1.0,
+        );
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+          colors: [
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
+            theme.colorScheme.secondaryContainer.withValues(alpha: 0.20),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 19,
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _fruitEmoji(info.fruitEn),
-                    style: const TextStyle(fontSize: 16),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.pregnancyBabyThisWeek,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.pregnancySizeLike(info.fruitFor(lang)),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  l10n.pregnancyWeekLabel(week),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w800,
                   ),
-                ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(body, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surface.withValues(
+                alpha: 0.72,
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            info.bodyFor(lang),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _EarlyDevelopmentSelector extends StatelessWidget {
+  const _EarlyDevelopmentSelector({
+    required this.day,
+    required this.lang,
+    required this.onSelected,
+  });
+
+  final int day;
+  final String lang;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selected = fetalStageForGestationalAge(
+      minPregnancyVisualWeek,
+      day: day,
+    ).kind;
+    const milestoneDays = [1, 3, 6];
+
+    return Row(
+      children: [
+        for (var index = 0; index < milestoneDays.length; index++) ...[
+          if (index > 0) const SizedBox(width: 6),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final milestoneDay = milestoneDays[index];
+                final stage = fetalStageForGestationalAge(
+                  minPregnancyVisualWeek,
+                  day: milestoneDay,
+                );
+                final active = selected == stage.kind;
+                return Material(
+                  color: active
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: InkWell(
+                    onTap: () => onSelected(milestoneDay),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        stage.shortLabelFor(lang),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: active
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

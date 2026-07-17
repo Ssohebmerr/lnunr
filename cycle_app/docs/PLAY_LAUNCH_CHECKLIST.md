@@ -119,13 +119,21 @@ Service account JSON (`GOOGLE_PLAY_SERVICE_ACCOUNT` secret) must have **View fin
 - [ ] **Health apps declaration** (mandatory for cycle trackers) — declare
       Health & wellness → cycle/period tracking; NOT a medical device
 - [ ] **Content rating** (IARC) — answers in same doc
-- [ ] **Target audience** — 18+ (never select any under-13 age band:
-      health data + UGC); communities 18+
+- [ ] **Target audience** — match the actual app behavior: core tracking is
+      13+, while Lune AI and communities are 18+ only. Never select an
+      under-13 age band. Keep the store listing and reviewer notes explicit
+      about the restricted features.
 - [ ] **News app / COVID / Financial / Government** — all No
 - [ ] **Ads** — No ads
 - [ ] **UGC** — Yes; describe moderation (AI + report/block)
 - [ ] **AI-generated content** — if asked: users can flag any AI chat reply
       (flag icon under each response → `aiReports` collection → admin review)
+- [ ] **Third-party AI data use** — disclose submitted AI content plus relevant
+      cycle/health context; verify Gemini/DeepSeek production terms, retention,
+      no-sale/no-ads/no-training controls, and keep evidence/DPA on file
+- [ ] **Android developer verification** — open the verification page in Play
+      Console and confirm `com.lune.app` is registered (manually register it if
+      it was not auto-registered)
 
 ### Permissions justification
 
@@ -169,7 +177,8 @@ flutterfire configure
 - [ ] Apple sign-in (iOS)
 - [ ] Premium purchase in **license test** account (Play) + RTDN webhook log
 - [ ] Cloud sync blocked without Premium + explicit consent
-- [ ] AI chat requires Premium **and** Privacy Center AI consent
+- [ ] AI chat and every generated AI card require 18+, Premium, and the
+      prominent AI consent disclosure; revoking consent blocks new requests
 - [ ] Community: under-13 blocked at onboarding; teen blocked from UGC; adult must enter birth year in setup sheet (no auto-fill)
 - [ ] Report + block user flow
 - [ ] Delete account removes data (check Firestore + Storage)

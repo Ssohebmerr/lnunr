@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../menstrual_cycle_widget.dart';
+import '../widget_languages/language_functions.dart';
 import '../widget_languages/languages.dart';
 import 'calender_view/calender_view.dart';
 import 'text_style/custom_text_style.dart';
@@ -63,19 +64,23 @@ class _MenstrualCycleCalenderViewState
   @override
   void initState() {
     super.initState();
+    isExpanded = widget.isExpanded ?? false;
     weekTitles = getWeekTitle();
     _selectedDateTime = DateTime.now();
     selectedMonthsDays = _daysInMonth(selectedDateTime);
     selectedWeekDays = CalenderDateUtils.daysInRange(
             _firstDayOfWeek(selectedDateTime), _lastDayOfWeek(selectedDateTime))
         .toList();
-    initializeDateFormatting("en_US", null).then((_) => setState(() {
-          var monthFormat = CalenderDateUtils.formatDayMonth(selectedDateTime);
-          displayMonth =
-              "${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}";
-          var todayFormat = CalenderDateUtils.formatDay(selectedDateTime);
-          today = todayFormat;
-        }));
+    initializeDateFormatting(getLanguageCode(), null).then((_) {
+      if (!mounted) return;
+      setState(() {
+        var monthFormat = CalenderDateUtils.formatDayMonth(selectedDateTime);
+        displayMonth =
+            "${monthFormat[0].toUpperCase()}${monthFormat.substring(1)}";
+        var todayFormat = CalenderDateUtils.formatDay(selectedDateTime);
+        today = todayFormat;
+      });
+    });
 
     if (widget.logPeriodText != null && widget.logPeriodText!.isNotEmpty) {
       _logPeriodText = widget.logPeriodText!;
@@ -103,7 +108,7 @@ class _MenstrualCycleCalenderViewState
     pastAllPeriodsDays = _instance.pastAllPeriodDays;
     futurePeriodDays = await initFuturePeriodDay();
     futureOvulationDays = await initFutureOvulationDay();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Widget calendarGridView() {
@@ -155,9 +160,10 @@ class _MenstrualCycleCalenderViewState
           multipleDateSelectionCallBack: () {},
           dayOfWeekStyle: TextStyle(
             fontFamily: getFontFamily(),
-            color: widget.themeColor,
-            fontWeight: FontWeight.w800,
-            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+            fontSize: 10.5,
+            height: 1.2,
           ),
         ),
       );
@@ -281,8 +287,9 @@ class _MenstrualCycleCalenderViewState
   TextStyle configureDateStyle(monthStarted, monthEnded) {
     TextStyle? dateStyles;
     TextStyle normalTextStyle = TextStyle(
-      color: widget.themeColor,
-      fontWeight: FontWeight.normal,
+      color: Theme.of(context).colorScheme.onSurface,
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
       fontFamily: getFontFamily(),
     );
 
@@ -299,93 +306,69 @@ class _MenstrualCycleCalenderViewState
 
   Widget bottomView() {
     if (isExpandable) {
-      return GestureDetector(
-        onTap: toggleExpanded,
-        child: Container(
-          height: 40,
-          padding: const EdgeInsets.all(0),
-          decoration: BoxDecoration(
-            color: widget.backgroundColorCode ?? Colors.black12,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
+      final theme = Theme.of(context);
+      return Container(
+        margin: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+        padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 6, 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withValues(alpha: 0.58),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              (widget.hideLogPeriodButton!)
-                  ? const SizedBox()
-                  : GestureDetector(
-                      onTap: () {
-                        Navigator.of(context)
-                            .push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MenstrualCycleMonthlyCalenderView(
-                              themeColor: widget.themeColor,
-                              hideInfoView: widget.hideInfoView!,
-                              isShowCloseIcon: true,
-                              onDataChanged: (value) {},
-                            ),
-                          ),
-                        )
-                            .then((value) {
-                          if (value) {
-                            //printLogs(("onDataChanged from calender---- 2");
-                            init();
-                          }
-                          widget.onDataChanged!.call(value);
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            shape: BoxShape.rectangle,
-                            border: Border.all(
-                                width: 1.0, color: widget.themeColor!),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(8)),
-                          ),
-                          child: Text(
-                            _logPeriodText,
-                            style: TextStyle(
-                              color: widget.themeColor!,
-                              fontSize: 8,
-                              fontFamily: getFontFamily(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-              Text(
-                CalenderDateUtils.fullFormat.format(selectedDateTime),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: widget.themeColor!,
-                  fontFamily: getFontFamily(),
+        ),
+        child: Row(
+          children: <Widget>[
+            if (!widget.hideLogPeriodButton!) ...[
+              TextButton.icon(
+                onPressed: _openMonthlyCalendar,
+                style: TextButton.styleFrom(
+                  foregroundColor: widget.themeColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: const Icon(Icons.water_drop_outlined, size: 16),
+                label: Text(
+                  _logPeriodText,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: getFontFamily(),
+                  ),
                 ),
               ),
-              IconButton(
-                onPressed: toggleExpanded,
-                iconSize: 25.0,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                icon: isExpanded
-                    ? Icon(
-                        Icons.arrow_drop_up,
-                        color: widget.themeColor!,
-                      )
-                    : Icon(
-                        Icons.arrow_drop_down,
-                        color: widget.themeColor!,
-                      ),
-              ),
+              const SizedBox(width: 4),
             ],
-          ),
+            Expanded(
+              child: Text(
+                MaterialLocalizations.of(context).formatFullDate(
+                  selectedDateTime,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontFamily: getFontFamily(),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: isExpanded ? 'Collapse calendar' : 'Expand calendar',
+              onPressed: toggleExpanded,
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: widget.themeColor,
+              ),
+            ),
+          ],
         ),
       );
     } else {
@@ -393,87 +376,128 @@ class _MenstrualCycleCalenderViewState
     }
   }
 
+  Future<void> _openMonthlyCalendar() async {
+    final value = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => MenstrualCycleMonthlyCalenderView(
+          themeColor: widget.themeColor,
+          hideInfoView: widget.hideInfoView!,
+          isShowCloseIcon: true,
+          onDataChanged: (_) {},
+        ),
+      ),
+    );
+    if (value == true) await init();
+    widget.onDataChanged?.call(value ?? false);
+  }
+
+  Widget _calendarHeader() {
+    final theme = Theme.of(context);
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+      child: Row(
+        children: [
+          _headerIconButton(
+            tooltip: MaterialLocalizations.of(context).previousMonthTooltip,
+            icon: rtl ? Icons.chevron_right : Icons.chevron_left,
+            onPressed: isExpanded ? previousMonth : previousWeek,
+          ),
+          Expanded(
+            child: Text(
+              displayMonth,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontFamily: getFontFamily(),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          _headerIconButton(
+            tooltip: MaterialLocalizations.of(context).nextMonthTooltip,
+            icon: rtl ? Icons.chevron_left : Icons.chevron_right,
+            onPressed: isExpanded ? nextMonth : nextWeek,
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: WidgetBaseLanguage.todayLabel,
+            child: InkWell(
+              onTap: resetToToday,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: widget.themeColor!.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: widget.themeColor!.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 21,
+                      color: widget.themeColor,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        today,
+                        style: TextStyle(
+                          color: widget.themeColor,
+                          fontSize: 8,
+                          fontFamily: getFontFamily(),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerIconButton({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(icon, color: widget.themeColor),
+    );
+  }
+
   @override
   Widget build(BuildContext buildContext) {
     return Directionality(
       textDirection:
           (isArabicLanguage()) ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: widget.backgroundColorCode,
-        body: Column(
+      child: Material(
+        color: widget.backgroundColorCode ?? Colors.transparent,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    resetToToday();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: <Widget>[
-                        Icon(
-                          Icons.calendar_today,
-                          color: widget.themeColor!,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 3),
-                          child: Text(
-                            today,
-                            style: TextStyle(
-                                color: widget.themeColor!,
-                                fontSize: 10.0,
-                                fontFamily: getFontFamily(),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 50),
-                  child: Text(
-                    displayMonth,
-                    style: TextStyle(
-                        color: widget.themeColor!,
-                        fontSize: 15.0,
-                        fontFamily: getFontFamily(),
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      onPressed: isExpanded ? previousMonth : previousWeek,
-                      icon: Icon(
-                        Icons.chevron_left,
-                        color: widget.themeColor!,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: isExpanded ? nextMonth : nextWeek,
-                      icon: Icon(
-                        Icons.chevron_right,
-                        color: widget.themeColor!,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            _calendarHeader(),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              child: calendarGridView(),
             ),
-            ExpansionCrossFade(
-              collapsed: calendarGridView(),
-              expanded: calendarGridView(),
-              isExpanded: isExpanded,
-            ),
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 10),
             (widget.hideInfoView!)
                 ? const SizedBox()
                 : getInformationView(selectedColor!, widget.themeColor!),
@@ -634,8 +658,7 @@ class _MenstrualCycleCalenderViewState
   }
 
   _firstDayOfWeek(DateTime date) {
-    var day = DateTime.utc(selectedDateTime.year, selectedDateTime.month,
-        selectedDateTime.day, 12);
+    var day = DateTime.utc(date.year, date.month, date.day, 12);
     return day.subtract(Duration(days: day.weekday));
   }
 

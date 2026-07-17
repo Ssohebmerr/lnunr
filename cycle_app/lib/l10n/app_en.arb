@@ -174,6 +174,14 @@
   "planMonthlyTitle": "Monthly",
   "planPerYear": "per year",
   "planPerMonth": "per month",
+  "planBestValue": "Best value",
+  "planUnavailable": "Unavailable right now",
+  "planMonthlyEquivalent": "Equivalent to {price} / month",
+  "@planMonthlyEquivalent": {
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
   "planSaveBadge": "Save {percent}%",
   "@planSaveBadge": {
     "placeholders": {
@@ -274,10 +282,20 @@
   "onboardingBirthDateHint": "Select your date of birth",
   "onboardingBirthDateRequired": "Please select your date of birth",
   "subscriptionPlansTitle": "Lune Premium",
-  "subscriptionPlansHeadline": "Lune AI is for Premium members",
+  "subscriptionPlansHeadline": "More insight. More privacy. More support.",
   "subscriptionPlansSubtitle": "Unlock unlimited chat, cycle analysis, encrypted cloud backup, and priority support.",
   "subscriptionPlansCta": "Subscribe with Google Play",
   "subscriptionPlansAccountHint": "Manage subscription in Account",
+  "subscriptionChoosePlanTitle": "Choose the plan that suits you",
+  "subscriptionChoosePlanSubtitle": "All plans unlock the same Premium features. Cancel anytime through Google Play.",
+  "subscriptionSelectedCta": "Continue with {plan}",
+  "@subscriptionSelectedCta": {
+    "placeholders": {
+      "plan": {"type": "String"}
+    }
+  },
+  "subscriptionLoadingPrice": "Loading price…",
+  "subscriptionSecurePayment": "Secure payment through Google Play • Cancel anytime",
   "logTabTitle": "Daily log",
   "settingsTitle": "Settings",
   "weeklyCalendar": "Weekly view",
@@ -898,7 +916,7 @@
   "consentCloudTitle": "Enable cloud backup?",
   "consentCloudBody": "Encrypted cycle backups will be stored in your Firebase account. You can turn this off anytime.",
   "consentAiTitle": "Enable AI features?",
-  "consentAiBody": "Chat messages and anonymized cycle context (symptoms, mood, phase) are sent to trusted AI providers (DeepSeek / Google) through our secure server. Not medical advice. No ads. You can disable this anytime.",
+  "consentAiBody": "When you enable AI, the message or content you submit and relevant cycle context (such as symptoms, mood, phase, and saved preferences) are sent to DeepSeek and/or Google through our secure server to provide a personalized response. Do not include identifying information you do not want processed. This is not medical advice. You can disable AI anytime.",
   "aiAdultsOnly": "Lune AI is for adults 18+ only.",
   "consentCommunityTitle": "Join communities?",
   "consentCommunityBody": "You will use an anonymous alias. Posts are moderated by AI. Your cycle data is never shared.",
@@ -982,7 +1000,7 @@
   "onboardingNameLabel": "Your name",
   "onboardingNameHint": "How should we greet you?",
   "onboardingGoalTitle": "What's your focus?",
-  "onboardingGoalSubtitle": "Track your cycle, follow your pregnancy, conceive, or avoid — the whole app adapts to your choice.",
+  "onboardingGoalSubtitle": "Choose what matters now — cycle, pregnancy, fertility, PCOS, menopause, or recovery — and the app adapts with you.",
   "onboardingCycleTitle": "Your cycle basics",
   "onboardingCycleSubtitle": "These power predictions, reminders, reports, and AI — everywhere in the app.",
   "onboardingPregnancyDataTitle": "Your pregnancy",
@@ -1288,6 +1306,8 @@
   "communitySortNewest": "Newest",
   "communityFeedPopular": "Popular",
   "communityFeedMyComments": "My comments",
+  "communityCoverTitle": "Post cover",
+  "communityCoverNone": "None",
   "communitySortDiscussed": "Most discussed",
   "communityFilterMyPosts": "My posts",
   "communitySearchPosts": "Search posts...",
@@ -1483,7 +1503,7 @@
   "privacyP1Body": "Lune (\"we\", \"us\", or \"our\") is a menstrual cycle tracking application designed to help users monitor their health and wellness. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our mobile application and related services. By using Lune, you agree to the practices described in this policy. If you do not agree, please discontinue use of the application.",
 
   "privacyP2Title": "2. Information We Collect",
-  "privacyP2Body": "We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed by third-party AI providers to generate responses. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.",
+  "privacyP2Body": "We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Data: If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.",
 
   "privacyP3Title": "3. How We Use Your Information",
   "privacyP3Body": "Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance, diagnose crashes, and fix bugs.\n• Ensure safety and prevent misuse of community features.",
@@ -1723,7 +1743,7 @@
   "qaCatNutrition": "Nutrition",
   "dailyBriefingPrompt": "Give me my daily briefing for today.",
   "accountSectionPremium": "Premium",
-  "accountViewPlans": "View subscription plans",
+  "accountViewPlans": "View plans and prices",
   "accountPremiumThanks": "You're a Premium member — thank you for supporting Lune!",
   "accountManageSubscription": "Manage subscription",
   "accountManageSubscriptionHint": "Opens Google Play subscriptions",

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
 import '../../../core/premium/premium_gate.dart';
+import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
@@ -68,9 +69,20 @@ class _AffirmationsScreenState extends State<AffirmationsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
 
-    if (!await PremiumGate.hasPremium()) {
+    final access = await PremiumGate.checkAiChat();
+    if (!mounted) return;
+    if (access == PremiumAiAccess.needsAdult) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.aiAdultsOnly)));
+      return;
+    }
+    if (access == PremiumAiAccess.needsPremium ||
+        access == PremiumAiAccess.limitReached) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.premiumRequiredAi)));
       return;
+    }
+    if (access == PremiumAiAccess.needsConsent) {
+      final accepted = await showAiConsentDialog(context);
+      if (!accepted || !mounted) return;
     }
     if (!mounted) return;
     setState(() => _generating = true);

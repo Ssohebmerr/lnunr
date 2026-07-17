@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,11 +14,75 @@ class AppMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
       decoration: AppTheme.gradientBackground(context),
-      child: child,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                PositionedDirectional(
+                  top: -120,
+                  end: -90,
+                  child: _MeshGlow(
+                    size: 330,
+                    color: isDark
+                        ? AuraColors.darkRose.withValues(alpha: 0.20)
+                        : AuraColors.rose.withValues(alpha: 0.32),
+                  ),
+                ),
+                PositionedDirectional(
+                  top: 235,
+                  start: -145,
+                  child: _MeshGlow(
+                    size: 360,
+                    color: isDark
+                        ? AuraColors.lavender.withValues(alpha: 0.12)
+                        : AuraColors.lavenderSoft.withValues(alpha: 0.28),
+                  ),
+                ),
+                PositionedDirectional(
+                  bottom: -160,
+                  end: -95,
+                  child: _MeshGlow(
+                    size: 390,
+                    color: isDark
+                        ? AuraColors.peachGold.withValues(alpha: 0.08)
+                        : AuraColors.peach.withValues(alpha: 0.20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _MeshGlow extends StatelessWidget {
+  const _MeshGlow({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
+            stops: const [0, 1],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -75,7 +141,8 @@ class AuraScaffold extends StatelessWidget {
     return AppMeshBackground(
       child: SafeArea(
         child: Padding(
-          padding: padding ??
+          padding:
+              padding ??
               EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.sm,
@@ -106,6 +173,7 @@ class AppGlassCard extends StatelessWidget {
   final double radius;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? margin;
+
   /// Disable blur for heavy widgets (calendars, logs) to avoid freezes on device.
   final bool blur;
 
@@ -134,6 +202,164 @@ class AppGlassCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(radius),
         child: child,
+      ),
+    );
+  }
+}
+
+/// A genuinely translucent, high-blur surface for floating controls.
+///
+/// Use this for composers, compact toolbars, filters, and other elements that
+/// sit above content. Standard feed cards should keep using [AppGlassCard] so
+/// the interface stays readable and avoids stacking expensive blur layers.
+class AppFloatingGlassPanel extends StatelessWidget {
+  const AppFloatingGlassPanel({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(AppSpacing.md),
+    this.radius = AppRadius.lg,
+    this.tint,
+    this.gradient,
+    this.highlighted = false,
+    this.onTap,
+    this.blurSigma = 20,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double radius;
+  final Color? tint;
+  final Gradient? gradient;
+  final bool highlighted;
+  final VoidCallback? onTap;
+  final double blurSigma;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = tint ?? theme.colorScheme.primary;
+    final borderColor = highlighted
+        ? accent.withValues(alpha: isDark ? 0.62 : 0.48)
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.18)
+              : Colors.white.withValues(alpha: 0.68));
+
+    final glass = RepaintBoundary(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: [
+            BoxShadow(
+              color: (highlighted ? accent : Colors.black).withValues(
+                alpha: highlighted
+                    ? (isDark ? 0.16 : 0.10)
+                    : (isDark ? 0.28 : 0.075),
+              ),
+              blurRadius: highlighted ? 24 : 20,
+              offset: const Offset(0, 8),
+              spreadRadius: -7,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: padding,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius),
+                gradient:
+                    gradient ??
+                    LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [
+                              AuraColors.darkCard.withValues(alpha: 0.68),
+                              AuraColors.darkCard.withValues(alpha: 0.46),
+                              accent.withValues(alpha: 0.12),
+                            ]
+                          : [
+                              Colors.white.withValues(alpha: 0.64),
+                              Colors.white.withValues(alpha: 0.38),
+                              accent.withValues(alpha: 0.09),
+                            ],
+                      stops: const [0, 0.68, 1],
+                    ),
+                border: Border.all(
+                  color: borderColor,
+                  width: highlighted ? 1.4 : 1,
+                ),
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (onTap == null) return glass;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: glass,
+      ),
+    );
+  }
+}
+
+/// Floating glass shell for the app's short modal option sheets.
+class AppGlassSheetSurface extends StatelessWidget {
+  const AppGlassSheetSurface({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.fromLTRB(18, 10, 18, 22),
+    this.showHandle = true,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final bool showHandle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        child: AppFloatingGlassPanel(
+          radius: AppRadius.xl,
+          tint: theme.colorScheme.primary,
+          padding: padding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showHandle) ...[
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.30,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+              child,
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -208,8 +434,9 @@ class _AppGradientButtonState extends State<AppGradientButton> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 16),
               child: Row(
-                mainAxisSize:
-                    widget.expanded ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisSize: widget.expanded
+                    ? MainAxisSize.max
+                    : MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.loading)
@@ -281,8 +508,8 @@ class AppPhaseBadge extends StatelessWidget {
         color: highlight
             ? null
             : (isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.65)),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.white.withValues(alpha: 0.65)),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
           color: highlight

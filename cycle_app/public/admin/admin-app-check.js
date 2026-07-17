@@ -16,10 +16,9 @@ let appCheckInstance = null;
  */
 export function initAdminAppCheck(app, siteKey) {
   if (!siteKey) {
-    console.warn(
-      '[AppCheck] Set window.LUNE_RECAPTCHA_SITE_KEY before admin loads, '
-      + 'or register the web app in Firebase Console → App Check.',
-    );
+    // Admin endpoints rely on Firebase Auth + server-side role checks. App
+    // Check is an optional extra layer for installations that configure a
+    // reCAPTCHA Enterprise key, so absence is not an actionable page error.
     return;
   }
 
