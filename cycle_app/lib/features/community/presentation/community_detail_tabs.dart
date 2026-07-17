@@ -245,73 +245,57 @@ class _InlineComposer extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AuraColors.darkCard.withValues(alpha: 0.82)
-                  : Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : theme.colorScheme.outline.withValues(alpha: 0.08),
+      child: AppFloatingGlassPanel(
+        onTap: onTap,
+        radius: AppRadius.md,
+        tint: theme.colorScheme.primary,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(
+                  alpha: isDark ? 0.2 : 0.12,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                initial,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(
-                      alpha: isDark ? 0.2 : 0.12,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    initial,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.communityPostHint,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.communityPostHint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.edit_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.edit_rounded,
+                color: theme.colorScheme.primary,
+                size: 18,
+              ),
+            ),
+          ],
         ),
       ),
     );

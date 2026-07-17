@@ -15,6 +15,7 @@ Future<Map<String, dynamic>> submitCommunityStory(
   final response = await CloudFunctionsClient.instance.post(
     '/submitCommunity',
     body: {'action': 'story', ...payload},
+    timeout: const Duration(seconds: 32),
   );
 
   Map<String, dynamic> body = const {};

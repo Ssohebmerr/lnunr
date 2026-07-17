@@ -11,7 +11,6 @@ import 'package:cycle_aura/menstrudel/services/symptom_service.dart';
 import 'package:cycle_aura/menstrudel/services/user_service.dart';
 import 'package:cycle_aura/menstrudel/services/wear_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -465,10 +464,14 @@ final _router = GoRouter(
       }
     }
 
-    // Let the splash screen play its branded intro; it owns the decision of
-    // where to route next once the animation finishes. (Stealth mode above
-    // still intercepts '/' when the session is locked.)
-    if (path == '/') return null;
+    // The web app enters its destination directly. Native platforms keep the
+    // branded splash, which owns the destination decision after its intro.
+    if (path == '/') {
+      if (kIsWeb) {
+        return _canEnterHome(done, user) ? '/home' : '/welcome';
+      }
+      return null;
+    }
 
     // Auth + welcome screens are always reachable.
     if (path == '/login' ||

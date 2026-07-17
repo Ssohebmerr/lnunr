@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.lune.app"
+        applicationId = "com.luneapp.cycle"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

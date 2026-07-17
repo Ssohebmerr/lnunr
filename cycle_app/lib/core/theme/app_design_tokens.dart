@@ -147,29 +147,31 @@ class AuraDecorations {
     double radius = AppRadius.lg,
     Color? tint,
   }) {
-    final surfaceColor = tint != null
-        ? tint.withValues(alpha: isDark ? 0.14 : 0.16)
-        : (isDark
-              ? AuraColors.darkCard.withValues(alpha: 0.94)
-              : Colors.white.withValues(alpha: 0.94));
+    final accent = tint ?? (isDark ? AuraColors.darkRose : AuraColors.rose);
     return BoxDecoration(
       borderRadius: BorderRadius.circular(radius),
-      color: surfaceColor,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [
+                AuraColors.darkCard.withValues(alpha: 0.72),
+                AuraColors.darkCard.withValues(alpha: 0.50),
+                accent.withValues(alpha: 0.10),
+              ]
+            : [
+                Colors.white.withValues(alpha: 0.72),
+                Colors.white.withValues(alpha: 0.46),
+                accent.withValues(alpha: 0.075),
+              ],
+        stops: const [0, 0.62, 1],
+      ),
       border: Border.all(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.07)
-            : AuraColors.plum.withValues(alpha: 0.06),
+            ? Colors.white.withValues(alpha: 0.16)
+            : Colors.white.withValues(alpha: 0.72),
         width: 1.0,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: (isDark ? Colors.black : AuraColors.plum).withValues(
-            alpha: isDark ? 0.20 : 0.045,
-          ),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
     );
   }
 
@@ -181,18 +183,35 @@ class AuraDecorations {
     bool blur = true,
   }) {
     final decoration = glassCard(isDark: isDark, radius: radius);
-    if (!blur) {
-      return Container(padding: padding, decoration: decoration, child: child);
-    }
-    return ClipRRect(
+    final surface = ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: padding,
-          decoration: decoration,
-          child: child,
+      child: blur
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                padding: padding,
+                decoration: decoration,
+                child: child,
+              ),
+            )
+          : Container(padding: padding, decoration: decoration, child: child),
+    );
+    return RepaintBoundary(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? Colors.black : AuraColors.plum).withValues(
+                alpha: isDark ? 0.24 : 0.075,
+              ),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+              spreadRadius: -7,
+            ),
+          ],
         ),
+        child: surface,
       ),
     );
   }

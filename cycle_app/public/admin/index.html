@@ -798,26 +798,36 @@
     .modal { padding: 22px 18px; }
   }
 </style>
+<link rel="stylesheet" href="./admin-2026.css?v=2" />
 </head>
 <body>
 
   <!-- ======== LOGIN ======== -->
   <div id="loginView" class="login-shell">
     <div class="login-box">
-      <div class="logo-big">🌸</div>
-      <h1>Lune Admin</h1>
-      <p class="subtitle">لوحة التحكم على الويب — للمسؤولين فقط</p>
-      <div class="login-hint">
-        <strong>أول مرة أو نسيتِ كلمة المرور؟</strong><br/>
-        من PowerShell داخل المشروع شغّلي:<br/>
-        <code>.\cycle_app\scripts\setup-admin.ps1 -Email "بريدك@example.com" -Password "كلمة_السر"</code>
-        ثم سجّلي دخول بنفس البريد وكلمة السر.<br/>
-        <span class="muted" style="font-size:11px">إذا ظهر «صلاحيات غير كافية»، السكربت يعيد صلاحيات الأدمن تلقائياً.</span>
+      <div class="login-brand-lockup">
+        <img class="login-logo" src="/images/logo.png" alt="" width="64" height="64" />
+        <div>
+          <span class="login-kicker">LUNE OPERATIONS</span>
+          <h1>مركز إدارة Lune</h1>
+        </div>
       </div>
-      <input id="email" type="email" placeholder="بريد الأدمن (Firebase)" autocomplete="username" />
-      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+      <p class="login-intro">مساحة خاصة لإدارة المحتوى والمجتمع والاشتراكات ومتابعة صحة المنتج.</p>
+      <label class="field-label" for="email">البريد الإلكتروني</label>
+      <input id="email" type="email" placeholder="admin@lune.app" autocomplete="username" />
+      <label class="field-label" for="password">كلمة المرور</label>
+      <input id="password" type="password" placeholder="••••••••••" autocomplete="current-password" />
       <button id="loginBtn" class="btn btn-block lg">تسجيل الدخول</button>
       <div id="loginErr" class="err"></div>
+      <div class="login-security"><span class="status-dot"></span> دخول محمي عبر Firebase Authentication</div>
+      <details class="login-help">
+        <summary>مساعدة تسجيل الدخول</summary>
+        <div class="login-hint">
+          <strong>إعداد حساب مسؤول أو استعادة الوصول</strong><br/>
+          شغّلي أداة إعداد الأدمن الموجودة داخل المشروع، ثم عودي وسجّلي الدخول بنفس البريد وكلمة المرور.
+          <code>.\cycle_app\scripts\setup-admin.ps1</code>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -830,7 +840,7 @@
     <!-- ===== Sidebar ===== -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-brand">
-        <div class="logo">🌸</div>
+        <div class="logo"><img src="/images/logo.png" alt="" width="42" height="42" /></div>
         <div>
           <div class="title">Lune Admin</div>
           <div class="sub">Control Center</div>
@@ -897,6 +907,11 @@
           </div>
         </div>
         <div class="topbar-actions">
+          <button id="adminSearchTrigger" class="topbar-tool" type="button" aria-label="بحث سريع">
+            <span>بحث سريع</span><kbd>Ctrl K</kbd>
+          </button>
+          <button id="globalRefresh" class="icon-tool" type="button" aria-label="تحديث القسم الحالي" title="تحديث القسم الحالي">↻</button>
+          <button id="themeToggle" class="icon-tool" type="button" aria-label="تبديل المظهر" title="تبديل المظهر">◐</button>
           <div class="topbar-user">
             <span class="who" id="adminEmail">—</span>
             <div class="avatar" id="adminAvatar">A</div>
@@ -913,10 +928,16 @@
           <div class="hero">
             <div class="hero-inner">
               <div>
-                <h1>أهلاً بكِ في لوحة التحكم 👋</h1>
-                <p>راقبي نمو التطبيق، راجعي البلاغات، وأديري المحتوى من مكان واحد. حماية المستخدمات أولويتنا — راجعي البلاغات المعلّقة يومياً.</p>
+                <span class="overview-kicker">LUNE OPERATIONS</span>
+                <h1>كل ما يحدث في Lune، أمامكِ بوضوح</h1>
+                <p>راقبي النمو، احمي المجتمع، وأديري المحتوى والاشتراكات من مركز واحد.</p>
+                <div class="overview-meta">
+                  <span id="overviewDate">—</span>
+                  <span id="connectionStatus"><i></i> متصلة</span>
+                  <span>المشروع: lune-7d956</span>
+                </div>
               </div>
-              <div class="hero-ico">🌸</div>
+              <div class="hero-product-mark"><img src="/images/logo.png" alt="" width="72" height="72" /></div>
             </div>
           </div>
 
@@ -963,6 +984,36 @@
             </div>
           </div>
 
+          <div class="operations-grid">
+            <section class="card operations-card operations-card--focus">
+              <div class="card-head">
+                <div>
+                  <span class="card-eyebrow">الأولوية الآن</span>
+                  <h2>قائمة العمل اليومية</h2>
+                </div>
+                <span class="live-pill"><i></i> مباشر</span>
+              </div>
+              <div class="focus-list">
+                <button type="button" data-quick="reports"><span>البلاغات التي تحتاج قرارًا</span><strong id="focusReports">—</strong></button>
+                <button type="button" data-quick="moderation"><span>مراجعة محتوى المجتمع</span><strong id="focusModeration">افتحي</strong></button>
+                <button type="button" data-quick="feedback"><span>رسائل وملاحظات المستخدمات</span><strong>راجعي</strong></button>
+              </div>
+            </section>
+            <section class="card operations-card operations-card--pulse">
+              <div class="card-head">
+                <div>
+                  <span class="card-eyebrow">نبض المنتج</span>
+                  <h2>ملخص سريع</h2>
+                </div>
+              </div>
+              <div class="pulse-list">
+                <div><span>تحويل Premium</span><strong id="premiumConversion">—</strong></div>
+                <div><span>حالة خدمات الإدارة</span><strong class="healthy-text">تعمل</strong></div>
+                <div><span>آخر تحديث</span><strong id="lastDashboardRefresh">الآن</strong></div>
+              </div>
+            </section>
+          </div>
+
           <div class="card">
             <div class="card-head">
               <div>
@@ -985,10 +1036,10 @@
             <div class="card-head">
               <div>
                 <h2>📚 المقالات التعليمية</h2>
-                <p class="muted" style="margin-top:4px">المقالات المنشورة تظهر في التطبيق فوراً. إذا كانت المجموعة فارغة، يستخدم التطبيق المقالات المدمجة.</p>
+                <p class="muted" style="margin-top:4px">المقالات والصور تُحمّل من السيرفر وتظهر في التطبيق فوراً، من دون زيادة حجم التطبيق.</p>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button id="importArticles" class="btn ghost sm">استيراد الافتراضية</button>
+                <button id="importArticles" class="btn ghost sm">استيراد المحتوى</button>
                 <button id="refreshArticles" class="btn ghost sm">🔄</button>
                 <button id="addArticle" class="btn sm">+ مقال جديد</button>
               </div>
@@ -1502,7 +1553,12 @@
           <option value="psychology_outlined">نفسية</option>
           <option value="volunteer_activism_outlined">لطف</option>
           <option value="favorite_outline">خصوبة</option>
-          <option value="medication_outlined">دواء</option>
+            <option value="medication_outlined">دواء</option>
+            <option value="calendar_month_outlined">تقويم</option>
+            <option value="bedtime_outlined">نوم</option>
+            <option value="bloodtype_outlined">نزيف وحديد</option>
+            <option value="water_drop_outlined">ترطيب</option>
+            <option value="spa_outlined">استرخاء</option>
           <option value="article_outlined">عام</option>
         </select>
       </div>
@@ -1510,7 +1566,16 @@
         <input id="articleMinutes" type="number" min="1" max="30" placeholder="دقائق القراءة" style="flex:1" />
         <input id="articleOrder" type="number" min="0" placeholder="الترتيب" style="flex:1" />
       </div>
-      <input id="articleCoverUrl" type="url" placeholder="رابط صورة الغلاف (اختياري)" />
+        <label class="muted" style="display:block;margin-bottom:6px">صورة غلاف المقال</label>
+        <div style="display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;margin-bottom:12px">
+          <div id="articleCoverPreview" style="width:96px;height:112px;border-radius:18px;background:linear-gradient(135deg,#E8A0BF,#C9B8E8);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:28px">📷</div>
+          <div>
+            <input id="articleCoverFile" type="file" accept="image/jpeg,image/png,image/webp" style="margin-bottom:7px" />
+            <div class="muted" style="font-size:11px;line-height:1.5">تُضغط الصورة تلقائياً وتُرفع إلى Firebase Storage. الحد الأقصى 5MB.</div>
+            <div id="articleCoverStatus" class="muted" style="font-size:11px;margin-top:5px"></div>
+          </div>
+        </div>
+        <input id="articleCoverUrl" type="url" placeholder="أو رابط HTTPS لصورة موجودة على السيرفر" />
       <textarea id="articleExcerptAr" rows="2" placeholder="ملخص عربي (1–2 سطر للبطاقة)"></textarea>
       <textarea id="articleExcerptEn" rows="2" placeholder="ملخص إنجليزي (1–2 سطر للبطاقة)"></textarea>
       <input id="articleSlug" type="text" placeholder="Slug (اختياري — يُولَّد من العنوان الإنجليزي)" />
@@ -1656,11 +1721,43 @@
     </div>
   </div>
 
+  <!-- ======== COMMAND PALETTE ======== -->
+  <div id="commandPalette" class="command-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="commandTitle">
+    <div class="command-panel">
+      <div class="command-head">
+        <div>
+          <span class="command-kicker">انتقال سريع</span>
+          <h2 id="commandTitle">إلى أين تريدين الذهاب؟</h2>
+        </div>
+        <button id="commandClose" class="icon-tool" type="button" aria-label="إغلاق">×</button>
+      </div>
+      <input id="commandSearch" type="search" placeholder="ابحثي عن المستخدمين، البلاغات، Premium، المقالات..." autocomplete="off" />
+      <div id="commandResults" class="command-results">
+        <button data-command-tab="overview"><span>نظرة عامة</span><small>لوحة اليوم</small></button>
+        <button data-command-tab="analytics"><span>التحليلات</span><small>النمو والنشاط</small></button>
+        <button data-command-tab="users"><span>المستخدمون</span><small>الحسابات والصلاحيات</small></button>
+        <button data-command-tab="premium"><span>Premium</span><small>الاشتراكات والمصادر</small></button>
+        <button data-command-tab="reports"><span>البلاغات</span><small>المراجعة والحماية</small></button>
+        <button data-command-tab="moderation"><span>مراجعة المنشورات</span><small>المحتوى المعلّق</small></button>
+        <button data-command-tab="feedback"><span>الملاحظات</span><small>رسائل المستخدمات</small></button>
+        <button data-command-tab="articles"><span>المقالات</span><small>المجلة التعليمية</small></button>
+        <button data-command-tab="notifications"><span>الإشعارات</span><small>الإرسال والجدولة</small></button>
+        <button data-command-tab="ai"><span>استخدام AI</span><small>الطلبات والتكلفة</small></button>
+        <button data-command-tab="settings"><span>الإعدادات</span><small>إعدادات التطبيق</small></button>
+      </div>
+      <div class="command-footer"><span>↑↓ للتنقل</span><span>Enter للفتح</span><span>Esc للإغلاق</span></div>
+    </div>
+  </div>
+
+<script defer src="./admin-ux.js?v=2"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL,
+} from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js';
 import { createAdminClient } from './admin-client.js';
 import { initAdminAppCheck, getAppCheckHeaders } from './admin-app-check.js';
 
@@ -1696,11 +1793,12 @@ async function loadFirebaseConfig() {
 }
 
 const firebaseConfig = await loadFirebaseConfig();
-let app, auth, admin;
+let app, auth, admin, storage;
 try {
   app = initializeApp(firebaseConfig);
   initAdminAppCheck(app, RECAPTCHA_ENTERPRISE_SITE_KEY);
   auth = getAuth(app);
+  storage = getStorage(app);
   admin = createAdminClient(auth, { getAppCheckHeaders });
 } catch (bootErr) {
   console.error('Firebase init failed:', bootErr);
@@ -1978,6 +2076,7 @@ function setStat(id, v) {
   const el = $(id);
   if (!el) return;
   el.textContent = fmtStatNumber(v);
+  document.dispatchEvent(new CustomEvent('lune:stats-updated'));
 }
 function updatePendingBadge(count) {
   const badge = document.getElementById('tabBadgeReports');
@@ -2022,6 +2121,7 @@ async function loadOverview() {
 // ---------------- articles CMS ----------------
 let _editingArticleId = null;
 let _articleHadPublishedAt = false;
+let _articlePreviewObjectUrl = '';
 
 const CATEGORY_LABELS = {
   basics: 'أساسيات',
@@ -2029,6 +2129,76 @@ const CATEGORY_LABELS = {
   nutrition: 'تغذية',
   mind: 'نفسية',
   adult: '18+',
+};
+
+function setArticleCoverPreview(src = '') {
+  const preview = $('articleCoverPreview');
+  if (!preview) return;
+  if (_articlePreviewObjectUrl) {
+    URL.revokeObjectURL(_articlePreviewObjectUrl);
+    _articlePreviewObjectUrl = '';
+  }
+  const safe = src.startsWith('blob:') ? src : safeHttpsUrl(src);
+  preview.innerHTML = safe
+    ? `<img src="${esc(safe)}" alt="معاينة الغلاف" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='📷'" />`
+    : '📷';
+}
+
+async function prepareArticleCover(file) {
+  if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) {
+    throw new Error('اختاري صورة JPG أو PNG أو WebP');
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    throw new Error('حجم الصورة الأصلية يجب ألا يتجاوز 12MB');
+  }
+  if (typeof createImageBitmap !== 'function') return file;
+
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const maxEdge = 1600;
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.86));
+  if (!blob) return file;
+  if (blob.size > 5 * 1024 * 1024) {
+    throw new Error('تعذّر ضغط الصورة إلى أقل من 5MB');
+  }
+  return blob;
+}
+
+async function uploadArticleCover(articleId, file) {
+  if (!storage) throw new Error('خدمة رفع الصور غير متاحة حالياً');
+  $('articleCoverStatus').textContent = 'جاري ضغط الصورة ورفعها…';
+  const body = await prepareArticleCover(file);
+  const unique = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const objectRef = storageRef(storage, `magazine_covers/${articleId}/${unique}.webp`);
+  const snapshot = await uploadBytes(objectRef, body, {
+    contentType: body.type || 'image/webp',
+    cacheControl: 'public,max-age=31536000,immutable',
+    customMetadata: { articleId, uploadedBy: auth.currentUser?.uid || '' },
+  });
+  const url = await getDownloadURL(snapshot.ref);
+  $('articleCoverStatus').textContent = 'تم رفع الصورة بنجاح ✓';
+  $('articleCoverUrl').value = url;
+  setArticleCoverPreview(url);
+  return url;
+}
+
+$('articleCoverFile').onchange = () => {
+  const file = $('articleCoverFile').files?.[0];
+  if (!file) {
+    setArticleCoverPreview($('articleCoverUrl').value.trim());
+    return;
+  }
+  _articlePreviewObjectUrl = URL.createObjectURL(file);
+  const preview = $('articleCoverPreview');
+  preview.innerHTML = `<img src="${esc(_articlePreviewObjectUrl)}" alt="معاينة الغلاف" style="width:100%;height:100%;object-fit:cover" />`;
+  $('articleCoverStatus').textContent = 'جاهزة للرفع عند حفظ المقال';
 };
 
 function slugFromTitle(title) {
@@ -2070,7 +2240,7 @@ async function loadArticles() {
       orderBy: { field: 'order', dir: 'asc' },
     });
     if (snap.empty) {
-      box.innerHTML = '<div class="empty">لا توجد مقالات في Firebase بعد. اضغطي «استيراد الافتراضية» لرفع 12 مقالًا.</div>';
+      box.innerHTML = '<div class="empty">لا توجد مقالات في Firebase بعد. اضغطي «استيراد المحتوى» لرفع مكتبة مجلة Lune.</div>';
       return;
     }
 
@@ -2138,6 +2308,9 @@ function clearArticleForm() {
   $('articleMinutes').value = '3';
   $('articleOrder').value = '99';
   $('articleCoverUrl').value = '';
+  $('articleCoverFile').value = '';
+  $('articleCoverStatus').textContent = '';
+  setArticleCoverPreview();
   $('articleExcerptAr').value = '';
   $('articleExcerptEn').value = '';
   $('articleSlug').value = '';
@@ -2171,6 +2344,7 @@ async function openArticleModal(id) {
       $('articleMinutes').value = String(a.minutes ?? 3);
       $('articleOrder').value = String(a.order ?? 0);
       $('articleCoverUrl').value = a.coverImageUrl || '';
+      setArticleCoverPreview(a.coverImageUrl || '');
       $('articleExcerptAr').value = a.excerptAr || '';
       $('articleExcerptEn').value = a.excerptEn || '';
       $('articleSlug').value = a.slug || '';
@@ -2206,7 +2380,20 @@ async function saveArticle() {
     return;
   }
 
-  const payload = {
+  const coverFile = $('articleCoverFile').files?.[0];
+  let coverImageUrl = $('articleCoverUrl').value.trim();
+  if (!coverFile && !safeHttpsUrl(coverImageUrl)) {
+    $('articleErr').textContent = 'صورة غلاف المقال مطلوبة (ملف أو رابط HTTPS)';
+    return;
+  }
+
+  $('saveArticle').disabled = true;
+  try {
+    if (coverFile) {
+      coverImageUrl = await uploadArticleCover(id, coverFile);
+    }
+
+    const payload = {
     titleAr,
     titleEn,
     bodyAr,
@@ -2215,7 +2402,7 @@ async function saveArticle() {
     iconName: $('articleIcon').value,
     minutes: Math.max(1, parseInt($('articleMinutes').value, 10) || 3),
     order: parseInt($('articleOrder').value, 10) || 0,
-    coverImageUrl: $('articleCoverUrl').value.trim() || null,
+    coverImageUrl,
     excerptAr: $('articleExcerptAr').value.trim(),
     excerptEn: $('articleExcerptEn').value.trim(),
     featured: $('articleFeatured').checked,
@@ -2225,19 +2412,17 @@ async function saveArticle() {
     updatedAt: admin.SERVER_TS,
   };
 
-  const scheduledVal = $('articleScheduledAt').value;
-  if (scheduledVal) {
-    payload.scheduledPublishAt = new Date(scheduledVal).toISOString();
-  } else {
-    payload.scheduledPublishAt = null;
-  }
+    const scheduledVal = $('articleScheduledAt').value;
+    if (scheduledVal) {
+      payload.scheduledPublishAt = new Date(scheduledVal).toISOString();
+    } else {
+      payload.scheduledPublishAt = null;
+    }
 
-  if ($('articlePublished').checked && !_articleHadPublishedAt) {
-    payload.publishedAt = admin.SERVER_TS;
-  }
+    if ($('articlePublished').checked && !_articleHadPublishedAt) {
+      payload.publishedAt = admin.SERVER_TS;
+    }
 
-  $('saveArticle').disabled = true;
-  try {
     await admin.set(['educationArticles', id], payload, true);
     closeArticleModal();
     await loadArticles();
@@ -2279,7 +2464,7 @@ async function deleteArticle(id) {
 }
 
 async function importDefaultArticles() {
-  if (!confirm('استيراد 12 مقالًا افتراضيًا؟ المقالات الموجودة بنفس المعرّف ستُحدَّث.')) return;
+  if (!confirm('استيراد مكتبة مجلة Lune من السيرفر؟ المقالات الموجودة بنفس المعرّف ستُحدَّث.')) return;
   $('importArticles').disabled = true;
   try {
     const res = await fetch('default-articles.json');
@@ -2710,6 +2895,11 @@ function exportUsersCSV() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+window.LuneAdminBridge = {
+  activateTab,
+  refreshOverview: loadOverview,
+};
 
 } // end if (auth && db)
 </script>

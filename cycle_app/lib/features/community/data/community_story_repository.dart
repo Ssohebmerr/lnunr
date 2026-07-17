@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/media/media_upload_service.dart';
+import '../../../core/storage/user_prefs.dart';
 import 'community_constants.dart';
 import 'community_story_submit.dart';
 import 'models/community_story.dart';
@@ -22,23 +23,28 @@ class CommunityStoryRepository {
   String? get currentUid => _auth.currentUser?.uid;
 
   Future<void> _ensureStoryAllowed(String uid, String communityId) async {
-    // Check adult status
-    final userDoc = await _firestore
-        .collection('users')
-        .doc(uid)
-        .get()
-        .timeout(const Duration(seconds: 8));
+    // Run the independent account and membership reads together. This keeps
+    // the safety checks but removes one full serial Firestore round trip.
+    final checks = await Future.wait([
+      _firestore
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 8)),
+      _firestore
+          .collection('communities')
+          .doc(communityId)
+          .collection('members')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 8)),
+    ]);
+    final userDoc = checks[0];
     final birthYear = userDoc.data()?['communityBirthYear'] as int?;
     if (birthYear == null || !isCommunityAdultBirthYear(birthYear)) {
       throw Exception('Adults only');
     }
-    // Check membership
-    final memberDoc = await _firestore
-        .collection('communities')
-        .doc(communityId)
-        .collection('members')
-        .doc(uid)
-        .get();
+    final memberDoc = checks[1];
     if (!memberDoc.exists) {
       throw Exception('Join the community first');
     }
@@ -130,22 +136,52 @@ class CommunityStoryRepository {
     String? textOverlay,
     String? backgroundColor,
   }) async {
+    // Story photos are a Premium media surface. Check before touching Storage
+    // so a non-Premium member gets a clear explanation instead of a generic
+    // Firebase permission error after waiting for an upload.
+    if (!await UserPrefs.isPremium()) {
+      throw const MediaRequiresPremiumException();
+    }
     await _ensureStoryAllowed(uid, communityId);
+    if (!isCommunityStoryMediaSizeAllowed(await file.length())) {
+      throw const StoryMediaTooLargeException();
+    }
 
-    final mediaUrl = await _mediaUpload.uploadCommunityPostMedia(
-      uid: uid,
-      communityId: communityId,
-      file: file,
-      isVideo: false,
-    );
+    final String mediaUrl;
+    try {
+      mediaUrl = await _mediaUpload.uploadCommunityPostMedia(
+        uid: uid,
+        communityId: communityId,
+        file: file,
+        isVideo: false,
+      );
+    } on FirebaseException catch (error) {
+      // Storage rules are server-authoritative and also enforce Premium. Map
+      // that denial to the product error the composer already understands.
+      if (error.code == 'unauthorized' || error.code == 'permission-denied') {
+        throw const MediaRequiresPremiumException();
+      }
+      rethrow;
+    }
 
-    await submitCommunityStory({
-      'communityId': communityId,
-      'mediaUrl': mediaUrl,
-      'mediaType': 'image',
-      'textOverlay': textOverlay,
-      'backgroundColor': backgroundColor,
-    });
+    try {
+      await submitCommunityStory({
+        'communityId': communityId,
+        'mediaUrl': mediaUrl,
+        'mediaType': 'image',
+        'textOverlay': textOverlay,
+        'backgroundColor': backgroundColor,
+      });
+    } catch (_) {
+      // Rejects and temporary scanner failures must not leave paid Storage
+      // or an unmoderated orphan behind. Server cleanup races safely with this.
+      try {
+        await _mediaUpload.deleteUploadedCommunityMedia(mediaUrl);
+      } catch (error) {
+        debugPrint('Could not clean up unpublished story media: $error');
+      }
+      rethrow;
+    }
   }
 
   /// Create a text-only story (colored background + text).
@@ -212,4 +248,10 @@ class MediaRequiresPremiumException implements Exception {
   const MediaRequiresPremiumException();
   @override
   String toString() => 'Media stories require Premium';
+}
+
+class StoryMediaTooLargeException implements Exception {
+  const StoryMediaTooLargeException();
+  @override
+  String toString() => 'Story image exceeds 15 MB';
 }

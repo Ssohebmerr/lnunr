@@ -15,9 +15,9 @@ import '../../../core/profile/local_profile.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/aura_scaffold.dart';
 import '../../../core/widgets/feminine_icon.dart';
 import '../../../core/theme/app_design_tokens.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../community/presentation/community_tab.dart';
 import '../community/data/community_notification_listener.dart';
@@ -237,29 +237,27 @@ class _HomeShellState extends State<HomeShell> {
 
     return PremiumSyncListener(
       child: CommunityNotificationListener(
-        child: Container(
-          decoration: AppTheme.gradientBackground(context),
+        child: AppMeshBackground(
           child: Scaffold(
             // The tab content must scroll BEHIND the bottom pill for the
             // frosted-glass blur to have anything to sample — with false the
             // bar sat on a dead strip and always rendered as a flat slab.
             extendBody: true,
             backgroundColor: Colors.transparent,
-            body: Container(
-              decoration: AppTheme.gradientBackground(context),
-              child: SafeArea(
-                bottom: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (isAccount)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isAccount)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        12,
+                        AppSpacing.sm,
+                        12,
+                        10,
+                      ),
+                      child: _HomeGlassHeader(
                         child: Row(
                           children: [
                             Expanded(
@@ -280,15 +278,17 @@ class _HomeShellState extends State<HomeShell> {
                               ),
                           ],
                         ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        12,
+                        AppSpacing.sm,
+                        12,
+                        10,
+                      ),
+                      child: _HomeGlassHeader(
                         child: Row(
                           children: [
                             GestureDetector(
@@ -342,45 +342,47 @@ class _HomeShellState extends State<HomeShell> {
                                 onTap: _openAiChat,
                               ),
                             if (_index == 0)
-                              IconButton(
+                              _HeaderIconButton(
                                 tooltip: l10n.navReports,
                                 onPressed: _openReports,
                                 icon: FeminineIconView(
                                   FeminineIcon.reports,
                                   color: theme.colorScheme.primary,
-                                  size: 22,
+                                  size: 20,
                                 ),
                               ),
                             if (_stealthEnabled)
-                              IconButton(
+                              _HeaderIconButton(
                                 tooltip: l10n.stealthHideNow,
                                 onPressed: () => context.push('/stealth'),
                                 icon: Icon(
                                   Icons.visibility_off_rounded,
                                   color: theme.colorScheme.primary,
+                                  size: 20,
                                 ),
                               ),
                             if (_index == 0)
-                              IconButton(
+                              _HeaderIconButton(
                                 tooltip: l10n.retry,
                                 onPressed: HomeRefreshScope.refresh,
                                 icon: Icon(
                                   Icons.refresh_rounded,
                                   color: theme.colorScheme.primary,
+                                  size: 20,
                                 ),
                               ),
                           ],
                         ),
                       ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _index,
-                        sizing: StackFit.expand,
-                        children: List.generate(4, _tabChild),
-                      ),
                     ),
-                  ],
-                ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _index,
+                      sizing: StackFit.expand,
+                      children: List.generate(4, _tabChild),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -483,6 +485,171 @@ class _HomeShellState extends State<HomeShell> {
     final trailing = isRtl ? beforeLog.reversed.toList() : afterLog;
 
     return [...leading, _BottomBarLogSlot(onPressed: onLog), ...trailing];
+  }
+}
+
+/// Premium frosted header shared by every main tab.
+///
+/// The translucent gradient keeps the app background visible while a crisp
+/// highlight, restrained shadow, and two soft colour blooms give the bar real
+/// depth in both themes. All header actions remain outside the decorative
+/// layers, so their touch targets and semantics are unchanged.
+class _HomeGlassHeader extends StatelessWidget {
+  const _HomeGlassHeader({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const radius = AppRadius.lg;
+
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? Colors.black : AuraColors.plum).withValues(
+                alpha: isDark ? 0.26 : 0.10,
+              ),
+              blurRadius: 22,
+              offset: const Offset(0, 9),
+              spreadRadius: -8,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isDark
+                            ? [
+                                const Color(0xFF443047).withValues(alpha: 0.62),
+                                AuraColors.darkCard.withValues(alpha: 0.46),
+                              ]
+                            : [
+                                Colors.white.withValues(alpha: 0.62),
+                                const Color(0xFFFFEDF5).withValues(alpha: 0.36),
+                              ],
+                      ),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.13)
+                            : Colors.white.withValues(alpha: 0.68),
+                      ),
+                    ),
+                  ),
+                ),
+                PositionedDirectional(
+                  top: -38,
+                  end: -22,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 112,
+                      height: 112,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AuraColors.rose.withValues(
+                              alpha: isDark ? 0.18 : 0.24,
+                            ),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                PositionedDirectional(
+                  bottom: -46,
+                  start: 52,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AuraColors.lavenderSoft.withValues(
+                              alpha: isDark ? 0.12 : 0.18,
+                            ),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 62),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 9,
+                    ),
+                    child: child,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.tooltip,
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final String tooltip;
+  final VoidCallback onPressed;
+  final Widget icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 4),
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: icon,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 38, height: 38),
+        style: IconButton.styleFrom(
+          backgroundColor: theme.colorScheme.primary.withValues(
+            alpha: isDark ? 0.13 : 0.09,
+          ),
+          side: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.10)
+                : Colors.white.withValues(alpha: 0.75),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+        ),
+      ),
+    );
   }
 }
 

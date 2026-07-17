@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../l10n/app_localizations.dart';
+import '../privacy/consent_manager.dart';
+import '../widgets/app_surface.dart';
+import '../../l10n/app_localizations.dart';
 
 enum AgeGroup { under13, teen, adult }
 
@@ -15,27 +17,20 @@ Future<AgeGroup?> showAgeGate(BuildContext context) async {
     context: context,
     isDismissible: false,
     enableDrag: false,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    backgroundColor: Colors.transparent,
+    elevation: 0,
     builder: (ctx) => PopScope(
       canPop: false,
-      child: Padding(
+      child: AppGlassSheetSurface(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
+            Icon(
+              Icons.cake_outlined,
+              size: 40,
+              color: theme.colorScheme.primary,
             ),
-            const SizedBox(height: 20),
-            Icon(Icons.cake_outlined,
-                size: 40, color: theme.colorScheme.primary),
             const SizedBox(height: 12),
             Text(
               l10n.ageGateTitle,
@@ -133,6 +128,18 @@ Future<bool> isMinor() async {
   return group == 'under13' || group == 'teen';
 }
 
+/// True only after the user explicitly selected the 18+ age group.
+/// Unknown/missing age is intentionally not treated as adult for AI access.
+Future<bool> isAdult() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('user_age_group') == AgeGroup.adult.name;
+}
+
+/// AI features process sensitive health context and are restricted to adults.
+Future<bool> blocksAiByAgeGate() async {
+  return !await isAdult();
+}
+
 /// True when onboarding age gate blocks community (under 13 or 13–17).
 Future<bool> blocksCommunityByAgeGate() async {
   return isMinor();
@@ -149,6 +156,7 @@ Future<void> saveAgeGroup(AgeGroup group) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('user_age_group', group.name);
   await prefs.setBool('age_gate_done', true);
+  await ConsentManager.syncAiEligibility();
 }
 
 /// Checks if the user has already completed the age gate.

@@ -44,6 +44,7 @@ class CommentLikeButton extends StatelessWidget {
               postId: postId,
               commentId: commentId,
               uid: uid,
+              currentlyLiked: snap.hasData ? liked : null,
             );
           },
           borderRadius: BorderRadius.circular(AppRadius.pill),

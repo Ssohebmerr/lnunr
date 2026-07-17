@@ -4,12 +4,17 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/config/feature_flags.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/widgets/app_surface.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../education/data/education_articles_repository.dart';
+import '../../../education/data/education_content.dart';
 import '../../data/community_repository.dart';
 import '../../data/community_seed.dart';
 import '../../data/models/community_post.dart';
 import '../../data/models/post_type.dart';
 import '../community_feed_utils.dart';
+import '../community_magazine_feed.dart';
+import '../widgets/community_magazine_feed_card.dart';
 import '../widgets/community_ui.dart';
 import '../widgets/post_card.dart';
 import '../widgets/stories_row.dart';
@@ -24,6 +29,7 @@ class CommunityFeedTab extends StatefulWidget {
     required this.onJoinPrompt,
     required this.onRefresh,
     required this.onCreateStory,
+    required this.onDiscussArticle,
   });
 
   final List<String> joinedIds;
@@ -33,6 +39,7 @@ class CommunityFeedTab extends StatefulWidget {
   final VoidCallback onJoinPrompt;
   final Future<void> Function() onRefresh;
   final VoidCallback onCreateStory;
+  final void Function(Article article, String communityId) onDiscussArticle;
 
   @override
   State<CommunityFeedTab> createState() => _CommunityFeedTabState();
@@ -46,12 +53,73 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
 
   /// Selected feed chip: newest / popular / discussed / following / mine /
   /// commented. Replaces the old sort enum + my-posts toggle pair.
-  String _feedChip = 'newest';
+  String _feedChip = 'popular';
+
+  // Keep the expensive merged Firestore stream stable across search, filter
+  // and chip setState calls. Recreating it from build used to tear down and
+  // resubscribe to every joined community on ordinary UI interactions.
+  Stream<List<CommunityPost>>? _feedStream;
+  Stream<Set<String>>? _blockedUidsStream;
+  Stream<Set<String>>? _savedPostIdsStream;
+  String _streamJoinedKey = '';
+  String? _streamUid;
 
   // Lazy streams — only created the first time their chip is selected so
   // regular feed browsing never runs the extra queries.
   Stream<Set<String>>? _followingUids;
   Stream<Set<String>>? _commentedPostIds;
+  late final Stream<Set<String>> _emptyFollowingStream;
+  late final Stream<Set<String>> _emptyCommentedStream;
+
+  late Future<List<Article>> _magazineArticles;
+  late final int _magazineRotationSeed;
+
+  @override
+  void initState() {
+    super.initState();
+    _emptyFollowingStream = Stream.value(const <String>{});
+    _emptyCommentedStream = Stream.value(const <String>{});
+    final now = DateTime.now();
+    _magazineRotationSeed = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime(2024)).inDays;
+    _magazineArticles = _loadMagazineArticles();
+  }
+
+  Future<List<Article>> _loadMagazineArticles() => EducationArticlesRepository()
+      .fetchPublished(includeAdult: false)
+      .timeout(const Duration(seconds: 8), onTimeout: () => const <Article>[]);
+
+  Future<void> _refreshFeed() async {
+    if (mounted) {
+      setState(() => _magazineArticles = _loadMagazineArticles());
+    }
+    await widget.onRefresh();
+  }
+
+  void _ensureStableStreams(CommunityRepository repo, String? uid) {
+    final ids = [...widget.joinedIds]..sort();
+    final joinedKey = ids.join('|');
+    if (_feedStream == null ||
+        joinedKey != _streamJoinedKey ||
+        uid != _streamUid) {
+      _streamJoinedKey = joinedKey;
+      if (_streamUid != uid) {
+        _followingUids = null;
+        _commentedPostIds = null;
+      }
+      _streamUid = uid;
+      _feedStream = repo.watchJoinedFeed(ids);
+      _blockedUidsStream = uid == null
+          ? Stream.value(const <String>{})
+          : repo.watchBlockedUids(uid);
+      _savedPostIdsStream = uid == null
+          ? Stream.value(const <String>{})
+          : repo.watchSavedPostIds(uid);
+    }
+  }
 
   void _selectChip(String id) {
     final repo = context.read<CommunityRepository>();
@@ -106,14 +174,15 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
 
     await showModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       isScrollControlled: true,
       builder: (ctx) {
         final theme = Theme.of(ctx);
         return StatefulBuilder(
-          builder: (ctx, setModalState) => SafeArea(
+          builder: (ctx, setModalState) => AppGlassSheetSurface(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: EdgeInsets.zero,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,26 +291,35 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
 
     final repo = context.read<CommunityRepository>();
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    _ensureStableStreams(repo, uid);
 
     return StreamBuilder<Set<String>>(
-      stream: uid != null ? repo.watchBlockedUids(uid) : Stream.value(const {}),
+      stream: _blockedUidsStream,
       builder: (context, blockedSnap) {
         final blocked = blockedSnap.data ?? const <String>{};
         return StreamBuilder<Set<String>>(
-          stream: _followingUids ?? Stream.value(const {}),
-          builder: (context, followingSnap) {
-            final followed = followingSnap.data ?? const <String>{};
+          stream: _savedPostIdsStream,
+          builder: (context, savedSnap) {
+            final saved = savedSnap.data ?? const <String>{};
             return StreamBuilder<Set<String>>(
-              stream: _commentedPostIds ?? Stream.value(const {}),
-              builder: (context, commentedSnap) {
-                final commented = commentedSnap.data ?? const <String>{};
-                return _buildFeed(
-                  context,
-                  l10n,
-                  repo,
-                  blocked: blocked,
-                  followed: followed,
-                  commented: commented,
+              stream: _followingUids ?? _emptyFollowingStream,
+              builder: (context, followingSnap) {
+                final followed = followingSnap.data ?? const <String>{};
+                return StreamBuilder<Set<String>>(
+                  stream: _commentedPostIds ?? _emptyCommentedStream,
+                  builder: (context, commentedSnap) {
+                    final commented = commentedSnap.data ?? const <String>{};
+                    return _buildFeed(
+                      context,
+                      l10n,
+                      repo,
+                      blocked: blocked,
+                      saved: saved,
+                      savedLoaded: savedSnap.hasData,
+                      followed: followed,
+                      commented: commented,
+                    );
+                  },
                 );
               },
             );
@@ -256,232 +334,272 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
     AppLocalizations l10n,
     CommunityRepository repo, {
     required Set<String> blocked,
+    required Set<String> saved,
+    required bool savedLoaded,
     required Set<String> followed,
     required Set<String> commented,
   }) {
     return StreamBuilder<List<CommunityPost>>(
-          stream: repo.watchJoinedFeed(widget.joinedIds),
-          builder: (context, snap) {
-            final all = (snap.data ?? [])
-                .where((p) => !blocked.contains(p.authorUid))
-                .toList();
-            final currentUid = FirebaseAuth.instance.currentUser?.uid;
-            var posts = _typeFilter == null
-                ? all
-                : all.where((p) => p.postType == _typeFilter).toList();
-            if (_categoryFilter != 'all') {
-              posts = posts.where((p) {
-                final c = CommunitySeed.byId(p.communityId);
-                return c?.topic == _categoryFilter;
-              }).toList();
-            }
-            posts = filterAndSortCommunityPosts(
-              posts: posts,
-              query: _search,
-              sort: _feedChip == 'discussed'
-                  ? CommunityFeedSort.discussed
-                  : CommunityFeedSort.newest,
-              authorUidFilter: _feedChip == 'mine' ? currentUid : null,
-            );
-            switch (_feedChip) {
-              case 'popular':
-                posts = sortByPopularity(posts);
-              case 'following':
-                posts = posts
-                    .where((p) => followed.contains(p.authorUid))
-                    .toList();
-              case 'commented':
-                posts = posts.where((p) => commented.contains(p.id)).toList();
-            }
+      stream: _feedStream,
+      builder: (context, snap) {
+        final all = (snap.data ?? [])
+            .where((p) => !blocked.contains(p.authorUid))
+            .toList();
+        final currentUid = FirebaseAuth.instance.currentUser?.uid;
+        var posts = _typeFilter == null
+            ? all
+            : all.where((p) => p.postType == _typeFilter).toList();
+        if (_categoryFilter != 'all') {
+          posts = posts.where((p) {
+            final c = CommunitySeed.byId(p.communityId);
+            return c?.topic == _categoryFilter;
+          }).toList();
+        }
+        posts = filterAndSortCommunityPosts(
+          posts: posts,
+          query: _search,
+          sort: _feedChip == 'discussed'
+              ? CommunityFeedSort.discussed
+              : CommunityFeedSort.newest,
+          authorUidFilter: _feedChip == 'mine' ? currentUid : null,
+        );
+        switch (_feedChip) {
+          case 'popular':
+            posts = sortByPopularity(posts);
+          case 'following':
+            posts = posts.where((p) => followed.contains(p.authorUid)).toList();
+          case 'commented':
+            posts = posts.where((p) => commented.contains(p.id)).toList();
+        }
 
-            return RefreshIndicator(
-              onRefresh: widget.onRefresh,
-              child: CustomScrollView(
-                slivers: [
-                  if (FeatureFlags.isEnabledSync(FeatureFlags.luneStories))
-                    SliverToBoxAdapter(
-                      child: StoriesRow(
-                        joinedIds: widget.joinedIds,
-                        alias: widget.alias,
-                        avatarIndex: widget.avatarIndex,
-                        onCreateStory: widget.onCreateStory,
+        return RefreshIndicator(
+          onRefresh: _refreshFeed,
+          child: CustomScrollView(
+            slivers: [
+              if (FeatureFlags.isEnabledSync(FeatureFlags.luneStories))
+                SliverToBoxAdapter(
+                  child: StoriesRow(
+                    joinedIds: widget.joinedIds,
+                    alias: widget.alias,
+                    avatarIndex: widget.avatarIndex,
+                    onCreateStory: widget.onCreateStory,
+                  ),
+                ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surface.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.22
+                          : 0.55,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      side: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.08),
                       ),
                     ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Material(
-                        color: Theme.of(context).colorScheme.surface.withValues(
-                          alpha: Theme.of(context).brightness == Brightness.dark
-                              ? 0.22
-                              : 0.55,
+                    child: InkWell(
+                      onTap: widget.onJoinPrompt,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          side: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: InkWell(
-                          onTap: widget.onJoinPrompt,
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.explore_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.explore_rounded,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l10n.communityFeedBrowseTitle,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                      ),
-                                      Text(
-                                        l10n.communityFeedBrowseSubtitle,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onSurfaceVariant,
-                                              height: 1.25,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.communityFeedBrowseTitle,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  size: 14,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.7),
-                                ),
-                              ],
+                                  Text(
+                                    l10n.communityFeedBrowseSubtitle,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                          height: 1.25,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  // Search + filters in a single row
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: CommunitySearchField(
-                              controller: _searchController,
-                              hint: l10n.communitySearchPosts,
-                              onChanged: (v) => setState(() => _search = v),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          _FilterButton(
-                            activeCount: _activeFilterCount,
-                            tooltip: l10n.communityFilters,
-                            onTap: () => _openFilterSheet(context),
-                          ),
-                        ],
+                ),
+              ),
+              // Search + filters in a single row
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CommunitySearchField(
+                          controller: _searchController,
+                          hint: l10n.communitySearchPosts,
+                          onChanged: (v) => setState(() => _search = v),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      _FilterButton(
+                        activeCount: _activeFilterCount,
+                        tooltip: l10n.communityFilters,
+                        onTap: () => _openFilterSheet(context),
+                      ),
+                    ],
                   ),
-                  // Feed chips: sort modes + personal filters, always visible.
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: CommunityFilterChips(
-                        items: [
-                          (
-                            id: 'newest',
-                            label: l10n.communitySortNewest,
-                            icon: Icons.schedule_rounded,
-                          ),
-                          (
-                            id: 'popular',
-                            label: l10n.communityFeedPopular,
-                            icon: Icons.local_fire_department_outlined,
-                          ),
-                          (
-                            id: 'following',
-                            label: l10n.communityFollowingTitle,
-                            icon: Icons.favorite_outline_rounded,
-                          ),
-                          (
-                            id: 'discussed',
-                            label: l10n.communitySortDiscussed,
-                            icon: Icons.forum_outlined,
-                          ),
-                          (
-                            id: 'mine',
-                            label: l10n.communityFilterMyPosts,
-                            icon: Icons.person_outline_rounded,
-                          ),
-                          (
-                            id: 'commented',
-                            label: l10n.communityFeedMyComments,
-                            icon: Icons.chat_bubble_outline_rounded,
-                          ),
-                        ],
-                        selected: _feedChip,
-                        onSelected: _selectChip,
+                ),
+              ),
+              // Feed chips: sort modes + personal filters, always visible.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: CommunityFilterChips(
+                    items: [
+                      (
+                        id: 'popular',
+                        label: l10n.communityFeedPopular,
+                        icon: Icons.local_fire_department_outlined,
                       ),
-                    ),
+                      (
+                        id: 'newest',
+                        label: l10n.communitySortNewest,
+                        icon: Icons.schedule_rounded,
+                      ),
+                      (
+                        id: 'following',
+                        label: l10n.communityFollowingTitle,
+                        icon: Icons.favorite_outline_rounded,
+                      ),
+                      (
+                        id: 'discussed',
+                        label: l10n.communitySortDiscussed,
+                        icon: Icons.forum_outlined,
+                      ),
+                      (
+                        id: 'mine',
+                        label: l10n.communityFilterMyPosts,
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      (
+                        id: 'commented',
+                        label: l10n.communityFeedMyComments,
+                        icon: Icons.chat_bubble_outline_rounded,
+                      ),
+                    ],
+                    selected: _feedChip,
+                    onSelected: _selectChip,
                   ),
-                  if (posts.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: CommunityEmptyState(
-                        icon: Icons.article_outlined,
-                        title: l10n.communityNoPosts,
-                      ),
-                    )
-                  else
-                    SliverPadding(
+                ),
+              ),
+              if (posts.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: CommunityEmptyState(
+                    icon: Icons.article_outlined,
+                    title: l10n.communityNoPosts,
+                  ),
+                )
+              else
+                FutureBuilder<List<Article>>(
+                  future: _magazineArticles,
+                  initialData: const <Article>[],
+                  builder: (context, articleSnap) {
+                    final magazineAllowed =
+                        _search.trim().isEmpty &&
+                        _typeFilter == null &&
+                        const {
+                          'popular',
+                          'newest',
+                          'discussed',
+                        }.contains(_feedChip);
+                    final articles = magazineAllowed
+                        ? (articleSnap.data ?? const <Article>[])
+                        : const <Article>[];
+                    final entries = buildCommunityMagazineFeed<CommunityPost>(
+                      posts: posts,
+                      articles: articles,
+                      communityIdOf: (post) => post.communityId,
+                      rotationSeed: _magazineRotationSeed,
+                    );
+
+                    return SliverPadding(
                       padding: EdgeInsets.fromLTRB(
-                        16,
-                        12,
-                        16,
+                        10,
+                        10,
+                        10,
                         MediaQuery.paddingOf(context).bottom + 24,
                       ),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (_, i) => PostCard(
-                            post: posts[i],
-                            showCommunity: true,
-                            onTap: () => widget.onPostTap(posts[i]),
-                          ),
-                          childCount: posts.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((_, i) {
+                          final entry = entries[i];
+                          if (entry is CommunityPostFeedEntry<CommunityPost>) {
+                            return PostCard(
+                              post: entry.post,
+                              showCommunity: true,
+                              savedOverride: savedLoaded
+                                  ? saved.contains(
+                                      CommunityRepository.savedPostDocId(
+                                        entry.post.communityId,
+                                        entry.post.id,
+                                      ),
+                                    )
+                                  : null,
+                              onTap: () => widget.onPostTap(entry.post),
+                            );
+                          }
+
+                          final magazine =
+                              entry
+                                  as CommunityMagazineFeedEntry<CommunityPost>;
+                          return CommunityMagazineFeedCard(
+                            article: magazine.article,
+                            onDiscuss: () => widget.onDiscussArticle(
+                              magazine.article,
+                              magazine.communityId,
+                            ),
+                          );
+                        }, childCount: entries.length),
                       ),
-                    ),
-                ],
-              ),
-            );
-          },
+                    );
+                  },
+                ),
+            ],
+          ),
         );
+      },
+    );
   }
 }
 

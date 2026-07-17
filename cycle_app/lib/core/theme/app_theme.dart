@@ -91,7 +91,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         hintStyle: TextStyle(color: scheme.onSurfaceVariant),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -114,7 +117,10 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.primary,
-          side: BorderSide(color: scheme.primary.withValues(alpha: 0.6), width: 1.6),
+          side: BorderSide(
+            color: scheme.primary.withValues(alpha: 0.6),
+            width: 1.6,
+          ),
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
           textStyle: GoogleFonts.cairo(
@@ -145,18 +151,32 @@ class AppTheme {
         thickness: 1,
       ),
       chipTheme: base.chipTheme.copyWith(
+        backgroundColor: isDark
+            ? Colors.white.withValues(alpha: 0.055)
+            : Colors.white.withValues(alpha: 0.62),
+        disabledColor: isDark
+            ? Colors.white.withValues(alpha: 0.035)
+            : Colors.white.withValues(alpha: 0.38),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3)),
-        selectedColor:
-            (isDark ? AuraColors.darkRose : AuraColors.accent).withValues(alpha: 0.20),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.white.withValues(alpha: 0.84),
+        ),
+        selectedColor: (isDark ? AuraColors.darkRose : AuraColors.accent)
+            .withValues(alpha: 0.20),
         checkmarkColor: isDark ? AuraColors.darkRose : AuraColors.accentDeep,
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
-          selectedBackgroundColor:
-              isDark ? scheme.primary : AuraColors.accentDeep,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.055)
+              : Colors.white.withValues(alpha: 0.62),
+          selectedBackgroundColor: isDark
+              ? scheme.primary
+              : AuraColors.accentDeep,
           selectedForegroundColor: isDark ? AuraColors.darkBg : Colors.white,
           shape: const StadiumBorder(),
           side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
@@ -166,13 +186,35 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.13)
+                : Colors.white.withValues(alpha: 0.55),
+          ),
         ),
-        backgroundColor: isDark ? AuraColors.darkCard : AuraColors.plum,
+        elevation: 0,
+        insetPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        backgroundColor: isDark
+            ? AuraColors.darkCard.withValues(alpha: 0.90)
+            : AuraColors.plum.withValues(alpha: 0.91),
+        contentTextStyle: GoogleFonts.cairo(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+        actionTextColor: isDark ? AuraColors.darkRose : AuraColors.blush,
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: isDark ? AuraColors.darkCard : AuraColors.cream,
+        backgroundColor: isDark
+            ? AuraColors.darkCard.withValues(alpha: 0.90)
+            : Colors.white.withValues(alpha: 0.90),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        dragHandleColor: scheme.onSurfaceVariant.withValues(alpha: 0.30),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
       ),
       tabBarTheme: TabBarThemeData(
@@ -180,12 +222,16 @@ class AppTheme {
         labelColor: scheme.primary,
         unselectedLabelColor: scheme.onSurfaceVariant,
         dividerColor: Colors.transparent,
-        labelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 13),
-        unselectedLabelStyle: GoogleFonts.cairo(fontWeight: FontWeight.w500, fontSize: 13),
+        labelStyle: GoogleFonts.cairo(
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+        unselectedLabelStyle: GoogleFonts.cairo(
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+        ),
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: scheme.primary,
-      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
       dialogTheme: DialogThemeData(
         backgroundColor: isDark ? AuraColors.darkCard : AuraColors.cream,
         surfaceTintColor: Colors.transparent,
@@ -196,8 +242,9 @@ class AppTheme {
       datePickerTheme: DatePickerThemeData(
         backgroundColor: isDark ? AuraColors.darkCard : AuraColors.cream,
         surfaceTintColor: Colors.transparent,
-        headerBackgroundColor:
-            isDark ? AuraColors.darkBgMid : AuraColors.accentDeep,
+        headerBackgroundColor: isDark
+            ? AuraColors.darkBgMid
+            : AuraColors.accentDeep,
         headerForegroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -222,38 +269,38 @@ class AppTheme {
   }
 
   static ColorScheme get _lightScheme => ColorScheme.light(
-        primary: AuraColors.roseDeep,
-        onPrimary: Colors.white,
-        primaryContainer: AuraColors.blush,
-        onPrimaryContainer: AuraColors.plum,
-        secondary: AuraColors.lavenderSoft,
-        onSecondary: AuraColors.plum,
-        secondaryContainer: AuraColors.lavender.withValues(alpha: 0.4),
-        tertiary: AuraColors.peachGold,
-        onTertiary: AuraColors.plum,
-        surface: AuraColors.cream,
-        onSurface: AuraColors.plum,
-        onSurfaceVariant: AuraColors.inkSoft,
-        outline: AuraColors.rose.withValues(alpha: 0.3),
-        outlineVariant: AuraColors.lavender.withValues(alpha: 0.4),
-      );
+    primary: AuraColors.roseDeep,
+    onPrimary: Colors.white,
+    primaryContainer: AuraColors.blush,
+    onPrimaryContainer: AuraColors.plum,
+    secondary: AuraColors.lavenderSoft,
+    onSecondary: AuraColors.plum,
+    secondaryContainer: AuraColors.lavender.withValues(alpha: 0.4),
+    tertiary: AuraColors.peachGold,
+    onTertiary: AuraColors.plum,
+    surface: AuraColors.cream,
+    onSurface: AuraColors.plum,
+    onSurfaceVariant: AuraColors.inkSoft,
+    outline: AuraColors.rose.withValues(alpha: 0.3),
+    outlineVariant: AuraColors.lavender.withValues(alpha: 0.4),
+  );
 
   static ColorScheme get _darkScheme => ColorScheme.dark(
-        primary: AuraColors.darkRose,
-        onPrimary: AuraColors.darkBg,
-        primaryContainer: AuraColors.darkCard,
-        onPrimaryContainer: AuraColors.darkCream,
-        secondary: AuraColors.lavenderSoft,
-        onSecondary: AuraColors.darkBg,
-        secondaryContainer: AuraColors.darkBgMid,
-        tertiary: AuraColors.peachGold,
-        onTertiary: AuraColors.darkBg,
-        surface: AuraColors.darkBg,
-        onSurface: AuraColors.darkCream,
-        onSurfaceVariant: AuraColors.darkCream.withValues(alpha: 0.65),
-        outline: AuraColors.darkRose.withValues(alpha: 0.25),
-        outlineVariant: Colors.white.withValues(alpha: 0.1),
-      );
+    primary: AuraColors.darkRose,
+    onPrimary: AuraColors.darkBg,
+    primaryContainer: AuraColors.darkCard,
+    onPrimaryContainer: AuraColors.darkCream,
+    secondary: AuraColors.lavenderSoft,
+    onSecondary: AuraColors.darkBg,
+    secondaryContainer: AuraColors.darkBgMid,
+    tertiary: AuraColors.peachGold,
+    onTertiary: AuraColors.darkBg,
+    surface: AuraColors.darkBg,
+    onSurface: AuraColors.darkCream,
+    onSurfaceVariant: AuraColors.darkCream.withValues(alpha: 0.65),
+    outline: AuraColors.darkRose.withValues(alpha: 0.25),
+    outlineVariant: Colors.white.withValues(alpha: 0.1),
+  );
 
   static TextTheme _textTheme(TextTheme base, ColorScheme scheme) {
     return GoogleFonts.cairoTextTheme(base).copyWith(
@@ -315,8 +362,8 @@ class AppTheme {
   }
 
   static BoxDecoration gradientBackground([BuildContext? context]) {
-    final isDark = context != null &&
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark =
+        context != null && Theme.of(context).brightness == Brightness.dark;
     return AuraDecorations.meshBackground(isDark);
   }
 }

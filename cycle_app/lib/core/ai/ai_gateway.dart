@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../age/age_gate.dart';
+import '../privacy/consent_manager.dart';
 import 'ai_gateway_exception.dart';
 import 'ai_prompt_builder.dart';
 import 'ai_prompt_style.dart';
@@ -63,6 +65,9 @@ _aiLog(
       throw const AiGatewayException('auth_required');
     }
 
+    await _assertAiEligibility();
+    await ConsentManager.syncAiEligibility();
+
     return _requestFromCloudFunction(
       message: message,
       context: context,
@@ -94,6 +99,9 @@ _aiLog('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
       throw const AiGatewayException('auth_required');
     }
 
+    await _assertAiEligibility();
+    await ConsentManager.syncAiEligibility();
+
     // Reports are generated in one pass — no partial rendering benefit.
     if (mode == 'analyze' || mode == 'doctor') {
       final reply = await _requestFromCloudFunction(
@@ -114,6 +122,17 @@ _aiLog('[AiGateway.stream] mode=$mode, historyLen=${history.length}');
       personality: personality,
       history: history,
     );
+  }
+
+  /// Fail closed before any health context leaves the device. The same state
+  /// is mirrored to Firestore and checked again by Cloud Functions.
+  Future<void> _assertAiEligibility() async {
+    if (await blocksAiByAgeGate()) {
+      throw const AiGatewayException('adult_required');
+    }
+    if (!await ConsentManager.hasAiConsent()) {
+      throw const AiGatewayException('consent_required');
+    }
   }
 
   /// Cycle widget / wellness maps may contain DateTime or custom objects.
@@ -218,6 +237,12 @@ _aiLog('[AiGateway] Cloud Function status: ${response.statusCode}');
 
     if (errorCode == 'daily_limit_reached' || response.statusCode == 429) {
       throw AiGatewayException('daily_limit_reached', message: errorMessage);
+    }
+    if (errorCode == 'adult_required') {
+      throw AiGatewayException('adult_required', message: errorMessage);
+    }
+    if (errorCode == 'consent_required') {
+      throw AiGatewayException('consent_required', message: errorMessage);
     }
     if (errorCode == 'premium_required' || response.statusCode == 403) {
       throw AiGatewayException('premium_required', message: errorMessage);
@@ -409,6 +434,12 @@ _aiLog('[AiGateway] Cloud Function status: ${response.statusCode}');
 
     if (errorCode == 'daily_limit_reached' || statusCode == 429) {
       throw AiGatewayException('daily_limit_reached', message: errorMessage);
+    }
+    if (errorCode == 'adult_required') {
+      throw AiGatewayException('adult_required', message: errorMessage);
+    }
+    if (errorCode == 'consent_required') {
+      throw AiGatewayException('consent_required', message: errorMessage);
     }
     if (errorCode == 'premium_required' || statusCode == 403) {
       throw AiGatewayException('premium_required', message: errorMessage);

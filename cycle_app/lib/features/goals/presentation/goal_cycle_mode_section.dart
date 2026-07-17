@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../menstrudel_integration/wellness_hub_launcher.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../../cycle/presentation/widgets/lune_cycle_ring.dart';
@@ -11,6 +13,8 @@ import '../../cycle/presentation/widgets/ovulation_log_card.dart';
 import '../../home/widgets/home_feed_sections.dart';
 import '../data/goal_mode_analytics.dart';
 import '../data/goal_mode_content.dart';
+import '../data/user_goal_experience.dart';
+import 'condition_widgets.dart';
 
 /// Home body for general / conceive / avoid — primary cycle view first, details collapsed.
 class GoalModeHomeSection extends StatelessWidget {
@@ -55,11 +59,11 @@ class GoalModeBannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     final subtitle = GoalModeContent.headerSubtitle(goal, data, lang);
-    final (icon, title, gradient) = _branding(goal, l10n, theme);
+    final dailyTip = GoalModeContent.dailyTip(goal, data, lang);
+    final experience = userGoalExperience(goal);
 
     return AppGlassCard(
       blur: false,
@@ -67,38 +71,80 @@ class GoalModeBannerCard extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          gradient: gradient,
+          gradient: experience.gradient,
         ),
         padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Icon(icon, color: Colors.white, size: 26),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: FeminineIconView(
+                    goal.femIcon,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        experience.titleFor(lang),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle.forLang(lang),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                  const Padding(
+                    padding: EdgeInsets.only(top: 1),
+                    child: Icon(
+                      Icons.wb_sunny_outlined,
                       color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                      size: 18,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle.forLang(lang),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      height: 1.4,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      dailyTip.forLang(lang),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -108,53 +154,6 @@ class GoalModeBannerCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  (IconData, String, Gradient) _branding(
-    UserGoalTypes goal,
-    AppLocalizations l10n,
-    ThemeData theme,
-  ) {
-    return switch (goal) {
-      UserGoalTypes.conceive => (
-        Icons.child_friendly,
-        l10n.goalModeConceiveTitle,
-        LinearGradient(
-          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-        ),
-      ),
-      UserGoalTypes.avoid => (
-        Icons.shield_outlined,
-        l10n.goalModeAvoidTitle,
-        const LinearGradient(colors: [Color(0xFF5C6BC0), Color(0xFF7E57C2)]),
-      ),
-      UserGoalTypes.pcos => (
-        Icons.medical_services_outlined,
-        l10n.localeName.startsWith('ar')
-            ? 'إدارة تكيس المبايض'
-            : 'PCOS Management',
-        const LinearGradient(colors: [Color(0xFF26A69A), Color(0xFF00897B)]),
-      ),
-      UserGoalTypes.menopause => (
-        Icons.hourglass_empty_rounded,
-        l10n.localeName.startsWith('ar')
-            ? 'تتبع سن الأمل'
-            : 'Menopause Tracking',
-        const LinearGradient(colors: [Color(0xFF8D6E63), Color(0xFF5D4037)]),
-      ),
-      UserGoalTypes.postpartum => (
-        Icons.baby_changing_station_rounded,
-        l10n.localeName.startsWith('ar')
-            ? 'الاستشفاء بعد الولادة'
-            : 'Postpartum Recovery',
-        const LinearGradient(colors: [Color(0xFFEC407A), Color(0xFFC2185B)]),
-      ),
-      _ => (
-        Icons.health_and_safety_outlined,
-        l10n.goalModeGeneralTitle,
-        LinearGradient(colors: [AppColors.accent, theme.colorScheme.primary]),
-      ),
-    };
   }
 }
 
@@ -180,30 +179,11 @@ class GoalCycleSharedBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
-    final tip = GoalModeContent.dailyTip(goal, data, lang);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppGlassCard(
-          blur: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.goalModeTodayFocus,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                tip.forLang(lang),
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
-              ),
-            ],
-          ),
-        ),
+        GoalModeBannerCard(goal: goal, data: data),
         const SizedBox(height: 12),
         _CycleRingCard(
           data: data,
@@ -211,6 +191,14 @@ class GoalCycleSharedBody extends StatelessWidget {
           onOpenCalendar: onOpenCalendar,
         ),
         const SizedBox(height: 12),
+        if (goal.isConceiveMode) ...[
+          const OvulationLogCard(),
+          const SizedBox(height: 12),
+        ],
+        if (goal.isAvoidMode) ...[
+          _AvoidProtectionCard(data: data),
+          const SizedBox(height: 12),
+        ],
         AppGlassCard(
           blur: false,
           padding: EdgeInsets.zero,
@@ -288,7 +276,7 @@ class GoalCycleSharedBody extends StatelessWidget {
                 const SizedBox(height: 12),
                 _GoalChecklistCard(goal: goal, lang: lang),
                 const SizedBox(height: 12),
-                if (goal == UserGoalTypes.general || goal.isConceiveMode) ...[
+                if (goal == UserGoalTypes.general) ...[
                   const OvulationLogCard(),
                   const SizedBox(height: 12),
                 ],
@@ -388,10 +376,22 @@ class _CycleRingCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (showRing)
-            const RepaintBoundary(
+            RepaintBoundary(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: Center(child: LuneCycleRing(size: 248)),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Center(
+                  child: LuneCycleRing(
+                    size: 248,
+                    phase: data.phase,
+                    cycleDay: data.cycleDay > 0 ? data.cycleDay : null,
+                    cycleLength: data.avgCycleLength > 0
+                        ? data.avgCycleLength
+                        : null,
+                    periodDuration: data.avgPeriodDuration > 0
+                        ? data.avgPeriodDuration
+                        : null,
+                  ),
+                ),
               ),
             )
           else
@@ -579,42 +579,118 @@ class _GoalChecklistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final items = GoalModeContent.checklist(goal, lang);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSectionHeader(title: l10n.goalModeChecklist),
+        const SizedBox(height: 8),
+        ConditionRitualChecklist(
+          items: items
+              .map((item) => ConditionItem.fromEn(item.en, item.forLang(lang)))
+              .toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvoidProtectionCard extends StatelessWidget {
+  const _AvoidProtectionCard({required this.data});
+
+  final CycleDashboardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final ar = Localizations.localeOf(context).languageCode.startsWith('ar');
+    final level = GoalModeAnalytics.fertilityLevel(data);
+    final accent = switch (level) {
+      FertilityLevel.high => AuraColors.danger,
+      FertilityLevel.moderate => AuraColors.warning,
+      FertilityLevel.low => AuraColors.success,
+      FertilityLevel.unknown => theme.colorScheme.primary,
+    };
+    final status = switch (level) {
+      FertilityLevel.high => l10n.goalModeFertilityHigh,
+      FertilityLevel.moderate => l10n.goalModeFertilityModerate,
+      FertilityLevel.low => l10n.goalModeFertilityLow,
+      FertilityLevel.unknown => l10n.goalModeFertilityUnknown,
+    };
 
     return AppGlassCard(
       blur: false,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.goalModeChecklist,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(Icons.shield_outlined, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ar ? 'روتين الحماية' : 'Protection routine',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      '${l10n.goalModeFertilityToday}: $status',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.tertiaryContainer.withValues(
+                alpha: 0.34,
+              ),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Text(
+              ar
+                  ? 'تقدير التقويم للتوعية فقط، وليس وسيلة منع حمل ولا يضمن يومًا آمنًا. استمري باستخدام وسيلة موثوقة تناسبكِ.'
+                  : 'Calendar estimates are for awareness only. They are not contraception and never guarantee a safe day. Keep using a reliable method that fits you.',
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
             ),
           ),
-          const SizedBox(height: 8),
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item.forLang(lang),
-                      style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
-                    ),
-                  ),
-                ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: () => WellnessHubLauncher.openPills(context),
+                icon: const Icon(Icons.medication_outlined, size: 18),
+                label: Text(l10n.wellnessPills),
               ),
-            ),
+              OutlinedButton.icon(
+                onPressed: () => WellnessHubLauncher.openLarc(context),
+                icon: const Icon(Icons.health_and_safety_outlined, size: 18),
+                label: Text(l10n.wellnessLarc),
+              ),
+            ],
           ),
         ],
       ),

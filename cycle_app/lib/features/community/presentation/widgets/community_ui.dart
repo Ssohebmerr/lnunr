@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/widgets/app_avatar.dart';
@@ -684,6 +685,133 @@ class CommunityEmptyState extends StatelessWidget {
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Member tile — a person row for the Following / Blocked lists
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A soft glass row for a community member: avatar, alias, an optional
+/// "since" date, and a trailing pill action (unfollow / unblock). Shared by
+/// the Following and Blocked screens so both read as one consistent list.
+class CommunityMemberTile extends StatelessWidget {
+  const CommunityMemberTile({
+    super.key,
+    required this.name,
+    required this.uidSeed,
+    required this.actionLabel,
+    required this.onAction,
+    this.avatarIndex = 0,
+    this.since,
+  });
+
+  final String name;
+  final String uidSeed;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final int avatarIndex;
+  final DateTime? since;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? AuraColors.darkCard.withValues(alpha: 0.72)
+            : Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: (isDark ? Colors.white : scheme.outline).withValues(
+            alpha: isDark ? 0.06 : 0.08,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Row(
+        children: [
+          AppAvatar(radius: 22, avatarIndex: avatarIndex, uidSeed: uidSeed),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (since != null) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat.yMMMd().format(since!),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _TilePillButton(label: actionLabel, onTap: onAction),
+        ],
+      ),
+    );
+  }
+}
+
+class _TilePillButton extends StatelessWidget {
+  const _TilePillButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.35),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );

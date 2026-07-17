@@ -8,6 +8,8 @@ class AiGatewayException implements Exception {
   bool get isDailyLimit => code == 'daily_limit_reached';
   bool get isPremiumRequired => code == 'premium_required';
   bool get isProfileRequired => code == 'profile_required';
+  bool get isConsentRequired => code == 'consent_required';
+  bool get isAdultRequired => code == 'adult_required';
   bool get isAuthRequired => code == 'auth_required';
   bool get isNetworkError => code == 'network_error';
   bool get isServerError => code == 'server_error';
@@ -19,6 +21,12 @@ class AiGatewayException implements Exception {
     }
     if (isPremiumRequired || isProfileRequired) {
       return 'محادثة لُون الذكية متاحة لمشتركات Premium. اشتركي من شاشة الخطط، أو تحققي من حالة اشتراكك في تبويب الحساب.';
+    }
+    if (isConsentRequired) {
+      return 'يلزم قبول موافقة ميزات الذكاء الاصطناعي قبل إرسال رسائلك وسياق دورتك.';
+    }
+    if (isAdultRequired) {
+      return 'Lune AI متاح للبالغات بعمر 18 سنة أو أكثر فقط.';
     }
     if (isAuthRequired) {
       return 'يلزم تسجيل الدخول لاستخدام المساعدة الذكية. عودي إلى شاشة الترحيب وسجّلي الدخول.';

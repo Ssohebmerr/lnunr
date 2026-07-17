@@ -3,15 +3,16 @@
 // ----------------------------------------------------------------------------
 // Request lifecycle (strict server-side paywall — the client is NEVER trusted):
 //   1. Verify the Firebase ID token.
-//   2. reservePremiumChatSlot(uid): ONE transaction that requires
+//   2. Require adult age + explicit AI consent before evaluating content.
+//   3. reservePremiumChatSlot(uid): ONE transaction that requires
 //      users/{uid}.isPremium == true AND daily_chat_count < 30, then
 //      increments the counter. 403 premium_required / 429 daily_limit_reached
 //      otherwise — no external API call is ever made for ineligible users.
-//   3. Call DeepSeek (fallback Gemini) with a SERVER-clamped token budget.
+//   4. Call DeepSeek (fallback Gemini) with a SERVER-clamped token budget.
 //      Client-provided maxTokens can only shrink the budget, never grow it.
-//   4. On provider failure the reserved slot is rolled back so the user does
+//   5. On provider failure the reserved slot is rolled back so the user does
 //      not lose a message for our outage.
-//   5. Token usage + estimated cost are logged to aiUsageDaily for the admin
+//   6. Token usage + estimated cost are logged to aiUsageDaily for the admin
 //      panel budget monitor.
 // Keys live in Firebase Secrets (DEEPSEEK_API_KEY + GEMINI_API_KEY).
 // ============================================================================
@@ -32,6 +33,7 @@ const { detectRedFlags, emergencyResponseFor } = require('../lib/red_flags');
 const { extractRememberFacts, saveUserFacts } = require('../lib/ai_memory');
 const {
   QuotaError,
+  requireAiEligibility,
   reservePremiumChatSlot,
   releaseChatSlot,
 } = require('../lib/chat_quota');
@@ -70,6 +72,8 @@ exports.chat = onRequest(
     try {
       const decoded = await admin.auth().verifyIdToken(token);
       const uid = decoded.uid;
+      await requireAiEligibility(uid);
+
       const message = (req.body?.message || '').trim().substring(0, 2000);
       const cycleContext = sanitizeCycleContext(req.body?.cycleContext);
       const mode = req.body?.mode || 'chat';

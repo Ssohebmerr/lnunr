@@ -7,19 +7,25 @@ import 'package:cycle_aura/core/widgets/feminine_icons_custom.dart';
 enum UserGoalTypes {
   /// For users tracking periods for general health.
   general('general'),
+
   /// For users focusing on sexual health.
   sexual('sexual'),
+
   /// For users trying to conceive.
   conceive('conceive'),
+
   /// For users trying to avoid pregnancy.
   avoid('avoid'),
-  /// For users currently pregnant — pregnancy tracking mode.
+
   /// For users currently pregnant — pregnancy tracking mode.
   pregnant('pregnant'),
+
   /// For users transitioning or in menopause.
   menopause('menopause'),
+
   /// For users managing PCOS symptoms.
   pcos('pcos'),
+
   /// For users in postpartum recovery.
   postpartum('postpartum');
 
@@ -43,20 +49,23 @@ enum UserGoalTypes {
       UserGoalTypes.sexual => l10n.userGoal_sexual,
       UserGoalTypes.conceive => l10n.userGoal_conceive,
       UserGoalTypes.avoid => l10n.userGoal_avoid,
-      UserGoalTypes.pregnant => l10n.localeName.startsWith('ar')
-          ? 'أنا حامل'
-          : "I'm pregnant",
-      UserGoalTypes.menopause => l10n.localeName.startsWith('ar')
-          ? 'تتبع سن الأمل / انقطاع الطمث'
-          : 'Menopause Tracking',
-      UserGoalTypes.pcos => l10n.localeName.startsWith('ar')
-          ? 'إدارة تكيس المبايض'
-          : 'PCOS Management',
-      UserGoalTypes.postpartum => l10n.localeName.startsWith('ar')
-          ? 'الاستشفاء بعد الولادة'
-          : 'Postpartum Recovery',
+      UserGoalTypes.pregnant =>
+        l10n.localeName.startsWith('ar') ? 'أنا حامل' : "I'm pregnant",
+      UserGoalTypes.menopause =>
+        l10n.localeName.startsWith('ar')
+            ? 'تتبع سن الأمل / انقطاع الطمث'
+            : 'Menopause Tracking',
+      UserGoalTypes.pcos =>
+        l10n.localeName.startsWith('ar')
+            ? 'إدارة تكيس المبايض'
+            : 'PCOS Management',
+      UserGoalTypes.postpartum =>
+        l10n.localeName.startsWith('ar')
+            ? 'الاستشفاء بعد الولادة'
+            : 'Postpartum Recovery',
     };
   }
+
   IconData get icon {
     return switch (this) {
       UserGoalTypes.general => Icons.health_and_safety,
@@ -106,15 +115,11 @@ extension UserGoalExtension on UserGoalTypes {
 
   bool get isPostpartumMode => this == UserGoalTypes.postpartum;
 
-  bool get isCycleGoalMode =>
-      isGeneralMode || isConceiveMode || isAvoidMode;
+  bool get isCycleGoalMode => isGeneralMode || isConceiveMode || isAvoidMode;
 
   /// True for any goal that wants a custom home body section
   /// (pregnancy, menopause, pcos, postpartum). The general cycle
   /// modes (general, conceive, avoid) share `GoalCycleSharedBody`.
   bool get hasCustomHomeBody =>
-      isPregnancyMode ||
-      isMenopauseMode ||
-      isPcosMode ||
-      isPostpartumMode;
+      isPregnancyMode || isMenopauseMode || isPcosMode || isPostpartumMode;
 }

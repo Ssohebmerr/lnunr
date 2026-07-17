@@ -19,6 +19,7 @@ import '../data/models/community_post.dart';
 import '../data/models/community_profile.dart';
 import '../data/models/post_type.dart';
 import '../data/moderation_result.dart';
+import '../data/post_cover_styles.dart';
 import 'widgets/community_ui.dart';
 import 'widgets/moderation_rejected_dialog.dart';
 
@@ -54,6 +55,9 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   late PostType _type;
   bool _sending = false;
   bool _isAnonymous = false;
+
+  /// Selected gradient cover id for text posts (null = plain text).
+  String? _coverStyle;
 
   // Poll options (2 required, up to 4)
   static const _maxPollOptions = 4;
@@ -194,6 +198,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     setState(() => _sending = true);
     final lang = Localizations.localeOf(context).languageCode;
     final repo = context.read<CommunityRepository>();
+    String? orphanedMediaUrl;
 
     try {
       if (widget.isEditing) {
@@ -208,6 +213,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         String? uploadedUrl;
         if (_pickedFile != null) {
           uploadedUrl = await _uploadMedia(user.uid);
+          orphanedMediaUrl = uploadedUrl;
         }
 
         final pending = await repo.createPost(
@@ -221,7 +227,12 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
           mediaType: uploadedUrl != null ? 'image' : null,
           isAnonymous: _isAnonymous,
           pollOptions: _type == PostType.poll ? _pollOptions : null,
+          coverStyle: (_type != PostType.poll && uploadedUrl == null)
+              ? _coverStyle
+              : null,
         );
+        // The server has atomically attached and approved the upload.
+        orphanedMediaUrl = null;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -247,6 +258,12 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
       }
     } on MediaRequiresPremiumException {
       if (mounted) _showPremiumGate();
+    } on MediaReviewUnavailableException {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
+      }
     } on MinorRestrictedException {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -261,6 +278,13 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
         ).showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
       }
     } finally {
+      if (orphanedMediaUrl != null) {
+        try {
+          await _mediaUpload.deleteUploadedCommunityMedia(orphanedMediaUrl);
+        } catch (error) {
+          debugPrint('Could not clean up unpublished media: $error');
+        }
+      }
       if (mounted) setState(() => _sending = false);
     }
   }
@@ -579,6 +603,47 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                           ),
                         ),
                       ),
+                      // ── Cover style picker (text posts only) ──
+                      if (!widget.isEditing &&
+                          _type != PostType.poll &&
+                          _pickedFile == null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.communityCoverTitle,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _CoverSwatch(
+                                selected: _coverStyle == null,
+                                label: l10n.communityCoverNone,
+                                onTap: () =>
+                                    setState(() => _coverStyle = null),
+                              ),
+                              for (final style in PostCoverStyles.all)
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: 8,
+                                  ),
+                                  child: _CoverSwatch(
+                                    gradient: style.gradient,
+                                    icon: style.icon,
+                                    selected: _coverStyle == style.id,
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _coverStyle = style.id);
+                                    },
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                       if (_type == PostType.poll && !widget.isEditing) ...[
                         const SizedBox(height: 16),
                         _buildPollEditor(context, l10n, theme, isDark),
@@ -756,6 +821,72 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Round swatch for the cover-style picker: a gradient circle (or a "none"
+/// outline) with a check overlay when selected.
+class _CoverSwatch extends StatelessWidget {
+  const _CoverSwatch({
+    required this.selected,
+    required this.onTap,
+    this.gradient,
+    this.icon,
+    this.label,
+  });
+
+  final bool selected;
+  final VoidCallback onTap;
+  final Gradient? gradient;
+  final IconData? icon;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: gradient,
+          color: gradient == null
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+              : null,
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: selected ? 2.4 : 1,
+          ),
+        ),
+        child: Center(
+          child: selected
+              ? Icon(
+                  Icons.check_rounded,
+                  size: 20,
+                  color: gradient != null
+                      ? Colors.white
+                      : theme.colorScheme.primary,
+                )
+              : (gradient != null
+                    ? Icon(
+                        icon,
+                        size: 18,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      )
+                    : Icon(
+                        Icons.block_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      )),
         ),
       ),
     );

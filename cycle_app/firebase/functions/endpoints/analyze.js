@@ -12,6 +12,7 @@ const { defineSecret } = require('firebase-functions/params');
 const { callAiWithFallback } = require('../lib/ai_router');
 const {
   QuotaError,
+  requireAiEligibility,
   reservePremiumChatSlot,
   releaseChatSlot,
 } = require('../lib/chat_quota');
@@ -83,6 +84,8 @@ exports.analyze = onRequest(
     try {
       const decoded = await admin.auth().verifyIdToken(token);
       const uid = decoded.uid;
+      await requireAiEligibility(uid);
+
       const message = (req.body?.message || '').trim().substring(0, 2000);
       const cycleContext = sanitizeCycleContext(req.body?.cycleContext);
       const isDoctorReport = req.body?.doctorReport === true;

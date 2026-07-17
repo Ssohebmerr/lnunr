@@ -1,29 +1,27 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
-import 'fetal_week_illustration.dart';
+import 'pregnancy_baby_realistic_visual.dart';
 
-/// Flo-style 3D pregnancy hero: soft aura background, pulsing fetal
-/// silhouette with a gentle float animation, and a decorative
-/// "amniotic" gradient ring. Drops into the same slot the original
-/// `PregnancyBabyHeroCard` used — the parent already passes a
-/// `week` integer and a `lang` string.
+/// Realistic pregnancy hero: soft aura background and a gently animated fetal
+/// stage image. The previous drawn-ring engine has been removed.
 ///
 /// Visual layering (back to front):
 ///   1. Soft pinkish radial aura that breathes.
-///   2. Two concentric "amniotic" rings with subtle rotation.
-///   3. A floating, pulsing illustration of the baby (fetal visual).
-///   4. A faint heart-line pulse overlay.
+///   2. A floating, pulsing fetal-stage image.
+///   3. A gentle vignette overlay.
 class PregnancyBabyHero3DCard extends StatefulWidget {
   const PregnancyBabyHero3DCard({
     super.key,
     required this.week,
+    required this.lang,
+    this.gestationalDay = 7,
     this.size = 260,
   });
 
   final int week;
+  final String lang;
+  final int gestationalDay;
   final double size;
 
   @override
@@ -35,7 +33,6 @@ class _PregnancyBabyHero3DCardState extends State<PregnancyBabyHero3DCard>
     with TickerProviderStateMixin {
   late final AnimationController _pulse;
   late final AnimationController _float;
-  late final AnimationController _rotate;
 
   @override
   void initState() {
@@ -48,17 +45,12 @@ class _PregnancyBabyHero3DCardState extends State<PregnancyBabyHero3DCard>
       vsync: this,
       duration: const Duration(milliseconds: 3600),
     )..repeat(reverse: true);
-    _rotate = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 30),
-    )..repeat();
   }
 
   @override
   void dispose() {
     _pulse.dispose();
     _float.dispose();
-    _rotate.dispose();
     super.dispose();
   }
 
@@ -75,51 +67,39 @@ class _PregnancyBabyHero3DCardState extends State<PregnancyBabyHero3DCard>
             // Layer 1 — soft radial aura
             const _AuraBackground(),
 
-            // Layer 2 — amniotic rings (slow rotation)
-            AnimatedBuilder(
-              animation: _rotate,
-              builder: (_, _) => CustomPaint(
-                painter: _AmnioticRingsPainter(
-                  rotation: _rotate.value,
-                  color: Colors.white.withValues(alpha: 0.18),
-                  colorStrong: Colors.white.withValues(alpha: 0.32),
-                ),
-              ),
-            ),
-
-            // Layer 3 — pulsing + floating illustration
+            // Layer 2 — softly floating, medically staged illustration.
             AnimatedBuilder(
               animation: Listenable.merge([_pulse, _float]),
               builder: (_, _) {
                 final pulse = Curves.easeInOut.transform(_pulse.value);
                 final floatY = Curves.easeInOutSine.transform(_float.value);
-                final scale = 1.0 + pulse * 0.04;
+                // The fetal artwork now owns the visible movement and gradual
+                // weekly growth. Keep this outer motion restrained so the
+                // layered perspective remains calm instead of feeling shaky.
+                final scale = 0.998 + pulse * 0.004;
                 return Center(
                   child: Transform.translate(
-                    offset: Offset(0, -4 * floatY),
+                    offset: Offset(0, -0.8 * floatY),
                     child: Transform.scale(
                       scale: scale,
                       child: Container(
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.11 + 0.08 * pulse),
-                              blurRadius: 26 + 14 * pulse,
-                              spreadRadius: 1 + 3 * pulse,
-                            ),
-                            BoxShadow(
-                              color: Colors.white.withValues(alpha: 0.55),
-                              blurRadius: 14,
-                              spreadRadius: -2,
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.09 + 0.04 * pulse,
+                              ),
+                              blurRadius: 20 + 8 * pulse,
+                              spreadRadius: 1 + pulse,
                             ),
                           ],
                         ),
-                        child: FetalWeekIllustration(
+                        child: PregnancyBabyRealisticVisual(
                           week: widget.week,
+                          gestationalDay: widget.gestationalDay,
+                          lang: widget.lang,
                           size: widget.size,
-                          hero: true,
                         ),
                       ),
                     ),
@@ -128,7 +108,7 @@ class _PregnancyBabyHero3DCardState extends State<PregnancyBabyHero3DCard>
               },
             ),
 
-            // Layer 4 — gentle vignette so the illustration pops
+            // Layer 3 — gentle vignette so the illustration pops
             IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -207,51 +187,4 @@ class _AuraBackgroundState extends State<_AuraBackground>
       },
     );
   }
-}
-
-/// Layer 2 — concentric amniotic rings, slowly rotating.
-class _AmnioticRingsPainter extends CustomPainter {
-  _AmnioticRingsPainter({
-    required this.rotation,
-    required this.color,
-    required this.colorStrong,
-  });
-
-  final double rotation; // 0..1
-  final Color color;
-  final Color colorStrong;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final maxR = math.min(size.width, size.height) * 0.46;
-    for (int i = 0; i < 3; i++) {
-      final r = maxR * (0.55 + 0.18 * i);
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2 - 0.2 * i
-        ..color = i == 0 ? colorStrong : color;
-      canvas.save();
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(rotation * 2 * math.pi * (i.isEven ? 1 : -1));
-      canvas.drawCircle(Offset.zero, r, paint);
-      canvas.restore();
-    }
-
-    // Soft sparkle dots (3) — adds the "amniotic fluid" feel
-    for (int i = 0; i < 3; i++) {
-      final angle = rotation * 2 * math.pi + i * (2 * math.pi / 3);
-      final r = maxR * 0.78;
-      final dx = center.dx + math.cos(angle) * r;
-      final dy = center.dy + math.sin(angle) * r;
-      final paint = Paint()..color = colorStrong;
-      canvas.drawCircle(Offset(dx, dy), 1.6, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _AmnioticRingsPainter old) =>
-      old.rotation != rotation ||
-      old.color != color ||
-      old.colorStrong != colorStrong;
 }

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../menstrual_cycle_widget.dart';
 import '../../widget_languages/languages.dart';
 import '../text_style/custom_text_style.dart';
-import 'calender_view.dart';
 
 /// get future prediction due periods dates of next period
 initFuturePeriodDay() async {
@@ -56,129 +55,99 @@ initFutureOvulationDay() async {
 }
 
 Widget getInformationView(Color daySelectedColor, Color themeColor) {
-  const double fontSize = 6;
-  const double circleSize = 8;
-
-  return Padding(
-    padding: const EdgeInsets.only(left: 5, right: 5),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(
-          width: 5,
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 2.0),
-          width: circleSize,
-          height: circleSize,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: defaultMenstruationColor,
-          ),
-        ),
-        Text(
-          WidgetBaseLanguage.periodLabel,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: getFontFamily(),
-          ),
-        ),
-        const SizedBox(
-          width: 5,
-        ),
-        DottedBorder(
-          color: defaultOvulationColor,
-          borderType: BorderType.circle,
-          strokeWidth: 1,
-          child: Container(
-            margin: const EdgeInsets.only(
-              left: 2.0,
-              right: 2.0,
-            ),
-            width: circleSize - 2,
-            height: circleSize - 2,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        Text(
-          WidgetBaseLanguage.predictOvulationDateLabel,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: getFontFamily(),
-          ),
-        ),
-        const SizedBox(
-          width: 5,
-        ),
-        DottedBorder(
+  return Builder(
+    builder: (context) {
+      final theme = Theme.of(context);
+      final items = <_CalendarLegendItemData>[
+        _CalendarLegendItemData(
+          label: WidgetBaseLanguage.periodLabel,
           color: defaultMenstruationColor,
-          borderType: BorderType.circle,
-          strokeWidth: 1,
-          child: Container(
-            margin: const EdgeInsets.only(
-              left: 2.0,
-              right: 2.0,
-            ),
-            width: circleSize - 2,
-            height: circleSize - 2,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-          ),
         ),
-        Text(
-          WidgetBaseLanguage.predictPeriodDateLabel,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: getFontFamily(),
-          ),
+        _CalendarLegendItemData(
+          label: WidgetBaseLanguage.predictOvulationDateLabel,
+          color: defaultOvulationColor,
+          outlined: true,
         ),
-        const SizedBox(
-          width: 5,
+        _CalendarLegendItemData(
+          label: WidgetBaseLanguage.predictPeriodDateLabel,
+          color: defaultMenstruationColor,
+          outlined: true,
         ),
+        _CalendarLegendItemData(
+          label: WidgetBaseLanguage.selectedDateLabel,
+          color: daySelectedColor,
+        ),
+        _CalendarLegendItemData(
+          label: WidgetBaseLanguage.todayLabel,
+          color: themeColor,
+        ),
+      ];
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            for (final item in items)
+              _CalendarLegendItem(item: item, theme: theme),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _CalendarLegendItemData {
+  const _CalendarLegendItemData({
+    required this.label,
+    required this.color,
+    this.outlined = false,
+  });
+
+  final String label;
+  final Color color;
+  final bool outlined;
+}
+
+class _CalendarLegendItem extends StatelessWidget {
+  const _CalendarLegendItem({required this.item, required this.theme});
+
+  final _CalendarLegendItemData item;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
         Container(
-          margin: const EdgeInsets.only(right: 2.0),
-          width: circleSize,
-          height: circleSize,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: daySelectedColor,
+            color: item.outlined ? Colors.transparent : item.color,
+            border: Border.all(
+              color: item.color,
+              width: item.outlined ? 1.4 : 0,
+            ),
           ),
         ),
+        const SizedBox(width: 5),
         Text(
-          WidgetBaseLanguage.selectedDateLabel,
-          style: TextStyle(
-            fontSize: fontSize,
+          item.label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
             fontFamily: getFontFamily(),
-          ),
-        ),
-        const SizedBox(
-          width: 5,
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 2.0),
-          width: circleSize,
-          height: circleSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: themeColor,
-          ),
-        ),
-        Text(
-          WidgetBaseLanguage.todayLabel,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: getFontFamily(),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            height: 1.25,
           ),
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 Widget progressIndicator() {

@@ -2,11 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/theme/app_design_tokens.dart';
-import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../data/models/followed_user.dart';
+import 'widgets/community_ui.dart';
 
 class FollowingScreen extends StatelessWidget {
   const FollowingScreen({super.key});
@@ -17,8 +17,8 @@ class FollowingScreen extends StatelessWidget {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final repo = context.read<CommunityRepository>();
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.communityFollowingTitle)),
+    return AuraSettingsScaffold(
+      title: l10n.communityFollowingTitle,
       body: uid == null
           ? Center(child: Text(l10n.communityLoginRequired))
           : StreamBuilder<List<FollowedUser>>(
@@ -30,67 +30,40 @@ class FollowingScreen extends StatelessWidget {
 
                 final following = snap.data ?? [];
                 if (following.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        l10n.communityFollowingEmpty,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
+                  return CommunityEmptyState(
+                    icon: Icons.group_outlined,
+                    title: l10n.communityFollowingTitle,
+                    subtitle: l10n.communityFollowingEmpty,
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   itemCount: following.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final user = following[index];
                     final label = user.alias?.isNotEmpty == true
                         ? user.alias!
                         : l10n.communityBlockedUserUnknown;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Material(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AuraColors.darkCard.withValues(alpha: 0.72)
-                            : Colors.white.withValues(alpha: 0.82),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          side: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withValues(alpha: 0.07),
-                          ),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: ListTile(
-                          leading: AppAvatar(
-                            radius: 20,
-                            avatarIndex: user.avatarIndex,
-                            uidSeed: user.uid,
-                          ),
-                          title: Text(label),
-                          trailing: TextButton(
-                            onPressed: () async {
-                              await repo.unfollowUser(
-                                uid: uid,
-                                followedUid: user.uid,
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.communityUnfollowed),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(l10n.communityUnfollow),
-                          ),
-                        ),
-                      ),
+                    return CommunityMemberTile(
+                      name: label,
+                      uidSeed: user.uid,
+                      avatarIndex: user.avatarIndex,
+                      since: user.followedAt,
+                      actionLabel: l10n.communityUnfollow,
+                      onAction: () async {
+                        await repo.unfollowUser(
+                          uid: uid,
+                          followedUid: user.uid,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.communityUnfollowed)),
+                          );
+                        }
+                      },
                     );
                   },
                 );

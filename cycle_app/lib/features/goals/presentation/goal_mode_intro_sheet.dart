@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
+import '../data/user_goal_experience.dart';
 
-/// Lightweight, single-screen "welcome" sheet shown right after the user
-/// picks one of the three lifecycle goals (menopause, pcos, postpartum).
+/// Lightweight, single-screen summary shown after changing the primary goal.
 ///
 /// Goal: in 2-3 lines, tell the user *what we'll focus on* and give them
 /// one quick "areas to track" tap chip. It does NOT re-onboard — the home
@@ -31,7 +32,7 @@ class GoalModeIntroSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final lang = Localizations.localeOf(context).languageCode;
     final isAr = lang.startsWith('ar');
-    final (title, body, gradient, focusAreas) = _copy(goal, isAr);
+    final experience = userGoalExperience(goal);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -45,7 +46,7 @@ class GoalModeIntroSheet extends StatelessWidget {
                 height: 110,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppRadius.lg),
-                  gradient: gradient,
+                  gradient: experience.gradient,
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -56,9 +57,9 @@ class GoalModeIntroSheet extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.22),
                         borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
-                      child: Icon(
-                        goal.icon,
-                        size: 28,
+                      child: FeminineIconView(
+                        goal.femIcon,
+                        size: 30,
                         color: Colors.white,
                       ),
                     ),
@@ -69,7 +70,7 @@ class GoalModeIntroSheet extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            title,
+                            experience.titleFor(lang),
                             style: theme.textTheme.titleSmall?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -92,7 +93,7 @@ class GoalModeIntroSheet extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                body,
+                experience.introFor(lang),
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
               const SizedBox(height: 16),
@@ -106,11 +107,11 @@ class GoalModeIntroSheet extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: focusAreas
+                children: experience.features
                     .map(
                       (it) => AppStatChip(
-                        icon: it.$1,
-                        label: it.$2,
+                        icon: it.icon,
+                        label: it.forLang(lang),
                         highlight: true,
                       ),
                     )
@@ -141,56 +142,5 @@ class GoalModeIntroSheet extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  (
-    String,
-    String,
-    LinearGradient,
-    List<(IconData, String)>,
-  ) _copy(UserGoalTypes goal, bool isAr) {
-    return switch (goal) {
-      UserGoalTypes.pregnant => (
-          isAr ? 'مرحباً في رحلة الحمل' : 'Welcome to Pregnancy Tracking',
-          isAr
-              ? 'سنتابع أسابيع حملكِ، نموّ الجنين، ونصائح الراحة والتغذية.'
-              : 'We\'ll track your weeks, baby\'s growth, and gentle rest and nutrition tips.',
-          const LinearGradient(colors: [Color(0xFFEC407A), Color(0xFFC2185B)]),
-          [
-            (Icons.pregnant_woman_rounded, isAr ? 'أسبوع الحمل' : 'Pregnancy week'),
-            (Icons.favorite_outline, isAr ? 'النمو' : 'Growth'),
-            (Icons.bedtime_outlined, isAr ? 'الراحة' : 'Rest'),
-          ],
-        ),
-      UserGoalTypes.conceive => (
-          isAr ? 'مرحباً في محاولة الحمل' : 'Welcome to Trying to Conceive',
-          isAr
-              ? 'سنساعدكِ على تتبّع نافذة الخصوبة والأيام الذهبية.'
-              : 'We\'ll help you track your fertile window and golden days.',
-          const LinearGradient(colors: [Color(0xFFE91E63), Color(0xFFAD1457)]),
-          [
-            (Icons.child_friendly, isAr ? 'الخصوبة' : 'Fertility'),
-            (Icons.calendar_today, isAr ? 'الدورة' : 'Cycle'),
-            (Icons.favorite, isAr ? 'الصحة' : 'Wellness'),
-          ],
-        ),
-      UserGoalTypes.avoid => (
-          isAr ? 'مرحباً في تجنّب الحمل' : 'Welcome to Avoid Pregnancy',
-          isAr
-              ? 'سنركّز على أيام الحماية وتذكيراتكِ اليومية.'
-              : 'We\'ll focus on protection days and your daily reminders.',
-          const LinearGradient(colors: [Color(0xFF5C6BC0), Color(0xFF3949AB)]),
-          [
-            (Icons.shield, isAr ? 'الحماية' : 'Protection'),
-            (Icons.event, isAr ? 'التقويم' : 'Calendar'),
-          ],
-        ),
-      _ => (
-          isAr ? 'مرحباً بكِ' : 'Welcome',
-          isAr ? 'هدفكِ الجديد محفوظ.' : 'Your new goal is saved.',
-          AuraDecorations.primaryGradient,
-          <(IconData, String)>[],
-        ),
-    };
   }
 }

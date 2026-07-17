@@ -128,14 +128,14 @@ function Tap-Nav([string]$label) {
 function Launch-App {
   $prev = $ErrorActionPreference
   $ErrorActionPreference = 'SilentlyContinue'
-  & $adb shell monkey -p com.lune.app -c android.intent.category.LAUNCHER 1 2>$null | Out-Null
+  & $adb shell monkey -p com.luneapp.cycle -c android.intent.category.LAUNCHER 1 2>$null | Out-Null
   $ErrorActionPreference = $prev
   Start-Sleep -Seconds 5
 }
 
 Wait-Device
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-& $adb shell pm clear com.lune.app 2>$null | Out-Null
+& $adb shell pm clear com.luneapp.cycle 2>$null | Out-Null
 Start-Sleep -Seconds 2
 Launch-App
 
@@ -225,13 +225,13 @@ Tap-Desc @('حسابي', 'Account') | Out-Null
 Swipe-Up
 Tap-Desc @('تخفي', 'Stealth', 'Calculator') | Out-Null
 if (-not $?) {
-  & $adb shell am start -n com.lune.app/.MainActivity -d "lune://stealth" 2>$null | Out-Null
+  & $adb shell am start -n com.luneapp.cycle/com.lune.app.MainActivity -d "lune://stealth" 2>$null | Out-Null
 }
 Start-Sleep -Seconds 2
 Capture "stealth"
 
 # Pregnancy home — second onboarding pass
-& $adb shell pm clear com.lune.app 2>$null | Out-Null
+& $adb shell pm clear com.luneapp.cycle 2>$null | Out-Null
 Start-Sleep -Seconds 2
 Launch-App
 Complete-Onboarding -Pregnancy

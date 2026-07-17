@@ -3,7 +3,7 @@
     "short_name": "Lune",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#211521",
+    "background_color": "#FFF6F1",
     "theme_color": "#E8A0BF",
     "description": "Lune — private menstrual cycle tracker with AI wellness assistant.",
     "orientation": "portrait-primary",

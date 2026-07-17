@@ -5,16 +5,13 @@ import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../data/pregnancy_development_content.dart';
+import '../data/pregnancy_fetal_stage.dart';
 import 'pregnancy_tracking_section.dart';
-import 'fetal_week_illustration.dart';
 import '../../home/widgets/reports_ui.dart';
 
 /// Pregnancy-first reports — Lume identity, readable typography.
 class PregnancyReportsSection extends StatelessWidget {
-  const PregnancyReportsSection({
-    super.key,
-    required this.data,
-  });
+  const PregnancyReportsSection({super.key, required this.data});
 
   final CycleDashboardData data;
 
@@ -25,6 +22,7 @@ class PregnancyReportsSection extends StatelessWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final week = data.pregnancyWeek.clamp(4, 42);
     final info = PregnancyDevelopmentContent.forWeek(week, lang);
+    final stage = fetalStageForGestationalAge(week, day: data.cycleDay);
     final daysToDue = _daysUntilDue(data.expectedDueDate);
 
     return Column(
@@ -45,7 +43,24 @@ class PregnancyReportsSection extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                FetalWeekIllustration(week: week, size: 88),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: SizedBox.square(
+                    dimension: 88,
+                    child: Image.asset(
+                      stage.assetPath,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (_, _, _) => ColoredBox(
+                        color: theme.colorScheme.surfaceContainerLow,
+                        child: Icon(
+                          Icons.child_care_outlined,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -180,20 +195,20 @@ class PregnancyReportsSection extends StatelessWidget {
   List<String> _checklistForTrimester(int trimester, AppLocalizations l10n) {
     return switch (trimester) {
       1 => [
-          l10n.pregnancyCheckFirstVisit,
-          l10n.pregnancyCheckPrenatalVitamins,
-          l10n.pregnancyCheckRest,
-        ],
+        l10n.pregnancyCheckFirstVisit,
+        l10n.pregnancyCheckPrenatalVitamins,
+        l10n.pregnancyCheckRest,
+      ],
       2 => [
-          l10n.pregnancyCheckAnatomyScan,
-          l10n.pregnancyCheckMovement,
-          l10n.pregnancyCheckHydration,
-        ],
+        l10n.pregnancyCheckAnatomyScan,
+        l10n.pregnancyCheckMovement,
+        l10n.pregnancyCheckHydration,
+      ],
       _ => [
-          l10n.pregnancyCheckBirthPlan,
-          l10n.pregnancyCheckHospitalBag,
-          l10n.pregnancyCheckKickCounts,
-        ],
+        l10n.pregnancyCheckBirthPlan,
+        l10n.pregnancyCheckHospitalBag,
+        l10n.pregnancyCheckKickCounts,
+      ],
     };
   }
 }

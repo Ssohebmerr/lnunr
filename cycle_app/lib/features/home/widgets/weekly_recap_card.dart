@@ -5,6 +5,7 @@ import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/ai_context_engine.dart';
 import '../../../core/ai/ai_gateway.dart';
 import '../../../core/ai/ai_response_cache.dart';
+import '../../../core/premium/premium_gate.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -44,6 +45,17 @@ class _WeeklyRecapCardState extends State<WeeklyRecapCard> {
     });
 
     try {
+      if (await PremiumGate.checkAiChat() != PremiumAiAccess.allowed) {
+        if (mounted) {
+          setState(() {
+            _loading = false;
+            _failed = true;
+          });
+        }
+        return;
+      }
+      if (!mounted) return;
+
       final l10n = AppLocalizations.of(context)!;
       final locale = Localizations.localeOf(context).languageCode;
       final engine = AiContextEngine();

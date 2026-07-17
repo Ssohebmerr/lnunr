@@ -26,7 +26,7 @@ class PlayBillingService {
 
   static const Set<String> productIds = {monthlyProductId, yearlyProductId};
 
-  static const packageName = 'com.lune.app';
+  static const packageName = 'com.luneapp.cycle';
   static final _functions = CloudFunctionsClient.instance;
 
   final InAppPurchase _iap;

@@ -1,39 +1,42 @@
-/// Premium illustrated avatars via DiceBear API.
-///
-/// Styles: lorelei (elegant portraits), notionists (modern illustration),
-/// avataaars (rich cartoon characters).
+import 'package:flutter/material.dart';
+
+/// A single portrait inside one of the local 2×2 Lune avatar sheets.
 class AvatarPreset {
-  const AvatarPreset(this.style, this.seed);
-  final String style;
-  final String seed;
+  const AvatarPreset(this.assetPath, this.tile);
+
+  final String assetPath;
+  final int tile;
+
+  Alignment get cropAlignment => switch (tile) {
+    0 => Alignment.topLeft,
+    1 => Alignment.topRight,
+    2 => Alignment.bottomLeft,
+    _ => Alignment.bottomRight,
+  };
 }
 
 class AvatarCatalog {
   AvatarCatalog._();
 
-  /// 16 premium avatar presets — elegant, diverse, modern.
+  /// 16 stable, app-owned portraits. Keep the order stable: avatar indices
+  /// are already persisted locally and in community profiles.
   static const presets = [
-    // Lorelei — elegant hand-drawn female portraits
-    AvatarPreset('lorelei', 'luna'),
-    AvatarPreset('lorelei', 'amira'),
-    AvatarPreset('lorelei', 'sofia'),
-    AvatarPreset('lorelei', 'yuki'),
-    // Notionists — clean modern illustrations
-    AvatarPreset('notionists', 'nora'),
-    AvatarPreset('notionists', 'layla'),
-    AvatarPreset('notionists', 'maya'),
-    AvatarPreset('notionists', 'hana'),
-    // Avataaars — rich cartoon characters
-    AvatarPreset('avataaars', 'sara'),
-    AvatarPreset('avataaars', 'leila'),
-    AvatarPreset('avataaars', 'nada'),
-    AvatarPreset('avataaars', 'rana'),
-    // More lorelei variety
-    AvatarPreset('lorelei', 'dina'),
-    AvatarPreset('lorelei', 'farah'),
-    // More notionists variety
-    AvatarPreset('notionists', 'salma'),
-    AvatarPreset('notionists', 'jana'),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_01.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_01.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_01.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_01.png', 3),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_02.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_02.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_02.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_02.png', 3),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_03.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_03.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_03.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_03.png', 3),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 3),
   ];
 
   static int get count => presets.length;
@@ -50,20 +53,7 @@ class AvatarCatalog {
     return hash;
   }
 
-  /// Returns a DiceBear image URL for the given avatar index.
-  /// Uses API v9 (stable) with soft pastel backgrounds.
-  static String imageUrl({
-    required int index,
-    int size = 256,
-  }) {
-    final p = presetAt(index);
-    return 'https://api.dicebear.com/9.x/${p.style}/png'
-        '?seed=${Uri.encodeComponent(p.seed)}'
-        '&size=$size'
-        '&backgroundColor=f5e6d3,e8d5c4,d4e6f1,e8daef,fdebd0,fadbd8,d5f5e3,fcf3cf'
-        '&radius=50';
-  }
+  static String assetPathAt(int index) => presetAt(index).assetPath;
 
-  static String imageUrlForUid(String uid, {int size = 256}) =>
-      imageUrl(index: indexFromSeed(uid), size: size);
+  static Alignment cropAlignmentAt(int index) => presetAt(index).cropAlignment;
 }

@@ -2,23 +2,100 @@ import 'dart:math' as math;
 
 import '../data/models/community_comment.dart';
 import '../data/models/community_post.dart';
+import '../data/models/post_type.dart';
 
 enum CommunityFeedSort { newest, discussed }
 
-/// Engagement-ranked ordering for the "popular" feed chip: comment volume
-/// dampened by age, so a fresh conversation can beat an old megathread.
+/// Conversation-first ranking for the "popular" feed chip.
+///
+/// The score blends freshness, discussion depth and useful post signals. A
+/// small evergreen engagement component keeps a valuable older conversation
+/// discoverable, while the main engagement term decays with age. The final
+/// pass limits long runs from one community so the feed feels like a healthy
+/// mix of the groups the member joined.
 List<CommunityPost> sortByPopularity(
   List<CommunityPost> posts, {
   DateTime? now,
 }) {
   final ref = now ?? DateTime.now();
   double score(CommunityPost p) {
-    final ageDays = ref.difference(p.createdAt).inHours / 24.0;
-    return (p.commentCount + 1) / math.pow(ageDays.clamp(0, 3650) + 2, 1.4);
+    final ageHours =
+        ref.difference(p.createdAt).inMinutes.clamp(0, 5256000) / 60.0;
+    final ageDays = ageHours / 24.0;
+    final freshness = 1 / (1 + ageHours / 36);
+    final discussion = math.log(p.commentCount + 1) * 0.85 / (1 + ageDays / 14);
+    final evergreen = math.sqrt(p.commentCount) * 0.25;
+    final conversationPreview = p.hasTopComment ? 0.3 : 0.0;
+    final resolvedQuestion = p.hasBestAnswer ? 0.18 : 0.0;
+    final unansweredQuestion =
+        p.postType == PostType.question && p.commentCount == 0 ? 0.32 : 0.0;
+    final interactive = p.isPoll ? 0.16 : 0.0;
+    return freshness * 3 +
+        discussion +
+        evergreen +
+        conversationPreview +
+        resolvedQuestion +
+        unansweredQuestion +
+        interactive;
   }
 
   final list = [...posts]..sort((a, b) => score(b).compareTo(score(a)));
-  return list;
+  return diversifyCommunityPosts(list);
+}
+
+/// Avoids a visually repetitive feed without hiding or dropping any post.
+/// Ordering is only adjusted when more than [maxConsecutive] adjacent items
+/// come from the same community; the next highest-ranked different group is
+/// pulled forward.
+List<CommunityPost> diversifyCommunityPosts(
+  List<CommunityPost> ranked, {
+  int maxConsecutive = 2,
+}) {
+  if (ranked.length < 2 || maxConsecutive < 1) return [...ranked];
+  final remaining = [...ranked];
+  final result = <CommunityPost>[];
+  String? lastCommunityId;
+  var consecutive = 0;
+
+  while (remaining.isNotEmpty) {
+    var nextIndex = 0;
+    if (lastCommunityId != null && consecutive >= maxConsecutive) {
+      final alternative = remaining.indexWhere(
+        (post) => post.communityId != lastCommunityId,
+      );
+      if (alternative >= 0) nextIndex = alternative;
+    }
+
+    final next = remaining.removeAt(nextIndex);
+    if (next.communityId == lastCommunityId) {
+      consecutive += 1;
+    } else {
+      lastCommunityId = next.communityId;
+      consecutive = 1;
+    }
+    result.add(next);
+  }
+  return result;
+}
+
+/// Adds locally-sent comments until the live server snapshot contains the
+/// authoritative copy. Matching uses the immutable submission fields and a
+/// narrow timestamp window, so the UI never flashes or shows duplicates.
+List<CommunityComment> mergeOptimisticComments({
+  required List<CommunityComment> serverComments,
+  required List<CommunityComment> optimisticComments,
+}) {
+  final unmatched = optimisticComments.where((local) {
+    return !serverComments.any(
+      (server) =>
+          server.authorUid == local.authorUid &&
+          server.text == local.text &&
+          server.parentCommentId == local.parentCommentId &&
+          server.createdAt.difference(local.createdAt).abs() <
+              const Duration(minutes: 2),
+    );
+  });
+  return [...serverComments, ...unmatched];
 }
 
 List<CommunityPost> filterAndSortCommunityPosts({

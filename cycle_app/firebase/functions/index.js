@@ -95,6 +95,7 @@ exports.submitCommunity = community.submitCommunity;
 // ---------------------------------------------------------------------------
 const moderationTriggers = require('./triggers/moderationTriggers');
 const communityNotifications = require('./triggers/communityNotifications');
+const communityMediaCleanup = require('./triggers/communityMediaCleanup');
 
 exports.onStoryCreated = moderationTriggers.onStoryCreated;
 exports.onPostCreated = moderationTriggers.onPostCreated;
@@ -104,7 +105,11 @@ exports.onCommentApproved = communityNotifications.onCommentApproved;
 exports.onCommentPublished = communityNotifications.onCommentPublished;
 exports.onCommentDeleted = communityNotifications.onCommentDeleted;
 exports.onPostLiked = communityNotifications.onPostLiked;
+exports.onCommentLiked = communityNotifications.onCommentLiked;
+exports.onCommentUnliked = communityNotifications.onCommentUnliked;
 exports.onUserFollowed = communityNotifications.onUserFollowed;
+exports.onCommunityPostDeleted = communityMediaCleanup.onCommunityPostDeleted;
+exports.onCommunityStoryDeleted = communityMediaCleanup.onCommunityStoryDeleted;
 
 // ---------------------------------------------------------------------------
 // Scheduled jobs

@@ -8,7 +8,7 @@ const admin = require('firebase-admin');
 // Subscription product ids — must match Play Console AND
 // `play_billing_service.dart` (enforced by a contract test).
 const PREMIUM_PRODUCT_IDS = new Set(['premium_monthly', 'premium_yearly']);
-const DEFAULT_PACKAGE = 'com.lune.app';
+const DEFAULT_PACKAGE = 'com.luneapp.cycle';
 
 /** @returns {import('googleapis').androidpublisher_v3.Androidpublisher} */
 function getAndroidPublisher(serviceAccountJson) {

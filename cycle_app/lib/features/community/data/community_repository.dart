@@ -369,6 +369,10 @@ class CommunityRepository {
     batch.set(_membersRef(communityId).doc(uid), {
       'alias': alias,
       'joinedAt': FieldValue.serverTimestamp(),
+      // Auditable proof that this membership was created through the
+      // guidelines acceptance flow required for user-generated content.
+      'guidelinesVersion': 1,
+      'guidelinesAcceptedAt': FieldValue.serverTimestamp(),
     });
     batch.set(
       _firestore
@@ -403,6 +407,12 @@ class CommunityRepository {
   /// Maximum number of communities to subscribe to simultaneously.
   static const _maxConcurrentCommunities = 12;
 
+  /// The home feed only needs a recent slice from each joined community.
+  /// Community detail screens still keep their full 50-post live window.
+  /// This caps a 12-community feed at 144 live documents instead of 600,
+  /// which materially reduces first-paint time and Firestore listener work.
+  static const _feedPostsPerCommunity = 12;
+
   Stream<List<CommunityPost>> watchJoinedFeed(List<String> joinedIds) {
     if (joinedIds.isEmpty) return Stream.value(const []);
 
@@ -421,7 +431,7 @@ class CommunityRepository {
 
     for (final communityId in limitedIds) {
       subs.add(
-        watchPosts(communityId).listen(
+        watchPosts(communityId, limit: _feedPostsPerCommunity).listen(
           (posts) {
             cache.removeWhere((k, _) => k.startsWith('$communityId|'));
             for (final p in posts) {
@@ -545,12 +555,19 @@ class CommunityRepository {
     required String postId,
     required String uid,
     required String reaction,
+    required String? currentReaction,
+    required bool currentReactionLoaded,
   }) async {
     final ref = _likesRef(communityId, postId).doc(uid);
-    final snap = await ref.get();
-    final current = snap.exists
-        ? ((snap.data()?['reaction'] as String?) ?? 'heart')
-        : null;
+    final String? current;
+    if (currentReactionLoaded) {
+      current = currentReaction;
+    } else {
+      final snap = await ref.get();
+      current = snap.exists
+          ? ((snap.data()?['reaction'] as String?) ?? 'heart')
+          : null;
+    }
     if (current == reaction) {
       await ref.delete();
       return;
@@ -608,10 +625,11 @@ class CommunityRepository {
     required String postId,
     required String commentId,
     required String uid,
+    bool? currentlyLiked,
   }) async {
     final ref = _commentLikesRef(communityId, postId, commentId).doc(uid);
-    final snap = await ref.get();
-    if (snap.exists) {
+    final liked = currentlyLiked ?? (await ref.get()).exists;
+    if (liked) {
       await ref.delete();
     } else {
       await ref.set({'createdAt': FieldValue.serverTimestamp()});
@@ -752,11 +770,11 @@ class CommunityRepository {
         },
       );
 
-  Stream<List<CommunityPost>> watchPosts(String communityId) {
+  Stream<List<CommunityPost>> watchPosts(String communityId, {int limit = 50}) {
     final viewerUid = _auth.currentUser?.uid;
     return _postsRef(communityId)
         .orderBy('createdAt', descending: true)
-        .limit(50)
+        .limit(limit)
         .snapshots()
         .asyncMap((s) async {
           final posts = s.docs
@@ -932,6 +950,7 @@ class CommunityRepository {
     final response = await _functions.post(
       '/submitCommunity',
       body: {'action': action, ...payload},
+      timeout: const Duration(seconds: 32),
     );
 
     Map<String, dynamic> body = const {};
@@ -948,6 +967,9 @@ class CommunityRepository {
     if (code == 'community_banned') throw const CommunityBannedException();
     if (code == 'media_premium_required') {
       throw const MediaRequiresPremiumException();
+    }
+    if (code == 'media_review_unavailable') {
+      throw const MediaReviewUnavailableException();
     }
     if (code == 'rate_limited' || code == 'duplicate_content') {
       throw ModerationRejectedException(message);
@@ -1056,11 +1078,21 @@ class CommunityRepository {
           .snapshots()
           .map((s) => s.exists);
 
-  Future<bool> toggleSavePost(String uid, CommunityPost post) async {
+  /// One listener for the whole feed instead of one saved-doc listener per
+  /// visible post card.
+  Stream<Set<String>> watchSavedPostIds(String uid) => _savedPostsRef(
+    uid,
+  ).snapshots().map((snapshot) => snapshot.docs.map((doc) => doc.id).toSet());
+
+  Future<bool> toggleSavePost(
+    String uid,
+    CommunityPost post, {
+    bool? currentlySaved,
+  }) async {
     final id = savedPostDocId(post.communityId, post.id);
     final ref = _savedPostsRef(uid).doc(id);
-    final snap = await ref.get();
-    if (snap.exists) {
+    final saved = currentlySaved ?? (await ref.get()).exists;
+    if (saved) {
       await ref.delete();
       return false;
     }
@@ -1208,21 +1240,23 @@ class CommunityRepository {
     String? mediaType,
     bool isAnonymous = false,
     List<String>? pollOptions,
+    String? coverStyle,
   }) async {
-    await _ensureCanParticipate(uid);
+    if (_auth.currentUser?.uid != uid) throw StateError('Not signed in');
     // Media uploads require a Premium subscription.
     if ((mediaUrl != null || mediaType != null) &&
         !await UserPrefs.isPremium()) {
       throw const MediaRequiresPremiumException();
     }
-    final member = await isMember(uid, communityId);
-    if (!member) throw StateError('Join the community first');
-
     final clean = CommunityTextSanitize.post(text);
-    final moderation = await moderateText(clean);
-    if (!moderation.approved && !moderation.pendingReview) {
+    // Keep instant client-side safety feedback, while the trusted submission
+    // endpoint performs the only network/AI moderation pass. Previously the
+    // client repeated profile, membership and AI calls that the endpoint
+    // already performs, adding several serial round trips to every post.
+    final localModeration = _fallbackModeration(clean);
+    if (!localModeration.approved) {
       throw ModerationRejectedException(
-        moderation.reason ?? 'Content rejected',
+        localModeration.reason ?? 'Content rejected',
       );
     }
 
@@ -1235,10 +1269,11 @@ class CommunityRepository {
       'mediaUrl': ?mediaUrl,
       'mediaType': ?mediaType,
       'isAnonymous': isAnonymous,
+      'coverStyle': ?coverStyle,
       if (postType == PostType.poll && pollOptions != null)
         'pollOptions': pollOptions,
     });
-    return result['pendingReview'] as bool? ?? moderation.pendingReview;
+    return result['pendingReview'] as bool? ?? false;
   }
 
   Future<void> updatePost({
@@ -1313,15 +1348,16 @@ class CommunityRepository {
     String? parentCommentId,
     List<String> mentions = const [],
   }) async {
-    await _ensureCanParticipate(uid);
-    final member = await isMember(uid, communityId);
-    if (!member) throw StateError('Join the community first');
+    if (_auth.currentUser?.uid != uid) throw StateError('Not signed in');
 
     final clean = CommunityTextSanitize.comment(text);
-    final moderation = await moderateText(clean);
-    if (!moderation.approved && !moderation.pendingReview) {
+    // The server repeats all authoritative participation and AI checks. Only
+    // run the synchronous safety net here so the comment takes one network
+    // trip instead of several sequential ones.
+    final localModeration = _fallbackModeration(clean);
+    if (!localModeration.approved) {
       throw ModerationRejectedException(
-        moderation.reason ?? 'Content rejected',
+        localModeration.reason ?? 'Content rejected',
       );
     }
 
@@ -1333,7 +1369,7 @@ class CommunityRepository {
       'parentCommentId': ?parentCommentId,
       if (mentions.isNotEmpty) 'mentions': mentions.take(5).toList(),
     });
-    return result['pendingReview'] as bool? ?? moderation.pendingReview;
+    return result['pendingReview'] as bool? ?? false;
   }
 
   Future<void> updateComment({

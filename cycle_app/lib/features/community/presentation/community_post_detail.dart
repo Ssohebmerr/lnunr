@@ -25,10 +25,15 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
   bool _sending = false;
   String? _replyToCommentId;
   String? _replyToAlias;
+  final List<CommunityComment> _optimisticComments = [];
+  final Map<String, Timer> _optimisticCleanupTimers = {};
 
   _CommentSort _commentSort = _CommentSort.oldest;
   Future<Map<String, int>>? _likeCountsFuture;
   String _likeCountsKey = '';
+  late final Stream<CommunityPost?> _postStream;
+  late final Stream<List<CommunityComment>> _commentsStream;
+  late final Stream<Set<String>> _blockedUidsStream;
 
   // Mention state: the @token being typed and aliases already picked from
   // the suggestion strip (alias → uid), resolved against the final text on
@@ -41,14 +46,44 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
   @override
   void initState() {
     super.initState();
+    final repo = context.read<CommunityRepository>();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _postStream = repo.watchPost(widget.community.id, widget.post.id);
+    _commentsStream = repo.watchComments(widget.community.id, widget.post.id);
+    _blockedUidsStream = uid == null
+        ? Stream.value(const <String>{})
+        : repo.watchBlockedUids(uid);
     _commentController.addListener(_onComposerChanged);
+    _commentFocus.addListener(_onCommentFocusChanged);
   }
 
   @override
   void dispose() {
+    for (final timer in _optimisticCleanupTimers.values) {
+      timer.cancel();
+    }
+    _commentFocus.removeListener(_onCommentFocusChanged);
     _commentController.dispose();
     _commentFocus.dispose();
     super.dispose();
+  }
+
+  bool _isOptimistic(CommunityComment comment) =>
+      comment.id.startsWith('_local_');
+
+  /// Keep a just-sent comment visible until the Firestore listener catches
+  /// up, without duplicating it once the authoritative server copy arrives.
+  List<CommunityComment> _withOptimisticComments(
+    List<CommunityComment> serverComments,
+  ) => mergeOptimisticComments(
+    serverComments: serverComments,
+    optimisticComments: _optimisticComments,
+  );
+
+  void _removeOptimisticComment(String id) {
+    _optimisticCleanupTimers.remove(id)?.cancel();
+    if (!mounted) return;
+    setState(() => _optimisticComments.removeWhere((c) => c.id == id));
   }
 
   void _onComposerChanged() {
@@ -76,6 +111,10 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
       _mentionQuery = query.toLowerCase();
       _mentionTokenStart = at;
     });
+  }
+
+  void _onCommentFocusChanged() {
+    if (mounted) setState(() {});
   }
 
   void _clearMentionQuery() {
@@ -110,7 +149,9 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     final byUid = <String, ({String uid, String alias, int avatarIndex})>{};
 
     final post = widget.post;
-    if (!post.isAnonymous && post.authorUid.isNotEmpty && post.authorUid != me) {
+    if (!post.isAnonymous &&
+        post.authorUid.isNotEmpty &&
+        post.authorUid != me) {
       byUid[post.authorUid] = (
         uid: post.authorUid,
         alias: post.authorAlias,
@@ -152,7 +193,27 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     final text = _commentController.text.trim();
     if (user == null || text.isEmpty || !widget.canComment) return;
 
-    setState(() => _sending = true);
+    final replyToCommentId = _replyToCommentId;
+    final replyToAlias = _replyToAlias;
+    final optimistic = CommunityComment(
+      id: '_local_${DateTime.now().microsecondsSinceEpoch}',
+      authorUid: user.uid,
+      authorAlias: widget.alias,
+      text: text,
+      createdAt: DateTime.now(),
+      parentCommentId: replyToCommentId,
+      moderationStatus: 'pending_review',
+    );
+
+    setState(() {
+      _sending = true;
+      _optimisticComments.add(optimistic);
+      _replyToCommentId = null;
+      _replyToAlias = null;
+    });
+    // Clear immediately so sending feels instant. On failure, the draft is
+    // restored if the user has not started typing a new comment.
+    _commentController.clear();
     final repo = context.read<CommunityRepository>();
 
     // Only aliases still present in the final text count as mentions.
@@ -162,20 +223,20 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     };
 
     try {
-      final profile = await repo.resolveProfile(user.uid);
       final pending = await repo.createComment(
         communityId: widget.community.id,
         postId: widget.post.id,
         uid: user.uid,
         text: text,
-        authorAvatarIndex: profile.avatarIndex,
-        parentCommentId: _replyToCommentId,
+        parentCommentId: replyToCommentId,
         mentions: mentionUids.take(5).toList(),
       );
-      _commentController.clear();
       _pickedMentions.clear();
-      _cancelReply();
       if (mounted) {
+        _optimisticCleanupTimers[optimistic.id] = Timer(
+          const Duration(seconds: 8),
+          () => _removeOptimisticComment(optimistic.id),
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -187,12 +248,89 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
         );
       }
     } on ModerationRejectedException catch (e) {
+      _restoreFailedComment(
+        optimistic,
+        replyToCommentId: replyToCommentId,
+        replyToAlias: replyToAlias,
+      );
       if (mounted) {
         await showModerationRejectedDialog(context, reason: e.reason);
+      }
+    } on CommunityBannedException {
+      _restoreFailedComment(
+        optimistic,
+        replyToCommentId: replyToCommentId,
+        replyToAlias: replyToAlias,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.communityBannedMessage),
+          ),
+        );
+      }
+    } on MinorRestrictedException {
+      _restoreFailedComment(
+        optimistic,
+        replyToCommentId: replyToCommentId,
+        replyToAlias: replyToAlias,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.communityMinorRestricted,
+            ),
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('_PostDetailScreen._sendComment failed: $e\n$st');
+      _restoreFailedComment(
+        optimistic,
+        replyToCommentId: replyToCommentId,
+        replyToAlias: replyToAlias,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.errorGeneric),
+            action: SnackBarAction(
+              label: AppLocalizations.of(context)!.retry,
+              onPressed: () {
+                _commentFocus.requestFocus();
+              },
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  void _restoreFailedComment(
+    CommunityComment optimistic, {
+    required String? replyToCommentId,
+    required String? replyToAlias,
+  }) {
+    _optimisticCleanupTimers.remove(optimistic.id)?.cancel();
+    if (!mounted) return;
+    final shouldRestoreDraft = _commentController.text.trim().isEmpty;
+    setState(() {
+      _optimisticComments.removeWhere((c) => c.id == optimistic.id);
+      if (shouldRestoreDraft) {
+        _replyToCommentId = replyToCommentId;
+        _replyToAlias = replyToAlias;
+      }
+    });
+    if (shouldRestoreDraft) {
+      _commentController.value = TextEditingValue(
+        text: optimistic.text,
+        selection: TextSelection.collapsed(offset: optimistic.text.length),
+      );
+    }
+    _commentFocus.requestFocus();
   }
 
   Future<void> _editPost(CommunityPost post) async {
@@ -481,18 +619,33 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
   /// Aggregate like counts for the current top-level comments, cached until
   /// the comment set changes so rebuilds don't refetch.
   Future<Map<String, int>> _topLikeCounts(List<CommunityComment> comments) {
-    final ids =
-        comments
-            .where((c) => c.parentCommentId == null)
-            .map((c) => c.id)
-            .toList()
+    final topLevel = comments
+        .where((c) => c.parentCommentId == null && !_isOptimistic(c))
+        .toList();
+    final keyParts =
+        topLevel.map((c) => '${c.id}:${c.likeCount ?? 'legacy'}').toList()
           ..sort();
-    final key = ids.join(',');
+    final key = keyParts.join(',');
     if (key != _likeCountsKey || _likeCountsFuture == null) {
       _likeCountsKey = key;
-      _likeCountsFuture = context
-          .read<CommunityRepository>()
-          .fetchCommentLikeCounts(widget.community.id, widget.post.id, ids);
+      final known = <String, int>{
+        for (final comment in topLevel)
+          if (comment.likeCount != null) comment.id: comment.likeCount!,
+      };
+      final legacyIds = topLevel
+          .where((comment) => comment.likeCount == null)
+          .map((comment) => comment.id)
+          .toList();
+      _likeCountsFuture = legacyIds.isEmpty
+          ? Future.value(known)
+          : context
+                .read<CommunityRepository>()
+                .fetchCommentLikeCounts(
+                  widget.community.id,
+                  widget.post.id,
+                  legacyIds,
+                )
+                .then((legacy) => {...known, ...legacy});
     }
     return _likeCountsFuture!;
   }
@@ -526,6 +679,7 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
     for (final c in topLevel) {
       final isBest = bestAnswerId == c.id;
       final replyCount = threadReplyCount(c.id, comments);
+      final isOptimistic = _isOptimistic(c);
 
       widgets.add(
         Padding(
@@ -565,6 +719,15 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                     ),
                   ),
                   const Spacer(),
+                  if (isOptimistic)
+                    const Padding(
+                      padding: EdgeInsetsDirectional.only(start: 8),
+                      child: SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(strokeWidth: 1.7),
+                      ),
+                    ),
                   if (isBest)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(start: 8),
@@ -607,12 +770,13 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      CommentLikeButton(
-                        communityId: widget.community.id,
-                        postId: widget.post.id,
-                        commentId: c.id,
-                      ),
-                      if (widget.canComment) ...[
+                      if (!isOptimistic)
+                        CommentLikeButton(
+                          communityId: widget.community.id,
+                          postId: widget.post.id,
+                          commentId: c.id,
+                        ),
+                      if (widget.canComment && !isOptimistic) ...[
                         const SizedBox(width: 10),
                         TextButton.icon(
                           onPressed: () => _startReply(c),
@@ -656,9 +820,16 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   ),
                 ],
               ),
-              onLongPress: () =>
-                  _showCommentActions(c, post, isPostAuthor: isPostAuthor),
-              onTap: widget.canComment
+              onLongPress: isOptimistic
+                  ? null
+                  : () => _showCommentActions(
+                      c,
+                      post,
+                      isPostAuthor: isPostAuthor,
+                    ),
+              onTap: isOptimistic
+                  ? null
+                  : widget.canComment
                   ? () =>
                         _showCommentActions(c, post, isPostAuthor: isPostAuthor)
                   : replyCount > 0
@@ -709,12 +880,11 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final repo = context.read<CommunityRepository>();
     final user = FirebaseAuth.instance.currentUser;
     final lang = Localizations.localeOf(context).languageCode;
 
     return StreamBuilder<CommunityPost?>(
-      stream: repo.watchPost(widget.community.id, widget.post.id),
+      stream: _postStream,
       builder: (context, postSnap) {
         if (postSnap.connectionState == ConnectionState.waiting &&
             !postSnap.hasData) {
@@ -796,20 +966,18 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                       ),
                     ),
                     StreamBuilder<Set<String>>(
-                      stream: user != null
-                          ? repo.watchBlockedUids(user.uid)
-                          : Stream.value(const {}),
+                      stream: _blockedUidsStream,
                       builder: (context, blockedSnap) {
                         final blocked = blockedSnap.data ?? const <String>{};
                         return StreamBuilder<List<CommunityComment>>(
-                          stream: repo.watchComments(
-                            widget.community.id,
-                            livePost.id,
-                          ),
+                          stream: _commentsStream,
                           builder: (context, snap) {
-                            final comments = (snap.data ?? [])
+                            final serverComments = (snap.data ?? [])
                                 .where((c) => !blocked.contains(c.authorUid))
                                 .toList();
+                            final comments = _withOptimisticComments(
+                              serverComments,
+                            );
                             _latestComments = comments;
                             if (comments.isEmpty) {
                               return Padding(
@@ -942,7 +1110,6 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
 
   Widget _buildCommentComposer(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return SafeArea(
       top: false,
@@ -989,52 +1156,43 @@ class _PostDetailScreenState extends State<_PostDetailScreen> {
                   ],
                 ),
               ),
-            Material(
-              color: isDark
-                  ? AuraColors.darkCard.withValues(alpha: 0.9)
-                  : Colors.white.withValues(alpha: 0.94),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                side: BorderSide(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.09),
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _commentController,
-                        focusNode: _commentFocus,
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: l10n.communityCommentHint,
-                          border: InputBorder.none,
-                          counterText: '',
-                          isCollapsed: true,
-                        ),
-                        maxLength: 300,
+            AppFloatingGlassPanel(
+              radius: AppRadius.md,
+              tint: theme.colorScheme.primary,
+              highlighted: _commentFocus.hasFocus,
+              padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      focusNode: _commentFocus,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: l10n.communityCommentHint,
+                        border: InputBorder.none,
+                        counterText: '',
+                        isCollapsed: true,
                       ),
+                      maxLength: 300,
                     ),
-                    const SizedBox(width: 8),
-                    IconButton.filled(
-                      onPressed: _sending ? null : _sendComment,
-                      icon: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.send_rounded, size: 18),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    onPressed: _sending ? null : _sendComment,
+                    icon: _sending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded, size: 18),
+                  ),
+                ],
               ),
             ),
           ],

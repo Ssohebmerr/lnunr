@@ -6,7 +6,7 @@ Use this when filling **Play Console → App content → Data safety** and befor
 
 | Field | Value |
 |-------|-------|
-| Package | `com.lune.app` |
+| Package | `com.luneapp.cycle` |
 | Privacy policy URL | `https://lune-7d956.web.app/privacy-policy.html` |
 | Terms of Service URL | `https://lune-7d956.web.app/terms-of-service.html` |
 | Support email | `merrsoheb@gmail.com` |
@@ -30,8 +30,8 @@ firebase deploy --only firestore:rules,functions
 | Data type | Purpose | Shared? | Encrypted in transit | User can delete |
 |-----------|---------|---------|----------------------|-----------------|
 | Email address | Account / sign-in | Firebase only | Yes | Yes (delete account) |
-| Health info (cycle logs, symptoms, moods, BBT) | App functionality | No (not sold) | Yes if cloud sync on | Yes |
-| Messages (AI chat) | App functionality | Google Gemini / DeepSeek (service providers) | Yes | Yes |
+| Health info (cycle logs, symptoms, moods, BBT) | Tracking + optional AI personalization | AI-relevant context is processed by Gemini / DeepSeek only after explicit consent; never sold | Yes when AI/cloud features are on | Yes |
+| Messages and submitted AI content | App functionality | Google Gemini / DeepSeek (service providers) | Yes | Yes |
 | User-generated content (community posts) | App functionality | Other users (anonymous) | Yes | Yes |
 | App interactions (likes, memberships) | App functionality | No | Yes | Yes |
 | Purchase history (premium) | App functionality | Google Play | Yes | Via Google Play / account deletion |
@@ -69,6 +69,18 @@ reason picker (Medical / Inaccurate / Inappropriate) → `aiReports` collection
 → admin dashboard review. Cite this if the review team asks how offensive AI
 output is reported.
 
+### Third-party AI launch checks (manual — do not skip)
+
+- [ ] In Data safety, declare that AI messages/submitted content and relevant
+      health context leave the device for app functionality. Do not describe
+      the AI context as anonymous or local-only.
+- [ ] Confirm the production Gemini and DeepSeek account/API terms prohibit
+      sale, advertising use, and provider training beyond the disclosed Lune
+      feature, and document retention/deletion. If the current plan does not
+      provide these controls, change the provider plan/config before release.
+- [ ] Keep a copy of the provider terms/DPA and screenshots of the in-app AI
+      disclosure in case Google requests proof of limited use and consent.
+
 ---
 
 ## Technical controls implemented
@@ -91,6 +103,7 @@ output is reported.
 - [x] Contact support (`merrsoheb@gmail.com`) in Account & Privacy Center
 - [x] Full account deletion Cloud Function (`deleteUserAccount`) — posts, comments, storage, partner data, Auth user
 - [x] Consent withdrawal toggles in Privacy Center (cloud / AI / communities); privacy acceptance does **not** auto-enable AI
+- [x] AI age + consent enforced centrally on-device and again in Cloud Functions before provider processing
 - [x] Premium gating: cloud sync, AI chat (30 msgs/day), communities; core tracking free
 - [x] Onboarding age gate: under-13 cannot complete setup; teens blocked from community UGC and **Lune AI**
 - [x] Community `communityBirthYear` set only via explicit setup sheet (not copied from onboarding `birthDate`)
@@ -122,7 +135,7 @@ Use these answers when completing **Play Console → App content → Content rat
 
 | Question area | Recommended answer |
 |---------------|-------------------|
-| Target age | **18+** for community/social features; core tracker usable by adults |
+| Target age | Core tracker: **13+**; Lune AI and community/social features: **18+ only** |
 | User interaction | Yes — anonymous communities with moderation |
 | Shares location | No |
 | Shares personal info | No (nicknames only in communities) |

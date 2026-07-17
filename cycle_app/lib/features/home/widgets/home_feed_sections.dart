@@ -385,6 +385,7 @@ class HomeWeeklyCalendarCard extends StatelessWidget {
                       child: MenstrualCycleCalenderView(
                         themeColor: AuraColors.roseDeep,
                         daySelectedColor: AuraColors.lavenderSoft,
+                        backgroundColorCode: Colors.transparent,
                         hideInfoView: true,
                       ),
                     ),

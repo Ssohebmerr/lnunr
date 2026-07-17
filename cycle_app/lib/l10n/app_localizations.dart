@@ -968,6 +968,24 @@ abstract class AppLocalizations {
   /// **'per month'**
   String get planPerMonth;
 
+  /// No description provided for @planBestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Best value'**
+  String get planBestValue;
+
+  /// No description provided for @planUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable right now'**
+  String get planUnavailable;
+
+  /// No description provided for @planMonthlyEquivalent.
+  ///
+  /// In en, this message translates to:
+  /// **'Equivalent to {price} / month'**
+  String planMonthlyEquivalent(String price);
+
   /// No description provided for @planSaveBadge.
   ///
   /// In en, this message translates to:
@@ -1511,7 +1529,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscriptionPlansHeadline.
   ///
   /// In en, this message translates to:
-  /// **'Lune AI is for Premium members'**
+  /// **'More insight. More privacy. More support.'**
   String get subscriptionPlansHeadline;
 
   /// No description provided for @subscriptionPlansSubtitle.
@@ -1531,6 +1549,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage subscription in Account'**
   String get subscriptionPlansAccountHint;
+
+  /// No description provided for @subscriptionChoosePlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the plan that suits you'**
+  String get subscriptionChoosePlanTitle;
+
+  /// No description provided for @subscriptionChoosePlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All plans unlock the same Premium features. Cancel anytime through Google Play.'**
+  String get subscriptionChoosePlanSubtitle;
+
+  /// No description provided for @subscriptionSelectedCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {plan}'**
+  String subscriptionSelectedCta(String plan);
+
+  /// No description provided for @subscriptionLoadingPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading price…'**
+  String get subscriptionLoadingPrice;
+
+  /// No description provided for @subscriptionSecurePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payment through Google Play • Cancel anytime'**
+  String get subscriptionSecurePayment;
 
   /// No description provided for @logTabTitle.
   ///
@@ -4529,7 +4577,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentAiBody.
   ///
   /// In en, this message translates to:
-  /// **'Chat messages and anonymized cycle context (symptoms, mood, phase) are sent to trusted AI providers (DeepSeek / Google) through our secure server. Not medical advice. No ads. You can disable this anytime.'**
+  /// **'When you enable AI, the message or content you submit and relevant cycle context (such as symptoms, mood, phase, and saved preferences) are sent to DeepSeek and/or Google through our secure server to provide a personalized response. Do not include identifying information you do not want processed. This is not medical advice. You can disable AI anytime.'**
   String get consentAiBody;
 
   /// No description provided for @aiAdultsOnly.
@@ -4871,7 +4919,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingGoalSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Track your cycle, follow your pregnancy, conceive, or avoid — the whole app adapts to your choice.'**
+  /// **'Choose what matters now — cycle, pregnancy, fertility, PCOS, menopause, or recovery — and the app adapts with you.'**
   String get onboardingGoalSubtitle;
 
   /// No description provided for @onboardingCycleTitle.
@@ -6104,6 +6152,18 @@ abstract class AppLocalizations {
   /// **'My comments'**
   String get communityFeedMyComments;
 
+  /// No description provided for @communityCoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post cover'**
+  String get communityCoverTitle;
+
+  /// No description provided for @communityCoverNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get communityCoverNone;
+
   /// No description provided for @communitySortDiscussed.
   ///
   /// In en, this message translates to:
@@ -7049,7 +7109,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed by third-party AI providers to generate responses. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.'**
+  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Data: If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.'**
   String get privacyP2Body;
 
   /// No description provided for @privacyP3Title.
@@ -8129,7 +8189,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountViewPlans.
   ///
   /// In en, this message translates to:
-  /// **'View subscription plans'**
+  /// **'View plans and prices'**
   String get accountViewPlans;
 
   /// No description provided for @accountPremiumThanks.

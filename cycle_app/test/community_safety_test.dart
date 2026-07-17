@@ -58,10 +58,7 @@ void main() {
     });
 
     test('profile without birth year is not ready for community', () {
-      const profile = CommunityProfile(
-        alias: 'luna_user',
-        setupComplete: true,
-      );
+      const profile = CommunityProfile(alias: 'luna_user', setupComplete: true);
       expect(profile.isReady, isFalse);
       expect(profile.isMinor, isTrue);
     });
@@ -85,6 +82,24 @@ void main() {
         setupComplete: true,
       );
       expect(profile.isReady, isTrue);
+    });
+  });
+
+  group('community story media guard', () {
+    test('accepts a non-empty image up to 15 MB', () {
+      expect(isCommunityStoryMediaSizeAllowed(1), isTrue);
+      expect(
+        isCommunityStoryMediaSizeAllowed(kCommunityStoryMaxMediaBytes),
+        isTrue,
+      );
+    });
+
+    test('rejects empty or oversized story images', () {
+      expect(isCommunityStoryMediaSizeAllowed(0), isFalse);
+      expect(
+        isCommunityStoryMediaSizeAllowed(kCommunityStoryMaxMediaBytes + 1),
+        isFalse,
+      );
     });
   });
 

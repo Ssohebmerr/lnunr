@@ -87,13 +87,13 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/icon/app_icon.png
-  adaptive_icon_background: "#211521"
-  adaptive_icon_foreground: assets/icon/app_icon.png
+  adaptive_icon_background: assets/icon/app_icon_bg.png
+  adaptive_icon_foreground: assets/icon/app_icon_fg.png
   remove_alpha_ios: true
   web:
     generate: true
     image_path: assets/icon/app_icon.png
-    background_color: "#211521"
+    background_color: "#FFF6F1"
     theme_color: "#E8A0BF"
   windows:
     generate: true
@@ -103,17 +103,19 @@ flutter_launcher_icons:
     generate: true
     image_path: assets/icon/app_icon.png
 
-# Launch screen: app icon (drop) centred on its own dark-plum field.
+# Launch screen: transparent drop mark centred on a theme-matched field.
+# Light mode = pale mesh tone + deepened mark; dark mode = plum + pale mark,
+# so the native first frame matches the app's theme (no dark flash on light).
 # Regenerate: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#211521"
-  image: assets/icon/app_icon.png
+  color: "#FFF6F4"
+  image: assets/icon/splash_mark_light.png
   color_dark: "#211521"
-  image_dark: assets/icon/app_icon.png
+  image_dark: assets/icon/splash_mark_dark.png
   android_12:
-    image: assets/icon/app_icon.png
-    icon_background_color: "#211521"
-    image_dark: assets/icon/app_icon.png
+    image: assets/icon/splash_mark_light.png
+    icon_background_color: "#FFF6F4"
+    image_dark: assets/icon/splash_mark_dark.png
     icon_background_color_dark: "#211521"
   android: true
   ios: true
@@ -123,5 +125,7 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
+    - assets/avatars/
     - assets/icons/feminine/
     - assets/icon/app_icon.png
+    - assets/pregnancy/fetal_stages/

@@ -26,9 +26,9 @@ class _HomePromoBannersState extends State<HomePromoBanners> {
     if (uri == null) return;
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح الرابط')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح الرابط')));
       }
     }
   }
@@ -51,9 +51,10 @@ class _HomePromoBannersState extends State<HomePromoBanners> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: AppGlassCard(
-                  blur: false,
+                  blur: true,
                   padding: EdgeInsets.zero,
-                  onTap: banner.actionUrl != null && banner.actionUrl!.isNotEmpty
+                  onTap:
+                      banner.actionUrl != null && banner.actionUrl!.isNotEmpty
                       ? () => _openUrl(context, banner.actionUrl!)
                       : null,
                   child: Container(

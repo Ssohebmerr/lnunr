@@ -10,6 +10,7 @@ void main() {
         'text': 'Hello!',
         'createdAt': DateTime(2025, 6, 1),
         'authorAvatarIndex': 2,
+        'likeCount': 7,
       });
 
       expect(comment.id, 'doc1');
@@ -17,6 +18,7 @@ void main() {
       expect(comment.authorAlias, 'Luna');
       expect(comment.text, 'Hello!');
       expect(comment.authorAvatarIndex, 2);
+      expect(comment.likeCount, 7);
     });
 
     test('defaults missing fields safely', () {
@@ -28,6 +30,7 @@ void main() {
       expect(comment.moderationStatus, 'approved');
       expect(comment.hidden, isFalse);
       expect(comment.parentCommentId, isNull);
+      expect(comment.likeCount, isNull);
     });
 
     test('parses parentCommentId', () {

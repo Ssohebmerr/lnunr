@@ -38,3 +38,8 @@ firebase-debug.log
 
 # Code indexing
 .codetb-index.json
+
+# Tooling artifacts (local caches / editor / agent attachments)
+.pnpm-store/
+.codex-remote-attachments/
+.vscode/

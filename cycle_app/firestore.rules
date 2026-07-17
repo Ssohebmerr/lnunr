@@ -83,7 +83,9 @@ service cloud.firestore {
 
               || request.resource.data.daily_chat_count == 0)
 
-        && !request.resource.data.keys().hasAny(['isAdmin', 'role']);
+        && !request.resource.data.keys().hasAny(['isAdmin', 'role'])
+
+        && aiEligibilityValid(request.resource.data);
 
     }
 
@@ -93,7 +95,27 @@ service cloud.firestore {
 
       return !request.resource.data.diff(resource.data).affectedKeys()
 
-        .hasAny(protectedUserFields());
+        .hasAny(protectedUserFields())
+
+        && aiEligibilityValid(request.resource.data);
+
+    }
+
+
+
+    function aiEligibilityValid(data) {
+
+      return (!('aiConsentGranted' in data)
+
+              || data.aiConsentGranted is bool)
+
+        && (!('aiConsentVersion' in data)
+
+              || data.aiConsentVersion == 1)
+
+        && (!('aiAgeGroup' in data)
+
+              || data.aiAgeGroup in ['unknown', 'under13', 'teen', 'adult']);
 
     }
 
@@ -491,6 +513,12 @@ service cloud.firestore {
       allow create, update: if false;
     }
 
+    // A matching document unlocks a community image in Storage after the
+    // server-side Vision/Gemini scan. Clients must never forge approvals.
+    match /communityMediaApprovals/{communityId}/owners/{ownerUid}/files/{fileName} {
+      allow read, write: if false;
+    }
+
 
 
     match /educationArticles/{articleId} {
@@ -691,7 +719,11 @@ service cloud.firestore {
 
           && isCommunityAdult()
 
-          && isCommunityNotBanned();
+          && isCommunityNotBanned()
+
+          && request.resource.data.guidelinesVersion == 1
+
+          && request.resource.data.guidelinesAcceptedAt == request.time;
 
         allow delete: if request.auth != null && request.auth.uid == memberId;
 

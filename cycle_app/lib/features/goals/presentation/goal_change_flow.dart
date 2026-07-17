@@ -1,9 +1,9 @@
-import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart' as md;
 import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../cycle/data/cycle_sync_service.dart';
+import '../data/user_goal_experience.dart';
 import 'goal_mode_intro_sheet.dart';
 import 'goal_picker_sheet.dart';
 import 'pregnancy_lmp_sheet.dart';
@@ -33,29 +33,21 @@ class GoalChangeFlow {
 
     await cycleSync.setUserGoal(picked);
 
-    // Lifecycle goals get a friendly intro sheet so the user sees what
-    // we'll focus on (without re-running onboarding).
+    // Every visible goal gets the same concise summary of what changes. This
+    // keeps switching goals understandable without re-running onboarding.
     if (!context.mounted) return null;
-    if (picked.isMenopauseMode ||
-        picked.isPcosMode ||
-        picked.isPostpartumMode) {
-      await GoalModeIntroSheet.show(context, picked);
-    }
+    await GoalModeIntroSheet.show(context, picked);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.goalChangedSnackbar)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.goalChangedSnackbar)));
     }
     return picked;
   }
 
-  static String labelFor(
-    BuildContext context,
-    UserGoalTypes goal,
-  ) {
-    final mdL10n = md.AppLocalizations.of(context);
-    if (mdL10n != null) return goal.getDisplayName(mdL10n);
-    return goal.dbName;
+  static String labelFor(BuildContext context, UserGoalTypes goal) {
+    final lang = Localizations.localeOf(context).languageCode;
+    return userGoalExperience(goal).titleFor(lang);
   }
 }

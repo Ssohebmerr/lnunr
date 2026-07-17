@@ -192,5 +192,104 @@ const articles = [
   },
 ];
 
-writeFileSync(out, JSON.stringify(articles, null, 2), 'utf8');
-console.log(`Wrote ${articles.length} articles to ${out}`);
+const newArticles = [
+  {
+    id: 'irregular_cycles', category: 'basics', iconName: 'calendar_month_outlined',
+    minutes: 4, adultsOnly: false, published: true, order: 13,
+    titleEn: 'Irregular cycles: when is variation normal?',
+    titleAr: 'الدورة غير المنتظمة: متى يكون التغيّر طبيعيًا؟',
+    bodyEn:
+      'A cycle does not have to arrive on the same date every month. Small changes can happen, especially in the first years after periods begin, during stressful seasons, or when routines change.\n\nTracking gives you a clearer picture than memory alone. Record the first day of bleeding, how long it lasts, and any major changes in sleep, stress, exercise, or weight.\n\nA late period can also happen with pregnancy, some contraceptives, breastfeeding, perimenopause, or health conditions. One late cycle is not a diagnosis.\n\nTalk with a health professional if your periods become irregular after being predictable, you miss three in a row, or the change comes with symptoms that worry you. Your Lune history can help you explain the pattern clearly.',
+    bodyAr:
+      'لا يجب أن تبدأ الدورة في التاريخ نفسه تمامًا كل شهر. قد تحدث فروقات بسيطة، خصوصًا في السنوات الأولى بعد بدايتها، أو خلال فترات الضغط، أو عندما يتغير روتين الحياة.\n\nالتتبع يعطيك صورة أوضح من الاعتماد على الذاكرة. سجّلي أول يوم للنزيف، ومدته، وأي تغيّر واضح في النوم أو الضغط أو الرياضة أو الوزن.\n\nقد تتأخر الدورة أيضًا بسبب الحمل، وبعض وسائل منع الحمل، والرضاعة، ومرحلة ما قبل انقطاع الطمث، أو بعض الحالات الصحية. دورة واحدة متأخرة لا تعني تشخيصًا.\n\nتحدثي مع مختصة إذا أصبحت دورتك غير منتظمة بعد أن كانت متوقعة، أو غابت ثلاث مرات متتالية، أو صاحب التغيّر أعراض تقلقك. سجل Lune يساعدك على شرح النمط بوضوح.',
+  },
+  {
+    id: 'sleep_and_cycle', category: 'mind', iconName: 'bedtime_outlined',
+    minutes: 3, adultsOnly: false, published: true, order: 14,
+    titleEn: 'Sleep and your cycle: a gentler routine',
+    titleAr: 'النوم ودورتك: روتين ألطف لأيام الشهر',
+    bodyEn:
+      'Some people notice that sleep feels different before a period: falling asleep may take longer, dreams may feel vivid, or tiredness may arrive earlier. Premenstrual symptoms can include sleeping too much or too little.\n\nStart with consistency rather than perfection. Keep wake-up time fairly steady, dim bright screens before bed, and make the room cool and comfortable. Caffeine late in the day can make an already restless night harder.\n\nUse Lune to note sleep beside mood and cycle day. After two or three cycles, you may see a repeatable pattern and can protect those nights with a lighter evening.\n\nIf poor sleep lasts beyond your cycle pattern, affects daily life, or comes with persistent low mood or anxiety, talk with a qualified professional.',
+    bodyAr:
+      'تلاحظ بعض النساء أن النوم يتغير قبل الدورة: قد يستغرق الدخول في النوم وقتًا أطول، أو تصبح الأحلام أوضح، أو يأتي التعب مبكرًا. وقد تشمل أعراض ما قبل الدورة النوم أكثر أو أقل من المعتاد.\n\nابدئي بالانتظام لا بالكمال. ثبتي وقت الاستيقاظ قدر الإمكان، وخففي الشاشات الساطعة قبل النوم، واجعلي الغرفة مريحة ومعتدلة الحرارة. وقد يزيد الكافيين المتأخر صعوبة ليلة مضطربة أصلًا.\n\nاستخدمي Lune لتسجيل النوم بجانب المزاج ويوم الدورة. بعد دورتين أو ثلاث قد يظهر نمط متكرر، وعندها يمكنك حماية تلك الليالي بأمسية أخف.\n\nإذا استمر اضطراب النوم خارج نمط الدورة، أو أثّر على حياتك اليومية، أو صاحبه مزاج منخفض أو قلق مستمر، فتحدثي مع مختصة مؤهلة.',
+  },
+  {
+    id: 'heavy_periods_iron', category: 'health', iconName: 'bloodtype_outlined',
+    minutes: 4, adultsOnly: false, published: true, order: 15,
+    titleEn: 'Heavy periods and iron: signs worth noticing',
+    titleAr: 'غزارة الدورة والحديد: علامات تستحق الانتباه',
+    bodyEn:
+      'Heavy menstrual bleeding can affect energy and may lead to iron-deficiency anemia. Signs can include unusual tiredness, weakness, dizziness, headaches, or shortness of breath. These symptoms have many possible causes, so they deserve assessment rather than self-diagnosis.\n\nBleeding may be considered heavy when it lasts more than seven days, soaks through protection every hour for several hours, requires changes during the night, or regularly disrupts school, work, or sleep.\n\nTrack flow level, duration, clots, and symptoms in Lune. A few cycles of clear records can help a clinician understand what is happening and decide whether blood tests are useful.\n\nIron-rich foods support general nutrition, but do not start high-dose iron supplements unless a clinician recommends them. Seek urgent care for very heavy bleeding with fainting, chest pain, severe weakness, or trouble breathing.',
+    bodyAr:
+      'قد تؤثر غزارة نزيف الدورة على الطاقة، وقد تؤدي إلى فقر الدم الناتج عن نقص الحديد. ومن علاماته التعب غير المعتاد، والضعف، والدوخة، والصداع، أو ضيق النفس. لهذه الأعراض أسباب متعددة، لذلك تحتاج تقييمًا لا تشخيصًا ذاتيًا.\n\nقد يُعد النزيف غزيرًا إذا استمر أكثر من سبعة أيام، أو أغرق الفوطة كل ساعة لعدة ساعات، أو تطلب التغيير ليلًا، أو عطّل المدرسة أو العمل أو النوم بانتظام.\n\nسجّلي مستوى التدفق ومدته والكتل الدموية والأعراض في Lune. سجل واضح لعدة دورات يساعد المختصة على فهم ما يحدث وتحديد الحاجة إلى فحوصات دم.\n\nالأطعمة الغنية بالحديد تدعم التغذية العامة، لكن لا تبدئي جرعات عالية من مكملات الحديد إلا بتوصية مختصة. واطلبي رعاية عاجلة عند نزيف شديد جدًا مع إغماء أو ألم صدر أو ضعف شديد أو صعوبة تنفس.',
+  },
+  {
+    id: 'bloating_and_hydration', category: 'nutrition', iconName: 'water_drop_outlined',
+    minutes: 3, adultsOnly: false, published: true, order: 16,
+    titleEn: 'Bloating before your period: small comforts',
+    titleAr: 'الانتفاخ قبل الدورة: خطوات صغيرة للراحة',
+    bodyEn:
+      'Bloating and a gassy feeling are common premenstrual symptoms. Hormone changes, digestion, salty meals, and individual food sensitivities can all shape how your body feels.\n\nGentle habits may help: drink regularly through the day, eat at a comfortable pace, keep meals balanced, and notice whether very salty foods or large late meals make your own symptoms worse. Light movement can also support comfort.\n\nThere is no need for a harsh detox or to fear normal foods. Track what you ate and how you felt without judging yourself; look for a repeated personal pattern instead of blaming one meal.\n\nSpeak with a clinician if bloating is severe, persistent throughout the month, suddenly different, or comes with unexplained weight loss, vomiting, blood in stool, or significant pain.',
+    bodyAr:
+      'الانتفاخ والشعور بالغازات من الأعراض الشائعة قبل الدورة. وقد تؤثر تغيرات الهرمونات والهضم والوجبات المالحة وحساسية الجسم لبعض الأطعمة في شعورك.\n\nقد تساعد عادات لطيفة: اشربي بانتظام خلال اليوم، وكلي بهدوء، وحافظي على توازن الوجبات، ولاحظي إن كانت الأطعمة شديدة الملوحة أو الوجبات الكبيرة المتأخرة تزيد أعراضك أنتِ. وقد تدعم الحركة الخفيفة الراحة أيضًا.\n\nلا حاجة إلى ديتوكس قاسٍ أو الخوف من الطعام الطبيعي. سجّلي ما أكلتِ وكيف شعرتِ من دون لوم، وابحثي عن نمط شخصي متكرر بدل اتهام وجبة واحدة.\n\nتحدثي مع مختصة إذا كان الانتفاخ شديدًا أو مستمرًا طوال الشهر أو تغيّر فجأة، أو صاحبه فقدان وزن غير مفسر أو قيء أو دم في البراز أو ألم واضح.',
+  },
+  {
+    id: 'stress_and_late_periods', category: 'mind', iconName: 'spa_outlined',
+    minutes: 3, adultsOnly: false, published: true, order: 17,
+    titleEn: 'Can stress make a period late?',
+    titleAr: 'هل يمكن أن يؤخر الضغط النفسي الدورة؟',
+    bodyEn:
+      'Stress is one possible reason a period arrives late or is missed. The body systems involved in stress and reproduction influence one another, but stress is not the only explanation.\n\nIf pregnancy is possible, a pregnancy test is the practical first step. Changes in weight, intense exercise, breastfeeding, hormonal contraception, perimenopause, and some health conditions can also change timing.\n\nInstead of trying to force a period to start, support the basics: regular meals, enough rest, gentle movement, and a manageable routine. Log dates and major stressors so you can see whether the pattern settles.\n\nSee a health professional if you miss three periods in a row, your cycles become irregular after being predictable, or you also notice symptoms such as marked weight change, unusual hair growth, or ongoing fatigue.',
+    bodyAr:
+      'الضغط النفسي أحد الأسباب الممكنة لتأخر الدورة أو غيابها. فالأنظمة المسؤولة عن الضغط والتكاثر في الجسم تؤثر في بعضها، لكن الضغط ليس التفسير الوحيد.\n\nإذا كان الحمل ممكنًا، فاختبار الحمل هو الخطوة العملية الأولى. وقد يغيّر التوقيت أيضًا تغير الوزن، والرياضة الشديدة، والرضاعة، ووسائل منع الحمل الهرمونية، ومرحلة ما قبل انقطاع الطمث، وبعض الحالات الصحية.\n\nبدل محاولة إجبار الدورة على البدء، ادعمي الأساسيات: وجبات منتظمة، وراحة كافية، وحركة لطيفة، وروتين يمكن تحمله. سجّلي التواريخ وفترات الضغط الكبيرة لترَي إن كان النمط سيستقر.\n\nراجعي مختصة إذا غابت ثلاث دورات متتالية، أو أصبحت الدورات غير منتظمة بعد أن كانت متوقعة، أو ظهرت علامات مثل تغير واضح في الوزن أو نمو شعر غير معتاد أو تعب مستمر.',
+  },
+  {
+    id: 'prepare_for_doctor_visit', category: 'health', iconName: 'medical_services_outlined',
+    minutes: 3, adultsOnly: false, published: true, order: 18,
+    titleEn: 'How to prepare for a cycle health visit',
+    titleAr: 'كيف تستعدين لموعد صحة الدورة؟',
+    bodyEn:
+      'A useful appointment starts before you enter the clinic. Bring the dates of recent periods, how many days bleeding lasted, flow level, pain score, bleeding between periods, and symptoms that affect daily life.\n\nWrite down medicines, supplements, allergies, contraception, past conditions, and the questions you do not want to forget. Your Lune history can organize much of this information.\n\nIt is normal to feel nervous. You can say that at the start, ask what will happen before any examination, request privacy for part of the conversation, and ask for an explanation in words you understand.\n\nNot every visit requires a pelvic examination. What is appropriate depends on age, symptoms, history, and the purpose of the visit. You can ask why a test is recommended and what alternatives exist.',
+    bodyAr:
+      'يبدأ الموعد المفيد قبل دخول العيادة. خذي معك تواريخ الدورات الأخيرة، وعدد أيام النزيف، ومستوى التدفق، ودرجة الألم، وأي نزيف بين الدورات، والأعراض التي تؤثر على حياتك اليومية.\n\nاكتبي الأدوية والمكملات والحساسيات ووسيلة منع الحمل والحالات السابقة والأسئلة التي لا تريدين نسيانها. ويمكن لسجل Lune تنظيم كثير من هذه المعلومات.\n\nمن الطبيعي أن تشعري بالتوتر. يمكنك قول ذلك في البداية، والسؤال عما سيحدث قبل أي فحص، وطلب الخصوصية لجزء من الحديث، وطلب شرح بكلمات تفهمينها.\n\nلا يحتاج كل موعد إلى فحص للحوض. يعتمد المناسب على العمر والأعراض والتاريخ وسبب الزيارة. ومن حقك السؤال عن سبب اقتراح أي فحص والبدائل المتاحة.',
+  },
+];
+
+const hostBase = 'https://lune-7d956.web.app/images/magazine';
+const sourceUrls = {
+  what_is_cycle: ['https://www.nhs.uk/conditions/periods/'],
+  cycle_phases: ['https://www.nhs.uk/conditions/periods/'],
+  first_period: ['https://www.nhs.uk/conditions/periods/'],
+  pms_explained: ['https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome'],
+  period_pain: ['https://111.wales.nhs.uk/Periods%2Cpainful/'],
+  see_doctor: ['https://www.acog.org/womens-health/faqs/heavy-menstrual-bleeding'],
+  cycle_nutrition: ['https://womenshealth.gov/a-z-topics/iron-deficiency-anemia'],
+  cycle_exercise: ['https://111.wales.nhs.uk/Periods%2Cpainful/'],
+  hormones_mood: ['https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome'],
+  self_kindness: ['https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome'],
+  fertility_window: ['https://www.acog.org/womens-health/faqs/fertility-awareness-based-methods-of-family-planning'],
+  contraception_overview: ['https://www.acog.org/womens-health/faqs/birth-control'],
+  irregular_cycles: ['https://www.nhs.uk/symptoms/missed-or-late-periods/'],
+  sleep_and_cycle: ['https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome'],
+  heavy_periods_iron: [
+    'https://www.acog.org/womens-health/faqs/heavy-menstrual-bleeding',
+    'https://womenshealth.gov/a-z-topics/iron-deficiency-anemia',
+  ],
+  bloating_and_hydration: ['https://womenshealth.gov/menstrual-cycle/premenstrual-syndrome'],
+  stress_and_late_periods: ['https://www.nhs.uk/symptoms/missed-or-late-periods/'],
+  prepare_for_doctor_visit: ['https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2018/10/well-woman-visit'],
+};
+
+const serverArticles = [...articles, ...newArticles].map((article) => ({
+  ...article,
+  coverImageUrl: `${hostBase}/${article.id}.webp`,
+  excerptAr: article.bodyAr.split('\n\n')[0],
+  excerptEn: article.bodyEn.split('\n\n')[0],
+  featured: article.id === 'what_is_cycle',
+  slug: article.id,
+  sourceUrls: sourceUrls[article.id] || [],
+  contentVersion: 2,
+}));
+
+writeFileSync(out, JSON.stringify(serverArticles, null, 2), 'utf8');
+console.log(`Wrote ${serverArticles.length} server articles to ${out}`);

@@ -6,6 +6,7 @@ import 'calender_view/calender_view.dart';
 class MenstrualCycleMonthlyCalenderView extends StatefulWidget {
   final Color? themeColor;
   final Color? daySelectedColor;
+  final Color? backgroundColor;
   final bool hideInfoView;
   final bool isShowCloseIcon;
   final Function? onDataChanged;
@@ -14,6 +15,7 @@ class MenstrualCycleMonthlyCalenderView extends StatefulWidget {
       {super.key,
       this.themeColor = Colors.black,
       this.daySelectedColor,
+      this.backgroundColor,
       this.isShowCloseIcon = false,
       this.onDataChanged,
       this.hideInfoView = false});
@@ -42,11 +44,12 @@ class _MenstrualCycleMonthlyCalenderViewState
           selectedColor: (widget.daySelectedColor != null)
               ? widget.daySelectedColor
               : Colors.grey,
+          backgroundColor: widget.backgroundColor,
           cycleLength: _instance.getCycleLength(),
           periodLength: _instance.getPeriodDuration(),
           isFromCalender: widget.isShowCloseIcon,
           onDataChanged: (value) {
-            widget.onDataChanged!.call(value);
+            widget.onDataChanged?.call(value);
           },
           hideInfoView: widget.hideInfoView),
     );

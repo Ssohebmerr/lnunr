@@ -7,9 +7,8 @@
 //       Used by community triggers (posts, comments, stories) to decide
 //       whether user-generated content is allowed. Returns
 //       `{ approved: true }` or `{ approved: false, reason: "..." }`.
-//       IMPORTANT: a Gemini outage returns `{ approved: true }` (fail-open)
-//       so we don't block legitimate users on transient errors — the onPost
-//       / onComment triggers can then re-run via reprocessPendingModeration.
+//       A Gemini outage returns `pendingReview` (fail-closed): unchecked UGC
+//       stays private to its author until a retry or human review resolves it.
 //
 //   - buildContextString(cycleContext, mode)
 //       Renders the structured cycle context into a flat string the model
@@ -21,14 +20,35 @@
 
 const { callGemini, GEMINI_MODERATION_SAFETY_SETTINGS } = require('./gemini');
 
+const MODERATION_TIMEOUT_MS = 4500;
+
 const MODERATION_INSTRUCTION = `You are a content moderator for a women's health community app.
 Review the post/comment below. Reject ONLY if it contains:
 - Medical prescriptions or specific medication dosages
 - Dangerous self-harm/suicide content
 - Harassment, hate speech, or threats
-- Spam, ads, or promotional links
+- Child sexual abuse/exploitation, grooming, or sexualization of minors
+- Sexual exploitation or non-consensual intimate content
+- Personal contact solicitation, scams, illegal sales, spam, or promotional links
 Allow supportive peer discussion, emotional sharing, personal experiences.
 Reply ONLY with JSON: {"approved":true} or {"approved":false,"reason":"short reason"}`;
+
+async function withModerationTimeout(request) {
+  let timer;
+  try {
+    return await Promise.race([
+      request,
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('moderation_timeout')),
+          MODERATION_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 /**
  * Run moderation on a piece of text via Gemini.
@@ -36,38 +56,43 @@ Reply ONLY with JSON: {"approved":true} or {"approved":false,"reason":"short rea
  * @param {string} geminiApiKey Raw key from `defineSecret().value()`.
  * @param {string} text The text to moderate.
  * @returns {Promise<{approved: boolean, reason?: string}>}
- *   Returns `{ approved: true }` on parse failures (fail-open for transient
- *   outages — see header note).
+ *   Returns `pendingReview` on parse failures or transient outages.
  */
 async function moderateContent(geminiApiKey, text) {
   try {
-    const result = await callGemini(
-      geminiApiKey, MODERATION_INSTRUCTION, text, 100,
-      undefined, GEMINI_MODERATION_SAFETY_SETTINGS,
+    const result = await withModerationTimeout(
+      callGemini(
+        geminiApiKey, MODERATION_INSTRUCTION, text, 100,
+        undefined, GEMINI_MODERATION_SAFETY_SETTINGS,
+      ),
     );
-    // Only an EXPLICIT rejection blocks the post. Everything else — an explicit
-    // approval, a safety-blocked/empty reply, or unparseable text — passes,
-    // because the client-side keyword/link/contact filter already caught the
-    // dangerous cases before the text ever reached the model, and reports +
-    // auto-hide remain the human safety net.
     if (result.includes('"approved":false')) {
       const match = result.match(/"reason"\s*:\s*"([^"]+)"/);
       return { approved: false, reason: match ? match[1] : 'Content not allowed.' };
     }
-    return { approved: true };
+    if (result.includes('"approved":true')) return { approved: true };
+    return {
+      approved: false,
+      pendingReview: true,
+      reason: 'Moderation response could not be verified.',
+    };
   } catch (e) {
-    // Fail-OPEN on a transient outage (see header note) — never strand a
-    // legitimate post in a review queue nobody drains.
+    // Fail closed to the private review queue. The author still sees the
+    // optimistic/pending item, while other members never receive unchecked
+    // content. Scheduled moderation and the admin queue resolve it later.
     console.error('Moderation error:', e);
-    return { approved: true, failOpen: true };
+    return {
+      approved: false,
+      pendingReview: true,
+      reason: 'Moderation temporarily unavailable.',
+    };
   }
 }
 
 /**
  * Map a moderation result to a Firestore status update.
- * Only an explicit AI rejection blocks the write; everything else is approved
- * (fail-open) so nothing is stranded in a review queue. `pending_review` is now
- * reserved for the reports auto-hide path, not the submit path.
+ * Explicit approval publishes, explicit rejection blocks, and an unavailable
+ * or unverifiable classifier result is held in `pending_review`.
  *
  * @returns {Promise<{
  *   moderationStatus: 'approved'|'rejected',
@@ -87,11 +112,18 @@ async function evaluateModeration(geminiApiKey, text) {
   }
 
   const result = await moderateContent(geminiApiKey, text);
+  if (result.pendingReview) {
+    return {
+      moderationStatus: 'pending_review',
+      pendingReview: true,
+      reason: result.reason,
+    };
+  }
   if (result.approved) {
     return {
       moderationStatus: 'approved',
       pendingReview: false,
-      reviewedBy: result.failOpen ? 'auto_ai_failopen' : 'auto_ai',
+      reviewedBy: 'auto_ai',
     };
   }
   return {

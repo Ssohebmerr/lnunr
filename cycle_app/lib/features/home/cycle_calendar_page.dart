@@ -45,10 +45,11 @@ class _CycleCalendarPageState extends State<CycleCalendarPage> {
           blur: false,
           padding: EdgeInsets.zero,
           child: SizedBox(
-            height: 220,
+            height: 285,
             child: MenstrualCycleCalenderView(
               themeColor: AuraColors.roseDeep,
               daySelectedColor: AuraColors.lavenderSoft,
+              backgroundColorCode: Colors.transparent,
               hideInfoView: false,
               onDataChanged: _onDataChanged,
             ),
@@ -60,10 +61,11 @@ class _CycleCalendarPageState extends State<CycleCalendarPage> {
           blur: false,
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: SizedBox(
-            height: 360,
+            height: 430,
             child: MenstrualCycleMonthlyCalenderView(
               themeColor: AuraColors.roseDeep,
               daySelectedColor: AuraColors.lavenderSoft,
+              backgroundColor: Colors.transparent,
               hideInfoView: false,
               onDataChanged: _onDataChanged,
             ),

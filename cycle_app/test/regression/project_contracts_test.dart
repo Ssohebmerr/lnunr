@@ -57,8 +57,8 @@ void main() {
       }
       expect(js, contains("'${PlayBillingService.monthlyProductId}'"));
       expect(js, contains("'${PlayBillingService.yearlyProductId}'"));
-      expect(PlayBillingService.packageName, 'com.lune.app');
-      expect(js, contains("'com.lune.app'"));
+      expect(PlayBillingService.packageName, 'com.luneapp.cycle');
+      expect(js, contains("'com.luneapp.cycle'"));
     });
   });
 

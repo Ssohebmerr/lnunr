@@ -40,7 +40,11 @@ void main() {
       ];
       for (final mode in knownModes) {
         final prompt = AiPromptStyle.forMode(mode);
-        expect(prompt, isNotEmpty, reason: 'mode "$mode" produced empty prompt');
+        expect(
+          prompt,
+          isNotEmpty,
+          reason: 'mode "$mode" produced empty prompt',
+        );
         expect(prompt.trim(), isNotEmpty);
       }
     });
@@ -52,18 +56,22 @@ void main() {
       final fullChat = AiPromptStyle.forMode('chat');
       for (final mode in specialised) {
         final p = AiPromptStyle.forMode(mode);
-        expect(p, isNot(equals(fullChat)),
-            reason: 'specialised mode "$mode" should not equal chat prompt');
+        expect(
+          p,
+          isNot(equals(fullChat)),
+          reason: 'specialised mode "$mode" should not equal chat prompt',
+        );
       }
     });
 
     test('recap and weekly_recap return the same prompt', () {
-      expect(AiPromptStyle.forMode('recap'),
-          equals(AiPromptStyle.forMode('weekly_recap')));
+      expect(
+        AiPromptStyle.forMode('recap'),
+        equals(AiPromptStyle.forMode('weekly_recap')),
+      );
     });
 
-    test('isPregnant swaps the chat fall-through to the pregnant variant',
-        () {
+    test('isPregnant swaps the chat fall-through to the pregnant variant', () {
       final nonPregnant = AiPromptStyle.forMode('chat', isPregnant: false);
       final pregnant = AiPromptStyle.forMode('chat', isPregnant: true);
       expect(pregnant, isNot(equals(nonPregnant)));
@@ -90,18 +98,50 @@ void main() {
       );
     });
 
+    test('interactive chat adapts Arabic dialect only with clear evidence', () {
+      for (final mode in ['chat', 'analyze']) {
+        final prompt = AiPromptStyle.forMode(mode);
+        expect(prompt, contains('ARABIC DIALECT ADAPTATION'));
+        expect(prompt, contains('start with warm, natural'));
+        expect(prompt, contains('clear, recurring wording'));
+        expect(prompt, contains('Never infer it from the app locale'));
+        expect(prompt, contains('Never announce, explain, or expose'));
+      }
+    });
+
+    test('structured and specialised modes keep their existing style', () {
+      for (final mode in ['doctor', 'briefing', 'emergency', 'mood']) {
+        expect(
+          AiPromptStyle.forMode(mode),
+          isNot(contains('ARABIC DIALECT ADAPTATION')),
+          reason: 'mode "$mode" should not receive free-form dialect rules',
+        );
+      }
+    });
+
     test('every prompt that needs it contains the medical safety clause', () {
       // The medical safety block is the ONLY thing that must be strict —
       // but specialised modes like `briefing` and `partner` intentionally
       // omit it (they're too short / non-clinical to warrant the boilerplate).
       const modesWithSafety = [
-        'chat', 'emergency', 'mood', 'analyze', 'doctor',
-        'patterns', 'nutrition', 'fertility', 'weight', 'intimacy',
+        'chat',
+        'emergency',
+        'mood',
+        'analyze',
+        'doctor',
+        'patterns',
+        'nutrition',
+        'fertility',
+        'weight',
+        'intimacy',
       ];
       for (final mode in modesWithSafety) {
         final prompt = AiPromptStyle.forMode(mode);
-        expect(prompt.toLowerCase(), contains('medical safety'),
-            reason: 'mode "$mode" is missing the medical safety block');
+        expect(
+          prompt.toLowerCase(),
+          contains('medical safety'),
+          reason: 'mode "$mode" is missing the medical safety block',
+        );
       }
     });
   });
@@ -109,18 +149,38 @@ void main() {
   group('AiPromptStyle.configForMode', () {
     test('returns positive maxTokens and a temperature in (0, 1.5]', () {
       const modes = [
-        'chat', 'briefing', 'patterns', 'emergency', 'nutrition',
-        'partner', 'mood', 'fertility', 'weight', 'intimacy',
-        'recap', 'doctor', 'analyze', 'unknown-thing',
+        'chat',
+        'briefing',
+        'patterns',
+        'emergency',
+        'nutrition',
+        'partner',
+        'mood',
+        'fertility',
+        'weight',
+        'intimacy',
+        'recap',
+        'doctor',
+        'analyze',
+        'unknown-thing',
       ];
       for (final mode in modes) {
         final cfg = AiPromptStyle.configForMode(mode);
-        expect(cfg.maxTokens, greaterThan(0),
-            reason: 'mode "$mode" gave non-positive maxTokens');
-        expect(cfg.temperature, greaterThan(0),
-            reason: 'mode "$mode" gave non-positive temperature');
-        expect(cfg.temperature, lessThanOrEqualTo(1.5),
-            reason: 'mode "$mode" gave implausibly high temperature');
+        expect(
+          cfg.maxTokens,
+          greaterThan(0),
+          reason: 'mode "$mode" gave non-positive maxTokens',
+        );
+        expect(
+          cfg.temperature,
+          greaterThan(0),
+          reason: 'mode "$mode" gave non-positive temperature',
+        );
+        expect(
+          cfg.temperature,
+          lessThanOrEqualTo(1.5),
+          reason: 'mode "$mode" gave implausibly high temperature',
+        );
       }
     });
 
@@ -130,8 +190,11 @@ void main() {
       // is allowed to be even larger (it caps at 1500 to avoid runaway
       // tokens for unbounded conversation).
       final doctorCfg = AiPromptStyle.configForMode('doctor');
-      expect(doctorCfg.maxTokens, greaterThanOrEqualTo(1000),
-          reason: 'doctor budget regressed below 1000 — restore to 1200');
+      expect(
+        doctorCfg.maxTokens,
+        greaterThanOrEqualTo(1000),
+        reason: 'doctor budget regressed below 1000 — restore to 1200',
+      );
     });
 
     test('lightweight modes (partner, intimacy, briefing) have smaller '
@@ -139,8 +202,11 @@ void main() {
       final chat = AiPromptStyle.configForMode('chat');
       for (final mode in ['partner', 'intimacy', 'briefing']) {
         final cfg = AiPromptStyle.configForMode(mode);
-        expect(cfg.maxTokens, lessThanOrEqualTo(chat.maxTokens),
-            reason: 'lightweight mode "$mode" should not exceed chat budget');
+        expect(
+          cfg.maxTokens,
+          lessThanOrEqualTo(chat.maxTokens),
+          reason: 'lightweight mode "$mode" should not exceed chat budget',
+        );
       }
     });
 
@@ -159,9 +225,11 @@ void main() {
         'mood': 0.85,
       };
       for (final entry in samples.entries) {
-        expect(AiPromptStyle.configForMode(entry.key).temperature,
-            entry.value,
-            reason: 'temperature for "${entry.key}" drifted');
+        expect(
+          AiPromptStyle.configForMode(entry.key).temperature,
+          entry.value,
+          reason: 'temperature for "${entry.key}" drifted',
+        );
       }
     });
   });
@@ -174,12 +242,25 @@ void main() {
     });
 
     test('chat/analyze/doctor/mood/patterns/etc. opt IN', () {
-      const fullModes = ['chat', 'analyze', 'doctor', 'mood', 'patterns',
-                          'emergency', 'nutrition', 'fertility', 'weight',
-                          'recap', 'unknown-mode'];
+      const fullModes = [
+        'chat',
+        'analyze',
+        'doctor',
+        'mood',
+        'patterns',
+        'emergency',
+        'nutrition',
+        'fertility',
+        'weight',
+        'recap',
+        'unknown-mode',
+      ];
       for (final mode in fullModes) {
-        expect(AiPromptStyle.includesFullContext(mode), isTrue,
-            reason: 'mode "$mode" should include full context');
+        expect(
+          AiPromptStyle.includesFullContext(mode),
+          isTrue,
+          reason: 'mode "$mode" should include full context',
+        );
       }
     });
   });

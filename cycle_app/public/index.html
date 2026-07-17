@@ -6,13 +6,15 @@
 <title>Lune — دورتكِ لها أطوار، كالقمر</title>
 <meta name="description" content="Lune تعني القمر — تطبيق عربي لتتبع أطوار دورتكِ بهدوء. خصوصية أولاً، 8 أهداف، بدون إعلانات." />
 <link rel="icon" href="/images/favicon.png" type="image/png" />
-<link rel="apple-touch-icon" href="/images/logo.png" />
+  <link rel="apple-touch-icon" href="/images/logo.png" />
+  <meta name="theme-color" content="#1c1019" />
 <link rel="stylesheet" href="site.css?v=15" />
 <link rel="stylesheet" href="home.css?v=15" />
 <link rel="stylesheet" href="home-flo.css?v=15" />
 <link rel="stylesheet" href="home-content.css?v=15" />
 <link rel="stylesheet" href="home-pro.css?v=15" />
-<link rel="stylesheet" href="features.css?v=15" />
+  <link rel="stylesheet" href="features.css?v=16" />
+  <link rel="stylesheet" href="home-2026.css?v=2" />
 </head>
 <body class="page-home">
 
@@ -23,14 +25,10 @@
       <span>Lune</span>
     </a>
     <div class="nav-links">
-      <a href="/about.html">عن التطبيق</a>
-      <a href="/contact.html">اتصل بنا</a>
-      <a href="#cando">ما يمكنك فعله</a>
-      <a href="#goals">أهدافك</a>
+      <a href="/about.html">عن Lune</a>
+      <a href="#showcase">داخل التطبيق</a>
       <a href="/features.html">الميزات</a>
       <a href="#premium">Premium</a>
-      <a href="#reviews">التقييمات</a>
-      <a href="#faq">أسئلة</a>
       <a href="#trust">الثقة</a>
       <a href="#download" class="btn btn-primary btn-sm">حمّلي التطبيق</a>
     </div>
@@ -69,12 +67,11 @@
 <section class="hero hero-premium">
   <div class="container hero-grid">
     <div class="hero-copy-animate">
-      <span class="hero-eyebrow">Lune = القمر · أطوار دورتكِ · خصوصية أولاً</span>
+      <span class="hero-eyebrow">تجربة عربية خاصة · مصممة حولكِ</span>
       <h1>دورتكِ لها أطوار —<br /><span class="text-gradient">مثل القمر</span>، رفيقة تفهمكِ</h1>
       <p class="hero-lead">
-        <strong>Lune</strong> تعني القمر — والقمر يمرّ بأطوار كل شهر، مثل دورتكِ. منصة عربية هادئة لتتبع
-        الدورة والخصوبة والحمل وسنّ الأمل — 8 أهداف، بياناتك على جهازكِ، بدون إعلانات،
-        وPremium اختياري للذكاء الاصطناعي والمجتمع.
+        <strong>Lune</strong> مساحة عربية هادئة تجمع التتبع والخصوصية والرعاية الذاتية في تجربة واحدة.
+        تفهم دورتكِ وأهدافكِ، وترافقكِ من الصحة العامة إلى الحمل وسنّ الأمل—بدون إعلانات أو ضجيج.
       </p>
       <div class="hero-stat-row" aria-label="أرقام سريعة">
         <div class="hero-stat"><strong>8</strong><span>أهداف شخصية</span></div>
@@ -92,8 +89,8 @@
         <span class="hero-badge-text"><strong>قريباً</strong> على Google Play</span>
       </div>
       <div class="hero-actions">
-        <a href="#download" class="btn btn-primary">حمّلي من Google Play</a>
-        <a href="/trust-hub.html" class="btn btn-secondary">مركز الثقة والخصوصية</a>
+        <a href="#showcase" class="btn btn-primary">شاهدي تجربة Lune</a>
+        <a href="/trust-hub.html" class="btn btn-secondary">كيف نحمي بياناتكِ؟</a>
       </div>
       <div class="hero-trust">
         <span><span class="dot"></span> تشفير محلي</span>
@@ -101,22 +98,20 @@
         <span><span class="dot"></span> حذف الحساب في أي وقت</span>
       </div>
     </div>
-    <div class="hero-visual">
-      <div class="hero-moon-glow" aria-hidden="true"></div>
-      <svg class="hero-crescent" viewBox="0 0 120 120" aria-hidden="true">
-        <defs>
-          <linearGradient id="crescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#E8A0BF" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#C9B8E8" stop-opacity="0.7"/>
-          </linearGradient>
-        </defs>
-        <path d="M70 15 A45 45 0 1 0 70 105 A32 32 0 1 1 70 15 Z" fill="url(#crescentGrad)"/>
-      </svg>
-      <div class="device-frame">
-        <div class="device-screen">
-          <img class="hero-screenshot" src="/images/screenshots/home.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/home.svg?v=12'" alt="شاشة Lune الرئيسية" width="180" height="390" />
-        </div>
-      </div>
+    <div class="hero-visual hero-stage" aria-label="شاشات حقيقية من تطبيق Lune">
+      <div class="hero-stage-glow" aria-hidden="true"></div>
+      <figure class="hero-shot hero-shot--home">
+        <img src="/images/screenshots/home.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/home.svg?v=12'" alt="الرئيسية وتقويم الدورة في Lune" width="390" height="844" />
+      </figure>
+      <figure class="hero-shot hero-shot--ai">
+        <img src="/images/screenshots/ai.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/ai.svg?v=12'" alt="محادثة Lune AI" width="390" height="844" loading="lazy" />
+      </figure>
+      <figure class="hero-shot hero-shot--community">
+        <img src="/images/screenshots/community.png?v=12" onerror="this.onerror=null;this.src='/images/screenshots/community.svg?v=12'" alt="مجتمعات Lune" width="390" height="844" loading="lazy" />
+      </figure>
+      <div class="hero-float hero-float--privacy"><strong>خصوصية أولاً</strong><span>بياناتكِ على جهازكِ</span></div>
+      <div class="hero-float hero-float--ai"><strong>Lune AI</strong><span>يتحدث بطريقتكِ</span></div>
+      <div class="hero-stage-mark" aria-hidden="true">L</div>
     </div>
   </div>
 </section>
@@ -405,11 +400,12 @@
 
 
 <!-- Visual showcase -->
-<section class="section section-alt showcase">
+<section class="section section-alt showcase" id="showcase">
   <div class="container">
     <div class="section-header">
-      <h2>صُمّم لراحتكِ وخصوصيتكِ</h2>
-      <p>تجربة عربية أنيقة — من التتبع اليومي إلى فهم جسمكِ بعمق.</p>
+      <span class="section-kicker">من داخل التطبيق</span>
+      <h2>كل ما تحتاجينه، في مساحة تشبهكِ</h2>
+      <p>شاشات حقيقية من Lune — اسحبي لتشاهدي التتبع، الذكاء الاصطناعي، المجتمع، Premium والمزيد.</p>
     </div>
     <div class="showcase-grid showcase-grid--15">
       <article class="showcase-card">
@@ -473,6 +469,7 @@
         <div class="showcase-caption"><h3>خصوصية حقيقية</h3><p>تشفير، تخفي، وحذف فوري.</p></div>
       </article>
     </div>
+    <p class="showcase-scroll-note" aria-hidden="true">اسحبي لاستكشاف المزيد ←</p>
   </div>
 </section>
 
@@ -547,7 +544,7 @@
         <div class="review-stars" aria-label="5 نجوم">★★★★★</div>
         <p class="review-text">«أخيراً تطبيق عربي ما يخوّفني على بياناتي. الخصوصية واضحة والواجهة مريحة — حسّيت إني بأمان من أول يوم.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=سارة+م&background=D484A8&color=fff&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar" aria-hidden="true">س</span>
           <div><strong>سارة م.</strong><span>عمّان · مستخدمة مبكرة</span></div>
         </div>
       </article>
@@ -555,7 +552,7 @@
         <div class="review-stars">★★★★★</div>
         <p class="review-text">«التقويم دقيق والتنبؤات منطقية. أحب إنه ما في إعلانات مزعجة — بس تتبع نظيف بدون ضغط.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=نور+أ&background=C9B8E8&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar review-avatar--lavender" aria-hidden="true">ن</span>
           <div><strong>نور أ.</strong><span>الرياض · مستخدمة مبكرة</span></div>
         </div>
       </article>
@@ -563,7 +560,7 @@
         <div class="review-stars">★★★★★</div>
         <p class="review-text">«وضع التخفي فكرة عبقرية. ومركز الثقة فيه كل شيء عن بياناتي — شفافية نادرة في تطبيقات الدورة.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=ليلى+ك&background=E8A0BF&color=fff&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar" aria-hidden="true">ل</span>
           <div><strong>ليلى ك.</strong><span>دبي · مستخدمة مبكرة</span></div>
         </div>
       </article>
@@ -571,7 +568,7 @@
         <div class="review-stars">★★★★★</div>
         <p class="review-text">«المساعد الذكي مفيد لما أحتاج أسأل سؤال سريع عن دورتي. واضح إنه Premium ومحدود — ما في مفاجآت.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=مريم+ح&background=FFB4A2&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar review-avatar--peach" aria-hidden="true">م</span>
           <div><strong>مريم ح.</strong><span>القاهرة · مشتركة Premium</span></div>
         </div>
       </article>
@@ -579,7 +576,7 @@
         <div class="review-stars">★★★★☆</div>
         <p class="review-text">«التصميم جميل والألوان هادية. التتبع الأساسي يشتغل بدون نت — مهم لما أسافر.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=رنا+س&background=D4C4F0&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar review-avatar--lavender" aria-hidden="true">ر</span>
           <div><strong>رنا س.</strong><span>بيروت · مستخدمة مبكرة</span></div>
         </div>
       </article>
@@ -587,7 +584,7 @@
         <div class="review-stars">★★★★★</div>
         <p class="review-text">«حذفت حسابي للتجربة ورجعت — الحذف فوري فعلاً. هذا اللي خلاني أثق وأكمل استخدام التطبيق.»</p>
         <div class="review-author">
-          <img src="https://ui-avatars.com/api/?name=هبة+ع&background=FADADD&color=5C3D52&size=96&bold=true" alt="" width="48" height="48" loading="lazy" />
+          <span class="review-avatar review-avatar--soft" aria-hidden="true">هـ</span>
           <div><strong>هبة ع.</strong><span>الدار البيضاء · مستخدمة مبكرة</span></div>
         </div>
       </article>

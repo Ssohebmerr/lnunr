@@ -17,6 +17,11 @@ class ModerationRejectedException implements Exception {
   final String reason;
 }
 
+/// The image scanner was unavailable, so unchecked media was not published.
+class MediaReviewUnavailableException implements Exception {
+  const MediaReviewUnavailableException();
+}
+
 /// Thrown when an under-18 user tries to join, post, or comment.
 /// Minors get a read-only community experience for their safety.
 class MinorRestrictedException implements Exception {

@@ -1,5 +1,96 @@
 part of 'chat_tab.dart';
 
+/// Shared frosted surface for chat bubbles. The grouped backdrop filter lets
+/// long conversations reuse one backdrop sample instead of blurring the screen
+/// independently for every message.
+class _ChatGlassSurface extends StatelessWidget {
+  const _ChatGlassSurface({
+    required this.child,
+    required this.borderRadius,
+    this.padding = EdgeInsets.zero,
+    this.constraints,
+    this.gradient,
+    this.accent,
+    this.strong = false,
+  });
+
+  final Widget child;
+  final BorderRadiusGeometry borderRadius;
+  final EdgeInsetsGeometry padding;
+  final BoxConstraints? constraints;
+  final Gradient? gradient;
+  final Color? accent;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final resolvedRadius = borderRadius.resolve(Directionality.of(context));
+    final tint = accent ?? theme.colorScheme.primary;
+    final surfaceGradient =
+        gradient ??
+        LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  AuraColors.darkCard.withValues(alpha: 0.62),
+                  AuraColors.darkCard.withValues(alpha: 0.38),
+                  tint.withValues(alpha: 0.09),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.58),
+                  Colors.white.withValues(alpha: 0.30),
+                  tint.withValues(alpha: 0.065),
+                ],
+          stops: const [0, 0.7, 1],
+        );
+
+    Widget glass = RepaintBoundary(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: resolvedRadius,
+          boxShadow: [
+            BoxShadow(
+              color: (strong ? tint : Colors.black).withValues(
+                alpha: strong
+                    ? (isDark ? 0.18 : 0.11)
+                    : (isDark ? 0.20 : 0.055),
+              ),
+              blurRadius: strong ? 18 : 14,
+              offset: const Offset(0, 6),
+              spreadRadius: -6,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: resolvedRadius,
+          child: BackdropFilter.grouped(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: resolvedRadius,
+                gradient: surfaceGradient,
+                border: Border.all(
+                  color: strong
+                      ? Colors.white.withValues(alpha: isDark ? 0.20 : 0.34)
+                      : Colors.white.withValues(alpha: isDark ? 0.14 : 0.58),
+                ),
+              ),
+              child: Padding(padding: padding, child: child),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (constraints != null) {
+      glass = ConstrainedBox(constraints: constraints!, child: glass);
+    }
+    return glass;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Streaming reply bubble + blinking caret, and the typing indicator.
 // Extracted from chat_tab.dart to keep that file focused on the screen.
@@ -18,7 +109,6 @@ class _StreamingBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = theme.brightness == Brightness.dark;
     final meta = kLunePersonalityMeta[personality]!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -28,31 +118,20 @@ class _StreamingBubble extends StatelessWidget {
           _LuneAvatar(meta: meta),
           const SizedBox(width: 8),
           Flexible(
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white.withValues(alpha: 0.78),
-                borderRadius: const BorderRadiusDirectional.only(
-                  topStart: Radius.circular(6),
-                  topEnd: Radius.circular(20),
-                  bottomStart: Radius.circular(20),
-                  bottomEnd: Radius.circular(20),
-                ),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.white.withValues(alpha: 0.65),
-                ),
+            child: _ChatGlassSurface(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              borderRadius: const BorderRadiusDirectional.only(
+                topStart: Radius.circular(8),
+                topEnd: Radius.circular(16),
+                bottomStart: Radius.circular(16),
+                bottomEnd: Radius.circular(16),
               ),
               child: Builder(
                 builder: (context) {
                   final base = TextStyle(
                     color: theme.colorScheme.onSurface,
-                    height: 1.68,
-                    fontSize: 16.5,
+                    height: 1.62,
+                    fontSize: 16,
                   );
                   return RichText(
                     text: TextSpan(
@@ -62,8 +141,7 @@ class _StreamingBubble extends StatelessWidget {
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
                           child: Padding(
-                            padding:
-                                const EdgeInsetsDirectional.only(start: 2),
+                            padding: const EdgeInsetsDirectional.only(start: 2),
                             child: _BlinkingCaret(
                               color: theme.colorScheme.primary,
                             ),
@@ -160,7 +238,6 @@ class _TypingBubbleState extends State<_TypingBubble>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final meta = kLunePersonalityMeta[widget.personality]!;
 
     return Padding(
@@ -170,18 +247,13 @@ class _TypingBubbleState extends State<_TypingBubble>
         children: [
           _LuneAvatar(meta: meta),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.white.withValues(alpha: 0.78),
-              borderRadius: const BorderRadiusDirectional.only(
-                topStart: Radius.circular(6),
-                topEnd: Radius.circular(20),
-                bottomStart: Radius.circular(20),
-                bottomEnd: Radius.circular(20),
-              ),
+          _ChatGlassSurface(
+            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 13),
+            borderRadius: const BorderRadiusDirectional.only(
+              topStart: Radius.circular(8),
+              topEnd: Radius.circular(16),
+              bottomStart: Radius.circular(16),
+              bottomEnd: Radius.circular(16),
             ),
             child: AnimatedBuilder(
               animation: _controller,

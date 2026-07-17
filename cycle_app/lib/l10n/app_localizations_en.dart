@@ -484,6 +484,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planPerMonth => 'per month';
 
   @override
+  String get planBestValue => 'Best value';
+
+  @override
+  String get planUnavailable => 'Unavailable right now';
+
+  @override
+  String planMonthlyEquivalent(String price) {
+    return 'Equivalent to $price / month';
+  }
+
+  @override
   String planSaveBadge(int percent) {
     return 'Save $percent%';
   }
@@ -767,7 +778,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionPlansTitle => 'Lune Premium';
 
   @override
-  String get subscriptionPlansHeadline => 'Lune AI is for Premium members';
+  String get subscriptionPlansHeadline =>
+      'More insight. More privacy. More support.';
 
   @override
   String get subscriptionPlansSubtitle =>
@@ -778,6 +790,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionPlansAccountHint => 'Manage subscription in Account';
+
+  @override
+  String get subscriptionChoosePlanTitle => 'Choose the plan that suits you';
+
+  @override
+  String get subscriptionChoosePlanSubtitle =>
+      'All plans unlock the same Premium features. Cancel anytime through Google Play.';
+
+  @override
+  String subscriptionSelectedCta(String plan) {
+    return 'Continue with $plan';
+  }
+
+  @override
+  String get subscriptionLoadingPrice => 'Loading price…';
+
+  @override
+  String get subscriptionSecurePayment =>
+      'Secure payment through Google Play • Cancel anytime';
 
   @override
   String get logTabTitle => 'Daily log';
@@ -2412,7 +2443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentAiBody =>
-      'Chat messages and anonymized cycle context (symptoms, mood, phase) are sent to trusted AI providers (DeepSeek / Google) through our secure server. Not medical advice. No ads. You can disable this anytime.';
+      'When you enable AI, the message or content you submit and relevant cycle context (such as symptoms, mood, phase, and saved preferences) are sent to DeepSeek and/or Google through our secure server to provide a personalized response. Do not include identifying information you do not want processed. This is not medical advice. You can disable AI anytime.';
 
   @override
   String get aiAdultsOnly => 'Lune AI is for adults 18+ only.';
@@ -2602,7 +2633,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingGoalSubtitle =>
-      'Track your cycle, follow your pregnancy, conceive, or avoid — the whole app adapts to your choice.';
+      'Choose what matters now — cycle, pregnancy, fertility, PCOS, menopause, or recovery — and the app adapts with you.';
 
   @override
   String get onboardingCycleTitle => 'Your cycle basics';
@@ -3304,6 +3335,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityFeedMyComments => 'My comments';
 
   @override
+  String get communityCoverTitle => 'Post cover';
+
+  @override
+  String get communityCoverNone => 'None';
+
+  @override
   String get communitySortDiscussed => 'Most discussed';
 
   @override
@@ -3834,7 +3871,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyP2Body =>
-      'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Chat Data: Messages you send to our AI assistant are processed by third-party AI providers to generate responses. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.';
+      'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Data: If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.';
 
   @override
   String get privacyP3Title => '3. How We Use Your Information';
@@ -4442,7 +4479,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSectionPremium => 'Premium';
 
   @override
-  String get accountViewPlans => 'View subscription plans';
+  String get accountViewPlans => 'View plans and prices';
 
   @override
   String get accountPremiumThanks =>

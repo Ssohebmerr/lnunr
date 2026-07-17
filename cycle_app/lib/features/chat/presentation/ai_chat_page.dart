@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -80,11 +82,10 @@ class _AiChatPageState extends State<AiChatPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     if (!_ready) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!_premium) {
@@ -123,31 +124,62 @@ class _AiChatPageState extends State<AiChatPage> {
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              gradient: AuraDecorations.primaryGradient,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
+          scrolledUnderElevation: 0,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            AuraColors.darkCard.withValues(alpha: 0.64),
+                            AuraColors.darkCard.withValues(alpha: 0.38),
+                          ]
+                        : [
+                            Colors.white.withValues(alpha: 0.58),
+                            Colors.white.withValues(alpha: 0.28),
+                          ],
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withValues(
+                        alpha: isDark ? 0.12 : 0.54,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
+          ),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: AuraDecorations.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
                   Icons.auto_awesome_rounded,
                   size: 16,
                   color: Colors.white,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.homeAiCardTitle,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              const SizedBox(width: 9),
+              Text(
+                l10n.homeAiCardTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           centerTitle: true,
         ),

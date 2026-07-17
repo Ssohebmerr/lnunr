@@ -47,6 +47,8 @@ Future<void> showStoryComposer({
                   final picker = ImagePicker();
                   final file = await picker.pickImage(
                     source: ImageSource.gallery,
+                    maxWidth: 1920,
+                    maxHeight: 1920,
                     imageQuality: 85,
                   );
                   if (file == null || !context.mounted) return;
@@ -66,7 +68,11 @@ Future<void> showStoryComposer({
                 onTap: () async {
                   Navigator.pop(ctx);
                   final picker = ImagePicker();
-                  final files = await picker.pickMultiImage(imageQuality: 85);
+                  final files = await picker.pickMultiImage(
+                    maxWidth: 1920,
+                    maxHeight: 1920,
+                    imageQuality: 85,
+                  );
                   if (files.isEmpty || !context.mounted) return;
                   await _uploadMultipleStories(
                     context: context,
@@ -114,6 +120,23 @@ Future<void> _uploadStory({
   final messenger = ScaffoldMessenger.of(context);
   final repo = context.read<CommunityStoryRepository>();
 
+  messenger.showSnackBar(
+    SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(l10n.storyPublish),
+        ],
+      ),
+    ),
+  );
+
   try {
     await repo.createStory(
       communityId: communityId,
@@ -123,16 +146,25 @@ Future<void> _uploadStory({
       authorAvatarIndex: profile.avatarIndex,
     );
     if (context.mounted) {
+      messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(content: Text(l10n.storyPublished)));
     }
   } on MediaRequiresPremiumException {
     if (context.mounted) {
+      messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.storyPremiumRequired)),
       );
     }
-  } catch (e) {
+  } on StoryMediaTooLargeException {
     if (context.mounted) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text(l10n.fileTooLarge)));
+    }
+  } catch (e) {
+    debugPrint('Story upload failed for ${file.name}: $e');
+    if (context.mounted) {
+      messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
     }
   }
@@ -152,6 +184,23 @@ Future<void> _uploadMultipleStories({
   final messenger = ScaffoldMessenger.of(context);
   final repo = context.read<CommunityStoryRepository>();
 
+  messenger.showSnackBar(
+    SnackBar(
+      duration: const Duration(minutes: 5),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(l10n.storyPublish),
+        ],
+      ),
+    ),
+  );
+
   int successCount = 0;
   for (final file in files) {
     try {
@@ -165,9 +214,16 @@ Future<void> _uploadMultipleStories({
       successCount++;
     } on MediaRequiresPremiumException {
       if (context.mounted) {
+        messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.storyPremiumRequired)),
         );
+        return;
+      }
+    } on StoryMediaTooLargeException {
+      if (context.mounted) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(l10n.fileTooLarge)));
         return;
       }
     } catch (e) {
@@ -176,11 +232,15 @@ Future<void> _uploadMultipleStories({
   }
 
   if (context.mounted && successCount > 0) {
+    messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
         content: Text('${l10n.storyPublished} ($successCount/${files.length})'),
       ),
     );
+  } else if (context.mounted) {
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));
   }
 }
 
