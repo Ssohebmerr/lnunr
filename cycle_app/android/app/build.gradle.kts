@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.lune.app"
+        applicationId = "com.luneapp.cycle"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

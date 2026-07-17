@@ -15,7 +15,7 @@ Use this order after merging the server security hardening changes.
 | App Check (client) | ✅ Sends token | ⏳ Register apps | Android Play Integrity, iOS App Attest, Web reCAPTCHA Enterprise |
 | App Check (enforce) | ⏳ `APP_CHECK_ENFORCE=false` | ⏳ Enforce after APK | Flip env var, then Console Enforce for Firestore/Storage |
 | Auth reCAPTCHA | — | ⏳ Enable in Console | Email/password fraud prevention |
-| API key restrictions | — | ⏳ GCP Credentials | Android `com.lune.app`, iOS bundle, web referrers |
+| API key restrictions | — | ⏳ GCP Credentials | Android `com.luneapp.cycle`, iOS bundle, web referrers |
 | IP rate limits | ✅ Active | — | `/chat`, community submit, etc. |
 | Community text sanitize | ✅ Client + server | — | HTML strip, length caps |
 | `grantTesterPremium` | ✅ Gated | ⏳ `TESTER_PREMIUM_ENABLED=false` | Debug UI only in `kDebugMode` |
@@ -31,7 +31,7 @@ Legend: ✅ done in repo/deploy · ⏳ manual Console step · — not applicable
 
 1. **Google Cloud Console → APIs → Credentials**  
    Restrict the Web API key to:
-   - Android app: `com.lune.app`
+   - Android app: `com.luneapp.cycle`
    - iOS bundle: `com.lune.app`
    - HTTP referrers: `https://lune-7d956.web.app/*`, `https://lune-7d956.firebaseapp.com/*`
 

@@ -11,7 +11,6 @@ import 'package:cycle_aura/menstrudel/services/symptom_service.dart';
 import 'package:cycle_aura/menstrudel/services/user_service.dart';
 import 'package:cycle_aura/menstrudel/services/wear_sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';

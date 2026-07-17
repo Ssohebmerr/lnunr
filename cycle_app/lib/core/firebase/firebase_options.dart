@@ -28,7 +28,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g',
-    appId: '1:113050193026:android:731eb6c6712ba42d10789b',
+    appId: '1:113050193026:android:81eb438e56b544c710789b',
     messagingSenderId: '113050193026',
     projectId: 'lune-7d956',
     storageBucket: 'lune-7d956.firebasestorage.app',

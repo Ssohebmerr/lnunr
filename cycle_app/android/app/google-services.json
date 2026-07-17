@@ -49,6 +49,51 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:113050193026:android:81eb438e56b544c710789b",
+        "android_client_info": {
+          "package_name": "com.luneapp.cycle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "113050193026-97dc3tqc2aprvq78god7odod03ankeii.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.luneapp.cycle",
+            "certificate_hash": "de62ec7e6fbbd3df4e57529a4cb8fd031a13d104"
+          }
+        },
+        {
+          "client_id": "113050193026-kd162rqmu35h0gegh65gi6dvislbn8sm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.luneapp.cycle",
+            "certificate_hash": "673f18b4d94f39d9952705b2f2120ee31cd467f6"
+          }
+        },
+        {
+          "client_id": "113050193026-p30nbqodq492163nhghoofo7ea514qh4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "113050193026-8sjul80ge8gr670uht3q6f0i7c7mmtlm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

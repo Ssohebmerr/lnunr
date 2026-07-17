@@ -6,7 +6,7 @@ Use this when filling **Play Console → App content → Data safety** and befor
 
 | Field | Value |
 |-------|-------|
-| Package | `com.lune.app` |
+| Package | `com.luneapp.cycle` |
 | Privacy policy URL | `https://lune-7d956.web.app/privacy-policy.html` |
 | Terms of Service URL | `https://lune-7d956.web.app/terms-of-service.html` |
 | Support email | `merrsoheb@gmail.com` |
