@@ -1,6 +1,6 @@
 // Server-authoritative community submissions. Client-side validation remains
 // for fast feedback, but this endpoint owns the actual post/comment write,
-// rate limit, duplicate check, identity fields, and Premium media gate.
+// rate limit, duplicate check, identity fields, and story Premium media gate.
 
 'use strict';
 
@@ -174,10 +174,9 @@ async function submitPost(db, uid, body) {
     ? parseFirebaseMediaUrl(mediaUrl, communityId, uid)
     : null;
   if ((mediaUrl || mediaType) &&
-      (user.isPremium !== true || !mediaUrl ||
-        mediaType !== 'image' || !media)) {
+      (!mediaUrl || mediaType !== 'image' || !media)) {
     throw new CommunitySubmissionError(
-      'media_premium_required', 403, 'Premium media is unavailable.',
+      'invalid_media', 400, 'Invalid post media.',
     );
   }
   const options = postType === 'poll' ? pollOptions(body.pollOptions) : null;

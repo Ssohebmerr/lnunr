@@ -18,7 +18,7 @@ class AvatarPreset {
 class AvatarCatalog {
   AvatarCatalog._();
 
-  /// 16 stable, app-owned portraits. Keep the order stable: avatar indices
+  /// Stable, app-owned portraits. Keep the order stable: avatar indices
   /// are already persisted locally and in community profiles.
   static const presets = [
     AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_01.png', 0),
@@ -37,7 +37,19 @@ class AvatarCatalog {
     AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 1),
     AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 2),
     AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_04.png', 3),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_05.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_05.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_05.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_05.png', 3),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_06.png', 0),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_06.png', 1),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_06.png', 2),
+    AvatarPreset('assets/avatars/lune_avatar_illustrated_sheet_06.png', 3),
   ];
+
+  // Preserve the fallback avatar of profiles created before the hijabi set was
+  // added. New portraits remain available through the avatar picker.
+  static const _legacySeedPoolSize = 16;
 
   static int get count => presets.length;
 
@@ -48,7 +60,7 @@ class AvatarCatalog {
   static int indexFromSeed(String seed) {
     var hash = 0;
     for (final c in seed.codeUnits) {
-      hash = (hash + c) % presets.length;
+      hash = (hash + c) % _legacySeedPoolSize;
     }
     return hash;
   }

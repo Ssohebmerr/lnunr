@@ -25,9 +25,12 @@ class HomeMediaItem {
       article: article,
       titleEn: article.titleEn,
       titleAr: article.titleAr,
-      subtitleEn:
-          excerptEn.isNotEmpty ? excerptEn : '${article.minutes} min read',
-      subtitleAr: excerptAr.isNotEmpty ? excerptAr : '${article.minutes} د قراءة',
+      subtitleEn: excerptEn.isNotEmpty
+          ? excerptEn
+          : '${article.minutes} min read',
+      subtitleAr: excerptAr.isNotEmpty
+          ? excerptAr
+          : '${article.minutes} د قراءة',
       coverImageUrl: article.coverImageUrl,
       icon: article.icon,
       accent: articleCategoryColor(article.category),
@@ -43,14 +46,14 @@ class HomeMediaItem {
     required IconData icon,
     required Color accent,
   }) : this._(
-          titleEn: titleEn,
-          titleAr: titleAr,
-          subtitleEn: subtitleEn,
-          subtitleAr: subtitleAr,
-          url: url,
-          icon: icon,
-          accent: accent,
-        );
+         titleEn: titleEn,
+         titleAr: titleAr,
+         subtitleEn: subtitleEn,
+         subtitleAr: subtitleAr,
+         url: url,
+         icon: icon,
+         accent: accent,
+       );
 
   final Article? article;
   final String titleEn;

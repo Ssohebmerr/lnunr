@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_home_refresh.dart';
+import '../../../core/age/age_gate.dart';
 import '../../../core/cms/app_settings_repository.dart';
 import '../../../core/config/feature_flags.dart';
 import '../../../core/navigation/home_shell_actions.dart';
@@ -14,6 +15,7 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/premium/premium_status_notifier.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../core/widgets/feminine_icon.dart';
@@ -49,6 +51,8 @@ class _HomeShellState extends State<HomeShell> {
   bool _stealthEnabled = false;
   StreamSubscription<User?>? _authSub;
   bool _communityEnabled = true;
+  bool _ageChecking = true;
+  bool _ageBlocked = false;
 
   final Set<int> _visitedTabs = {0};
 
@@ -93,6 +97,16 @@ class _HomeShellState extends State<HomeShell> {
       } else {
         NotificationService.ensureInitialPermission();
       }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _enforceAgeGate());
+  }
+
+  Future<void> _enforceAgeGate() async {
+    final allowed = await ensureAgeGateAllowsApp(context);
+    if (!mounted) return;
+    setState(() {
+      _ageBlocked = !allowed;
+      _ageChecking = false;
     });
   }
 
@@ -223,6 +237,56 @@ class _HomeShellState extends State<HomeShell> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isAccount = _index == 3;
+
+    if (_ageChecking) {
+      return Scaffold(
+        body: AppMeshBackground(
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (_ageBlocked) {
+      return Scaffold(
+        body: Container(
+          decoration: AppTheme.gradientBackground(context),
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.block_outlined,
+                      size: 56,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.ageGateTitle,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.ageGateUnder13Message,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     final labels = [
       l10n.navHome,

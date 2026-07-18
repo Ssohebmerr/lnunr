@@ -66,8 +66,10 @@ class _StealthCalculatorScreenState extends State<StealthCalculatorScreen> {
   void _onEquals() {
     HapticFeedback.mediumImpact();
 
-    // Check if the secret buffer ends with the PIN + '='
-    _checkSecretUnlock();
+    // Capture the buffer NOW — the setState below wipes it synchronously,
+    // and the async check used to read the field only after that wipe, so
+    // the unlock could never fire no matter how correct the PIN was.
+    _checkSecretUnlock(_secretBuffer);
 
     setState(() {
       if (_firstOperand != null && _operator != null) {
@@ -83,10 +85,11 @@ class _StealthCalculatorScreenState extends State<StealthCalculatorScreen> {
     });
   }
 
-  void _checkSecretUnlock() async {
+  Future<void> _checkSecretUnlock(String buffer) async {
+    if (buffer.isEmpty) return;
     if (!await UserPrefs.hasStealthPin()) return;
 
-    if (await UserPrefs.stealthPinMatchesBuffer(_secretBuffer)) {
+    if (await UserPrefs.stealthPinMatchesBuffer(buffer)) {
       _unlockApp();
     }
   }

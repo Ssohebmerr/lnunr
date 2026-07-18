@@ -9,7 +9,7 @@ import 'education_content.dart';
 /// the application binary size.
 class EducationArticlesRepository {
   EducationArticlesRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -37,11 +37,12 @@ class EducationArticlesRepository {
 
   Stream<List<Article>> watchPublished({required bool includeAdult}) async* {
     try {
-      await for (final snap in _firestore
-          .collection(collection)
-          .where('published', isEqualTo: true)
-          .orderBy('order')
-          .snapshots()) {
+      await for (final snap
+          in _firestore
+              .collection(collection)
+              .where('published', isEqualTo: true)
+              .orderBy('order')
+              .snapshots()) {
         if (snap.docs.isEmpty) {
           yield const [];
           continue;

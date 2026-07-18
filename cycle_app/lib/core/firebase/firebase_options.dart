@@ -19,7 +19,7 @@ class DefaultFirebaseOptions {
   // Web uses Firebase Hosting config; appId is optional for Auth + Firestore.
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyB7eZd1_CoG4ynhNc7AwCs1zR0G1sJpIEo',
-    appId: '1:113050193026:android:731eb6c6712ba42d10789b',
+    appId: '1:113050193026:android:81eb438e56b544c710789b',
     messagingSenderId: '113050193026',
     projectId: 'lune-7d956',
     authDomain: 'lune-7d956.firebaseapp.com',
@@ -36,10 +36,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g',
-    appId: '1:113050193026:android:731eb6c6712ba42d10789b',
+    appId: '1:113050193026:android:81eb438e56b544c710789b',
     messagingSenderId: '113050193026',
     projectId: 'lune-7d956',
     storageBucket: 'lune-7d956.firebasestorage.app',
-    iosBundleId: 'com.lune.app',
+    iosBundleId: 'com.luneapp.cycle',
   );
 }

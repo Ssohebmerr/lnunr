@@ -16,7 +16,7 @@ const { AppPlatform } = require(`${firebaseToolsRoot}lib/management/apps`);
 const { requireAuth } = require(`${firebaseToolsRoot}lib/requireAuth`);
 
 const PROJECT_ID = 'lune-7d956';
-const ANDROID_APP_ID = '1:113050193026:android:731eb6c6712ba42d10789b';
+const ANDROID_APP_ID = '1:113050193026:android:81eb438e56b544c710789b';
 
 async function main() {
   const { configstore } = require(`${firebaseToolsRoot}lib/configstore`);

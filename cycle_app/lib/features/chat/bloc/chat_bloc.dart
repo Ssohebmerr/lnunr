@@ -80,15 +80,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _saveAssistantReply(
     String text,
   ) async {
-    await repository.saveMessage(
-      uid,
-      ChatMessage(
-        id: '',
-        text: text,
-        isUser: false,
-        timestamp: DateTime.now(),
-      ),
-    );
+    try {
+      // The reply is already on screen via the local Firestore cache; the
+      // timeout just stops a flaky network from locking the composer while
+      // the write keeps syncing in the background.
+      await repository
+          .saveMessage(
+            uid,
+            ChatMessage(
+              id: '',
+              text: text,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[ChatBloc] save assistant reply failed: $e');
+    }
   }
 
   Future<bool> _tryRecoverPremium() async {
@@ -138,19 +147,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatLoaded(messages: const [], isSending: true));
     }
 
-    try {
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: text,
-          isUser: true,
-          timestamp: DateTime.now(),
-        ),
-      );
-    } catch (e) {
-      debugPrint('[ChatBloc] save user message failed: $e');
-    }
+    // Fire-and-forget: the message shows up instantly through the local
+    // Firestore cache; waiting for the server ack here only delayed the
+    // start of the AI reply on slow networks.
+    unawaited(
+      repository
+          .saveMessage(
+            uid,
+            ChatMessage(
+              id: '',
+              text: text,
+              isUser: true,
+              timestamp: DateTime.now(),
+            ),
+          )
+          .catchError(
+            (Object e) => debugPrint('[ChatBloc] save user message failed: $e'),
+          ),
+    );
 
     try {
       final context = await _safeContext();
@@ -303,19 +317,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     const prompt =
         'Analyze my menstrual cycle patterns and give wellness insights.';
-    try {
-      await repository.saveMessage(
-        uid,
-        ChatMessage(
-          id: '',
-          text: prompt,
-          isUser: true,
-          timestamp: DateTime.now(),
-        ),
-      );
-    } catch (e) {
-      debugPrint('[ChatBloc] save analyze prompt failed: $e');
-    }
+    unawaited(
+      repository
+          .saveMessage(
+            uid,
+            ChatMessage(
+              id: '',
+              text: prompt,
+              isUser: true,
+              timestamp: DateTime.now(),
+            ),
+          )
+          .catchError(
+            (Object e) =>
+                debugPrint('[ChatBloc] save analyze prompt failed: $e'),
+          ),
+    );
 
     try {
       final context = await _safeContext();

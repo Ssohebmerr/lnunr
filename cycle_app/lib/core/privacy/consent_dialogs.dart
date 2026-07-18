@@ -73,8 +73,11 @@ Future<bool> _showGlassConsentSheet({
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline,
-                      color: theme.colorScheme.primary, size: 20),
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     acceptLabel,
@@ -163,6 +166,13 @@ Future<void> openPrivacyPolicy() async {
 
 Future<void> openTermsOfService() async {
   final uri = Uri.parse(PrivacyConstants.termsOfServiceUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
+Future<void> openYourDataEndsPage() async {
+  final uri = Uri.parse(PrivacyConstants.yourDataEndsUrl);
   if (await canLaunchUrl(uri)) {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }

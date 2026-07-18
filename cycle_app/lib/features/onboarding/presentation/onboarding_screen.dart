@@ -48,6 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _privacyAccepted = false;
   bool _saving = false;
   bool _blockedUnder13 = false;
+  bool _ageGateReady = false;
 
   @override
   void dispose() {
@@ -69,7 +70,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _showAgeGateIfNeeded() async {
-    if (await isAgeGateDone()) return;
+    if (await isAgeGateDone()) {
+      if (mounted) setState(() => _ageGateReady = true);
+      return;
+    }
     if (!mounted) return;
 
     final group = await showAgeGate(context);
@@ -82,6 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     await saveAgeGroup(group);
+    if (mounted) setState(() => _ageGateReady = true);
 
     if (group == AgeGroup.teen && mounted) {
       final l10n = AppLocalizations.of(context)!;
@@ -161,7 +166,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
-    if (_blockedUnder13 || await blocksAppByAgeGate()) return;
+    if (_blockedUnder13 ||
+        !await isAgeGateDone() ||
+        await blocksAppByAgeGate()) {
+      return;
+    }
     if (!mounted) return;
     setState(() => _saving = true);
 
@@ -383,7 +392,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   bool _canContinue() {
-    if (_blockedUnder13) return false;
+    if (_blockedUnder13 || !_ageGateReady) return false;
     if (_step == 1) {
       return _nameController.text.trim().isNotEmpty &&
           _birthDate != null &&

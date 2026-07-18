@@ -7,9 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/media/media_upload_service.dart';
-import '../../../core/premium/premium_upsell_dialog.dart';
 import '../../../core/security/community_text_sanitize.dart';
-import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -23,7 +21,7 @@ import '../data/post_cover_styles.dart';
 import 'widgets/community_ui.dart';
 import 'widgets/moderation_rejected_dialog.dart';
 
-/// Create or edit a text-only (or media-enabled Premium) community post.
+/// Create or edit a community post, with optional image media.
 class ComposePostScreen extends StatefulWidget {
   const ComposePostScreen({
     super.key,
@@ -63,7 +61,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   static const _maxPollOptions = 4;
   final List<TextEditingController> _pollControllers = [];
 
-  // Media (Premium only)
+  // Media
   XFile? _pickedFile;
   bool _uploadingMedia = false;
   final _mediaUpload = MediaUploadService();
@@ -103,12 +101,6 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
   // Media picker
   // ──────────────────────────────────────────────────────────
   Future<void> _pickMedia(ImageSource source) async {
-    final isPremium = await UserPrefs.isPremium();
-    if (!isPremium) {
-      if (mounted) _showPremiumGate();
-      return;
-    }
-
     final picker = ImagePicker();
     final file = await picker.pickImage(source: source, imageQuality: 85);
     if (file == null) return;
@@ -127,13 +119,6 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
     setState(() {
       _pickedFile = file;
     });
-  }
-
-  Future<void> _showPremiumGate() {
-    return showPremiumUpsellDialog(
-      context,
-      feature: PremiumUpsellFeature.communityMedia,
-    );
   }
 
   void _showMediaPickerSheet() {
@@ -256,8 +241,6 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.communityBannedMessage)));
       }
-    } on MediaRequiresPremiumException {
-      if (mounted) _showPremiumGate();
     } on MediaReviewUnavailableException {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -622,8 +605,7 @@ class _ComposePostScreenState extends State<ComposePostScreen> {
                               _CoverSwatch(
                                 selected: _coverStyle == null,
                                 label: l10n.communityCoverNone,
-                                onTap: () =>
-                                    setState(() => _coverStyle = null),
+                                onTap: () => setState(() => _coverStyle = null),
                               ),
                               for (final style in PostCoverStyles.all)
                                 Padding(

@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/age/age_gate.dart';
@@ -10,11 +13,13 @@ import '../../../core/privacy/consent_data_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/privacy/consent_manager.dart';
 import '../../../core/privacy/privacy_constants.dart';
+import '../../../core/security/app_lock_controller.dart';
 import '../../../core/storage/user_prefs.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/aura_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../menstrudel_integration/menstrudel_init.dart';
 import '../data/data_deletion_service.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
@@ -32,6 +37,7 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
   bool _ai = false;
   bool _communities = false;
   bool _stealthMode = false;
+  bool _appLock = false;
   bool _loading = true;
   bool _purging = false;
   final _consentData = ConsentDataService();
@@ -283,14 +289,58 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
     final ai = await ConsentManager.hasAiConsent();
     final communities = await ConsentManager.hasCommunitiesConsent();
     final stealth = await UserPrefs.isStealthModeEnabled();
+    final appLock =
+        MenstrudelInit.settingsService?.areBiometricsEnabled ?? false;
     if (mounted) {
       setState(() {
         _cloudSync = cloud;
         _ai = ai;
         _communities = communities;
         _stealthMode = stealth;
+        _appLock = appLock;
         _loading = false;
       });
+    }
+  }
+
+  /// Turns the biometric App Lock on/off. Both directions require a
+  /// successful fingerprint/passcode confirmation, so nobody who picks up an
+  /// unlocked phone can quietly disable the protection.
+  Future<void> _toggleAppLock(bool enable) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final settings = MenstrudelInit.settingsService;
+    if (settings == null) return;
+
+    if (!await AppLockController.isDeviceSupported()) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.appLockUnavailable)),
+      );
+      return;
+    }
+
+    bool ok = false;
+    try {
+      ok = await LocalAuthentication().authenticate(
+        localizedReason: l10n.appLockConfirmReason,
+        persistAcrossBackgrounding: true,
+        biometricOnly: false,
+      );
+    } on PlatformException {
+      ok = false;
+    }
+    if (!ok || !mounted) return;
+
+    await settings.setBiometricsEnabled(enable);
+    if (!mounted) return;
+    // The confirm sheet backgrounds the app; if the lifecycle hook engaged
+    // the lock shield meanwhile, release it — the user just authenticated.
+    context.read<AppLockController>().unlock();
+    setState(() => _appLock = enable);
+    if (enable) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.appLockActivated)),
+      );
     }
   }
 
@@ -408,6 +458,17 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
 
   Future<void> _deleteAccount(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+    final user = FirebaseAuth.instance.currentUser;
+    final hasRegisteredAccount =
+        user != null &&
+        !(user.isAnonymous) &&
+        (user.email?.trim().isNotEmpty ?? false);
+
+    if (!hasRegisteredAccount) {
+      await openYourDataEndsPage();
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -552,8 +613,9 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                                   return;
                                 }
                                 if (!context.mounted) return;
-                                final accepted =
-                                    await showAiConsentDialog(context);
+                                final accepted = await showAiConsentDialog(
+                                  context,
+                                );
                                 if (!accepted || !context.mounted) return;
                                 setState(() => _ai = true);
                                 return;
@@ -604,6 +666,45 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
               ),
             const SizedBox(height: 12),
 
+            // App Lock — fingerprint/passcode gate every time Lune opens.
+            AppGlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fingerprint_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.appLockTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.appLockDescription,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.appLockEnable),
+                    value: _appLock,
+                    onChanged: _purging ? null : _toggleAppLock,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
             // Stealth Mode
             AppGlassCard(
               child: Column(
@@ -643,6 +744,10 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
                         if (pin == null || pin.length < 4) return;
                         await UserPrefs.setStealthModePin(pin);
                         await UserPrefs.setStealthModeEnabled(true);
+                        // Keep THIS session open — the disguise arms on the
+                        // next app start (as the snackbar says) instead of
+                        // instantly kicking the user to the calculator.
+                        UserPrefs.setSessionUnlocked(true);
                         if (!mounted) return;
                         setState(() => _stealthMode = true);
                         messenger.showSnackBar(

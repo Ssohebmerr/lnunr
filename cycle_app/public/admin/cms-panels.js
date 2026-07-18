@@ -94,8 +94,18 @@ export function initExtraAdmin(ctx) {
       return;
     }
     const audience = $('broadcastAudience').value;
-    const audLabel = audience === 'premium' ? 'مشتركو Premium فقط' : 'جميع المستخدمين';
-    if (!confirm(`إرسال الإشعار إلى: ${audLabel}؟\n\n📌 ${title}\n${body}\n\nلا يمكن التراجع بعد الإرسال.`)) return;
+    const segment = $('broadcastSegment').value || null;
+    const audLabel = audience === 'premium'
+      ? 'مشتركو Premium فقط'
+      : audience === 'free'
+        ? 'المستخدمون المجانيون فقط'
+        : 'جميع المستخدمين';
+    const segmentLabels = {
+      new_7d: 'المستخدمات الجدد خلال 7 أيام',
+      inactive_14d: 'غير النشطات منذ 14 يوماً',
+    };
+    const targetLabel = segment ? `${audLabel} · ${segmentLabels[segment]}` : audLabel;
+    if (!confirm(`إرسال الإشعار إلى: ${targetLabel}؟\n\n📌 ${title}\n${body}\n\nلا يمكن التراجع بعد الإرسال.`)) return;
     $('sendBroadcast').disabled = true;
     try {
       const user = auth.currentUser;
@@ -108,7 +118,7 @@ export function initExtraAdmin(ctx) {
           Authorization: `Bearer ${token}`,
           ...appCheckHeaders,
         },
-        body: JSON.stringify({ title, body, audience }),
+        body: JSON.stringify({ title, body, audience, segment }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'فشل الإرسال');
@@ -452,6 +462,26 @@ export function initExtraAdmin(ctx) {
     }
   }
 
+  async function runModerationAction(button, payload, successMessage) {
+    const status = $('moderationActionStatus');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'جارٍ التنفيذ…';
+    if (status) status.textContent = '';
+    try {
+      await admin.api('moderateCommunityContent', payload);
+      if (status) status.textContent = `✅ ${successMessage}`;
+      await loadModeration();
+      if (loadOverview) await loadOverview();
+    } catch (e) {
+      if (status) status.textContent = `❌ ${e.message}`;
+      alert('فشلت العملية: ' + e.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
   async function loadPendingModeration() {
     const box = $('pendingModerationList');
     if (!box) return;
@@ -529,63 +559,35 @@ export function initExtraAdmin(ctx) {
       box.innerHTML = postHtml + commentHtml;
 
       box.querySelectorAll('[data-approve-post]').forEach((b) => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const [communityId, postId] = b.dataset.approvePost.split('|');
-          await admin.update(['communities', communityId, 'posts', postId], {
-            moderationStatus: 'approved',
-            moderationReviewedAt: admin.SERVER_TS,
-            moderationReviewedBy: 'admin',
-          });
-          await loadModeration();
-          if (logAdminActivity) await logAdminActivity('approve_post', postId);
+          return runModerationAction(b, {
+            kind: 'post', communityId, postId, decision: 'approve',
+          }, 'تمت الموافقة على المنشور');
         };
       });
       box.querySelectorAll('[data-reject-post]').forEach((b) => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const [communityId, postId] = b.dataset.rejectPost.split('|');
-          await admin.update(['communities', communityId, 'posts', postId], {
-            hidden: true,
-            moderationStatus: 'rejected',
-            hiddenAt: admin.SERVER_TS,
-            hiddenBy: 'admin',
-            moderationReviewedAt: admin.SERVER_TS,
-            moderationReviewedBy: 'admin',
-          });
-          await loadModeration();
-          if (logAdminActivity) await logAdminActivity('reject_post', postId);
+          return runModerationAction(b, {
+            kind: 'post', communityId, postId, decision: 'reject',
+          }, 'تم رفض المنشور وإخفاؤه');
         };
       });
       box.querySelectorAll('[data-approve-comment]').forEach((b) => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const [communityId, postId, commentId] = b.dataset.approveComment.split('|');
-          await admin.update(
-            ['communities', communityId, 'posts', postId, 'comments', commentId],
-            {
-              moderationStatus: 'approved',
-              moderationReviewedAt: admin.SERVER_TS,
-              moderationReviewedBy: 'admin',
-            },
-          );
-          await loadModeration();
-          if (logAdminActivity) await logAdminActivity('approve_comment', commentId);
+          return runModerationAction(b, {
+            kind: 'comment', communityId, postId, commentId, decision: 'approve',
+          }, 'تمت الموافقة على التعليق');
         };
       });
       box.querySelectorAll('[data-reject-comment]').forEach((b) => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const [communityId, postId, commentId] = b.dataset.rejectComment.split('|');
-          await admin.update(
-            ['communities', communityId, 'posts', postId, 'comments', commentId],
-            {
-              hidden: true,
-              moderationStatus: 'rejected',
-              hiddenAt: admin.SERVER_TS,
-              hiddenBy: 'admin',
-              moderationReviewedAt: admin.SERVER_TS,
-              moderationReviewedBy: 'admin',
-            },
-          );
-          await loadModeration();
-          if (logAdminActivity) await logAdminActivity('reject_comment', commentId);
+          return runModerationAction(b, {
+            kind: 'comment', communityId, postId, commentId, decision: 'reject',
+          }, 'تم رفض التعليق وإخفاؤه');
         };
       });
     } catch (e) {
@@ -633,15 +635,12 @@ export function initExtraAdmin(ctx) {
       }).join('');
 
       box.querySelectorAll('[data-hide-post]').forEach((b) => {
-        b.onclick = async () => {
+        b.onclick = () => {
           const [communityId, postId, isHidden] = b.dataset.hidePost.split('|');
-          await admin.update(['communities', communityId, 'posts', postId], {
-            hidden: isHidden !== 'true',
-            hiddenAt: admin.SERVER_TS,
-            hiddenBy: 'admin',
-          });
-          await loadModeration();
-          if (logAdminActivity) await logAdminActivity('post_visibility', postId);
+          const decision = isHidden === 'true' ? 'show' : 'hide';
+          return runModerationAction(b, {
+            kind: 'post', communityId, postId, decision,
+          }, decision === 'hide' ? 'تم إخفاء المنشور' : 'تم إظهار المنشور');
         };
       });
       box.querySelectorAll('[data-ban-user]').forEach((b) => {
@@ -649,12 +648,21 @@ export function initExtraAdmin(ctx) {
           const uid = b.dataset.banUser;
           if (!uid) return;
           if (!confirm(`حظر ${uid} من المجتمع؟`)) return;
-          await admin.set(['users', uid], {
-            communityBanned: true,
-            communityBannedAt: admin.SERVER_TS,
-          }, true);
-          if (logAdminActivity) await logAdminActivity('community_ban', uid);
-          alert('تم الحظر');
+          b.disabled = true;
+          try {
+            await admin.api('setCommunityUserBan', {
+              uid,
+              banned: true,
+              reason: 'Banned from the moderation panel',
+            });
+            const status = $('moderationActionStatus');
+            if (status) status.textContent = '✅ تم حظر المستخدمة من المجتمع';
+            alert('تم الحظر');
+          } catch (e) {
+            alert('فشل الحظر: ' + e.message);
+          } finally {
+            b.disabled = false;
+          }
         };
       });
     } catch (e) {
