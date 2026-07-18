@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ai/ai_context_engine.dart';
+import '../../../core/ai/lune_personality.dart';
 import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../../../core/premium/premium_status_notifier.dart';
@@ -15,6 +18,7 @@ import '../../home/chat_tab.dart';
 import '../../premium/presentation/subscription_plans_screen.dart';
 import '../bloc/chat_bloc.dart';
 import '../data/chat_repository.dart';
+import 'personality_picker.dart';
 
 /// Dedicated Lune AI chat screen — Premium + registered users only.
 class AiChatPage extends StatefulWidget {
@@ -45,17 +49,39 @@ class _AiChatPageState extends State<AiChatPage> {
 
   void _onPremiumChanged() {
     if (!mounted) return;
-    setState(() => _premium = PremiumStatusNotifier.instance.isPremium);
+    setState(() {
+      _premium = PremiumStatusNotifier.instance.isPremium;
+      // If premium just flipped on (e.g. right after a purchase), make sure
+      // the chat has a uid to load with instead of falling to the error view.
+      _uid ??= FirebaseAuth.instance.currentUser?.uid;
+    });
   }
 
   Future<void> _bootstrap() async {
     try {
-      // Read the server-side premium flag for the CURRENT Firebase uid.
-      // Entitlement lives in Firestore only — the client never grants it.
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+
+      // Fast path: the locally cached entitlement renders the chat instantly.
+      // The authoritative server check still runs, but in the background —
+      // it only downgrades the UI if the entitlement was actually revoked.
+      if (uid != null && uid.isNotEmpty && await PremiumGate.hasPremium()) {
+        if (mounted) {
+          setState(() {
+            _premium = true;
+            _uid = uid;
+            _ready = true;
+            _error = null;
+          });
+        }
+        unawaited(_revalidateEntitlement());
+        return;
+      }
+
+      // No local entitlement — confirm with the server (Firestore is the
+      // authority; the client never grants premium) before deciding.
       final status = await PremiumActivationService.refreshPremiumStatus();
       final premium = status.ok || await PremiumGate.hasPremium();
 
-      final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null || uid.isEmpty) {
         throw StateError('No Firebase session after registration');
       }
@@ -75,6 +101,18 @@ class _AiChatPageState extends State<AiChatPage> {
           _ready = true;
         });
       }
+    }
+  }
+
+  Future<void> _revalidateEntitlement() async {
+    try {
+      final status = await PremiumActivationService.refreshPremiumStatus();
+      final premium = status.ok || await PremiumGate.hasPremium();
+      if (mounted && !premium) {
+        setState(() => _premium = false);
+      }
+    } catch (_) {
+      // Network hiccup — keep trusting the locally cached entitlement.
     }
   }
 
@@ -127,6 +165,27 @@ class _AiChatPageState extends State<AiChatPage> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
+          toolbarHeight: 48,
+          // The persona picker lives INSIDE the banner so the header reads as
+          // one clean glass unit instead of a bar with a pill floating below.
+          bottom: PreferredSize(
+            // 52 pill (42 segment + 4×2 padding + 1×2 border) + 2/8 outer pad.
+            preferredSize: const Size.fromHeight(62),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+              child: ValueListenableBuilder<LunePersonality>(
+                valueListenable: LunePersonalityPrefs.notifier,
+                builder: (context, current, _) => LunePersonalityPicker(
+                  current: current,
+                  onSelect: (p) {
+                    if (p == current) return;
+                    HapticFeedback.selectionClick();
+                    LunePersonalityPrefs.set(p);
+                  },
+                ),
+              ),
+            ),
+          ),
           flexibleSpace: ClipRect(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),

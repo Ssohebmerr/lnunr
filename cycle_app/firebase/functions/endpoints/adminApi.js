@@ -135,6 +135,22 @@ function buildDailySnapshot(db) {
   };
 }
 
+function requiredDocumentId(value, label) {
+  const id = String(value || '').trim();
+  if (!id || id.includes('/')) throw new Error(`${label} غير صالح`);
+  return id;
+}
+
+async function writeAdminActivity({ decoded, action, details }) {
+  await admin.firestore().collection('adminActivityLog').add({
+    adminUid: decoded.uid,
+    adminEmail: decoded.email || '',
+    action,
+    details,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Public function
 // ---------------------------------------------------------------------------
@@ -277,6 +293,146 @@ exports.adminApi = onRequest(
             applyServerTokens(payload.data || {}),
           );
           result = { id: ref.id };
+          break;
+        }
+
+        case 'moderateCommunityContent': {
+          const kind = payload.kind === 'comment' ? 'comment' : 'post';
+          const decision = String(payload.decision || '');
+          if (!['approve', 'reject', 'hide', 'show'].includes(decision)) {
+            throw new Error('قرار المراجعة غير صالح');
+          }
+
+          const communityId = requiredDocumentId(payload.communityId, 'communityId');
+          const postId = requiredDocumentId(payload.postId, 'postId');
+          const postRef = admin.firestore()
+            .collection('communities').doc(communityId)
+            .collection('posts').doc(postId);
+          const contentRef = kind === 'comment'
+            ? postRef.collection('comments')
+              .doc(requiredDocumentId(payload.commentId, 'commentId'))
+            : postRef;
+          const snap = await contentRef.get();
+          if (!snap.exists) throw new Error('المحتوى غير موجود أو تم حذفه');
+
+          const now = admin.firestore.FieldValue.serverTimestamp();
+          const remove = admin.firestore.FieldValue.delete();
+          let update;
+          if (decision === 'approve') {
+            update = {
+              moderationStatus: 'approved',
+              moderationReviewedAt: now,
+              moderationReviewedBy: decoded.uid,
+              hidden: false,
+              hiddenAt: remove,
+              hiddenBy: remove,
+            };
+          } else if (decision === 'reject') {
+            update = {
+              moderationStatus: 'rejected',
+              moderationReviewedAt: now,
+              moderationReviewedBy: decoded.uid,
+              hidden: true,
+              hiddenAt: now,
+              hiddenBy: decoded.uid,
+            };
+          } else if (decision === 'hide') {
+            update = {
+              hidden: true,
+              hiddenAt: now,
+              hiddenBy: decoded.uid,
+            };
+          } else {
+            update = {
+              hidden: false,
+              hiddenAt: remove,
+              hiddenBy: remove,
+              ...(snap.data()?.moderationStatus === 'rejected'
+                ? {
+                    moderationStatus: 'approved',
+                    moderationReviewedAt: now,
+                    moderationReviewedBy: decoded.uid,
+                  }
+                : {}),
+            };
+          }
+
+          await contentRef.update(update);
+          const targetId = kind === 'comment' ? payload.commentId : postId;
+          await writeAdminActivity({
+            decoded,
+            action: `${decision}_${kind}`,
+            details: `${communityId}/${postId}/${targetId}`,
+          });
+          result = { ok: true, kind, decision };
+          break;
+        }
+
+        case 'handleAdminReport': {
+          const source = payload.source === 'ai' ? 'ai' : 'community';
+          const decision = String(payload.decision || '');
+          if (!['resolve', 'dismiss', 'delete_content'].includes(decision)) {
+            throw new Error('قرار البلاغ غير صالح');
+          }
+          if (source === 'ai' && decision === 'delete_content') {
+            throw new Error('لا يمكن حذف محتوى من بلاغ AI');
+          }
+
+          const reportId = requiredDocumentId(payload.reportId, 'reportId');
+          const collection = source === 'ai' ? 'aiReports' : 'communityReports';
+          const reportRef = admin.firestore().collection(collection).doc(reportId);
+          const reportSnap = await reportRef.get();
+          if (!reportSnap.exists) throw new Error('البلاغ غير موجود');
+
+          const batch = admin.firestore().batch();
+          if (decision === 'delete_content') {
+            const report = reportSnap.data() || {};
+            const communityId = requiredDocumentId(report.communityId, 'communityId');
+            const postId = requiredDocumentId(report.postId, 'postId');
+            let contentRef = admin.firestore()
+              .collection('communities').doc(communityId)
+              .collection('posts').doc(postId);
+            if (report.commentId) {
+              contentRef = contentRef.collection('comments')
+                .doc(requiredDocumentId(report.commentId, 'commentId'));
+            }
+            batch.delete(contentRef);
+          }
+
+          batch.update(reportRef, {
+            status: decision === 'dismiss' ? 'dismissed' : 'resolved',
+            resolution: decision,
+            reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+            reviewedBy: decoded.uid,
+          });
+          await batch.commit();
+          await writeAdminActivity({
+            decoded,
+            action: `${source}_report_${decision}`,
+            details: reportId,
+          });
+          result = { ok: true, source, decision };
+          break;
+        }
+
+        case 'setCommunityUserBan': {
+          const uid = requiredDocumentId(payload.uid, 'uid');
+          const banned = payload.banned === true;
+          const now = admin.firestore.FieldValue.serverTimestamp();
+          const remove = admin.firestore.FieldValue.delete();
+          await admin.firestore().collection('users').doc(uid).set({
+            communityBanned: banned,
+            communityBannedAt: banned ? now : remove,
+            communityBannedReason: banned
+              ? String(payload.reason || 'Banned by moderator').substring(0, 160)
+              : remove,
+          }, { merge: true });
+          await writeAdminActivity({
+            decoded,
+            action: banned ? 'community_ban' : 'community_unban',
+            details: uid,
+          });
+          result = { ok: true, uid, banned };
           break;
         }
 
@@ -439,13 +595,16 @@ exports.adminApi = onRequest(
           const title = (payload.title || '').toString().trim().substring(0, 80);
           const body = (payload.body || '').toString().trim().substring(0, 300);
           const audience = ['all', 'premium', 'free'].includes(payload.audience) ? payload.audience : 'all';
+          const segment = ['new_7d', 'inactive_14d'].includes(payload.segment)
+            ? payload.segment
+            : null;
           if (!title || !body) throw new Error('العنوان والنص مطلوبان');
           if (!payload.scheduledFor) throw new Error('وقت الإرسال مطلوب');
           const when = new Date(payload.scheduledFor);
           if (Number.isNaN(when.getTime())) throw new Error('وقت غير صالح');
           if (when.getTime() < Date.now() - 60000) throw new Error('الوقت في الماضي');
           const ref = await admin.firestore().collection('scheduledBroadcasts').add({
-            title, body, audience,
+            title, body, audience, segment,
             scheduledFor: admin.firestore.Timestamp.fromDate(when),
             sent: false,
             createdBy: decoded.uid,

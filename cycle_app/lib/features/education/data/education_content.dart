@@ -38,7 +38,9 @@ class Article {
     return Article(
       id: id,
       category: category,
-      icon: articleIconFromName(data['iconName'] as String? ?? 'article_outlined'),
+      icon: articleIconFromName(
+        data['iconName'] as String? ?? 'article_outlined',
+      ),
       titleEn: data['titleEn'] as String? ?? '',
       titleAr: data['titleAr'] as String? ?? '',
       bodyEn: data['bodyEn'] as String? ?? '',
@@ -79,7 +81,8 @@ class Article {
   /// Hidden for users known to be under 18.
   final bool adultsOnly;
 
-  String get displaySlug => (slug != null && slug!.trim().isNotEmpty) ? slug! : id;
+  String get displaySlug =>
+      (slug != null && slug!.trim().isNotEmpty) ? slug! : id;
 
   bool get hasCover =>
       coverImageUrl != null && coverImageUrl!.trim().isNotEmpty;

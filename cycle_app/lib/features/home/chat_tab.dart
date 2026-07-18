@@ -12,7 +12,6 @@ import '../../../core/ai/ai_action_parser.dart';
 import '../../../core/ai/lune_personality.dart';
 import '../../../core/app_home_refresh.dart';
 import '../../../core/navigation/home_shell_actions.dart';
-import '../../../core/premium/premium_activation_service.dart';
 import '../../../core/premium/premium_status_notifier.dart';
 import '../../../core/premium/premium_gate.dart';
 import '../../../core/premium/premium_upsell_dialog.dart';
@@ -61,6 +60,7 @@ class _ChatTabState extends State<ChatTab> {
   void initState() {
     super.initState();
     PremiumStatusNotifier.instance.addListener(_onPremiumChanged);
+    LunePersonalityPrefs.notifier.addListener(_onPersonalityPref);
     _checkConsent();
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_onTextChanged);
@@ -85,12 +85,10 @@ class _ChatTabState extends State<ChatTab> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _onPersonalitySelected(LunePersonality p) async {
-    if (p == _personality) return;
-    HapticFeedback.selectionClick();
-    await LunePersonalityPrefs.set(p);
-    if (!mounted) return;
-    setState(() => _personality = p);
+  /// The persona picker now lives in the AiChatPage banner — this keeps the
+  /// bubbles/suggestions in sync when the selection changes up there.
+  void _onPersonalityPref() {
+    if (mounted) setState(() => _personality = LunePersonalityPrefs.current);
   }
 
   Future<void> _handleAction(AiSuggestedAction action) async {
@@ -160,12 +158,10 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   Future<void> _checkConsent() async {
-    var premium = await PremiumGate.hasPremium();
-    if (premium) {
-      // Re-validate the local flag against Firestore (server is authoritative).
-      final status = await PremiumActivationService.refreshPremiumStatus();
-      premium = status.ok || await PremiumGate.hasPremium();
-    }
+    // Local flag only — instant. The server-side entitlement check is owned
+    // by AiChatPage's bootstrap, which pushes revocations through
+    // PremiumStatusNotifier (already listened to above).
+    final premium = await PremiumGate.hasPremium();
     if (mounted) {
       setState(() {
         _isPremium = premium;
@@ -178,6 +174,7 @@ class _ChatTabState extends State<ChatTab> {
   void dispose() {
     _tts.stop();
     PremiumStatusNotifier.instance.removeListener(_onPremiumChanged);
+    LunePersonalityPrefs.notifier.removeListener(_onPersonalityPref);
     _controller.removeListener(_onTextChanged);
     _focusNode.removeListener(_onTextChanged);
     _controller.dispose();
@@ -303,14 +300,19 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   void _scrollToBottom() {
+    // The list is rendered with `reverse: true`, so "bottom" (newest message)
+    // is minScrollExtent — a fixed target that doesn't drift while offscreen
+    // rows are still being laid out (the old maxScrollExtent chase is what
+    // used to leave the view stuck mid-conversation).
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients) {
-        _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!_scroll.hasClients) return;
+      final position = _scroll.position;
+      if (position.pixels <= position.minScrollExtent + 2) return;
+      _scroll.animateTo(
+        position.minScrollExtent,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -333,20 +335,25 @@ class _ChatTabState extends State<ChatTab> {
     return BackdropGroup(
       child: Column(
         children: [
-          _PersonalityPicker(
-            current: _personality,
-            onSelect: _onPersonalitySelected,
-          ),
           Expanded(
             child: BlocConsumer<ChatBloc, ChatState>(
+              // Streaming emits a state per token chunk — without this guard
+              // the listener used to re-run (incl. a premium re-check) on
+              // every single chunk. Only react to real conversation changes.
+              listenWhen: (previous, next) {
+                if (next is! ChatLoaded) return false;
+                if (next.notice != null) return true;
+                if (previous is! ChatLoaded) return true;
+                return previous.messages.length != next.messages.length ||
+                    previous.isSending != next.isSending;
+              },
               listener: (context, state) {
-                if (state is ChatLoaded) {
-                  if (state.notice != null) {
-                    _handleNotice(state.notice!);
-                  }
+                final loaded = state as ChatLoaded;
+                if (loaded.notice != null) {
+                  _handleNotice(loaded.notice!);
                   _checkConsent();
-                  _scrollToBottom();
                 }
+                _scrollToBottom();
               },
               builder: (context, state) {
                 if (state is ChatLoading) {
@@ -379,12 +386,16 @@ class _ChatTabState extends State<ChatTab> {
                 }
 
                 final items = _buildTimeline(messages, sending: sending);
+                // reverse: true anchors the viewport to the newest message,
+                // so opening the chat lands on the latest turn instantly and
+                // only the visible (recent) rows get built.
                 return ListView.builder(
                   controller: _scroll,
+                  reverse: true,
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                   itemCount: items.length,
                   itemBuilder: (context, i) {
-                    final item = items[i];
+                    final item = items[items.length - 1 - i];
                     if (item is _TimelineDayHeader) {
                       return _DaySeparator(label: item.label);
                     }

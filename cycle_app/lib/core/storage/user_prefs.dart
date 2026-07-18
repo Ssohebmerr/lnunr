@@ -178,14 +178,17 @@ class UserPrefs {
   }
 
   /// True when [buffer] ends with the configured stealth PIN digits.
+  /// Operator characters (+, ×, …) picked up while "calculating" are ignored,
+  /// so typing the PIN around them still unlocks.
   static Future<bool> stealthPinMatchesBuffer(String buffer) async {
-    if (buffer.isEmpty) return false;
+    final digits = buffer.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return false;
     await _migrateStealthPinFromPrefsIfNeeded();
     final salt = await _secure.read(_stealthPinSaltKey) ?? _stealthPinSaltMem;
     final hash = await _secure.read(_stealthPinHashKey) ?? _stealthPinHashMem;
     if (salt == null || hash == null) return false;
-    for (var len = 4; len <= 8 && len <= buffer.length; len++) {
-      final candidate = buffer.substring(buffer.length - len);
+    for (var len = 4; len <= 8 && len <= digits.length; len++) {
+      final candidate = digits.substring(digits.length - len);
       if (_hashPin(candidate, salt) == hash) return true;
     }
     return false;

@@ -1245,6 +1245,7 @@
                 <button id="refreshModeration" class="btn sm">🔄</button>
               </div>
             </div>
+            <div id="moderationActionStatus" class="muted" role="status" aria-live="polite" style="min-height:18px"></div>
             <div id="pendingModerationList" style="margin-bottom:8px"></div>
             <h3 style="margin-top:18px;margin-bottom:6px">📝 أحدث المنشورات</h3>
             <div id="moderationList"><div class="spinner"></div></div>
@@ -1887,21 +1888,21 @@ function updateRoleBadge(role) {
 }
 
 function applyRoleVisibility(role) {
-  // Owner-only items
-  const ownerOnly = ['admins'];
-  // Admin-and-above items
-  const adminOnly = ['promo', 'feedback', 'premium'];
-  // Hide tabs based on role
-  ownerOnly.forEach((name) => {
-    const tab = document.querySelector(`.tab[data-tab="${name}"]`);
-    if (tab) tab.style.display = role === 'owner' ? '' : 'none';
+  const moderatorAllowed = new Set([
+    'overview', 'moderation', 'reports', 'activity', 'analytics', 'ai',
+  ]);
+  document.querySelectorAll('.tab[data-tab]').forEach((tab) => {
+    const name = tab.dataset.tab;
+    const allowed = name !== 'admins' || role === 'owner';
+    const roleAllowed = role !== 'moderator' || moderatorAllowed.has(name);
+    tab.style.display = allowed && roleAllowed ? '' : 'none';
   });
-  if (role === 'moderator') {
-    adminOnly.forEach((name) => {
-      const tab = document.querySelector(`.tab[data-tab="${name}"]`);
-      if (tab) tab.style.display = 'none';
-    });
-  }
+  document.querySelectorAll('[data-command-tab]').forEach((button) => {
+    const name = button.dataset.commandTab;
+    const allowed = name !== 'admins' || role === 'owner';
+    const roleAllowed = role !== 'moderator' || moderatorAllowed.has(name);
+    button.hidden = !(allowed && roleAllowed);
+  });
 }
 
 $('loginBtn').onclick = async () => {
@@ -2394,23 +2395,23 @@ async function saveArticle() {
     }
 
     const payload = {
-    titleAr,
-    titleEn,
-    bodyAr,
-    bodyEn,
-    category: $('articleCategory').value,
-    iconName: $('articleIcon').value,
-    minutes: Math.max(1, parseInt($('articleMinutes').value, 10) || 3),
-    order: parseInt($('articleOrder').value, 10) || 0,
-    coverImageUrl,
-    excerptAr: $('articleExcerptAr').value.trim(),
-    excerptEn: $('articleExcerptEn').value.trim(),
-    featured: $('articleFeatured').checked,
-    slug: $('articleSlug').value.trim() || slugFromTitle(titleEn) || id,
-    adultsOnly: $('articleAdultsOnly').checked,
-    published: $('articlePublished').checked,
-    updatedAt: admin.SERVER_TS,
-  };
+      titleAr,
+      titleEn,
+      bodyAr,
+      bodyEn,
+      category: $('articleCategory').value,
+      iconName: $('articleIcon').value,
+      minutes: Math.max(1, parseInt($('articleMinutes').value, 10) || 3),
+      order: parseInt($('articleOrder').value, 10) || 0,
+      coverImageUrl,
+      excerptAr: $('articleExcerptAr').value.trim(),
+      excerptEn: $('articleExcerptEn').value.trim(),
+      featured: $('articleFeatured').checked,
+      slug: $('articleSlug').value.trim() || slugFromTitle(titleEn) || id,
+      adultsOnly: $('articleAdultsOnly').checked,
+      published: $('articlePublished').checked,
+      updatedAt: admin.SERVER_TS,
+    };
 
     const scheduledVal = $('articleScheduledAt').value;
     if (scheduledVal) {
@@ -2608,26 +2609,30 @@ async function loadReports() {
 }
 
 async function handleReportAction(btn) {
-  const { act, id, community, post, comment } = btn.dataset;
+  const { act, id } = btn.dataset;
   btn.disabled = true;
   try {
     if (act === 'delete') {
       if (!confirm('حذف هذا المحتوى نهائيًا؟')) { btn.disabled = false; return; }
-      const postPath = ['communities', community, 'posts', post];
-      if (comment) {
-        await admin.delete([...postPath, 'comments', comment]);
-      } else {
-        await admin.delete(postPath);
-      }
-      await admin.update(['communityReports', id], { status: 'resolved' });
+      await admin.api('handleAdminReport', {
+        source: 'community', reportId: id, decision: 'delete_content',
+      });
     } else if (act === 'resolve') {
-      await admin.update(['communityReports', id], { status: 'resolved' });
+      await admin.api('handleAdminReport', {
+        source: 'community', reportId: id, decision: 'resolve',
+      });
     } else if (act === 'dismiss') {
-      await admin.update(['communityReports', id], { status: 'dismissed' });
+      await admin.api('handleAdminReport', {
+        source: 'community', reportId: id, decision: 'dismiss',
+      });
     } else if (act === 'ai-resolve') {
-      await admin.update(['aiReports', id], { status: 'resolved' });
+      await admin.api('handleAdminReport', {
+        source: 'ai', reportId: id, decision: 'resolve',
+      });
     } else if (act === 'ai-dismiss') {
-      await admin.update(['aiReports', id], { status: 'dismissed' });
+      await admin.api('handleAdminReport', {
+        source: 'ai', reportId: id, decision: 'dismiss',
+      });
     }
     await loadReports();
     loadOverview();
@@ -2754,10 +2759,10 @@ function renderUsers() {
       b.disabled = true;
       const makePremium = b.dataset.premium !== 'true';
       try {
-        await admin.set(['users', b.dataset.togglePremium], {
+        await admin.api('setUserPremium', {
+          uid: b.dataset.togglePremium,
           isPremium: makePremium,
-          ...(makePremium ? { premiumSince: new Date().toISOString() } : {}),
-        }, true);
+        });
         await loadUsers();
         loadOverview();
       } catch (e) {
@@ -2818,10 +2823,7 @@ async function openUserModal(uid) {
       e.target.disabled = true;
       const make = e.target.dataset.premium !== 'true';
       try {
-        await admin.set(['users', uid], {
-          isPremium: make,
-          ...(make ? { premiumSince: new Date().toISOString() } : {}),
-        }, true);
+        await admin.api('setUserPremium', { uid, isPremium: make });
         closeUserModal();
         await loadUsers();
         loadOverview();

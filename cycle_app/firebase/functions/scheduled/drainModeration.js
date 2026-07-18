@@ -4,9 +4,11 @@
 // Runs the AI moderator over anything still sitting in `pending_review` and
 // resolves it WITHOUT a human in the loop. This is what lets the community
 // scale without a moderation team: the submit path already auto-decides every
-// new post, and this job mops up the only remaining `pending_review` sources —
-//   1. the one-time backlog left by the old (pre-fix) stranding bug, and
-//   2. posts auto-hidden after 3+ user reports (see onReportCreated).
+// new post, and this job mops up remaining `pending_review` sources —
+//   1. the one-time backlog left by the old (pre-fix) stranding bug,
+//   2. posts auto-hidden after 3+ user reports (see onReportCreated), and
+//   3. edited posts/comments re-queued client-side (see updatePost/updateComment).
+// Instant re-review after edits also runs via onPostUpdated / onCommentUpdated.
 //
 // A transient Gemini outage leaves an item pending for the next run. Pending
 // content remains private to its author and is also available to admins.

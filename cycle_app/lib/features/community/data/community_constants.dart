@@ -1,4 +1,5 @@
-/// Community media uploads — enabled for stories, disabled for posts (Play safety).
+/// Community media uploads are enabled. Post images are free; story images
+/// are Premium-gated by the story composer and trusted submission Function.
 const bool kCommunityMediaUploadsEnabled = true;
 
 const int kCommunityStoryMaxMediaBytes = 15 * 1024 * 1024;

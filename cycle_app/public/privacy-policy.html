@@ -38,7 +38,7 @@
   <div class="container">
     <a href="index.html" class="breadcrumb">← Lune</a>
     <h1 id="pageTitle">Privacy Policy</h1>
-    <p class="lead" id="pageDate">Effective Date: July 7, 2026</p>
+    <p class="lead" id="pageDate">Effective Date: July 18, 2026</p>
     <div class="lang-bar">
       <button class="lang-btn active" onclick="setLang('en')">English</button>
       <button class="lang-btn" onclick="setLang('ar')">العربية</button>
@@ -59,6 +59,7 @@
                 <p>We collect the following types of information:</p>
                 <ul>
                     <li><strong>Health &amp; Cycle Data:</strong> Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.</li>
+                    <li><strong>Google Health Connect (optional):</strong> If you enable a Health Connect group, Lune reads and writes only the selected cycle, fertility, sleep, activity, vital, weight, and hydration categories during a manual foreground sync. Imported snapshots stay encrypted on your device and are not sent to Firebase, AI providers, advertising, communities, or partner features.</li>
                     <li><strong>Account Information:</strong> Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.</li>
                     <li><strong>Community Content:</strong> Posts, comments, reactions, and profile information you share in community features (if you opt in).</li>
                     <li><strong>Device Information:</strong> Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.</li>
@@ -79,12 +80,13 @@
                 </ul>
 
                 <h2>4. Data Storage &amp; Security</h2>
-                <p>Your cycle and health data is stored locally on your device by default in an AES-256 encrypted database. If you enable Premium cloud backup, your encrypted backup payload is uploaded to your private Firebase account — we do not claim every Firestore field uses the same encryption scheme. Encryption keys stay in your device's secure storage (Android Keystore / iOS Keychain). Android automatic app backup is disabled. We use TLS, secure authentication, and access controls for network features.</p>
+                <p>Your cycle and health data is stored locally on your device by default in an AES-256 encrypted database. Optional Health Connect records are managed by Android's on-device Health Connect store; Lune accesses them only during a manual foreground sync, and imported snapshots remain in encrypted local storage. If you enable Premium cloud backup, your encrypted backup payload is uploaded to your private Firebase account — Health Connect snapshots are excluded. Encryption keys stay in your device's secure storage (Android Keystore / iOS Keychain). Android automatic app backup is disabled. We use TLS, secure authentication, and access controls for network features.</p>
 
                 <h2>5. Third-Party Services</h2>
                 <p>We use the following third-party services:</p>
                 <ul>
                     <li><strong>Google Firebase</strong> (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.</li>
+                    <li><strong>Google Health Connect:</strong> Optional Android on-device health data exchange. Access is off by default, split into separate permission groups, and controlled by Android's Health Connect permissions. Lune does not request background health-data access.</li>
                     <li><strong>Google Gemini AI:</strong> AI chat and content processing. Submitted content and relevant cycle context may be sent to Google for processing per Google's API terms.</li>
                     <li><strong>DeepSeek AI:</strong> Alternative AI provider for chat and analysis when used by our backend. Submitted content and relevant cycle context may be sent to DeepSeek for processing per its API terms.</li>
                     <li><strong>Google Play Billing:</strong> Premium subscription payments on Android (processed by Google).</li>
@@ -137,6 +139,7 @@
                 <p>نجمع الأنواع التالية من المعلومات:</p>
                 <ul>
                     <li><strong>بيانات الصحة والدورة:</strong> تواريخ الدورة الشهرية والأعراض والمزاج ومستويات النزف والبيانات الصحية الأخرى التي تسجلينها طوعاً.</li>
+                    <li><strong>Google Health Connect (اختياري):</strong> إذا فعّلتِ إحدى مجموعات Health Connect، يقرأ Lune ويكتب فقط فئات الدورة والخصوبة والنوم والنشاط والمؤشرات الحيوية والوزن والماء التي تختارينها أثناء مزامنة يدوية والتطبيق مفتوح. تبقى النسخة المستوردة مشفّرة على جهازكِ ولا تُرسل إلى Firebase أو مزوّدي الذكاء الاصطناعي أو الإعلانات أو المجتمع أو الشريك.</li>
                     <li><strong>معلومات الحساب:</strong> البريد الإلكتروني والاسم وطريقة تسجيل الدخول عند التسجيل (بريد/كلمة مرور، Google، أو Apple). عند استخدام التطبيق كضيفة، ننشئ حساباً مجهولاً عبر Firebase مرتبطاً بجهازكِ دون جمع بريدك الإلكتروني.</li>
                     <li><strong>محتوى المجتمع:</strong> المنشورات والتعليقات والتفاعلات والمعلومات الشخصية التي تشاركينها في ميزات المجتمع (إذا اخترتِ المشاركة).</li>
                     <li><strong>معلومات الجهاز:</strong> معرفات الجهاز الأساسية المطلوبة للإشعارات وأمان التطبيق (Firebase App Check) وعمل التطبيق.</li>
@@ -157,13 +160,14 @@
                 </ul>
 
                 <h2>٤. تخزين البيانات والأمان</h2>
-                <p>يتم تخزين بيانات الدورة والصحة محلياً على جهازكِ افتراضياً في قاعدة بيانات مشفّرة AES-256. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُرفع حمولة النسخة المشفّرة إلى حساب Firebase الخاص بكِ. مفاتيح التشفير في التخزين الآمن للجهاز. النسخ الاحتياطي التلقائي لـ Android معطّل.</p>
+                <p>يتم تخزين بيانات الدورة والصحة محلياً على جهازكِ افتراضياً في قاعدة بيانات مشفّرة AES-256. تُدار سجلات Health Connect الاختيارية داخل مخزن Android المحلي، ولا يصل إليها Lune إلا أثناء مزامنة يدوية والتطبيق مفتوح، وتبقى النسخة المستوردة في تخزين محلي مشفّر. إذا فعّلتِ النسخ الاحتياطي السحابي Premium، تُرفع حمولة النسخة المشفّرة إلى حساب Firebase الخاص بكِ، مع استثناء نسخة Health Connect. مفاتيح التشفير في التخزين الآمن للجهاز. النسخ الاحتياطي التلقائي لـ Android معطّل.</p>
 
                 <h2>٥. خدمات الطرف الثالث</h2>
                 <p>نستخدم خدمات الطرف الثالث التالية:</p>
                 <ul>
                     <li><strong>Google Firebase</strong> (المصادقة، Firestore، الدوال السحابية، Cloud Messaging، الاستضافة، App Check، Crashlytics): الحسابات وتخزين البيانات والإشعارات والأمان وتقارير الأعطال.</li>
                     <li><strong>Google Gemini AI:</strong> محادثة الذكاء الاصطناعي ومعالجة المحتوى؛ قد يُرسل المحتوى المقدّم وسياق الدورة المرتبط به إلى Google وفق شروط واجهة API الخاصة بها.</li>
+                    <li><strong>Google Health Connect:</strong> تبادل اختياري للبيانات الصحية على جهاز Android. يكون متوقفاً افتراضياً، ومقسماً إلى مجموعات أذونات مستقلة، ولا يطلب Lune الوصول إلى البيانات الصحية في الخلفية.</li>
                     <li><strong>DeepSeek AI:</strong> مزوّد بديل للمحادثة والتحليل؛ قد يُرسل المحتوى المقدّم وسياق الدورة المرتبط به إلى DeepSeek وفق شروط واجهة API الخاصة به.</li>
                     <li><strong>Google Play Billing:</strong> مدفوعات الاشتراك المميز على Android (تُعالَج عبر Google).</li>
                 </ul>
@@ -217,8 +221,8 @@
             document.querySelectorAll('.lang-btn')[lang === 'en' ? 0 : 1].classList.add('active');
             document.getElementById('pageTitle').textContent = lang === 'en' ? 'Privacy Policy' : 'سياسة الخصوصية';
             document.getElementById('pageDate').textContent = lang === 'en'
-                ? 'Effective Date: July 7, 2026'
-                : 'تاريخ السريان: ٧ يوليو ٢٠٢٦';
+                ? 'Effective Date: July 18, 2026'
+                : 'تاريخ السريان: ١٨ يوليو ٢٠٢٦';
             document.documentElement.lang = lang;
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         }

@@ -44,5 +44,15 @@ void main() {
       expect(await UserPrefs.stealthPinMatchesBuffer('991234'), isTrue);
       expect(await UserPrefs.stealthPinMatchesBuffer('991235'), isFalse);
     });
+
+    test('six-digit pin matches even with operator characters mixed in',
+        () async {
+      await UserPrefs.setStealthModePin('123456');
+      expect(await UserPrefs.stealthPinMatchesBuffer('123456'), isTrue);
+      expect(await UserPrefs.stealthPinMatchesBuffer('99+123456'), isTrue);
+      expect(await UserPrefs.stealthPinMatchesBuffer('123+456'), isTrue);
+      expect(await UserPrefs.stealthPinMatchesBuffer('12345'), isFalse);
+      expect(await UserPrefs.stealthPinMatchesBuffer('654321'), isFalse);
+    });
   });
 }

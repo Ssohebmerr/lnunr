@@ -36,22 +36,26 @@ async function main() {
 
   const communityId = 'pcos';
   const ownerUid = 'owner';
+  const freeUid = 'free-member';
   const fileName = 'image.jpg';
   const objectPath = `community_media/${communityId}/${ownerUid}/${fileName}`;
 
   try {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
-      for (const uid of [ownerUid, 'member', 'outsider']) {
+      for (const uid of [ownerUid, 'member', 'outsider', freeUid]) {
         await ctx.firestore().collection('users').doc(uid).set({
           communityBirthYear: 1995,
           communitySetupComplete: true,
-          isPremium: true,
+          isPremium: uid !== freeUid,
         });
       }
-      for (const uid of [ownerUid, 'member']) {
+      for (const uid of [ownerUid, 'member', freeUid]) {
         await ctx.firestore().collection('communities').doc(communityId)
           .collection('members').doc(uid).set({ alias: uid });
       }
+      await ctx.firestore().collection('admins').doc('editor').set({
+        role: 'admin',
+      });
       await ctx.storage().ref(objectPath)
         .put(new Uint8Array([0xff, 0xd8, 0xff]), { contentType: 'image/jpeg' });
     });
@@ -59,6 +63,26 @@ async function main() {
     const owner = testEnv.authenticatedContext(ownerUid);
     const member = testEnv.authenticatedContext('member');
     const outsider = testEnv.authenticatedContext('outsider');
+    const freeMember = testEnv.authenticatedContext(freeUid);
+
+    await assertSucceeds(
+      freeMember.storage().ref(
+        `community_media/${communityId}/${freeUid}/free-post.jpg`,
+      ).put(
+        new Uint8Array([0xff, 0xd8, 0xff]),
+        { contentType: 'image/jpeg' },
+      ),
+    );
+    console.log('Free members can upload post images.');
+    await assertFails(
+      outsider.storage().ref(
+        `community_media/${communityId}/outsider/not-a-member.jpg`,
+      ).put(
+        new Uint8Array([0xff, 0xd8, 0xff]),
+        { contentType: 'image/jpeg' },
+      ),
+    );
+    console.log('Non-members cannot upload community images.');
 
     await assertSucceeds(
       member.firestore().collection('users').doc('member').get(),
@@ -85,7 +109,26 @@ async function main() {
         .collection('files').doc('forged.jpg').set({ approved: true }),
     );
 
-    console.log('All storage.rules media quarantine tests passed.');
+    const magazinePath = 'magazine_covers/cycle_health/editor-cover.webp';
+    const editor = testEnv.authenticatedContext('editor');
+    await assertFails(
+      outsider.storage().ref(magazinePath).put(
+        new Uint8Array([0x52, 0x49, 0x46, 0x46]),
+        { contentType: 'image/webp' },
+      ),
+    );
+    await assertSucceeds(
+      editor.storage().ref(magazinePath).put(
+        new Uint8Array([0x52, 0x49, 0x46, 0x46]),
+        { contentType: 'image/webp' },
+      ),
+    );
+    await assertSucceeds(
+      testEnv.unauthenticatedContext().storage().ref(magazinePath)
+        .getDownloadURL(),
+    );
+
+    console.log('All storage.rules media and magazine cover tests passed.');
   } finally {
     await testEnv.cleanup();
   }

@@ -82,15 +82,18 @@ class LunePersonalityPrefs {
 
   static const _key = 'lune_personality_v1';
 
-  /// In-memory cache so synchronous reads (system prompts) work without await.
-  static LunePersonality _cached = LunePersonality.friend;
+  /// In-memory value so synchronous reads (system prompts) work without await.
+  /// Exposed as a [ValueNotifier] so every open surface (chat header picker,
+  /// message bubbles) stays in sync when the persona changes.
+  static final ValueNotifier<LunePersonality> notifier =
+      ValueNotifier<LunePersonality>(LunePersonality.friend);
 
   /// Tracks the in-flight `load()` so `set()` can wait for it before writing
   /// to SharedPreferences — prevents a slow `load()` from clobbering a fresh
   /// `set()` (or vice versa) with stale disk data.
   static Future<void>? _pendingLoad;
 
-  static LunePersonality get current => _cached;
+  static LunePersonality get current => notifier.value;
 
   static Future<void> load() async {
     final future = _doLoad();
@@ -105,7 +108,7 @@ class LunePersonalityPrefs {
 
   static Future<void> _doLoad() async {
     final sp = await SharedPreferences.getInstance();
-    _cached = LunePersonality.fromId(sp.getString(_key));
+    notifier.value = LunePersonality.fromId(sp.getString(_key));
   }
 
   static Future<void> set(LunePersonality p) async {
@@ -121,7 +124,7 @@ class LunePersonalityPrefs {
     }
     final sp = await SharedPreferences.getInstance();
     await sp.setString(_key, p.id);
-    _cached = p;
+    notifier.value = p;
   }
 }
 

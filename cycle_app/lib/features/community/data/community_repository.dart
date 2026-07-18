@@ -1243,11 +1243,6 @@ class CommunityRepository {
     String? coverStyle,
   }) async {
     if (_auth.currentUser?.uid != uid) throw StateError('Not signed in');
-    // Media uploads require a Premium subscription.
-    if ((mediaUrl != null || mediaType != null) &&
-        !await UserPrefs.isPremium()) {
-      throw const MediaRequiresPremiumException();
-    }
     final clean = CommunityTextSanitize.post(text);
     // Keep instant client-side safety feedback, while the trusted submission
     // endpoint performs the only network/AI moderation pass. Previously the
@@ -1303,7 +1298,9 @@ class CommunityRepository {
       'text': clean,
       'postType': postType.value,
       'editedAt': FieldValue.serverTimestamp(),
-      if (moderation.pendingReview) 'moderationStatus': 'pending_review',
+      // Always re-queue for server moderation after edits. Client moderation
+      // alone must not keep edited text visible as previously approved.
+      'moderationStatus': 'pending_review',
     });
   }
 
@@ -1395,7 +1392,8 @@ class CommunityRepository {
     await ref.update({
       'text': clean,
       'editedAt': FieldValue.serverTimestamp(),
-      if (moderation.pendingReview) 'moderationStatus': 'pending_review',
+      // Always re-queue for server moderation after edits.
+      'moderationStatus': 'pending_review',
     });
   }
 }

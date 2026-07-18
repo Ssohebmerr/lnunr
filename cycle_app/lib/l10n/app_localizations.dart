@@ -7109,7 +7109,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Data: If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.'**
+  /// **'We collect the following types of information:\n\n• Health & Cycle Data: Menstrual cycle dates, symptoms, moods, flow levels, and other health-related entries you voluntarily log.\n• Google Health Connect (optional): If you enable a Health Connect group, Lune reads and writes only selected cycle, fertility, sleep, activity, vital, weight, and hydration categories during a manual foreground sync. Imported snapshots stay encrypted on your device and are not sent to Firebase, AI providers, advertising, communities, or partner features.\n• Account Information: Email, display name, and sign-in method when you register (email/password, Google, or Apple). If you use the app as a guest, we create an anonymous Firebase account linked to your device without collecting your email.\n• Community Content: Posts, comments, reactions, and profile information you share in community features (if you opt in).\n• Device Information: Basic device identifiers required for push notifications, app security (Firebase App Check), and app functionality.\n• AI Data: If you explicitly enable AI, the message or content you submit and relevant cycle context—such as symptoms, mood, phase, and saved preferences—are processed by DeepSeek and/or Google to generate personalized responses. Text you type may contain information you choose to disclose. Guest users: chat history stays on your device only. Registered users: chat history may be stored in your cloud account (Firebase) to restore conversations.\n• Usage & Diagnostics: Approximate last-active timestamp and crash/error reports via Firebase Crashlytics in release builds to help us fix bugs. We do not use third-party advertising trackers.'**
   String get privacyP2Body;
 
   /// No description provided for @privacyP3Title.
@@ -7121,7 +7121,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP3Body.
   ///
   /// In en, this message translates to:
-  /// **'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered health guidance and daily briefings.\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance, diagnose crashes, and fix bugs.\n• Ensure safety and prevent misuse of community features.'**
+  /// **'Your information is used to:\n\n• Provide core cycle tracking, predictions, and personalized insights.\n• Deliver AI-powered wellness information and daily briefings (not medical advice).\n• Enable community features (posts, comments, stories) if you opt in.\n• Process cloud backups if you enable encrypted backup.\n• Send optional notifications (period reminders, pill reminders).\n• Improve app performance, diagnose crashes, and fix bugs.\n• Ensure safety and prevent misuse of community features.'**
   String get privacyP3Body;
 
   /// No description provided for @privacyP4Title.
@@ -7133,7 +7133,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP4Body.
   ///
   /// In en, this message translates to:
-  /// **'Your cycle and health data is stored locally on your device by default. If you enable cloud sync, your data is encrypted using AES-256 encryption and stored securely in Google Firebase (Firestore). Encryption keys are stored in your device\'s secure storage (Android Keystore / iOS Keychain). We implement industry-standard security measures including TLS encryption, secure authentication, and access controls.'**
+  /// **'Your cycle and health data is stored locally on your device by default. Optional Health Connect records are managed by Android\'s on-device store; Lune accesses them only during manual foreground sync, and imported snapshots remain in encrypted local storage. If you enable Premium cloud backup, the encrypted backup payload is stored in Firebase, with Health Connect snapshots excluded. Encryption keys stay in your device\'s secure storage (Android Keystore / iOS Keychain).'**
   String get privacyP4Body;
 
   /// No description provided for @privacyP5Title.
@@ -7145,7 +7145,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyP5Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.\n• Google Gemini AI: AI chat and content processing. Messages are sent to Google for processing per Google\'s API terms.\n• DeepSeek AI: Alternative AI provider for chat and analysis when used by our backend. Messages are sent to DeepSeek for processing per their API terms.\n• Google Play Billing: Premium subscription payments on Android (processed by Google).\n\nEach provider has its own privacy policy. We encourage you to review them. We do not sell your personal data.'**
+  /// **'We use the following third-party services:\n\n• Google Firebase (Authentication, Firestore, Cloud Functions, Cloud Messaging, Hosting, App Check, Crashlytics): Accounts, data storage, push notifications, security, and crash reporting.\n• Google Health Connect: Optional Android on-device health data exchange. Access is off by default, split into permission groups, and Lune does not request background health-data access.\n• Google Gemini AI: AI chat and content processing. Messages are sent to Google for processing per Google\'s API terms.\n• DeepSeek AI: Alternative AI provider for chat and analysis when used by our backend. Messages are sent to DeepSeek for processing per their API terms.\n• Google Play Billing: Premium subscription payments on Android (processed by Google).\n\nEach provider has its own privacy policy. We encourage you to review them. We do not sell your personal data.'**
   String get privacyP5Body;
 
   /// No description provided for @privacyP6Title.
@@ -7259,7 +7259,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsP2Body.
   ///
   /// In en, this message translates to:
-  /// **'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered health insights and chat assistance.\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational health content and magazine articles.\n\nThe App is intended for personal, non-commercial use only.'**
+  /// **'Lune is a menstrual cycle tracking application that provides:\n\n• Cycle logging and prediction tools.\n• AI-powered wellness insights and chat assistance (educational only, not medical advice).\n• Self-care content and wellness recommendations.\n• Community features for sharing experiences.\n• Data backup and synchronization services.\n• Educational wellness content and magazine articles.\n\nThe App is intended for personal, non-commercial use only.'**
   String get termsP2Body;
 
   /// No description provided for @termsP3Title.
@@ -8005,6 +8005,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste your API key here'**
   String get geminiKeyHint;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Require your fingerprint or device passcode every time Lune opens.'**
+  String get appLockDescription;
+
+  /// No description provided for @appLockEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with fingerprint'**
+  String get appLockEnable;
+
+  /// No description provided for @appLockConfirmReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to change App Lock'**
+  String get appLockConfirmReason;
+
+  /// No description provided for @appLockUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No fingerprint or screen lock is set up on this device.'**
+  String get appLockUnavailable;
+
+  /// No description provided for @appLockActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock is on — Lune will ask for your fingerprint when it opens.'**
+  String get appLockActivated;
 
   /// No description provided for @stealthTitle.
   ///

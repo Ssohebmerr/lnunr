@@ -31,7 +31,7 @@ android {
 
     defaultConfig {
         applicationId = "com.luneapp.cycle"
-        minSdk = flutter.minSdkVersion
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -65,6 +65,7 @@ android {
                 "proguard-rules.pro",
             )
         }
+
     }
 
     lint {
@@ -75,6 +76,10 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // Health Connect is Android's on-device health data store.
+    implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     // Wear OS: embed watch APK for auto-install on paired watch
     wearApp(project(":wear"))

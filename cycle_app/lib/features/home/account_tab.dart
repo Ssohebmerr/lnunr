@@ -39,6 +39,7 @@ import '../premium/presentation/subscription_plans_screen.dart';
 import '../user/data/guest_user_service.dart';
 import '../user/data/guest_user_repository.dart';
 import '../education/presentation/education_hub_page.dart';
+import '../health_connect/presentation/health_connect_screen.dart';
 import '../partner/presentation/partner_page.dart';
 import '../settings/presentation/about_screen.dart';
 import '../settings/presentation/ai_diagnostic_screen.dart';
@@ -556,6 +557,19 @@ class _AccountTabState extends State<AccountTab> {
                 onTap: () => Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (_) => const PartnerPage())),
+              ),
+            if (Platform.isAndroid)
+              AccountMenuTile(
+                icon: Icons.health_and_safety_outlined,
+                title: 'Google Health Connect',
+                subtitle: Localizations.localeOf(context).languageCode == 'ar'
+                    ? 'مزامنة الدورة والعافية على جهازك'
+                    : 'On-device cycle and wellness sync',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthConnectScreen(),
+                  ),
+                ),
               ),
             AccountMenuTile(
               femIcon: FeminineIcon.watch,

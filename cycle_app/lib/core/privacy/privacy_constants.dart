@@ -28,12 +28,12 @@ class PrivacyConstants {
   static const supportEmail = 'merrsoheb@gmail.com';
 
   static Uri get supportMailto => Uri(
-        scheme: 'mailto',
-        path: supportEmail,
-        query: 'subject=${Uri.encodeComponent('Lune Support')}',
-      );
+    scheme: 'mailto',
+    path: supportEmail,
+    query: 'subject=${Uri.encodeComponent('Lune Support')}',
+  );
 
   static const appName = 'Lune';
   static const dataController = 'Lune';
-  static const effectiveDate = 'July 7, 2026';
+  static const effectiveDate = 'July 18, 2026';
 }

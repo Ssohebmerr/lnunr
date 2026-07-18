@@ -236,10 +236,8 @@ class _ArticleSources extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 return TextButton.icon(
-                  onPressed: () => launchUrl(
-                    uri,
-                    mode: LaunchMode.externalApplication,
-                  ),
+                  onPressed: () =>
+                      launchUrl(uri, mode: LaunchMode.externalApplication),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     visualDensity: VisualDensity.compact,

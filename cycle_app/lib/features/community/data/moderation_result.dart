@@ -38,7 +38,7 @@ class CommunityFullException implements Exception {
   const CommunityFullException();
 }
 
-/// Thrown when a non-premium user attempts to attach media to a post.
+/// A media entitlement error returned by a deployed community endpoint.
 class MediaRequiresPremiumException implements Exception {
   const MediaRequiresPremiumException();
 }

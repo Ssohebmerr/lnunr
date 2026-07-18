@@ -164,3 +164,29 @@ Future<bool> isAgeGateDone() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool('age_gate_done') ?? false;
 }
+
+/// Ensures the age gate has been completed for every entry path (guest,
+/// email, Google, Apple). Returns `false` when the user is under 13 or the
+/// sheet could not complete — callers must block the app in that case.
+Future<bool> ensureAgeGateAllowsApp(BuildContext context) async {
+  if (await blocksAppByAgeGate()) return false;
+  if (await isAgeGateDone()) return true;
+  if (!context.mounted) return false;
+
+  final group = await showAgeGate(context);
+  if (group == null) return false;
+
+  await saveAgeGroup(group);
+  if (group == AgeGroup.under13) return false;
+
+  if (group == AgeGroup.teen && context.mounted) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.ageGateMinorNote),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+  return true;
+}

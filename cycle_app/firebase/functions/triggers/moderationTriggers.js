@@ -7,7 +7,7 @@
 
 'use strict';
 
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 
@@ -97,6 +97,45 @@ exports.onCommentCreated = onDocumentCreated(
     if (!data || data.moderationStatus !== 'pending_review') return;
 
     await applyResult(event.data.ref, data.text || '', /* isStory */ false);
+  },
+);
+
+// Re-moderate edited posts/comments that were moved back to pending_review.
+exports.onPostUpdated = onDocumentUpdated(
+  {
+    document: 'communities/{communityId}/posts/{postId}',
+    secrets: [GEMINI_API_KEY],
+  },
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+    if (!after || after.moderationStatus !== 'pending_review') return;
+    if (
+      before?.moderationStatus === 'pending_review' &&
+      before?.text === after.text
+    ) {
+      return;
+    }
+    await applyResult(event.data.after.ref, after.text || '', false);
+  },
+);
+
+exports.onCommentUpdated = onDocumentUpdated(
+  {
+    document: 'communities/{communityId}/posts/{postId}/comments/{commentId}',
+    secrets: [GEMINI_API_KEY],
+  },
+  async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+    if (!after || after.moderationStatus !== 'pending_review') return;
+    if (
+      before?.moderationStatus === 'pending_review' &&
+      before?.text === after.text
+    ) {
+      return;
+    }
+    await applyResult(event.data.after.ref, after.text || '', false);
   },
 );
 

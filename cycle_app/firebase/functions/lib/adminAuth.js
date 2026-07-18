@@ -37,6 +37,7 @@ const MAX_ADMIN_QUERY_LIMIT = 500;
 
 const MODERATOR_QUERY_PREFIXES = [
   'communityReports',
+  'aiReports',
   'anonymousQuestions',
   'educationArticles',
   'appBanners',
@@ -53,8 +54,13 @@ const BLOCKED_WRITE_PREFIXES = [
 ];
 
 function pathSegments(path) {
+  if (Array.isArray(path)) {
+    return path
+      .map((segment) => String(segment || '').trim())
+      .filter(Boolean);
+  }
   if (!path || typeof path !== 'string') return [];
-  return path.split('/').filter(Boolean);
+  return path.split('/').map((segment) => segment.trim()).filter(Boolean);
 }
 
 function isBlockedWritePath(path) {
@@ -94,6 +100,9 @@ const ACTION_MIN_ROLE = {
   analyticsHistory: 'moderator',
   aiUsageStats: 'moderator',
   aiCostStats: 'moderator',
+  moderateCommunityContent: 'moderator',
+  handleAdminReport: 'moderator',
+  setCommunityUserBan: 'moderator',
   // admin and above
   set: 'admin',
   update: 'admin',

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/media/media_upload_service.dart';
-import '../../../core/storage/user_prefs.dart';
+import '../../../core/premium/community_media_access.dart';
 import 'community_constants.dart';
 import 'community_story_submit.dart';
 import 'models/community_story.dart';
@@ -136,10 +136,13 @@ class CommunityStoryRepository {
     String? textOverlay,
     String? backgroundColor,
   }) async {
-    // Story photos are a Premium media surface. Check before touching Storage
-    // so a non-Premium member gets a clear explanation instead of a generic
-    // Firebase permission error after waiting for an upload.
-    if (!await UserPrefs.isPremium()) {
+    // Refresh stale local entitlement before enforcing Premium media access.
+    // Check before touching Storage so an ineligible member gets a clear
+    // message.
+    if (!await CommunityMediaAccess.canUpload(
+      auth: _auth,
+      firestore: _firestore,
+    )) {
       throw const MediaRequiresPremiumException();
     }
     await _ensureStoryAllowed(uid, communityId);
@@ -147,22 +150,12 @@ class CommunityStoryRepository {
       throw const StoryMediaTooLargeException();
     }
 
-    final String mediaUrl;
-    try {
-      mediaUrl = await _mediaUpload.uploadCommunityPostMedia(
-        uid: uid,
-        communityId: communityId,
-        file: file,
-        isVideo: false,
-      );
-    } on FirebaseException catch (error) {
-      // Storage rules are server-authoritative and also enforce Premium. Map
-      // that denial to the product error the composer already understands.
-      if (error.code == 'unauthorized' || error.code == 'permission-denied') {
-        throw const MediaRequiresPremiumException();
-      }
-      rethrow;
-    }
+    final mediaUrl = await _mediaUpload.uploadCommunityPostMedia(
+      uid: uid,
+      communityId: communityId,
+      file: file,
+      isVideo: false,
+    );
 
     try {
       await submitCommunityStory({

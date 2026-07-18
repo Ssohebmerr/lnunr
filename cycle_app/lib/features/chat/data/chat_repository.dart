@@ -36,6 +36,11 @@ class ChatRepository {
           .doc(_chatId)
           .collection('messages');
 
+  /// How many recent messages the chat screen loads. Without a limit the
+  /// first open downloaded the entire history, which got slower with every
+  /// conversation. The AI context window (_historyWindow) is far smaller.
+  static const _visibleWindow = 80;
+
   Stream<List<ChatMessage>> watchMessages(String uid) async* {
     if (isLocalChatUid(uid)) {
       yield await _loadLocalMessages();
@@ -46,6 +51,7 @@ class ChatRepository {
     }
     yield* _messagesRef(uid)
         .orderBy('timestamp', descending: false)
+        .limitToLast(_visibleWindow)
         .snapshots()
         .map((s) =>
             s.docs.map((d) => ChatMessage.fromMap(d.id, d.data())).toList());
