@@ -21,9 +21,11 @@ class HomeExploreRail extends StatelessWidget {
   const HomeExploreRail({
     super.key,
     required this.settings,
+    this.showHeader = true,
   });
 
   final AppSettings settings;
+  final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -105,9 +107,7 @@ class HomeExploreRail extends StatelessWidget {
           label: l10n.accountMenuEducation,
           color: const Color(0xFF26A69A),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const EducationHubPage(),
-            ),
+            MaterialPageRoute<void>(builder: (_) => const EducationHubPage()),
           ),
         ),
       if (FeatureFlags.isEnabledSync(FeatureFlags.partnerSync))
@@ -115,32 +115,37 @@ class HomeExploreRail extends StatelessWidget {
           icon: FeminineIcon.partner,
           label: l10n.partnerTitle,
           color: theme.colorScheme.tertiary,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const PartnerPage()),
-          ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const PartnerPage())),
         ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppSectionHeader(title: l10n.homeExplore),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: items
-              .map(
-                (item) => SizedBox(
-                  width: (MediaQuery.sizeOf(context).width - 52) / 3,
-                  child: AppQuickTile(
-                    femIcon: item.icon,
-                    label: item.label,
-                    color: item.color,
-                    onTap: item.onTap,
-                  ),
-                ),
-              )
-              .toList(),
+        if (showHeader) AppSectionHeader(title: l10n.homeExplore),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final tileWidth = (constraints.maxWidth - 20) / 3;
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: items
+                  .map(
+                    (item) => SizedBox(
+                      width: tileWidth,
+                      child: AppQuickTile(
+                        femIcon: item.icon,
+                        label: item.label,
+                        color: item.color,
+                        onTap: item.onTap,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            );
+          },
         ),
       ],
     );

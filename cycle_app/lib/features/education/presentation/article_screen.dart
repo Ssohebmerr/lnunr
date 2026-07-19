@@ -329,6 +329,11 @@ class _ReaderParagraph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isSectionHeading = text.startsWith('## ');
+    final bulletLines = text
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
     final numbered = RegExp(
       r'^(\d+)[\.)]\s*(.+)$',
       dotAll: true,
@@ -339,6 +344,63 @@ class _ReaderParagraph extends StatelessWidget {
       fontSize: 16,
       fontWeight: FontWeight.w400,
     );
+
+    if (isSectionHeading) {
+      return Semantics(
+        header: true,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            text.substring(3).trim(),
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+              height: 1.38,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (bulletLines.isNotEmpty &&
+        bulletLines.every((line) => line.trimLeft().startsWith('• '))) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final line in bulletLines)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsetsDirectional.only(top: 11, end: 12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: accent,
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.22),
+                          blurRadius: 7,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SelectableText(
+                      line.trimLeft().substring(2).trim(),
+                      style: textStyle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
 
     if (numbered == null) {
       return SelectableText(text, style: textStyle);

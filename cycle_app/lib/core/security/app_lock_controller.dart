@@ -44,6 +44,11 @@ class AppLockController extends ChangeNotifier {
       return true;
     }
 
+    // Already open — never re-prompt. Without this, the lifecycle `resumed`
+    // that follows a successful unlock kicked off another prompt, looping
+    // the fingerprint sheet forever.
+    if (!_locked) return true;
+
     if (_authInFlight) return false;
     _authInFlight = true;
     try {

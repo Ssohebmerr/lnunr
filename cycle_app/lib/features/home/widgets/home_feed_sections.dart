@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/ai/models/ai_insight.dart';
 import '../../../core/ai/widgets/ai_insight_card.dart';
+import '../../../core/config/feature_flags.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -413,10 +414,6 @@ class HomeTipsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(title: l10n.homeTipsSection),
-        const AiInsightCard(type: AiInsightType.dailyTip, blur: false),
-        const SizedBox(height: 10),
-        const AiInsightCard(type: AiInsightType.moodInsight, blur: false),
-        const SizedBox(height: 10),
         AppGlassCard(
           blur: false,
           child: Row(
@@ -455,8 +452,85 @@ class HomeTipsSection extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        const AiInsightCard(type: AiInsightType.cycleHealth, blur: false),
+        if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) ...[
+          const SizedBox(height: 10),
+          const _HomeAiInsightSwitcher(),
+        ],
+      ],
+    );
+  }
+}
+
+/// Keeps all three home AI insight types available without stacking three
+/// full-size cards. Only the selected insight is built and shown at a time.
+class _HomeAiInsightSwitcher extends StatefulWidget {
+  const _HomeAiInsightSwitcher();
+
+  @override
+  State<_HomeAiInsightSwitcher> createState() => _HomeAiInsightSwitcherState();
+}
+
+class _HomeAiInsightSwitcherState extends State<_HomeAiInsightSwitcher> {
+  static const _types = <AiInsightType>[
+    AiInsightType.dailyTip,
+    AiInsightType.moodInsight,
+    AiInsightType.cycleHealth,
+  ];
+
+  AiInsightType _selected = AiInsightType.dailyTip;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final labels = <AiInsightType, String>{
+      AiInsightType.dailyTip: l10n.aiInsightDailyTitle,
+      AiInsightType.moodInsight: l10n.aiInsightMoodTitle,
+      AiInsightType.cycleHealth: l10n.aiInsightCycleTitle,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final type in _types)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8),
+                  child: ChoiceChip(
+                    selected: _selected == type,
+                    showCheckmark: false,
+                    avatar: Icon(
+                      type == AiInsightType.dailyTip
+                          ? Icons.auto_awesome_outlined
+                          : type == AiInsightType.moodInsight
+                          ? Icons.favorite_outline_rounded
+                          : Icons.monitor_heart_outlined,
+                      size: 17,
+                      color: _selected == type
+                          ? theme.colorScheme.onPrimaryContainer
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    label: Text(labels[type]!),
+                    onSelected: (_) => setState(() => _selected = type),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: AiInsightCard(
+            key: ValueKey(_selected),
+            type: _selected,
+            compact: true,
+            margin: EdgeInsets.zero,
+            blur: false,
+          ),
+        ),
       ],
     );
   }
