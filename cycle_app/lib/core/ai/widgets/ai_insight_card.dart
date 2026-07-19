@@ -21,11 +21,13 @@ class AiInsightCard extends StatefulWidget {
     required this.type,
     this.margin,
     this.blur = true,
+    this.compact = false,
   });
 
   final AiInsightType type;
   final EdgeInsetsGeometry? margin;
   final bool blur;
+  final bool compact;
 
   @override
   State<AiInsightCard> createState() => _AiInsightCardState();
@@ -35,6 +37,7 @@ class _AiInsightCardState extends State<AiInsightCard> {
   AiInsight? _insight;
   bool _loading = true;
   bool _refreshing = false;
+  bool _expanded = false;
 
   @override
   void initState() {
@@ -49,11 +52,7 @@ class _AiInsightCardState extends State<AiInsightCard> {
     final service = context.read<AiInsightsService>();
     final lang = Localizations.localeOf(context).languageCode;
     final insight = await service
-        .getInsight(
-          widget.type,
-          languageCode: lang,
-          forceRefresh: force,
-        )
+        .getInsight(widget.type, languageCode: lang, forceRefresh: force)
         .timeout(const Duration(seconds: 10), onTimeout: () => null);
 
     if (mounted) {
@@ -66,22 +65,33 @@ class _AiInsightCardState extends State<AiInsightCard> {
   }
 
   (IconData, String) _header(AppLocalizations l10n) => switch (widget.type) {
-        AiInsightType.dailyTip => (Icons.auto_awesome, l10n.aiInsightDailyTitle),
-        AiInsightType.moodInsight =>
-            (Icons.favorite_outline, l10n.aiInsightMoodTitle),
-        AiInsightType.cycleHealth =>
-            (Icons.monitor_heart_outlined, l10n.aiInsightCycleTitle),
-        AiInsightType.weeklySummary =>
-            (Icons.calendar_view_week_outlined, l10n.aiInsightWeeklyTitle),
-        AiInsightType.prenatalTip =>
-            (Icons.pregnant_woman_rounded, l10n.aiInsightPrenatalTitle),
-        AiInsightType.conceiveTip =>
-            (Icons.child_friendly, l10n.aiInsightConceiveTitle),
-        AiInsightType.avoidTip =>
-            (Icons.shield_outlined, l10n.aiInsightAvoidTitle),
-        AiInsightType.wellnessTip =>
-            (Icons.health_and_safety_outlined, l10n.aiInsightWellnessTitle),
-      };
+    AiInsightType.dailyTip => (Icons.auto_awesome, l10n.aiInsightDailyTitle),
+    AiInsightType.moodInsight => (
+      Icons.favorite_outline,
+      l10n.aiInsightMoodTitle,
+    ),
+    AiInsightType.cycleHealth => (
+      Icons.monitor_heart_outlined,
+      l10n.aiInsightCycleTitle,
+    ),
+    AiInsightType.weeklySummary => (
+      Icons.calendar_view_week_outlined,
+      l10n.aiInsightWeeklyTitle,
+    ),
+    AiInsightType.prenatalTip => (
+      Icons.pregnant_woman_rounded,
+      l10n.aiInsightPrenatalTitle,
+    ),
+    AiInsightType.conceiveTip => (
+      Icons.child_friendly,
+      l10n.aiInsightConceiveTitle,
+    ),
+    AiInsightType.avoidTip => (Icons.shield_outlined, l10n.aiInsightAvoidTitle),
+    AiInsightType.wellnessTip => (
+      Icons.health_and_safety_outlined,
+      l10n.aiInsightWellnessTitle,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +122,7 @@ class _AiInsightCardState extends State<AiInsightCard> {
                   child: Icon(icon, size: 18, color: Colors.white),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(title, style: theme.textTheme.titleSmall),
-                ),
+                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
                 AppPhaseBadge(
                   icon: Icons.auto_awesome,
                   label: l10n.aiInsightBadge,
@@ -124,16 +132,18 @@ class _AiInsightCardState extends State<AiInsightCard> {
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     tooltip: l10n.aiInsightRefresh,
-                    onPressed:
-                        _refreshing ? null : () => _load(force: true),
+                    onPressed: _refreshing ? null : () => _load(force: true),
                     icon: _refreshing
                         ? const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Icon(Icons.refresh,
-                            size: 18, color: theme.colorScheme.outline),
+                        : Icon(
+                            Icons.refresh,
+                            size: 18,
+                            color: theme.colorScheme.outline,
+                          ),
                   ),
               ],
             ),
@@ -141,7 +151,30 @@ class _AiInsightCardState extends State<AiInsightCard> {
             if (_loading)
               const _InsightSkeleton()
             else ...[
-              Text(_insight!.text, style: theme.textTheme.bodyMedium),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                alignment: AlignmentDirectional.topStart,
+                child: Text(
+                  _insight!.text,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+                  maxLines: widget.compact && !_expanded ? 4 : null,
+                  overflow: widget.compact && !_expanded
+                      ? TextOverflow.ellipsis
+                      : TextOverflow.visible,
+                ),
+              ),
+              if (widget.compact && _insight!.text.length > 180)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    onPressed: () => setState(() => _expanded = !_expanded),
+                    child: Text(
+                      Localizations.localeOf(context).languageCode == 'ar'
+                          ? (_expanded ? 'عرض أقل' : 'قراءة المزيد')
+                          : (_expanded ? 'Show less' : 'Read more'),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               Text(
                 l10n.aiInsightDisclaimer,
@@ -162,19 +195,20 @@ class _InsightSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08);
+    final color = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.08);
     Widget bar(double widthFactor) => FractionallySizedBox(
-          widthFactor: widthFactor,
-          child: Container(
-            height: 12,
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-        );
+      widthFactor: widthFactor,
+      child: Container(
+        height: 12,
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -175,13 +175,13 @@ class _HomePregnancySectionState extends State<HomePregnancySection> {
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
 
               leading: Icon(
-                Icons.expand_more_rounded,
+                Icons.favorite_outline_rounded,
 
                 color: theme.colorScheme.secondary,
               ),
 
               title: Text(
-                l10n.homeMoreThisWeek,
+                l10n.pregnancyYourBody,
 
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
@@ -189,27 +189,6 @@ class _HomePregnancySectionState extends State<HomePregnancySection> {
               ),
 
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.favorite_outline,
-                      color: theme.colorScheme.secondary,
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    Text(
-                      l10n.pregnancyYourBody,
-
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
                 Text(
                   weekInfo.maternalFor(lang),
 
@@ -244,7 +223,11 @@ class _HomePregnancySectionState extends State<HomePregnancySection> {
 
                 const SizedBox(height: 12),
 
-                const AiInsightCard(type: AiInsightType.prenatalTip),
+                const AiInsightCard(
+                  type: AiInsightType.prenatalTip,
+                  compact: true,
+                  margin: EdgeInsets.zero,
+                ),
               ],
             ),
           ),

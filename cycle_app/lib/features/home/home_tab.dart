@@ -191,7 +191,8 @@ class _HomeTabState extends State<HomeTab> {
       builders.add(() => const StreakBadge());
     }
 
-    if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled)) {
+    if (FeatureFlags.isEnabledSync(FeatureFlags.aiChatEnabled) &&
+        !_goal.isPregnancyMode) {
       builders.add(() => const DailyBriefingCard());
     }
 
@@ -304,50 +305,81 @@ class _HomeMoreSectionState extends State<_HomeMoreSection> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final extrasLabel = widget.showCommunity
+        ? (isArabic ? 'المجتمع والتحديثات' : 'Community & updates')
+        : (isArabic ? 'التحديثات والأخبار' : 'Updates & news');
+
     return AppGlassCard(
       blur: false,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           InkWell(
             borderRadius: BorderRadius.circular(AppRadius.md),
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               child: Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Icon(
-                      Icons.auto_awesome_outlined,
+                      Icons.widgets_outlined,
                       color: theme.colorScheme.primary,
-                      size: 20,
+                      size: 21,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.homeMoreThisWeek,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: theme.colorScheme.onSurfaceVariant,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.homeExplore,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isArabic
+                              ? 'اختصاراتك المهمة في مكان واحد'
+                              : 'Your useful shortcuts in one place',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          HomeExploreRail(settings: widget.settings, showHeader: false),
+          const SizedBox(height: 8),
+          Divider(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          TextButton.icon(
+            onPressed: () => setState(() => _expanded = !_expanded),
+            icon: AnimatedRotation(
+              turns: _expanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: const Icon(Icons.keyboard_arrow_down_rounded),
+            ),
+            label: Text(
+              _expanded
+                  ? (isArabic ? 'إخفاء $extrasLabel' : 'Hide $extrasLabel')
+                  : extrasLabel,
             ),
           ),
           AnimatedCrossFade(
@@ -357,15 +389,13 @@ class _HomeMoreSectionState extends State<_HomeMoreSection> {
                 : CrossFadeState.showFirst,
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+              padding: const EdgeInsets.only(top: 8),
               child: Column(
                 children: [
                   if (widget.showCommunity) ...[
                     const HomeCommunityCard(),
                     const SizedBox(height: 12),
                   ],
-                  HomeExploreRail(settings: widget.settings),
-                  const SizedBox(height: 12),
                   HomeUpdatesPanel(settings: widget.settings),
                 ],
               ),

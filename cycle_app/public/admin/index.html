@@ -1751,6 +1751,7 @@
   </div>
 
 <script defer src="./admin-ux.js?v=2"></script>
+<script src="/magazine/long-articles.js?v=1"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
 import {
@@ -2470,7 +2471,9 @@ async function importDefaultArticles() {
   try {
     const res = await fetch('default-articles.json');
     if (!res.ok) throw new Error('تعذر تحميل default-articles.json');
-    const articles = await res.json();
+    const existingLibrary = await res.json();
+    const longGuides = Array.isArray(window.LUNE_LONG_ARTICLES) ? window.LUNE_LONG_ARTICLES : [];
+    const articles = [...existingLibrary, ...longGuides];
     for (const a of articles) {
       const { id, ...data } = a;
       await admin.set(['educationArticles', id], {

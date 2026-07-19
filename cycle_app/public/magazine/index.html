@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="مجلة Lune: أدلة عربية وإنجليزية طويلة وموثقة عن الدورة والصحة والخصوبة والعافية." />
+  <meta name="theme-color" content="#fffafc" />
+  <link rel="icon" href="/images/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/site.css?v=15" />
+  <link rel="stylesheet" href="/magazine/magazine.css?v=1" />
+  <title>مجلة Lune — أدلة صحية موثقة</title>
+</head>
+<body data-page="index">
+  <nav class="site-nav">
+    <div class="container">
+      <a href="/index.html" class="nav-brand"><img src="/images/logo.png" alt="" class="nav-logo" width="36" height="36" /><span>Lune</span></a>
+      <div class="nav-links">
+        <a href="/magazine/" class="active" data-ar="المجلة" data-en="Magazine">المجلة</a>
+        <a href="/features.html" data-ar="الميزات" data-en="Features">الميزات</a>
+        <a href="/trust-hub.html" data-ar="الثقة" data-en="Trust">الثقة</a>
+        <a href="/index.html#download" class="btn btn-primary btn-sm" data-ar="حمّلي التطبيق" data-en="Get the app">حمّلي التطبيق</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="القائمة">☰</button>
+    </div>
+  </nav>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer-panel">
+      <button class="nav-drawer-close" id="navClose" aria-label="إغلاق">×</button>
+      <a href="/index.html" data-ar="الرئيسية" data-en="Home">الرئيسية</a>
+      <a href="/magazine/" data-ar="المجلة" data-en="Magazine">المجلة</a>
+      <a href="/features.html" data-ar="الميزات" data-en="Features">الميزات</a>
+      <a href="/trust-hub.html" data-ar="مركز الثقة" data-en="Trust center">مركز الثقة</a>
+    </div>
+  </div>
+
+  <main class="magazine-shell">
+    <header class="magazine-hero">
+      <div class="container">
+        <span class="magazine-kicker" data-ar="مجلة Lune الصحية" data-en="Lune health magazine">مجلة Lune الصحية</span>
+        <h1 data-ar="افهمي جسمكِ بهدوء، معلومة موثقة في كل مرة." data-en="Understand your body calmly, one well-sourced guide at a time.">افهمي جسمكِ بهدوء، معلومة موثقة في كل مرة.</h1>
+        <p data-ar="أدلة طويلة بالعربية والإنجليزية عن الدورة، الألم، الخصوبة، النوم، التغذية ومراحل الحياة؛ مكتوبة بلغة واضحة ومبنية على مصادر صحية رسمية." data-en="In-depth Arabic and English guides about periods, pain, fertility, sleep, nutrition, and life stages, written clearly and grounded in official health sources.">أدلة طويلة بالعربية والإنجليزية عن الدورة، الألم، الخصوبة، النوم، التغذية ومراحل الحياة؛ مكتوبة بلغة واضحة ومبنية على مصادر صحية رسمية.</p>
+        <div class="magazine-metrics">
+          <span class="metric"><strong id="articleTotal">20</strong> <span data-ar="دليلاً جديدًا" data-en="new guides">دليلاً جديدًا</span></span>
+          <span class="metric" data-ar="أكثر من 1000 كلمة لكل مقال" data-en="More than 1,000 words per article">أكثر من 1000 كلمة لكل مقال</span>
+          <span class="metric" data-ar="صور أصلية ومصادر رسمية" data-en="Original imagery and official sources">صور أصلية ومصادر رسمية</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="magazine-tools" aria-label="أدوات المجلة">
+      <div class="container">
+        <div class="magazine-tools-row">
+          <label class="magazine-search"><span class="sr-only">بحث</span><input id="articleSearch" type="search" placeholder="ابحثي عن موضوع أو عرض…" autocomplete="off" /></label>
+          <button type="button" class="language-toggle" data-lang-toggle>English</button>
+        </div>
+        <div class="category-bar" id="categoryBar" aria-label="تصنيفات المقالات"></div>
+      </div>
+    </section>
+
+    <section class="magazine-content">
+      <div class="container">
+        <div id="resultCount" style="margin-bottom:18px;color:var(--text-muted);font-weight:600"></div>
+        <div class="magazine-grid" id="articlesGrid"></div>
+        <p class="magazine-disclaimer" data-ar="هذه المقالات للتثقيف الصحي العام ولا تشخّص حالة ولا تستبدل زيارة الطبيبة أو خدمات الطوارئ." data-en="These articles provide general health education. They do not diagnose a condition or replace clinical or emergency care.">هذه المقالات للتثقيف الصحي العام ولا تشخّص حالة ولا تستبدل زيارة الطبيبة أو خدمات الطوارئ.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h4 data-ar="معلومات" data-en="Explore">معلومات</h4><a href="/about.html">عن Lune</a><a href="/features.html">الميزات</a></div><div class="footer-col"><h4 data-ar="الثقة" data-en="Trust">الثقة</h4><a href="/trust-hub.html">مركز الثقة</a><a href="/privacy-policy.html">سياسة الخصوصية</a></div><div class="footer-col"><h4 data-ar="تواصل" data-en="Contact">تواصل</h4><a href="mailto:merrsoheb@gmail.com">merrsoheb@gmail.com</a></div></div><div class="footer-bottom">&copy; 2026 Lune</div></div></footer>
+
+  <script src="/magazine/long-articles.js?v=1"></script>
+  <script src="/magazine/magazine.js?v=1"></script>
+  <script>const d=document.getElementById('navDrawer');document.getElementById('navToggle')?.addEventListener('click',()=>d.classList.add('open'));document.getElementById('navClose')?.addEventListener('click',()=>d.classList.remove('open'));d?.addEventListener('click',e=>{if(e.target===d)d.classList.remove('open')});</script>
+</body>
+</html>

@@ -290,8 +290,12 @@ class _LuneAppState extends State<LuneApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final path = _router.state.matchedLocation;
+    // Lock only when the app truly leaves the foreground. `inactive` also
+    // fires on transient focus loss — including the biometric sheet ITSELF,
+    // the notification shade, and permission dialogs — and re-locking there
+    // made the fingerprint prompt reappear in a loop after every success.
     if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+        state == AppLifecycleState.hidden) {
       if (MenstrudelInit.settingsService?.areBiometricsEnabled == true) {
         _appLock.lock();
       }
