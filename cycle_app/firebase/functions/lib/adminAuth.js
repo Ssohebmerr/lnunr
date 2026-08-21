@@ -51,6 +51,10 @@ const BLOCKED_WRITE_PREFIXES = [
   'communityPrivateAuth',
   'communityRateLimits',
   'communityContentHashes',
+  'communityMediaApprovals',
+  'ipRateLimits',
+  'ai_usage',
+  'aiUsageDaily',
 ];
 
 function pathSegments(path) {

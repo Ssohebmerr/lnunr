@@ -17,10 +17,13 @@ class EducationArticlesRepository {
 
   Future<List<Article>> fetchPublished({required bool includeAdult}) async {
     try {
+      // List views do not need every body at once; paginate to keep the
+      // education hub responsive with a large Firestore magazine library.
       final snap = await _firestore
           .collection(collection)
           .where('published', isEqualTo: true)
           .orderBy('order')
+          .limit(120)
           .get();
       if (snap.docs.isEmpty) {
         return const [];
@@ -42,6 +45,7 @@ class EducationArticlesRepository {
               .collection(collection)
               .where('published', isEqualTo: true)
               .orderBy('order')
+              .limit(120)
               .snapshots()) {
         if (snap.docs.isEmpty) {
           yield const [];
@@ -55,6 +59,17 @@ class EducationArticlesRepository {
       }
     } catch (_) {
       yield const [];
+    }
+  }
+
+  /// Loads one full article by id (used when opening a guide).
+  Future<Article?> fetchById(String id) async {
+    try {
+      final doc = await _firestore.collection(collection).doc(id).get();
+      if (!doc.exists || doc.data() == null) return null;
+      return Article.fromMap(doc.id, doc.data()!);
+    } catch (_) {
+      return null;
     }
   }
 

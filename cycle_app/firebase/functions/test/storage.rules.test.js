@@ -65,7 +65,7 @@ async function main() {
     const outsider = testEnv.authenticatedContext('outsider');
     const freeMember = testEnv.authenticatedContext(freeUid);
 
-    await assertSucceeds(
+    await assertFails(
       freeMember.storage().ref(
         `community_media/${communityId}/${freeUid}/free-post.jpg`,
       ).put(
@@ -73,7 +73,16 @@ async function main() {
         { contentType: 'image/jpeg' },
       ),
     );
-    console.log('Free members can upload post images.');
+    console.log('Free members cannot upload community media.');
+    await assertSucceeds(
+      owner.storage().ref(
+        `community_media/${communityId}/${ownerUid}/premium-post.jpg`,
+      ).put(
+        new Uint8Array([0xff, 0xd8, 0xff]),
+        { contentType: 'image/jpeg' },
+      ),
+    );
+    console.log('Premium members can upload community media.');
     await assertFails(
       outsider.storage().ref(
         `community_media/${communityId}/outsider/not-a-member.jpg`,

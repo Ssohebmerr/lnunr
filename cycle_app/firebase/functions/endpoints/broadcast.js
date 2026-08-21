@@ -16,9 +16,9 @@ const { sendBroadcastInternal } = require('../lib/broadcast');
 const { guardRequest, setCors } = require('../lib/http');
 
 exports.adminBroadcast = onRequest(
-  { cors: true, timeoutSeconds: 60 },
+  { cors: false, timeoutSeconds: 60 },
   async (req, res) => {
-    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {

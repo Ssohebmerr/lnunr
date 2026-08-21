@@ -26,6 +26,7 @@ const { defineSecret } = require('firebase-functions/params');
 
 const { verifyCallerIsAdmin } = require('../lib/adminAuth');
 const { guardRequest, setCors, bearerToken } = require('../lib/http');
+const { resolveAiAgeGroup } = require('../lib/ai_eligibility');
 
 const ADMIN_BOOTSTRAP_KEY = defineSecret('ADMIN_BOOTSTRAP_KEY');
 
@@ -35,7 +36,7 @@ const USER_SUBCOLLECTIONS_FOR_DELETE = [
   'chats', 'cycle_logs', 'wellness_logs',
   'community_reports', 'community_comments', 'community_likes',
   'backups', 'communityMemberships', 'blockedUsers',
-  'savedPosts', 'communityInbox',
+  'savedPosts', 'communityInbox', 'following', 'secure',
 ];
 
 const DELETE_BATCH_SIZE = 400;
@@ -79,6 +80,9 @@ async function deleteUserAiData(db, uid) {
   ]);
   await userRef.set({
     aiMemory: admin.firestore.FieldValue.delete(),
+    aiConsentGranted: false,
+    aiConsentVersion: admin.firestore.FieldValue.delete(),
+    aiEligibilityUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 }
 
@@ -88,9 +92,9 @@ async function deleteUserAiData(db, uid) {
 // ---------------------------------------------------------------------------
 
 exports.syncUsersFromAuth = onRequest(
-  { cors: true, timeoutSeconds: 300 },
+  { cors: false, timeoutSeconds: 300 },
   async (req, res) => {
-    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'required' }))) return;
 
     const token = bearerToken(req, res);
     if (!token) return;
@@ -224,7 +228,7 @@ exports.bootstrapAdmin = onCall({ secrets: [ADMIN_BOOTSTRAP_KEY] }, async (reque
 // ---------------------------------------------------------------------------
 
 exports.deleteUserAccount = onRequest(
-  { cors: true, timeoutSeconds: 120 },
+  { cors: false, timeoutSeconds: 120 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
     const token = bearerToken(req, res);
@@ -293,7 +297,7 @@ exports.deleteUserAccount = onRequest(
 // ---------------------------------------------------------------------------
 
 exports.purgeAiData = onRequest(
-  { cors: true, timeoutSeconds: 120 },
+  { cors: false, timeoutSeconds: 120 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
     const token = bearerToken(req, res);
@@ -312,6 +316,57 @@ exports.purgeAiData = onRequest(
         return;
       }
       res.status(500).json({ error: 'Failed to purge AI data.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// syncAiEligibility — trusted write of age/consent fields (Admin SDK).
+// Client Firestore writes to these fields are denied by rules.
+// ---------------------------------------------------------------------------
+
+exports.syncAiEligibility = onRequest(
+  { cors: false, timeoutSeconds: 30 },
+  async (req, res) => {
+    if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
+    if (req.method !== 'POST') {
+      setCors(res, req);
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+    const token = bearerToken(req, res);
+    if (!token) return;
+
+    try {
+      const decoded = await admin.auth().verifyIdToken(token);
+      const consentGranted = req.body?.consentGranted === true;
+      const declaredAgeGroup =
+        typeof req.body?.declaredAgeGroup === 'string'
+          ? req.body.declaredAgeGroup
+          : undefined;
+
+      const userRef = admin.firestore().collection('users').doc(decoded.uid);
+      const snap = await userRef.get();
+      const existing = snap.exists ? (snap.data() || {}) : {};
+      const aiAgeGroup = resolveAiAgeGroup(existing, declaredAgeGroup);
+
+      await userRef.set({
+        aiConsentGranted: consentGranted,
+        aiConsentVersion: 1,
+        aiAgeGroup,
+        aiEligibilityUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      setCors(res, req);
+      res.json({ success: true, aiAgeGroup, aiConsentGranted: consentGranted });
+    } catch (error) {
+      console.error('syncAiEligibility error:', error);
+      setCors(res, req);
+      if (error.code === 'auth/id-token-expired') {
+        res.status(401).json({ error: 'Token expired. Please re-authenticate.' });
+        return;
+      }
+      res.status(500).json({ error: 'Failed to sync AI eligibility.' });
     }
   },
 );

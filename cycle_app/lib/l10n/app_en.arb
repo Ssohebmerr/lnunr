@@ -694,6 +694,8 @@
   "educationCatHealth": "Health & symptoms",
   "educationCatNutrition": "Food & movement",
   "educationCatMind": "Mind & mood",
+  "educationCatFertility": "Fertility",
+  "educationCatFitness": "Movement",
   "educationCatAdult": "18+ topics",
   "educationMinutes": "{count} min read",
   "@educationMinutes": {

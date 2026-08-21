@@ -27,4 +27,11 @@ assert.doesNotThrow(() => assertAiEligibility({
   aiConsentVersion: 1,
 }));
 
+expectQuotaError({
+  aiAgeGroup: 'adult',
+  aiConsentGranted: true,
+  aiConsentVersion: 1,
+  communityBirthYear: 2012,
+}, 'adult_required');
+
 console.log('chat_quota eligibility tests passed');

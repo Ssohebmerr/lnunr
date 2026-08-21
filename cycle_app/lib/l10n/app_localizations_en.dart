@@ -1883,6 +1883,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get educationCatMind => 'Mind & mood';
 
   @override
+  String get educationCatFertility => 'Fertility';
+
+  @override
+  String get educationCatFitness => 'Movement';
+
+  @override
   String get educationCatAdult => '18+ topics';
 
   @override

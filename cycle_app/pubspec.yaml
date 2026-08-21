@@ -1,7 +1,7 @@
 name: cycle_aura
 description: "Lune — your cycle has phases, like the moon. Private Arabic cycle tracker with AI wellness."
 publish_to: 'none'
-version: 1.0.22+23
+version: 1.0.23+24
 
 environment:
   sdk: ^3.11.4

@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 
 import 'article_icon_registry.dart';
 
-enum ArticleCategory { basics, health, nutrition, mind, adult }
+enum ArticleCategory {
+  basics,
+  health,
+  nutrition,
+  mind,
+  fertility,
+  fitness,
+  adult,
+}
 
 /// A server-backed magazine article.
 ///

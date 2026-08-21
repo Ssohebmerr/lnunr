@@ -8,7 +8,7 @@
   "scripts": {
     "test:rules": "cd ../.. && node ./firebase/functions/node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --only firestore \"node firebase/functions/test/firestore.rules.test.js\"",
     "test:storage-rules": "cd ../.. && node ./firebase/functions/node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --project lune-media-rules-test --only firestore,storage \"node firebase/functions/test/storage.rules.test.js\"",
-    "test:unit": "node lib/ip_rate_limit.test.js && node lib/text_sanitize.test.js && node lib/mediaModeration.test.js && node lib/chat_quota.test.js"
+    "test:unit": "node lib/ip_rate_limit.test.js && node lib/text_sanitize.test.js && node lib/mediaModeration.test.js && node lib/chat_quota.test.js && node lib/ai_eligibility.test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

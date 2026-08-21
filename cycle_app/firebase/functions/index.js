@@ -81,6 +81,7 @@ exports.syncUsersFromAuth = users.syncUsersFromAuth;
 exports.bootstrapAdmin = users.bootstrapAdmin;
 exports.deleteUserAccount = users.deleteUserAccount;
 exports.purgeAiData = users.purgeAiData;
+exports.syncAiEligibility = users.syncAiEligibility;
 exports.verifyPlayPurchase = subscriptions.verifyPlayPurchase;
 exports.redeemPromoCode = subscriptions.redeemPromoCode;
 exports.grantTesterPremium = subscriptions.grantTesterPremium;

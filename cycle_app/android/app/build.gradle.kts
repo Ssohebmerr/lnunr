@@ -41,7 +41,7 @@ android {
     signingConfigs {
         create("release") {
             if (keystoreProperties.isNotEmpty()) {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile")!!)
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
@@ -51,13 +51,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystoreProperties.isNotEmpty()) {
-                signingConfigs.getByName("release")
-            } else {
-                // Fallback so `flutter build apk` still works on machines
-                // without the keystore (CI, fresh clones).
-                signingConfigs.getByName("debug")
+            if (keystoreProperties.isEmpty()) {
+                throw GradleException(
+                    "Missing android/key.properties — release builds require the upload keystore. " +
+                        "Copy key.properties.example and point storeFile at upload-keystore.jks.",
+                )
             }
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

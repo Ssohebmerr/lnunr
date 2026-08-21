@@ -662,6 +662,8 @@
   "educationCatHealth": "الصحة والأعراض",
   "educationCatNutrition": "الغذاء والحركة",
   "educationCatMind": "العقل والمزاج",
+  "educationCatFertility": "الخصوبة",
+  "educationCatFitness": "الحركة",
   "educationCatAdult": "مواضيع +18",
   "educationMinutes": "{count} د قراءة",
   "@educationMinutes": {

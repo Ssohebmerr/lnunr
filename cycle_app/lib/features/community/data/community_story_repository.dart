@@ -204,7 +204,10 @@ class CommunityStoryRepository {
 
     final ref = _storiesRef(communityId).doc(storyId);
     try {
-      await ref.update({'viewCount': FieldValue.increment(1)});
+      await ref.update({
+        'viewCount': FieldValue.increment(1),
+        'viewedBy': FieldValue.arrayUnion([uid]),
+      });
     } catch (e) {
       debugPrint('markViewed error: $e');
     }

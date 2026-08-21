@@ -216,7 +216,11 @@ async function classifyAmbiguousImage(geminiApiKey, media, detectedText) {
   throw lastError || new Error('gemini_vision_unavailable');
 }
 
-async function moderateCommunityImage(geminiApiKey, media) {
+async function moderateCommunityImage(keys, media) {
+  // Accept either a `{deepseekKey, geminiKey}` object or a bare Gemini key.
+  // OCR text is classified via the DeepSeek-first `evaluateModeration`; the
+  // image pixels themselves still need Gemini vision (DeepSeek has no vision).
+  const { geminiKey } = typeof keys === 'string' ? { geminiKey: keys } : (keys || {});
   try {
     const annotation = await annotateWithVision(media.gsUri);
     const vision = classifyVisionSignals(annotation);
@@ -226,7 +230,7 @@ async function moderateCommunityImage(geminiApiKey, media) {
 
     let textDecision = null;
     if (vision.detectedText.length >= 3) {
-      textDecision = await evaluateModeration(geminiApiKey, vision.detectedText);
+      textDecision = await evaluateModeration(keys, vision.detectedText);
       if (textDecision.reject) {
         return {
           status: 'rejected',
@@ -241,7 +245,7 @@ async function moderateCommunityImage(geminiApiKey, media) {
     }
 
     const decision = await classifyAmbiguousImage(
-      geminiApiKey,
+      geminiKey,
       media,
       vision.detectedText,
     );

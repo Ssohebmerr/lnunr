@@ -156,9 +156,9 @@ async function writeAdminActivity({ decoded, action, details }) {
 // ---------------------------------------------------------------------------
 
 exports.adminApi = onRequest(
-  { cors: true, timeoutSeconds: 120, secrets: [GEMINI_API_KEY] },
+  { cors: false, timeoutSeconds: 120, secrets: [GEMINI_API_KEY] },
   async (req, res) => {
-    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'required' }))) return;
 
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {

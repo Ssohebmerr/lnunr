@@ -1870,6 +1870,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get educationCatMind => 'العقل والمزاج';
 
   @override
+  String get educationCatFertility => 'الخصوبة';
+
+  @override
+  String get educationCatFitness => 'الحركة';
+
+  @override
   String get educationCatAdult => 'مواضيع +18';
 
   @override

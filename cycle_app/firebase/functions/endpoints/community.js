@@ -20,6 +20,14 @@ const {
 const { sanitizePostText, sanitizeCommentText } = require('../lib/text_sanitize');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
+
+// Provider keys for moderation — DeepSeek primary, Gemini fallback. Resolved
+// at request time (secret `.value()` is only available inside the handler).
+const moderationKeys = () => ({
+  deepseekKey: DEEPSEEK_API_KEY.value(),
+  geminiKey: GEMINI_API_KEY.value(),
+});
 
 const POST_TYPES = new Set([
   'support', 'question', 'tip', 'vent', 'milestone', 'poll',
@@ -191,9 +199,9 @@ async function submitPost(db, uid, body) {
   // while keeping the same server-authoritative checks and fail-safe result.
   const [, moderation, mediaModeration] = await Promise.all([
     reserveSubmission(db, uid, 'post', bodyText, 10),
-    evaluateModeration(GEMINI_API_KEY.value(), bodyText),
+    evaluateModeration(moderationKeys(), bodyText),
     media
-      ? moderateCommunityImage(GEMINI_API_KEY.value(), media)
+      ? moderateCommunityImage(moderationKeys(), media)
       : Promise.resolve(null),
   ]);
   if (moderation.reject) {
@@ -290,7 +298,7 @@ async function submitComment(db, uid, body) {
     : [];
   const [, moderation] = await Promise.all([
     reserveSubmission(db, uid, 'comment', bodyText, 20),
-    evaluateModeration(GEMINI_API_KEY.value(), bodyText),
+    evaluateModeration(moderationKeys(), bodyText),
   ]);
   if (moderation.reject) {
     throw new CommunitySubmissionError(
@@ -359,9 +367,9 @@ async function submitStory(db, uid, body) {
   const fingerprint = mediaUrl || textOverlay || 'text-story';
   const [, textModeration, mediaModeration] = await Promise.all([
     reserveSubmission(db, uid, 'story', fingerprint, 5),
-    evaluateModeration(GEMINI_API_KEY.value(), textOverlay || ''),
+    evaluateModeration(moderationKeys(), textOverlay || ''),
     media
-      ? moderateCommunityImage(GEMINI_API_KEY.value(), media)
+      ? moderateCommunityImage(moderationKeys(), media)
       : Promise.resolve(null),
   ]);
   if (textModeration.reject || mediaModeration?.status === 'rejected') {
@@ -413,8 +421,8 @@ async function submitStory(db, uid, body) {
 
 exports.submitCommunity = onRequest(
   {
-    cors: true,
-    secrets: [GEMINI_API_KEY],
+    cors: false,
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
     timeoutSeconds: 45,
     memory: '512MiB',
   },

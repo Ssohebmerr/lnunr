@@ -26,20 +26,28 @@ class CloudFunctionsClient {
       'Content-Type': 'application/json',
     };
 
-    if (requireAuth) {
-      final token = await _auth.currentUser?.getIdToken();
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-    }
+    // Fetch the auth and App Check tokens together instead of serially. The
+    // App Check call is bounded by a short timeout: while App Check stays in
+    // monitoring mode the token is optional, so a slow or failing attestation
+    // (sideloaded build, or Play Integrity/debug token not set up yet) must
+    // never stall the request for seconds on every post/comment.
+    final authFuture = requireAuth
+        ? (_auth.currentUser?.getIdToken() ?? Future<String?>.value())
+        : Future<String?>.value();
+    final appCheckFuture = FirebaseAppCheck.instance
+        .getToken()
+        .timeout(const Duration(seconds: 2), onTimeout: () => null)
+        .catchError((Object _) => null);
 
-    try {
-      final appCheckToken = await FirebaseAppCheck.instance.getToken();
-      if (appCheckToken != null && appCheckToken.isNotEmpty) {
-        headers['X-Firebase-AppCheck'] = appCheckToken;
-      }
-    } catch (_) {
-      // App Check may be unavailable on sideloaded builds until configured.
+    final tokens = await Future.wait([authFuture, appCheckFuture]);
+
+    final authToken = tokens[0];
+    if (requireAuth && authToken != null && authToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $authToken';
+    }
+    final appCheckToken = tokens[1];
+    if (appCheckToken != null && appCheckToken.isNotEmpty) {
+      headers['X-Firebase-AppCheck'] = appCheckToken;
     }
 
     return headers;

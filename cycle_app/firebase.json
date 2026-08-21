@@ -25,7 +25,12 @@
   },
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "images/magazine/guides/inline/**"
+    ],
     "headers": [
       {
         "source": "**",

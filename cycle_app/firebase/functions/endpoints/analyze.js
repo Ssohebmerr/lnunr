@@ -71,7 +71,7 @@ function buildAnalyzeContext(cycleContext) {
 
 exports.analyze = onRequest(
   {
-    cors: true,
+    cors: false,
     secrets: [DEEPSEEK_API_KEY, GEMINI_API_KEY],
     timeoutSeconds: 90,
   },

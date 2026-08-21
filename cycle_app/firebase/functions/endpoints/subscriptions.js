@@ -28,6 +28,7 @@ const { defineSecret, defineString } = require('firebase-functions/params');
 
 const playBilling = require('../play_billing');
 const { guardRequest, setCors } = require('../lib/http');
+const { verifyPubSubOidc } = require('../lib/pubsub_auth');
 
 const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret('GOOGLE_PLAY_SERVICE_ACCOUNT');
 
@@ -46,7 +47,7 @@ const TESTER_PREMIUM_ENABLED = defineString('TESTER_PREMIUM_ENABLED', {
 // ---------------------------------------------------------------------------
 
 exports.verifyPlayPurchase = onRequest(
-  { cors: true, secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT], timeoutSeconds: 30 },
+  { cors: false, secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT], timeoutSeconds: 30 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
@@ -106,7 +107,7 @@ exports.verifyPlayPurchase = onRequest(
 // ---------------------------------------------------------------------------
 
 exports.redeemPromoCode = onRequest(
-  { cors: true, timeoutSeconds: 30 },
+  { cors: false, timeoutSeconds: 30 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
@@ -192,7 +193,7 @@ exports.redeemPromoCode = onRequest(
 // ---------------------------------------------------------------------------
 
 exports.grantTesterPremium = onRequest(
-  { cors: true, timeoutSeconds: 30 },
+  { cors: false, timeoutSeconds: 30 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'auth_heavy', appCheck: 'required' }))) return;
 
@@ -245,7 +246,9 @@ exports.grantTesterPremium = onRequest(
 // ---------------------------------------------------------------------------
 // googlePlayWebhook — Real-Time Developer Notifications from Pub/Sub.
 // Configure in Play Console → Monetize → Monetization setup → RTDN topic,
-// then create a Pub/Sub push subscription to this function URL.
+// then create a Pub/Sub push subscription to this function URL with
+// authentication enabled (OIDC). Set PLAY_WEBHOOK_AUDIENCE to the push URL
+// if it differs from the default Cloud Functions URL.
 // ---------------------------------------------------------------------------
 
 exports.googlePlayWebhook = onRequest(
@@ -253,6 +256,13 @@ exports.googlePlayWebhook = onRequest(
   async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
+      return;
+    }
+
+    const oidcOk = await verifyPubSubOidc(req);
+    if (!oidcOk) {
+      console.warn('googlePlayWebhook: missing or invalid Pub/Sub OIDC token');
+      res.status(401).json({ ok: false, error: 'Unauthorized' });
       return;
     }
 

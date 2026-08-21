@@ -24,7 +24,18 @@ Use tracking as observation, not as a grade for your body. Record what happened 
     return items.map((item) => `• ${item}`).join('\n');
   }
 
-  function buildArabic(topic) {
+  function articleStem(articleId) {
+    return String(articleId || 'guide').replace(/-complete-guide$/u, '');
+  }
+
+  function figure(articleId, n, caption) {
+    const stem = articleStem(articleId);
+    const num = String(n).padStart(2, '0');
+    // Flat path — nested /inline/{stem}/ folders failed to deploy reliably on Hosting.
+    return `\n\n![${caption}](https://lune-7d956.web.app/images/magazine/guides/${stem}-fig-${num}.webp)\n\n`;
+  }
+
+  function buildArabic(topic, articleId) {
     return `## لماذا يستحق هذا الموضوع فهمًا هادئًا؟
 
 ${topic.lead} لا يوجد جسم يعمل كساعة دقيقة طوال العمر؛ فالدورة تتأثر بمرحلة الحياة والصحة العامة والنوم والضغط النفسي والأدوية وغيرها. الفائدة الحقيقية ليست في مطاردة رقم مثالي، بل في معرفة النمط المعتاد لكِ والانتباه إلى التغيرات التي تؤثر في راحتك أو حياتك اليومية. هذا الدليل يضع المعلومات في سياق عملي حتى تميّزي بين ما يمكن مراقبته، وما يستحق موعدًا عاديًا، وما يحتاج مساعدة عاجلة.
@@ -32,11 +43,11 @@ ${topic.lead} لا يوجد جسم يعمل كساعة دقيقة طوال ال�
 ## ما المقصود بالموضوع؟
 
 ${topic.meaning} من المفيد التفريق بين وصف العرض وبين معرفة سببه: كلمة مثل «غير منتظمة» أو «مؤلمة» تصف تجربة، لكنها لا تحدد التشخيص وحدها. التشخيص يعتمد على القصة كاملة، والفحص عند الحاجة، وأحيانًا تحاليل أو تصوير. لذلك ستجدين هنا لغة تساعدك على وصف التجربة بدقة من دون تضخيم أو تقليل.
-
+${figure(articleId, 1, 'لحظة هدوء للتأمل في إشارات الجسم دون استعجال الحكم')}
 ## ماذا قد يحدث داخل الجسم؟
 
 ${topic.biology} الهرمونات لا تعمل منفردة؛ فهي تتواصل مع الدماغ والمبيضين والرحم والغدة الدرقية والاستقلاب والنوم. لهذا قد يظهر التغير في أكثر من مكان في الوقت نفسه، مثل النزف والطاقة والمزاج والجلد. وجود ارتباط زمني لا يثبت دائمًا أن الهرمونات هي السبب الوحيد، لكنه يمنح الطبيبة نقطة بداية أفضل عندما يكون التتبع واضحًا.
-
+${figure(articleId, 2, 'صورة معبّرة عن العناية اليومية الهادئة والنوم المنتظم')}
 ## أنماط وعلامات تستحق الملاحظة
 
 راقبي النمط بدل التركيز على يوم واحد. اسألي: هل يتكرر؟ هل بدأ فجأة؟ هل يزداد؟ وهل يمنعك من نشاط معتاد؟ اكتبي أيضًا ما إذا كان مختلفًا عن المعتاد لكِ، لأن المقارنة الشخصية كثيرًا ما تكون أهم من مقارنة نفسك بالآخرين.
@@ -52,7 +63,7 @@ ${topic.causesIntro} الاحتمالات لا تعني أن أحدها موجو
 ${bullets(topic.causes)}
 
 قد يجتمع أكثر من عامل، مثل ضغط نفسي مع نقص نوم أو دواء جديد مع حالة سابقة. ولهذا فإن العلاج الجيد لا يركز فقط على إخفاء العرض؛ بل يحاول فهم ما إذا كان هناك سبب يحتاج معالجة، وما إذا كان العرض نفسه يحتاج تخفيفًا لحماية جودة الحياة.
-
+${figure(articleId, 3, 'دفتر يوميات بسيط يساعد على رؤية النمط بدل القلق من يوم واحد')}
 ## خطة تتبّع عملية لدورتين أو ثلاث
 
 ابدئي بتاريخ أول يوم نزف واضح، وليس مجرد بقعة خفيفة، ثم سجّلي مدة النزف والفاصل حتى الدورة التالية. استخدمي أوصافًا ثابتة تستطيعين تكرارها: خفيف، متوسط، غزير؛ ألم بسيط، متوسط، شديد؛ وتأثير محدود أو واضح أو معطّل. سجّلي الأدوية في وقتها الصحيح، والنوم التقريبي، وأي مرض أو سفر أو ضغط كبير. لا تحتاجين إلى مشاركة يومياتك كاملة؛ يمكنك عرض ملخص تختارينه.
@@ -68,7 +79,7 @@ ${bullets(topic.track)}
 ${bullets(topic.care)}
 
 إذا استخدمتِ مسكنًا أو مكملًا متاحًا دون وصفة، اقرئي النشرة واسألي صيدلانية عن الملاءمة والتداخلات، ولا تتجاوزي الجرعة المكتوبة. الراحة والحرارة والحركة اللطيفة والنوم المنتظم قد تكون أدوات مساعدة لبعض الأعراض، لكنها ليست بديلًا عن تقييم سبب النزف أو الألم أو غياب الدورة.
-
+${figure(articleId, 4, 'خطوات عناية بسيطة: راحة، ترطيب، وحركة لطيفة تناسب يومك')}
 ## متى أحجز موعدًا غير طارئ؟
 
 احجزي موعدًا عندما يستمر التغير عدة دورات، أو يتكرر، أو يزداد، أو يؤثر في العمل أو الدراسة أو النوم أو العلاقة مع الطعام والجسم. الموعد مناسب أيضًا إذا كنتِ تحاولين الحمل ولديكِ دورات متباعدة أو غائبة، أو إذا ظهر عرض جديد بعد دواء أو وسيلة منع حمل. التفاصيل التالية تجعل الحوار أوضح:
@@ -84,7 +95,7 @@ ${bullets(topic.visit)}
 ${bullets(topic.urgent)}
 
 القائمة ليست شاملة. ثقي بإحساسك عندما يكون الأمر مختلفًا بوضوح عن المعتاد، واستخدمي خدمات الطوارئ المحلية إذا كان التأخير قد يعرضك للخطر.
-
+${figure(articleId, 5, 'متى تطلبين المساعدة: موعد هادئ أو رعاية عاجلة حسب شدة الإشارة')}
 ## أفكار شائعة تحتاج تصحيحًا
 
 ${bullets(topic.myths)}
@@ -100,7 +111,7 @@ ${topic.takeaway}
 ${AR_SAFETY}`;
   }
 
-  function buildEnglish(topic) {
+  function buildEnglish(topic, articleId) {
     return `## Why this topic deserves a calm, practical look
 
 ${topic.lead} Bodies do not behave like perfect clocks across an entire lifetime. Cycles can respond to life stage, general health, sleep, stress, medicines, and many other influences. The useful goal is not to chase an ideal number. It is to learn your usual pattern and notice changes that affect comfort or daily function. This guide puts information into a practical sequence: what you can observe, what deserves a routine appointment, and what should not wait.
@@ -108,11 +119,11 @@ ${topic.lead} Bodies do not behave like perfect clocks across an entire lifetime
 ## What does the term actually mean?
 
 ${topic.meaning} It helps to separate the description of a symptom from its cause. Words such as “irregular,” “heavy,” or “painful” describe an experience, but they do not establish a diagnosis by themselves. Diagnosis depends on the full history, an examination when appropriate, and sometimes tests or imaging. The aim here is to give you accurate language for describing what is happening without minimizing it or assuming the worst.
-
+${figure(articleId, 1, 'A calm pause to notice body signals without rushing to judgment')}
 ## What may be happening in the body?
 
 ${topic.biology} Hormones do not operate alone. They communicate with the brain, ovaries, uterus, thyroid, metabolism, and sleep systems. A change can therefore appear in several areas at once, such as bleeding, energy, mood, or skin. A timing pattern does not prove that hormones are the only cause, but a clear pattern gives a clinician a better starting point.
-
+${figure(articleId, 2, 'Gentle daily care and steadier sleep support clearer observation')}
 ## Patterns worth noticing
 
 Look for a pattern rather than judging one day. Ask whether it repeats, began suddenly, is getting stronger, or stops you from doing something you normally do. Note whether it is different from your own baseline; your personal change is often more informative than comparison with someone else.
@@ -128,7 +139,7 @@ ${topic.causesIntro} A list of possibilities does not mean that any one diagnosi
 ${bullets(topic.causes)}
 
 More than one influence can be present, such as stress plus sleep loss, or a new medicine alongside an existing condition. Good care therefore does more than hide a symptom. It asks whether an underlying cause needs treatment and whether the symptom itself needs relief to protect quality of life.
-
+${figure(articleId, 3, 'A simple diary helps reveal patterns instead of worrying about one day')}
 ## A useful two- or three-cycle tracking plan
 
 Start with the first day of clear menstrual flow rather than a single faint spot, then record bleeding duration and the interval to the next period. Use repeatable descriptions: light, moderate, or heavy flow; mild, moderate, or severe pain; and limited, noticeable, or disabling impact. Record medicines at the time you take them, approximate sleep, illness, travel, and major stress. You control what you share; a concise summary is usually enough.
@@ -144,7 +155,7 @@ Self-care is not the same as ignoring a problem. It means supporting your body a
 ${bullets(topic.care)}
 
 If you use an over-the-counter pain medicine or supplement, read the label, ask a pharmacist about safety and interactions, and never exceed the stated dose. Rest, heat, gentle movement, and a consistent sleep routine can support some symptoms, but they are not substitutes for evaluating the cause of significant bleeding, pain, or absent periods.
-
+${figure(articleId, 4, 'Practical comfort: rest, fluids, and gentle movement that fit your day')}
 ## When to arrange a routine appointment
 
 Book a visit when a change lasts for several cycles, repeats, worsens, or affects work, school, sleep, movement, relationships, or eating. A visit is also appropriate when you are trying to conceive and cycles are widely spaced or absent, or when a new symptom begins after a medicine or contraceptive method. Bring details such as:
@@ -160,7 +171,7 @@ Seek urgent help for extremely heavy bleeding with dizziness, fainting, shortnes
 ${bullets(topic.urgent)}
 
 No list can cover every emergency. Trust the signal that something is clearly different from your normal, and use local emergency services when delay may place you at risk.
-
+${figure(articleId, 5, 'Knowing when a calm visit is enough and when care should not wait')}
 ## Common ideas that need correction
 
 ${bullets(topic.myths)}
@@ -457,7 +468,13 @@ ${EN_SAFETY}`;
     },
   ];
 
-  window.LUNE_LONG_ARTICLES = rawArticles.map((item, index) => ({
+  const extraRaw =
+    (typeof window !== 'undefined' && window.LUNE_LONG_ARTICLES_EXTRA_RAW) ||
+    (typeof global !== 'undefined' && global.LUNE_LONG_ARTICLES_EXTRA_RAW) ||
+    [];
+  const allRaw = rawArticles.concat(extraRaw);
+
+  window.LUNE_LONG_ARTICLES = allRaw.map((item, index) => ({
     id: item.id,
     category: item.category,
     iconName: item.iconName,
@@ -467,14 +484,31 @@ ${EN_SAFETY}`;
     order: 100 + index,
     titleEn: item.titleEn,
     titleAr: item.titleAr,
-    bodyEn: buildEnglish(completeTopic(item.en, EN_DEFAULTS)),
-    bodyAr: buildArabic(completeTopic(item.ar, AR_DEFAULTS)),
-    coverImageUrl: `https://lune-7d956.web.app/images/magazine/guides/${item.cover.replace(/\.png$/, '.webp')}`,
+    bodyEn: buildEnglish(completeTopic(item.en, EN_DEFAULTS), item.id),
+    bodyAr: buildArabic(completeTopic(item.ar, AR_DEFAULTS), item.id),
+    coverImageUrl: `https://lune-7d956.web.app/images/magazine/guides/${item.id.replace(/-complete-guide$/, '')}.webp`,
     excerptAr: item.ar.lead,
     excerptEn: item.en.lead,
     featured: index < 6,
     slug: item.id,
     sourceUrls: item.sourceUrls,
     contentVersion: 1,
+  }));
+
+  window.LUNE_LONG_ARTICLES_META = window.LUNE_LONG_ARTICLES.map((article) => ({
+    id: article.id,
+    slug: article.slug,
+    category: article.category,
+    minutes: article.minutes,
+    adultsOnly: article.adultsOnly,
+    published: article.published,
+    order: article.order,
+    titleEn: article.titleEn,
+    titleAr: article.titleAr,
+    excerptAr: article.excerptAr,
+    excerptEn: article.excerptEn,
+    coverImageUrl: article.coverImageUrl,
+    featured: article.featured,
+    sourceUrls: article.sourceUrls,
   }));
 })();

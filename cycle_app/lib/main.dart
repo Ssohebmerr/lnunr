@@ -73,7 +73,9 @@ import 'l10n/app_localizations.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('[FCM Background] ${message.notification?.title}');
+  if (kDebugMode) {
+    debugPrint('[FCM Background] ${message.notification?.title}');
+  }
 }
 
 void main() async {

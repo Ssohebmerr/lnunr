@@ -10,6 +10,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../data/community_constants.dart';
 import '../../data/community_story_repository.dart';
 import '../../data/models/community_profile.dart';
+import '../../data/moderation_result.dart' show ModerationRejectedException;
+import 'moderation_rejected_dialog.dart';
 
 /// Bottom sheet to create a new story (image from gallery or text-only).
 Future<void> showStoryComposer({
@@ -161,6 +163,13 @@ Future<void> _uploadStory({
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(content: Text(l10n.fileTooLarge)));
     }
+  } on ModerationRejectedException catch (e) {
+    // The image uploaded fine but the safety review rejected it — show why,
+    // instead of a generic error.
+    if (context.mounted) {
+      messenger.hideCurrentSnackBar();
+      await showModerationRejectedDialog(context, reason: e.reason);
+    }
   } catch (e) {
     debugPrint('Story upload failed for ${file.name}: $e');
     if (context.mounted) {
@@ -202,6 +211,7 @@ Future<void> _uploadMultipleStories({
   );
 
   int successCount = 0;
+  String? rejectedReason;
   for (final file in files) {
     try {
       await repo.createStory(
@@ -226,6 +236,9 @@ Future<void> _uploadMultipleStories({
         messenger.showSnackBar(SnackBar(content: Text(l10n.fileTooLarge)));
         return;
       }
+    } on ModerationRejectedException catch (e) {
+      // Keep uploading the rest; report the rejection reason at the end.
+      rejectedReason = e.reason;
     } catch (e) {
       debugPrint('Multi-story upload failed for ${file.name}: $e');
     }
@@ -238,6 +251,9 @@ Future<void> _uploadMultipleStories({
         content: Text('${l10n.storyPublished} ($successCount/${files.length})'),
       ),
     );
+  } else if (context.mounted && rejectedReason != null) {
+    messenger.hideCurrentSnackBar();
+    await showModerationRejectedDialog(context, reason: rejectedReason);
   } else if (context.mounted) {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(content: Text(l10n.errorGeneric)));

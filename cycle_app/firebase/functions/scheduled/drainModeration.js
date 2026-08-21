@@ -23,6 +23,7 @@ const { defineSecret } = require('firebase-functions/params');
 const { evaluateModeration } = require('../lib/moderation');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 
 // Bound the work per run so a large backlog can't blow the timeout or the bill;
 // leftovers roll to the next tick.
@@ -30,7 +31,10 @@ const BATCH_LIMIT = 40;
 
 async function resolveOne(ref, text, kind) {
   try {
-    const decision = await evaluateModeration(GEMINI_API_KEY.value(), text || '');
+    const decision = await evaluateModeration({
+      deepseekKey: DEEPSEEK_API_KEY.value(),
+      geminiKey: GEMINI_API_KEY.value(),
+    }, text || '');
     if (decision.moderationStatus === 'pending_review') {
       return 'pending';
     }
@@ -62,7 +66,7 @@ async function resolveOne(ref, text, kind) {
 exports.drainPendingModeration = onSchedule(
   {
     schedule: 'every 30 minutes',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
     timeoutSeconds: 300,
     memory: '256MiB',
   },

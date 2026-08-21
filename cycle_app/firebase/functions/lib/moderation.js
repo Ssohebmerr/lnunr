@@ -7,8 +7,10 @@
 //       Used by community triggers (posts, comments, stories) to decide
 //       whether user-generated content is allowed. Returns
 //       `{ approved: true }` or `{ approved: false, reason: "..." }`.
-//       A Gemini outage returns `pendingReview` (fail-closed): unchecked UGC
-//       stays private to its author until a retry or human review resolves it.
+//       DeepSeek is the primary classifier (same provider order as the AI
+//       chat router); Gemini is only a fallback. A total provider outage
+//       returns `pendingReview` (fail-closed): unchecked UGC stays private to
+//       its author until a retry or human review resolves it.
 //
 //   - buildContextString(cycleContext, mode)
 //       Renders the structured cycle context into a flat string the model
@@ -19,74 +21,109 @@
 'use strict';
 
 const { callGemini, GEMINI_MODERATION_SAFETY_SETTINGS } = require('./gemini');
+const { callDeepSeekDetailed } = require('./deepseek');
 
 const MODERATION_TIMEOUT_MS = 4500;
+const DEEPSEEK_MODERATION_TIMEOUT_MS = 8000;
 
-const MODERATION_INSTRUCTION = `You are a content moderator for a women's health community app.
-Review the post/comment below. Reject ONLY if it contains:
+const MODERATION_INSTRUCTION = `You are a strict content moderator for a women's health community app.
+Review the post/comment below. Reject if it contains ANY of:
+- Profanity, obscene/vulgar/crude language, sexual crudeness, insults, name-calling, mockery, or slurs — in ANY language or dialect (including Arabic and colloquial/3arabizi). Judge by meaning and intent, not spelling: catch deliberate misspellings, extra spaces, repeated letters, or symbol/number substitutions used to sneak an insult past filters.
+- Harassment, bullying, hate speech, or threats
 - Medical prescriptions or specific medication dosages
 - Dangerous self-harm/suicide content
-- Harassment, hate speech, or threats
 - Child sexual abuse/exploitation, grooming, or sexualization of minors
 - Sexual exploitation or non-consensual intimate content
 - Personal contact solicitation, scams, illegal sales, spam, or promotional links
-Allow supportive peer discussion, emotional sharing, personal experiences.
+Allow supportive peer discussion, emotional sharing, and personal experiences — including venting and frustration expressed WITHOUT profanity, insults, or abuse.
 Reply ONLY with JSON: {"approved":true} or {"approved":false,"reason":"short reason"}`;
 
-async function withModerationTimeout(request) {
+function withTimeout(promise, ms, label) {
   let timer;
-  try {
-    return await Promise.race([
-      request,
-      new Promise((_, reject) => {
-        timer = setTimeout(
-          () => reject(new Error('moderation_timeout')),
-          MODERATION_TIMEOUT_MS,
-        );
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
+  return Promise.race([
+    Promise.resolve(promise).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(label || 'moderation_timeout')), ms);
+    }),
+  ]);
+}
+
+/** Parse a raw model reply into a decision, or null when unrecognized. */
+function parseModerationReply(reply) {
+  const text = String(reply || '');
+  if (text.includes('"approved":false') || text.includes('"approved": false')) {
+    const match = text.match(/"reason"\s*:\s*"([^"]+)"/);
+    return { approved: false, reason: match ? match[1] : 'Content not allowed.' };
   }
+  if (text.includes('"approved":true') || text.includes('"approved": true')) {
+    return { approved: true };
+  }
+  return null;
+}
+
+/** Accept either a `{deepseekKey, geminiKey}` object or a bare Gemini key. */
+function normalizeKeys(keys) {
+  if (typeof keys === 'string') return { geminiKey: keys };
+  return keys || {};
 }
 
 /**
- * Run moderation on a piece of text via Gemini.
+ * Run moderation on a piece of text. DeepSeek is the primary classifier (same
+ * provider ordering as the AI chat router); Gemini is used only as a fallback
+ * when a Gemini key is configured and DeepSeek was unavailable.
  *
- * @param {string} geminiApiKey Raw key from `defineSecret().value()`.
+ * @param {{deepseekKey?: string, geminiKey?: string}|string} keys Provider keys
+ *   from `defineSecret().value()`. A bare string is treated as a Gemini key.
  * @param {string} text The text to moderate.
- * @returns {Promise<{approved: boolean, reason?: string}>}
- *   Returns `pendingReview` on parse failures or transient outages.
+ * @returns {Promise<{approved: boolean, reason?: string, pendingReview?: boolean}>}
+ *   Returns `pendingReview` when no provider could verify the content.
  */
-async function moderateContent(geminiApiKey, text) {
-  try {
-    const result = await withModerationTimeout(
-      callGemini(
-        geminiApiKey, MODERATION_INSTRUCTION, text, 100,
-        undefined, GEMINI_MODERATION_SAFETY_SETTINGS,
-      ),
-    );
-    if (result.includes('"approved":false')) {
-      const match = result.match(/"reason"\s*:\s*"([^"]+)"/);
-      return { approved: false, reason: match ? match[1] : 'Content not allowed.' };
+async function moderateContent(keys, text) {
+  const { deepseekKey, geminiKey } = normalizeKeys(keys);
+
+  // Primary: DeepSeek. As a plain text classifier it has none of the
+  // 2.5-flash "thinking eats the token budget" failure mode, and it does not
+  // depend on the Google AI Studio quota that was stranding posts.
+  if (deepseekKey) {
+    try {
+      const { text: reply } = await withTimeout(
+        callDeepSeekDetailed(deepseekKey, MODERATION_INSTRUCTION, text, 200, 0.2),
+        DEEPSEEK_MODERATION_TIMEOUT_MS,
+        'deepseek_moderation_timeout',
+      );
+      const decision = parseModerationReply(reply);
+      if (decision) return decision;
+    } catch (e) {
+      console.error('DeepSeek moderation failed, trying fallback:', e.message || e);
     }
-    if (result.includes('"approved":true')) return { approved: true };
-    return {
-      approved: false,
-      pendingReview: true,
-      reason: 'Moderation response could not be verified.',
-    };
-  } catch (e) {
-    // Fail closed to the private review queue. The author still sees the
-    // optimistic/pending item, while other members never receive unchecked
-    // content. Scheduled moderation and the admin queue resolve it later.
-    console.error('Moderation error:', e);
-    return {
-      approved: false,
-      pendingReview: true,
-      reason: 'Moderation temporarily unavailable.',
-    };
   }
+
+  // Fallback: Gemini (skipped entirely when no Gemini key is configured).
+  if (geminiKey) {
+    try {
+      const reply = await withTimeout(
+        callGemini(
+          geminiKey, MODERATION_INSTRUCTION, text, 100,
+          undefined, GEMINI_MODERATION_SAFETY_SETTINGS,
+        ),
+        MODERATION_TIMEOUT_MS,
+        'moderation_timeout',
+      );
+      const decision = parseModerationReply(reply);
+      if (decision) return decision;
+    } catch (e) {
+      console.error('Gemini moderation failed:', e.message || e);
+    }
+  }
+
+  // Fail closed to the private review queue. The author still sees the pending
+  // item, while other members never receive unchecked content. The scheduled
+  // drain job and the admin queue resolve it later.
+  return {
+    approved: false,
+    pendingReview: true,
+    reason: 'Moderation temporarily unavailable.',
+  };
 }
 
 /**
@@ -102,7 +139,7 @@ async function moderateContent(geminiApiKey, text) {
  *   reject?: boolean,
  * }>}
  */
-async function evaluateModeration(geminiApiKey, text) {
+async function evaluateModeration(keys, text) {
   if (text.length < 3) {
     return {
       moderationStatus: 'approved',
@@ -111,7 +148,7 @@ async function evaluateModeration(geminiApiKey, text) {
     };
   }
 
-  const result = await moderateContent(geminiApiKey, text);
+  const result = await moderateContent(keys, text);
   if (result.pendingReview) {
     return {
       moderationStatus: 'pending_review',

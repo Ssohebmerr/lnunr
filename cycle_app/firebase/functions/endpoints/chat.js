@@ -59,7 +59,7 @@ function clampMaxTokens(clientValue, mode) {
 
 exports.chat = onRequest(
   {
-    cors: true,
+    cors: false,
     secrets: [DEEPSEEK_API_KEY, GEMINI_API_KEY],
     timeoutSeconds: 90,
   },
