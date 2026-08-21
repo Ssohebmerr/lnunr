@@ -15,7 +15,7 @@ const { guardRequest, setCors } = require('../lib/http');
 const ALLOWED_FEEDBACK_TYPES = ['bug', 'idea', 'help', 'other'];
 
 exports.submitFeedback = onRequest(
-  { cors: true, timeoutSeconds: 20 },
+  { cors: false, timeoutSeconds: 20 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'feedback', appCheck: 'required' }))) return;
 

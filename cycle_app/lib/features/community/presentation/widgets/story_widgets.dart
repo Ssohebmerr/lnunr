@@ -288,6 +288,10 @@ class _StoryViewerState extends State<StoryViewer>
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
+                // Decode at story resolution (1080w) instead of the source's
+                // full size — keeps full-screen story images from spiking
+                // memory into an OutOfMemoryError.
+                cacheWidth: 1080,
                 errorBuilder: (_, _, _) => const Center(
                   child: Icon(
                     Icons.broken_image,

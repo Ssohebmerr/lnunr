@@ -328,6 +328,10 @@ class _PrivacyCenterScreenState extends State<PrivacyCenterScreen> {
       );
     } on PlatformException {
       ok = false;
+    } catch (_) {
+      // Newer local_auth throws LocalAuthException (userCanceled, etc.), which
+      // is not a PlatformException — treat any failure as "not authenticated".
+      ok = false;
     }
     if (!ok || !mounted) return;
 

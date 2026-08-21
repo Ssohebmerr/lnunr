@@ -363,6 +363,40 @@ class _ReaderParagraph extends StatelessWidget {
       );
     }
 
+    final imageMatch = RegExp(
+      r'^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$',
+    ).firstMatch(text.trim());
+    if (imageMatch != null) {
+      final caption = imageMatch.group(1) ?? '';
+      final url = imageMatch.group(2)!;
+      return _InlineArticleImage(url: url, caption: caption, accent: accent);
+    }
+
+    final mixedLines = text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    final imageLineRe = RegExp(r'^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$');
+    if (mixedLines.any(imageLineRe.hasMatch)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final line in mixedLines) ...[
+            if (imageLineRe.hasMatch(line))
+              _InlineArticleImage(
+                url: imageLineRe.firstMatch(line)!.group(2)!,
+                caption: imageLineRe.firstMatch(line)!.group(1) ?? '',
+                accent: accent,
+              )
+            else
+              SelectableText(line, style: textStyle),
+            const SizedBox(height: 12),
+          ],
+        ],
+      );
+    }
+
     if (bulletLines.isNotEmpty &&
         bulletLines.every((line) => line.trimLeft().startsWith('• '))) {
       return Column(
@@ -429,6 +463,61 @@ class _ReaderParagraph extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: SelectableText(numbered.group(2)!, style: textStyle)),
+      ],
+    );
+  }
+}
+
+class _InlineArticleImage extends StatelessWidget {
+  const _InlineArticleImage({
+    required this.url,
+    required this.caption,
+    required this.accent,
+  });
+
+  final String url;
+  final String caption;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: AspectRatio(
+            aspectRatio: 16 / 10,
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: accent.withValues(alpha: 0.12),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  caption.isEmpty ? '…' : caption,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (caption.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            caption,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+              height: 1.45,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
       ],
     );
   }

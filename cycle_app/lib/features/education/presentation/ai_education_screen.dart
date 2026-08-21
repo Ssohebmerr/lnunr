@@ -228,6 +228,24 @@ class _AiEducationScreenState extends State<AiEducationScreen> {
         color: const Color(0xFF9B59B6),
         category: ArticleCategory.mind,
       ),
+      _CategoryItem(
+        icon: Icons.spa_outlined,
+        label: l10n.educationCatFertility,
+        color: const Color(0xFFD4849A),
+        category: ArticleCategory.fertility,
+      ),
+      _CategoryItem(
+        icon: Icons.directions_walk_outlined,
+        label: l10n.educationCatFitness,
+        color: const Color(0xFF4A90A4),
+        category: ArticleCategory.fitness,
+      ),
+      _CategoryItem(
+        icon: Icons.lock_outline,
+        label: l10n.educationCatAdult,
+        color: const Color(0xFFE85D75),
+        category: ArticleCategory.adult,
+      ),
     ];
 
     return Column(

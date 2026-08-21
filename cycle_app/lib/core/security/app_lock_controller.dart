@@ -71,6 +71,12 @@ class AppLockController extends ChangeNotifier {
       // overlay's Unlock button lets the user retry.
       debugPrint('[AppLock] authenticate failed: ${e.code} ${e.message}');
       return false;
+    } catch (e) {
+      // Newer local_auth throws LocalAuthException (e.g. code userCanceled),
+      // which is NOT a PlatformException. A canceled/failed unlock must leave
+      // the app locked — it must never crash. (Crashlytics: LocalAuthException.)
+      debugPrint('[AppLock] authenticate error: $e');
+      return false;
     } finally {
       _authInFlight = false;
     }

@@ -3590,6 +3590,18 @@ abstract class AppLocalizations {
   /// **'Mind & mood'**
   String get educationCatMind;
 
+  /// No description provided for @educationCatFertility.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertility'**
+  String get educationCatFertility;
+
+  /// No description provided for @educationCatFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement'**
+  String get educationCatFitness;
+
   /// No description provided for @educationCatAdult.
   ///
   /// In en, this message translates to:

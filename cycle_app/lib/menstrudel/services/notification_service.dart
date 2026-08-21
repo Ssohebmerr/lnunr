@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,12 +10,16 @@ import 'package:cycle_aura/menstrudel/utils/exceptions.dart';
 
 @pragma('vm:entry-point')
 void onDidReceiveNotificationResponse(fln.NotificationResponse notificationResponse) {
-  debugPrint('Notification tapped: ${notificationResponse.payload}');
+  if (kDebugMode) {
+    debugPrint('Notification tapped: ${notificationResponse.payload}');
+  }
 }
 
 @pragma('vm:entry-point')
 void onDidReceiveBackgroundNotificationResponse(fln.NotificationResponse notificationResponse) {
-  debugPrint('Background notification tapped: ${notificationResponse.payload}');
+  if (kDebugMode) {
+    debugPrint('Background notification tapped: ${notificationResponse.payload}');
+  }
 }
 
 class NotificationService {

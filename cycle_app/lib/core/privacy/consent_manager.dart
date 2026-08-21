@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../firebase/cloud_functions_client.dart';
 
 /// Tracks explicit user consent for optional cloud/AI features (Data Safety / GDPR).
 class ConsentManager {
@@ -42,8 +43,9 @@ class ConsentManager {
     await syncAiEligibility();
   }
 
-  /// Mirrors the user's local AI consent and self-declared age group to their
-  /// private Firestore profile so Cloud Functions can enforce the same gate.
+  /// Mirrors local AI consent + age-gate group to Firestore via Cloud Functions.
+  /// Age/consent fields are protected in rules — clients cannot write them
+  /// directly.
   ///
   /// Returns false when no authenticated Firebase session is available or the
   /// write could not be acknowledged. Local tracking remains unaffected.
@@ -53,13 +55,20 @@ class ConsentManager {
       if (user == null) return false;
 
       final prefs = await SharedPreferences.getInstance();
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'aiConsentGranted': prefs.getBool(_aiKey) ?? false,
-        'aiConsentVersion': 1,
-        'aiAgeGroup': prefs.getString(_ageGroupKey) ?? 'unknown',
-        'aiEligibilityUpdatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      return true;
+      final response = await CloudFunctionsClient.instance.post(
+        '/syncAiEligibility',
+        body: {
+          'consentGranted': prefs.getBool(_aiKey) ?? false,
+          'declaredAgeGroup': prefs.getString(_ageGroupKey) ?? 'unknown',
+        },
+      );
+      if (response.statusCode == 200) return true;
+      if (kDebugMode) {
+        debugPrint(
+          '[ConsentManager] AI eligibility sync failed: ${response.statusCode}',
+        );
+      }
+      return false;
     } catch (error) {
       if (kDebugMode) {
         debugPrint('[ConsentManager] AI eligibility sync failed: $error');

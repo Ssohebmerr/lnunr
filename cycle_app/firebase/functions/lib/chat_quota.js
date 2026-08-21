@@ -17,6 +17,7 @@
 'use strict';
 
 const admin = require('firebase-admin');
+const { birthYearBlocksAdultAi } = require('./ai_eligibility');
 
 /** Premium users: max AI chat messages per calendar day (server-enforced). */
 const DAILY_PREMIUM_CHAT_LIMIT = 30;
@@ -37,13 +38,14 @@ class QuotaError extends Error {
 
 /**
  * Verifies the privacy/age state mirrored from the app before any prompt is
- * sent to an external AI provider.
+ * sent to an external AI provider. Age/consent fields are written only by
+ * Cloud Functions — never trusted from a client Firestore write.
  *
  * @param {object} data users/{uid} document data
  * @throws {QuotaError} 403 adult_required | consent_required
  */
 function assertAiEligibility(data) {
-  if (data.aiAgeGroup !== 'adult') {
+  if (birthYearBlocksAdultAi(data) || data.aiAgeGroup !== 'adult') {
     throw new QuotaError(
       'adult_required',
       403,

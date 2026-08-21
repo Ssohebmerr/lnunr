@@ -223,9 +223,24 @@ class SettingsService extends ChangeNotifier {
     return storedValue ?? defaultValue;
   }
 
+  /// Reads an int from prefs, tolerating a value of the WRONG type left by an
+  /// older build. `SharedPreferences.getInt` THROWS a cast error (it does not
+  /// return null) when the stored value is a String/other type, so a bare
+  /// `getInt(key) ?? default` still crashes. We catch that and fall back to the
+  /// default; the next `setInt` for this key overwrites the bad value, so it
+  /// self-heals. Fixes the `_loadThemeMode` "String is not a subtype of int?"
+  /// crash seen in Crashlytics.
+  int? _safeGetInt(String key) {
+    try {
+      return _prefs.getInt(key);
+    } catch (e) {
+      debugPrint('SettingsService: ignoring corrupt int pref "$key": $e');
+      return null;
+    }
+  }
+
   int _loadInt(String key, int defaultValue) {
-    final int? storedValue = _prefs.getInt(key);
-    return storedValue ?? defaultValue;
+    return _safeGetInt(key) ?? defaultValue;
   }
 
   String _loadString(String key, String defaultValue) {
@@ -242,12 +257,17 @@ class SettingsService extends ChangeNotifier {
   }
 
   Color _loadThemeColor() {
-    final colorValue = _prefs.getInt(themeColorKey) ?? kDefaultThemeColor.toARGB32();
+    final colorValue = _safeGetInt(themeColorKey) ?? kDefaultThemeColor.toARGB32();
     return Color(colorValue);
   }
 
   AppThemeMode _loadThemeMode() {
-    final themeIndex = _prefs.getInt(themeModeKey) ?? AppThemeMode.system.index;
+    final themeIndex = _safeGetInt(themeModeKey) ?? AppThemeMode.system.index;
+    // Guard against an out-of-range index from corrupt/legacy data so the
+    // lookup can never throw a RangeError either.
+    if (themeIndex < 0 || themeIndex >= AppThemeMode.values.length) {
+      return AppThemeMode.system;
+    }
     return AppThemeMode.values[themeIndex];
   }
 

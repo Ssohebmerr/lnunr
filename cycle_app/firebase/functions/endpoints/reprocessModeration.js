@@ -28,11 +28,16 @@ const { guardRequest, setCors } = require('../lib/http');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
+
 
 
 async function applyModerationResult(ref, text, kind) {
 
-  const decision = await evaluateModeration(GEMINI_API_KEY.value(), text);
+  const decision = await evaluateModeration({
+    deepseekKey: DEEPSEEK_API_KEY.value(),
+    geminiKey: GEMINI_API_KEY.value(),
+  }, text);
 
 
 
@@ -90,11 +95,11 @@ async function applyModerationResult(ref, text, kind) {
 
 exports.reprocessPendingModeration = onRequest(
 
-  { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 120 },
+  { cors: false, secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY], timeoutSeconds: 120 },
 
   async (req, res) => {
 
-    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'skip' }))) return;
+    if (!(await guardRequest(req, res, { bucket: 'admin', appCheck: 'required' }))) return;
 
 
 

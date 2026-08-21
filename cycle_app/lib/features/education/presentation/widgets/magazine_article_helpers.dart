@@ -9,6 +9,8 @@ Color articleCategoryColor(ArticleCategory category) {
     ArticleCategory.health => const Color(0xFFE85D75),
     ArticleCategory.nutrition => const Color(0xFF3D9A78),
     ArticleCategory.mind => const Color(0xFF9B59B6),
+    ArticleCategory.fertility => const Color(0xFFD4849A),
+    ArticleCategory.fitness => const Color(0xFF4A90A4),
     ArticleCategory.adult => const Color(0xFFE85D75),
   };
 }
@@ -19,6 +21,8 @@ String articleCategoryLabel(ArticleCategory category, AppLocalizations l10n) {
     ArticleCategory.health => l10n.educationCatHealth,
     ArticleCategory.nutrition => l10n.educationCatNutrition,
     ArticleCategory.mind => l10n.educationCatMind,
+    ArticleCategory.fertility => l10n.educationCatFertility,
+    ArticleCategory.fitness => l10n.educationCatFitness,
     ArticleCategory.adult => l10n.educationCatAdult,
   };
 }

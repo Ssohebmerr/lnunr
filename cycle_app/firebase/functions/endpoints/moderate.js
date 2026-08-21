@@ -25,6 +25,7 @@ const { moderateContent } = require('../lib/moderation');
 const { guardRequest, setCors } = require('../lib/http');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 
 function hourKey(now) {
   return now.toISOString().slice(0, 13);
@@ -52,7 +53,7 @@ async function reserveModerateSlot(db, uid) {
 }
 
 exports.moderate = onRequest(
-  { cors: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 30 },
+  { cors: false, secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY], timeoutSeconds: 30 },
   async (req, res) => {
     if (!(await guardRequest(req, res, { bucket: 'community', appCheck: 'required' }))) return;
 
@@ -74,7 +75,10 @@ exports.moderate = onRequest(
         return;
       }
 
-      const result = await moderateContent(GEMINI_API_KEY.value(), text);
+      const result = await moderateContent({
+        deepseekKey: DEEPSEEK_API_KEY.value(),
+        geminiKey: GEMINI_API_KEY.value(),
+      }, text);
       setCors(res);
       res.json(result);
     } catch (error) {

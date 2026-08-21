@@ -1,8 +1,12 @@
 (function () {
   'use strict';
 
-  const articles = Array.isArray(window.LUNE_LONG_ARTICLES) ? window.LUNE_LONG_ARTICLES : [];
   const page = document.body.dataset.page || 'index';
+  const catalog = Array.isArray(window.LUNE_LONG_ARTICLES_META) && window.LUNE_LONG_ARTICLES_META.length
+    ? window.LUNE_LONG_ARTICLES_META
+    : (Array.isArray(window.LUNE_LONG_ARTICLES) ? window.LUNE_LONG_ARTICLES : []);
+  const fullArticles = Array.isArray(window.LUNE_LONG_ARTICLES) ? window.LUNE_LONG_ARTICLES : [];
+  const articles = page === 'article' && fullArticles.length ? fullArticles : catalog;
   const savedLanguage = localStorage.getItem('lune-magazine-language');
   let language = savedLanguage === 'en' ? 'en' : 'ar';
   let activeCategory = 'all';
@@ -12,14 +16,14 @@
     ar: {
       all: 'الكل', featured: 'دليل مختار', read: 'اقرئي الدليل', minutes: 'دقيقة قراءة',
       results: 'دليل صحي طويل', noResults: 'لم نجد مقالًا يطابق البحث. جرّبي كلمة أو تصنيفًا آخر.',
-      categories: { basics: 'أساسيات الدورة', health: 'الصحة', mind: 'النفس والنوم', nutrition: 'التغذية', fitness: 'الحركة', fertility: 'الخصوبة' },
+      categories: { basics: 'أساسيات الدورة', health: 'الصحة', mind: 'النفس والنوم', nutrition: 'التغذية', fitness: 'الحركة', fertility: 'الخصوبة', adult: 'مواضيع +18' },
       sources: 'المصادر الطبية', sourceNote: 'المحتوى مبني على مراجع صحية رسمية، وهو للتثقيف العام وليس بديلًا عن التشخيص.',
       related: 'أدلة مرتبطة', share: 'نسخ الرابط', copied: 'تم النسخ', back: 'كل المقالات', language: 'English', notFound: 'المقال غير موجود', notFoundBody: 'قد يكون الرابط قديمًا أو غير مكتمل.'
     },
     en: {
       all: 'All', featured: 'Featured guide', read: 'Read the guide', minutes: 'min read',
       results: 'in-depth health guides', noResults: 'No article matched your search. Try another word or category.',
-      categories: { basics: 'Cycle basics', health: 'Health', mind: 'Mind & sleep', nutrition: 'Nutrition', fitness: 'Movement', fertility: 'Fertility' },
+      categories: { basics: 'Cycle basics', health: 'Health', mind: 'Mind & sleep', nutrition: 'Nutrition', fitness: 'Movement', fertility: 'Fertility', adult: '18+ topics' },
       sources: 'Medical sources', sourceNote: 'Content is based on official health references and is general education, not a substitute for diagnosis.',
       related: 'Related guides', share: 'Copy link', copied: 'Copied', back: 'All articles', language: 'العربية', notFound: 'Article not found', notFoundBody: 'The link may be old or incomplete.'
     }
@@ -146,6 +150,36 @@
 
   function appendBody(container, bodyText) {
     const blocks = bodyText.split(/\n\s*\n/u).map((block) => block.trim()).filter(Boolean);
+    const imageRe = /^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$/u;
+    const imageLineRe = /^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$/u;
+
+    function appendImage(caption, src) {
+      const figure = document.createElement('figure');
+      figure.className = 'article-inline-figure';
+      const image = document.createElement('img');
+      image.src = src;
+      image.alt = caption || '';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.width = 1200;
+      image.height = 750;
+      image.onerror = () => {
+        figure.classList.add('is-broken');
+        figure.replaceChildren();
+        const note = document.createElement('p');
+        note.className = 'article-inline-fallback';
+        note.textContent = caption || '';
+        figure.appendChild(note);
+      };
+      figure.appendChild(image);
+      if (caption) {
+        const figcaption = document.createElement('figcaption');
+        figcaption.textContent = caption;
+        figure.appendChild(figcaption);
+      }
+      container.appendChild(figure);
+    }
+
     blocks.forEach((block) => {
       if (block.startsWith('## ')) {
         const heading = document.createElement('h2');
@@ -153,7 +187,24 @@
         container.appendChild(heading);
         return;
       }
+      const imageMatch = block.match(imageRe);
+      if (imageMatch) {
+        appendImage(imageMatch[1], imageMatch[2]);
+        return;
+      }
       const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+      if (lines.some((line) => imageLineRe.test(line))) {
+        lines.forEach((line) => {
+          const m = line.match(imageLineRe);
+          if (m) appendImage(m[1], m[2]);
+          else {
+            const paragraph = document.createElement('p');
+            paragraph.textContent = line;
+            container.appendChild(paragraph);
+          }
+        });
+        return;
+      }
       if (lines.every((line) => line.startsWith('• '))) {
         const list = document.createElement('ul');
         lines.forEach((line) => {
@@ -208,42 +259,65 @@
 
   function renderArticle() {
     const slug = new URLSearchParams(location.search).get('slug') || '';
-    const article = articles.find((item) => item.slug === slug);
-    if (!article) { showNotFound(); return; }
-    document.title = `${field(article, 'title')} — Lune`;
-    const description = document.querySelector('meta[name="description"]');
-    if (description) description.content = field(article, 'excerpt');
-    document.getElementById('articleCover').src = article.coverImageUrl;
-    document.getElementById('articleCover').alt = field(article, 'title');
-    document.getElementById('articleTitle').textContent = field(article, 'title');
-    document.getElementById('articleCategory').textContent = categoryLabel(article.category);
-    document.getElementById('articleMinutes').textContent = `${article.minutes} ${text('minutes')}`;
+    const fromFull = fullArticles.find((item) => item.slug === slug);
+    const fromMeta = catalog.find((item) => item.slug === slug);
+    if (!fromFull && !fromMeta) { showNotFound(); return; }
+
+    const apply = (article) => {
+      document.title = `${field(article, 'title')} — Lune`;
+      const description = document.querySelector('meta[name="description"]');
+      if (description) description.content = field(article, 'excerpt');
+      document.getElementById('articleCover').src = article.coverImageUrl;
+      document.getElementById('articleCover').alt = field(article, 'title');
+      document.getElementById('articleTitle').textContent = field(article, 'title');
+      document.getElementById('articleCategory').textContent = categoryLabel(article.category);
+      document.getElementById('articleMinutes').textContent = `${article.minutes} ${text('minutes')}`;
+      const reader = document.getElementById('articleReader');
+      reader.replaceChildren();
+      const lead = document.createElement('p');
+      lead.className = 'lead';
+      lead.textContent = field(article, 'excerpt');
+      reader.appendChild(lead);
+      appendBody(reader, field(article, 'body'));
+      const sourceTitle = document.getElementById('sourcesTitle');
+      sourceTitle.textContent = text('sources');
+      document.getElementById('sourceNote').textContent = text('sourceNote');
+      document.getElementById('relatedTitle').textContent = text('related');
+      const sources = document.getElementById('articleSources');
+      sources.replaceChildren();
+      (article.sourceUrls || []).forEach((url) => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = new URL(url).hostname.replace(/^www\./, '');
+        item.appendChild(link);
+        sources.appendChild(item);
+      });
+      document.getElementById('copyLink').textContent = text('share');
+      document.getElementById('backToMagazine').textContent = text('back');
+      renderRelated(article);
+    };
+
+    if (fromFull && fromFull.bodyAr && fromFull.bodyEn) {
+      apply(fromFull);
+      return;
+    }
+
     const reader = document.getElementById('articleReader');
     reader.replaceChildren();
-    const lead = document.createElement('p');
-    lead.className = 'lead';
-    lead.textContent = field(article, 'excerpt');
-    reader.appendChild(lead);
-    appendBody(reader, field(article, 'body'));
-    const sourceTitle = document.getElementById('sourcesTitle');
-    sourceTitle.textContent = text('sources');
-    document.getElementById('sourceNote').textContent = text('sourceNote');
-    document.getElementById('relatedTitle').textContent = text('related');
-    const sources = document.getElementById('articleSources');
-    sources.replaceChildren();
-    article.sourceUrls.forEach((url) => {
-      const item = document.createElement('li');
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = new URL(url).hostname.replace(/^www\./, '');
-      item.appendChild(link);
-      sources.appendChild(item);
-    });
-    document.getElementById('copyLink').textContent = text('share');
-    document.getElementById('backToMagazine').textContent = text('back');
-    renderRelated(article);
+    const loading = document.createElement('p');
+    loading.textContent = language === 'ar' ? 'جاري تحميل الدليل…' : 'Loading guide…';
+    reader.appendChild(loading);
+
+    fetch(`/magazine/bodies/${encodeURIComponent(slug)}.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.json();
+      })
+      .then((article) => apply(article))
+      .catch(() => showNotFound());
   }
 
   function initArticle() {

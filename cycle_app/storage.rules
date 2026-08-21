@@ -68,9 +68,8 @@ service firebase.storage {
 
 
 
-    // Community post images are available to all adult community members.
-    // Story Premium entitlement is enforced by the trusted submission
-    // Function before a story document and media approval are created.
+    // Story / post media entitlement is also enforced here so free clients
+    // cannot fill Storage without going through Premium + Function checks.
     match /community_media/{communityId}/{uid}/{fileName} {
       // The uploader may preview a pending upload. Everyone else can read it
       // only after the trusted Function writes a moderation approval record.
@@ -81,6 +80,7 @@ service firebase.storage {
       );
       allow create, update: if isOwner(uid)
         && isCommunityAdult()
+        && isCommunityPremium()
         && isCommunityMember(communityId)
         && request.resource.size < 15 * 1024 * 1024
         && (request.resource.contentType == 'image/jpeg' || request.resource.contentType == 'video/mp4');

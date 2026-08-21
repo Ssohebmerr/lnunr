@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../../core/age/age_gate.dart';
+import '../../../core/privacy/consent_manager.dart';
 import '../../../core/security/community_text_sanitize.dart';
 import '../../../core/ai/firebase_ai_service.dart';
 import '../../../core/ai/direct_gemini_service.dart';
@@ -258,6 +259,10 @@ class CommunityRepository {
         .collection('users')
         .doc(uid)
         .set(profile.toMap(), SetOptions(merge: true));
+    // Recompute server-side AI age group from write-once birth year.
+    if (profile.birthYear != null) {
+      await ConsentManager.syncAiEligibility();
+    }
   }
 
   /// [fetchCounts] — skip remote member counts when the user cannot read

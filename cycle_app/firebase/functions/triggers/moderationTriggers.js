@@ -14,10 +14,14 @@ const { defineSecret } = require('firebase-functions/params');
 const { evaluateModeration } = require('../lib/moderation');
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 
 async function applyResult(ref, text, isStory = false) {
   try {
-    const decision = await evaluateModeration(GEMINI_API_KEY.value(), text);
+    const decision = await evaluateModeration({
+      deepseekKey: DEEPSEEK_API_KEY.value(),
+      geminiKey: GEMINI_API_KEY.value(),
+    }, text);
 
     if (isStory) {
       if (decision.reject) {
@@ -61,7 +65,7 @@ async function applyResult(ref, text, isStory = false) {
 exports.onStoryCreated = onDocumentCreated(
   {
     document: 'communities/{communityId}/stories/{storyId}',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
   },
   async (event) => {
     const data = event.data?.data();
@@ -77,7 +81,7 @@ exports.onStoryCreated = onDocumentCreated(
 exports.onPostCreated = onDocumentCreated(
   {
     document: 'communities/{communityId}/posts/{postId}',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
   },
   async (event) => {
     const data = event.data?.data();
@@ -90,7 +94,7 @@ exports.onPostCreated = onDocumentCreated(
 exports.onCommentCreated = onDocumentCreated(
   {
     document: 'communities/{communityId}/posts/{postId}/comments/{commentId}',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
   },
   async (event) => {
     const data = event.data?.data();
@@ -104,7 +108,7 @@ exports.onCommentCreated = onDocumentCreated(
 exports.onPostUpdated = onDocumentUpdated(
   {
     document: 'communities/{communityId}/posts/{postId}',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
   },
   async (event) => {
     const before = event.data.before.data();
@@ -123,7 +127,7 @@ exports.onPostUpdated = onDocumentUpdated(
 exports.onCommentUpdated = onDocumentUpdated(
   {
     document: 'communities/{communityId}/posts/{postId}/comments/{commentId}',
-    secrets: [GEMINI_API_KEY],
+    secrets: [GEMINI_API_KEY, DEEPSEEK_API_KEY],
   },
   async (event) => {
     const before = event.data.before.data();

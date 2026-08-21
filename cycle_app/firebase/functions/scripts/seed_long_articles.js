@@ -76,11 +76,12 @@ async function writeArticle(article, token) {
 }
 
 async function main() {
-  global.window = {};
+  global.window = global;
+  require(path.resolve(__dirname, '../../../public/magazine/long-articles-extra.js'));
   require(ARTICLES_FILE);
   const articles = global.window.LUNE_LONG_ARTICLES;
-  if (!Array.isArray(articles) || articles.length !== 20) {
-    throw new Error(`Expected 20 long guides, received ${articles?.length ?? 0}`);
+  if (!Array.isArray(articles) || articles.length !== 1000) {
+    throw new Error(`Expected exactly 1000 long guides, received ${articles?.length ?? 0}`);
   }
   const ids = new Set(articles.map((article) => article.id));
   if (ids.size !== articles.length) throw new Error('Article IDs must be unique');
@@ -88,7 +89,9 @@ async function main() {
     const arWords = article.bodyAr.trim().split(/\s+/u).length;
     const enWords = article.bodyEn.trim().split(/\s+/u).length;
     if (arWords < 1000 || enWords < 1000) {
-      throw new Error(`${article.id} is shorter than 1000 words`);
+      throw new Error(
+        `${article.id} is shorter than 1000 words (ar=${arWords}, en=${enWords})`,
+      );
     }
   }
   console.log(`Validated ${articles.length} long guides. Commit: ${COMMIT ? 'YES' : 'NO'}`);

@@ -31,6 +31,17 @@ class PostMediaView extends StatelessWidget {
       return _VideoPreview(url: mediaUrl);
     }
 
+    // Decode at (roughly) display resolution instead of the image's full
+    // source size. A community photo can be ~30-50MB once decoded at full
+    // resolution; several in a scrolling feed exhaust memory and the next
+    // allocation crashes with OutOfMemoryError (seen in Crashlytics as
+    // StandardMessageCodec OOM). Capping the decode width keeps memory bounded.
+    final decodeWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context))
+            .round()
+            .clamp(240, 1440);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
 
@@ -40,6 +51,8 @@ class PostMediaView extends StatelessWidget {
         width: double.infinity,
 
         fit: BoxFit.cover,
+
+        memCacheWidth: decodeWidth,
 
         placeholder: (_, _) => const AspectRatio(
           aspectRatio: 16 / 9,
