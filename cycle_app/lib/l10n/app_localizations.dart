@@ -1904,6 +1904,30 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get accountMenuSettings;
 
+  /// No description provided for @accountStatCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycles'**
+  String get accountStatCycles;
+
+  /// No description provided for @accountStatAvgCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg cycle'**
+  String get accountStatAvgCycle;
+
+  /// No description provided for @accountStatAvgPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg period'**
+  String get accountStatAvgPeriod;
+
+  /// No description provided for @accountQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick access'**
+  String get accountQuickActions;
+
   /// No description provided for @accountMenuHelp.
   ///
   /// In en, this message translates to:

@@ -10,8 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../profile/presentation/profile_edit_sheet.dart';
 
@@ -19,7 +18,6 @@ import '../../../core/app_home_refresh.dart';
 import '../../../core/profile/local_profile.dart';
 import '../../../core/config/feature_flags.dart';
 import '../../../core/navigation/home_shell_actions.dart';
-import '../../../core/notifications/notification_service.dart';
 import '../../../core/privacy/consent_dialogs.dart';
 import '../../../core/premium/premium_badge.dart';
 import '../../../core/premium/premium_status_notifier.dart';
@@ -38,6 +36,8 @@ import '../../../core/premium/play_billing_coordinator.dart';
 import '../premium/presentation/subscription_plans_screen.dart';
 import '../user/data/guest_user_service.dart';
 import '../user/data/guest_user_repository.dart';
+import '../community/data/community_repository.dart';
+import '../community/presentation/following_screen.dart';
 import '../education/presentation/education_hub_page.dart';
 import '../health_connect/presentation/health_connect_screen.dart';
 import '../partner/presentation/partner_page.dart';
@@ -72,7 +72,6 @@ class AccountTab extends StatefulWidget {
 
 class _AccountTabState extends State<AccountTab> {
   bool _premium = false;
-  bool _notifications = true;
   String _localName = 'Guest';
   String? _username;
   int _avatarIndex = 0;
@@ -81,6 +80,11 @@ class _AccountTabState extends State<AccountTab> {
   String? _accountUid;
   DateTime? _memberSince;
   bool _isAdmin = false;
+
+  // Following-count stream, memoized so the tab's frequent rebuilds (it watches
+  // PeriodService) don't churn the Firestore listener or flash the count.
+  Stream<Set<String>>? _followingStream;
+  String? _followingStreamUid;
 
   @override
   void initState() {
@@ -112,7 +116,6 @@ class _AccountTabState extends State<AccountTab> {
   }
 
   Future<void> _loadAll() async {
-    final prefs = await SharedPreferences.getInstance();
     await PremiumStatusNotifier.instance.loadFromPrefs();
     final p = PremiumStatusNotifier.instance.isPremium;
     var localName = await LocalProfile.displayName();
@@ -152,7 +155,6 @@ class _AccountTabState extends State<AccountTab> {
         _accountUid = uid;
         _memberSince = sessionUser?.metadata.creationTime;
         _premium = p;
-        _notifications = prefs.getBool('notifications_enabled') ?? true;
       });
     }
   }
@@ -206,12 +208,6 @@ class _AccountTabState extends State<AccountTab> {
   Future<void> _checkAdmin() async {
     final ok = await AdminRepository().isAdmin();
     if (mounted) setState(() => _isAdmin = ok);
-  }
-
-  Future<void> _savePref(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
-    await NotificationService.scheduleFromPrefs();
   }
 
   /// Root path to the plans: the full-screen paywall with monthly + yearly
@@ -294,6 +290,32 @@ class _AccountTabState extends State<AccountTab> {
       ),
     );
   }
+
+  void _openInsights() =>
+      _openSub(context, AppLocalizations.of(context)!.navInsights,
+          const InsightsTab());
+
+  /// Opens the education hub, guarded by the same server flag as the menu row.
+  Future<void> _openEducation() async {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = await AppSettingsRepository().fetch();
+    if (!mounted) return;
+    if (!settings.aiEducationEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.educationNotAvailable)),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EducationHubPage()),
+    );
+  }
+
+  void _openSettings() => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const AccountSettingsScreen(),
+        ),
+      );
 
   void _showWatchInfo(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -400,6 +422,25 @@ class _AccountTabState extends State<AccountTab> {
     final user = FirebaseAuth.instance.currentUser;
     final hasEmail = _hasEmailAccount(user);
 
+    // Cycle stats shown in the profile header (Bilibili-style stats row).
+    // PeriodService is provided app-wide, so this is always available.
+    final periodService = context.watch<PeriodService>();
+    final cyclesCount = periodService.periodEntries.length;
+    final prediction = periodService.upcomingPeriodPrediction;
+    final avgCycleLen =
+        prediction?.averageCycleLength ?? periodService.circleMaxValue;
+    final avgPeriodLen = prediction?.averagePeriodDuration ?? 0;
+
+    // Community following count (one-directional follow model). Cheap: reads
+    // only the user's own small `following` subcollection. The stream is
+    // memoized per-uid so rebuilds don't resubscribe.
+    if (_accountUid != _followingStreamUid) {
+      _followingStreamUid = _accountUid;
+      _followingStream = (_accountUid != null && _accountUid!.isNotEmpty)
+          ? context.read<CommunityRepository>().watchFollowingUids(_accountUid!)
+          : null;
+    }
+
     return ListView(
       primary: false,
       physics: const AlwaysScrollableScrollPhysics(
@@ -427,6 +468,11 @@ class _AccountTabState extends State<AccountTab> {
               ? () => _copyText(_accountUid!)
               : null,
           onLinkEmail: !hasEmail ? () => context.push('/register') : null,
+          statCyclesValue: '$cyclesCount',
+          statAvgCycleValue:
+              (cyclesCount > 0 && avgCycleLen > 0) ? '$avgCycleLen' : '—',
+          statAvgPeriodValue: avgPeriodLen > 0 ? '$avgPeriodLen' : '—',
+          onTapStats: _openInsights,
           onEditProfile: () async {
             final updated = await showModalBottomSheet<bool>(
               context: context,
@@ -457,6 +503,32 @@ class _AccountTabState extends State<AccountTab> {
           onManage: Platform.isAndroid ? _manageSubscription : null,
           onRestore: Platform.isAndroid ? _restorePurchases : null,
           onRefreshStatus: _refreshPremiumStatus,
+        ),
+        const SizedBox(height: 16),
+        AppSectionHeader(title: l10n.accountQuickActions),
+        _QuickActionsRow(
+          actions: [
+            _QuickActionData(
+              femIcon: FeminineIcon.insights,
+              label: l10n.navInsights,
+              onTap: _openInsights,
+            ),
+            _QuickActionData(
+              femIcon: FeminineIcon.education,
+              label: l10n.accountMenuEducation,
+              onTap: _openEducation,
+            ),
+            _QuickActionData(
+              femIcon: FeminineIcon.notifications,
+              label: l10n.accountMenuReminders,
+              onTap: _showRemindersSheet,
+            ),
+            _QuickActionData(
+              femIcon: FeminineIcon.settings,
+              label: l10n.accountMenuSettings,
+              onTap: _openSettings,
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         AppSectionHeader(title: l10n.accountSectionInfo),
@@ -526,29 +598,20 @@ class _AccountTabState extends State<AccountTab> {
         AppSectionHeader(title: l10n.accountSectionTools),
         AccountMenuCard(
           children: [
-            AccountMenuTile(
-              femIcon: FeminineIcon.insights,
-              title: l10n.accountMenuInsights,
-              onTap: () =>
-                  _openSub(context, l10n.navInsights, const InsightsTab()),
-            ),
-            AccountMenuTile(
-              femIcon: FeminineIcon.education,
-              title: l10n.accountMenuEducation,
-              onTap: () async {
-                final settings = await AppSettingsRepository().fetch();
-                if (!context.mounted) return;
-                if (!settings.aiEducationEnabled) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.educationNotAvailable)),
-                  );
-                  return;
-                }
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const EducationHubPage()),
-                );
-              },
-            ),
+            if (_followingStream != null)
+              AccountMenuTile(
+                femIcon: FeminineIcon.community,
+                title: l10n.communityFollowingTitle,
+                trailing: _FollowingCountTrailing(
+                  stream: _followingStream!,
+                  theme: theme,
+                ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FollowingScreen(),
+                  ),
+                ),
+              ),
             if (FeatureFlags.isEnabledSync(FeatureFlags.partnerSync))
               AccountMenuTile(
                 femIcon: FeminineIcon.partner,
@@ -592,38 +655,9 @@ class _AccountTabState extends State<AccountTab> {
           ],
         ),
         const SizedBox(height: 16),
-        AppSectionHeader(title: l10n.accountSectionPersonal),
-        AccountMenuCard(
-          children: [
-            AccountMenuTile(
-              femIcon: FeminineIcon.notifications,
-              title: l10n.accountMenuReminders,
-              showDivider: false,
-              trailing: Switch(
-                value: _notifications,
-                onChanged: (v) async {
-                  setState(() => _notifications = v);
-                  if (v) await NotificationService.requestPermission();
-                  await _savePref('notifications_enabled', v);
-                },
-              ),
-              onTap: _showRemindersSheet,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
         AppSectionHeader(title: l10n.accountSectionSupport),
         AccountMenuCard(
           children: [
-            AccountMenuTile(
-              femIcon: FeminineIcon.settings,
-              title: l10n.accountMenuSettings,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const AccountSettingsScreen(),
-                ),
-              ),
-            ),
             AccountMenuTile(
               femIcon: FeminineIcon.help,
               title: l10n.anonymousQa,
@@ -735,6 +769,10 @@ class _ProfileCard extends StatelessWidget {
     required this.onEditProfile,
     this.onCopyAccountId,
     this.onLinkEmail,
+    required this.statCyclesValue,
+    required this.statAvgCycleValue,
+    required this.statAvgPeriodValue,
+    this.onTapStats,
   });
 
   final User? user;
@@ -750,6 +788,10 @@ class _ProfileCard extends StatelessWidget {
   final VoidCallback onEditProfile;
   final VoidCallback? onCopyAccountId;
   final VoidCallback? onLinkEmail;
+  final String statCyclesValue;
+  final String statAvgCycleValue;
+  final String statAvgPeriodValue;
+  final VoidCallback? onTapStats;
 
   bool get _hasEmail {
     final email = user?.email?.trim();
@@ -807,6 +849,10 @@ class _ProfileCard extends StatelessWidget {
       shortId: accountUid != null ? _compactAccountId(accountUid!) : null,
       onCopyAccountId: onCopyAccountId,
       onLinkEmail: (!_hasEmail && onLinkEmail != null) ? onLinkEmail : null,
+      statCyclesValue: statCyclesValue,
+      statAvgCycleValue: statAvgCycleValue,
+      statAvgPeriodValue: statAvgPeriodValue,
+      onTapStats: onTapStats,
     );
   }
 }
@@ -827,6 +873,10 @@ class _AccountHeroCard extends StatelessWidget {
     required this.shortId,
     this.onCopyAccountId,
     this.onLinkEmail,
+    required this.statCyclesValue,
+    required this.statAvgCycleValue,
+    required this.statAvgPeriodValue,
+    this.onTapStats,
   });
 
   final Widget avatar;
@@ -840,6 +890,10 @@ class _AccountHeroCard extends StatelessWidget {
   final String? shortId;
   final VoidCallback? onCopyAccountId;
   final VoidCallback? onLinkEmail;
+  final String statCyclesValue;
+  final String statAvgCycleValue;
+  final String statAvgPeriodValue;
+  final VoidCallback? onTapStats;
 
   @override
   Widget build(BuildContext context) {
@@ -927,8 +981,295 @@ class _AccountHeroCard extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: 16),
+          _ProfileStatsRow(
+            theme: theme,
+            cyclesValue: statCyclesValue,
+            cyclesLabel: l10n.accountStatCycles,
+            avgCycleValue: statAvgCycleValue,
+            avgCycleLabel: l10n.accountStatAvgCycle,
+            avgPeriodValue: statAvgPeriodValue,
+            avgPeriodLabel: l10n.accountStatAvgPeriod,
+            onTap: onTapStats,
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Three-up cycle stats row inside the profile hero — mirrors the "stats"
+/// strip on social profile screens (cycles · average cycle · average period).
+/// Each cell taps through to the insights screen.
+class _ProfileStatsRow extends StatelessWidget {
+  const _ProfileStatsRow({
+    required this.theme,
+    required this.cyclesValue,
+    required this.cyclesLabel,
+    required this.avgCycleValue,
+    required this.avgCycleLabel,
+    required this.avgPeriodValue,
+    required this.avgPeriodLabel,
+    this.onTap,
+  });
+
+  final ThemeData theme;
+  final String cyclesValue;
+  final String cyclesLabel;
+  final String avgCycleValue;
+  final String avgCycleLabel;
+  final String avgPeriodValue;
+  final String avgPeriodLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          _StatCell(
+            value: cyclesValue,
+            label: cyclesLabel,
+            theme: theme,
+            onTap: onTap,
+          ),
+          _StatDivider(theme: theme),
+          _StatCell(
+            value: avgCycleValue,
+            label: avgCycleLabel,
+            theme: theme,
+            onTap: onTap,
+          ),
+          _StatDivider(theme: theme),
+          _StatCell(
+            value: avgPeriodValue,
+            label: avgPeriodLabel,
+            theme: theme,
+            onTap: onTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({
+    required this.value,
+    required this.label,
+    required this.theme,
+    this.onTap,
+  });
+
+  final String value;
+  final String label;
+  final ThemeData theme;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.4,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  const _StatDivider({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 34,
+      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.40),
+    );
+  }
+}
+
+/// A single quick-access shortcut definition for [_QuickActionsRow].
+class _QuickActionData {
+  const _QuickActionData({
+    this.icon,
+    this.femIcon,
+    required this.label,
+    required this.onTap,
+  }) : assert(icon != null || femIcon != null,
+            'Provide either icon or femIcon');
+
+  final IconData? icon;
+  final FeminineIcon? femIcon;
+  final String label;
+  final VoidCallback onTap;
+}
+
+/// Horizontal row of quick-access shortcuts (round tinted icon + label) that
+/// sits under the premium card — the account hub's fast lane to the most-used
+/// destinations.
+class _QuickActionsRow extends StatelessWidget {
+  const _QuickActionsRow({required this.actions});
+
+  final List<_QuickActionData> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGlassCard(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final action in actions)
+            Expanded(child: _QuickAction(data: action)),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({required this.data});
+
+  final _QuickActionData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.primary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: data.onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.22),
+                      color.withValues(alpha: 0.10),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: data.femIcon != null
+                      ? FeminineIconView(data.femIcon!, size: 24, color: color)
+                      : Icon(data.icon, size: 24, color: color),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Live "following" count pill + chevron — the trailing widget for the
+/// community row. Streams only the user's own `following` subcollection.
+class _FollowingCountTrailing extends StatelessWidget {
+  const _FollowingCountTrailing({required this.stream, required this.theme});
+
+  final Stream<Set<String>> stream;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final chevron = Icon(
+      Directionality.of(context) == TextDirection.rtl
+          ? Icons.chevron_left_rounded
+          : Icons.chevron_right_rounded,
+      color: theme.colorScheme.outline,
+    );
+    return StreamBuilder<Set<String>>(
+      stream: stream,
+      builder: (context, snap) {
+        final count = snap.data?.length ?? 0;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+              child: Text(
+                '$count',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            chevron,
+          ],
+        );
+      },
     );
   }
 }

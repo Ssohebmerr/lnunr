@@ -975,6 +975,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountMenuSettings => 'الإعدادات';
 
   @override
+  String get accountStatCycles => 'الدورات';
+
+  @override
+  String get accountStatAvgCycle => 'متوسط الدورة';
+
+  @override
+  String get accountStatAvgPeriod => 'متوسط الحيض';
+
+  @override
+  String get accountQuickActions => 'وصول سريع';
+
+  @override
   String get accountMenuHelp => 'التعليمات والمساعدة';
 
   @override
