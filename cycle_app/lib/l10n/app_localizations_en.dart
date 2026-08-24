@@ -978,6 +978,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountMenuSettings => 'Settings';
 
   @override
+  String get accountStatCycles => 'Cycles';
+
+  @override
+  String get accountStatAvgCycle => 'Avg cycle';
+
+  @override
+  String get accountStatAvgPeriod => 'Avg period';
+
+  @override
+  String get accountQuickActions => 'Quick access';
+
+  @override
   String get accountMenuHelp => 'Help & instructions';
 
   @override
