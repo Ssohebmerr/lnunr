@@ -99,7 +99,14 @@ class HomeKeyDatesCard extends StatelessWidget {
             color: theme.colorScheme.secondary,
             label: l10n.homeOvulation,
             value: data.ovulationDisplay,
-            subtitle: data.ovulationCalibrated
+            // A measured thermal shift is an observation, not a forecast, and
+            // the row has to say which one the user is looking at.
+            confirmed: data.ovulationConfirmedByTemperature,
+            subtitle: data.ovulationConfirmedByTemperature
+                ? l10n.ovulationConfirmedHint(
+                    (data.temperatureShiftCelsius ?? 0).toStringAsFixed(2),
+                  )
+                : data.ovulationCalibrated
                 ? l10n.ovulationCalibratedHint
                 : l10n.ovulationEstimateHint,
           ),
@@ -157,6 +164,7 @@ class _DateRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.subtitle,
+    this.confirmed = false,
   });
 
   final IconData icon;
@@ -165,12 +173,20 @@ class _DateRow extends StatelessWidget {
   final String value;
   final String? subtitle;
 
+  /// Observed rather than predicted — rendered with a check and success
+  /// colouring so the difference is visible at a glance, not only in prose.
+  final bool confirmed;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 20, color: color),
+        Icon(
+          confirmed ? Icons.check_circle_outline : icon,
+          size: 20,
+          color: confirmed ? AuraColors.success : color,
+        ),
         const SizedBox(width: 10),
         Expanded(
           flex: 2,
@@ -188,7 +204,10 @@ class _DateRow extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                    color: confirmed
+                        ? AuraColors.success
+                        : theme.colorScheme.primary,
+                    fontWeight: confirmed ? FontWeight.w700 : null,
                   ),
                 ),
               ],

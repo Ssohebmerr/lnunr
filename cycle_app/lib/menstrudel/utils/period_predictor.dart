@@ -16,9 +16,12 @@ class PeriodPredictor {
   /// The minimum number of periods logged needed to calculate a prediction.
   static const int _minPeriodsLogged = 2;
 
-  /// Calculates a list of valid cycle lengths (in days) from the start date of
-  /// one period to the start date of the next.
-  static List<int> getValidCycleLengths(List<Period> periods) {
+  /// Cycle lengths (in days) between consecutive period starts, oldest →
+  /// newest, with only physically impossible values removed.
+  ///
+  /// Keep the raw list for anything that reports on the user's pattern —
+  /// prolonged or erratic cycles are the signal, not noise to be cleaned away.
+  static List<int> getRawCycleLengths(List<Period> periods) {
     if (periods.length < _minPeriodsLogged) {
       return [];
     }
@@ -26,9 +29,9 @@ class PeriodPredictor {
     final List<Period> sortedPeriods = List.from(periods);
     sortedPeriods.sort((a, b) => a.startDate.compareTo(b.startDate));
 
-    List<int> cycleLengths = [];
+    final List<int> cycleLengths = [];
     for (int i = 0; i < sortedPeriods.length - 1; i++) {
-      int days = sortedPeriods[i + 1].startDate
+      final int days = sortedPeriods[i + 1].startDate
           .difference(sortedPeriods[i].startDate)
           .inDays;
 
@@ -36,7 +39,13 @@ class PeriodPredictor {
         cycleLengths.add(days);
       }
     }
-    return SmartCyclePredictor.prepareCycleLengths(cycleLengths);
+    return cycleLengths;
+  }
+
+  /// Calculates a list of valid cycle lengths (in days) from the start date of
+  /// one period to the start date of the next, cleaned for date estimation.
+  static List<int> getValidCycleLengths(List<Period> periods) {
+    return SmartCyclePredictor.prepareCycleLengths(getRawCycleLengths(periods));
   }
 
   static List<int> _getValidCycleLengths(List<Period> periods) =>
@@ -52,10 +61,22 @@ class PeriodPredictor {
     return durations;
   }
 
+  /// Cycle start dates for the completed cycles behind [getRawCycleLengths],
+  /// chronological — the anchor an annotation is stored against.
+  static List<DateTime> getCycleStarts(List<Period> periods) {
+    final sorted = List<Period>.from(periods)
+      ..sort((a, b) => a.startDate.compareTo(b.startDate));
+    return [
+      for (final p in sorted)
+        DateTime(p.startDate.year, p.startDate.month, p.startDate.day),
+    ];
+  }
+
   static PeriodPredictionResult? estimateNextPeriod(
     List<Period> periods,
-    DateTime now,
-  ) {
+    DateTime now, {
+    List<bool> explainedCycles = const [],
+  }) {
     if (periods.length < _minPeriodsLogged) {
       return null;
     }
@@ -63,15 +84,18 @@ class PeriodPredictor {
     final sortedPeriods = List<Period>.from(periods)
       ..sort((a, b) => a.startDate.compareTo(b.startDate));
 
-    final List<int> validCycleLengths = _getValidCycleLengths(sortedPeriods);
-    if (validCycleLengths.isEmpty) {
+    if (_getValidCycleLengths(sortedPeriods).isEmpty) {
       return null;
     }
 
+    // Hand over the raw history: the predictor cleans it internally for the
+    // date estimate, and needs the untouched list to flag clinical patterns
+    // and count how many cycles it had to exclude.
     final prediction = SmartCyclePredictor.estimateNextPeriod(
       lastPeriodStart: sortedPeriods.last.startDate,
-      completedLengths: validCycleLengths,
+      completedLengths: getRawCycleLengths(sortedPeriods),
       configuredFallback: _defaultCycleLength,
+      explainedCycles: explainedCycles,
       now: now,
     );
     final averageCycleLength = prediction.effectiveCycleLength;

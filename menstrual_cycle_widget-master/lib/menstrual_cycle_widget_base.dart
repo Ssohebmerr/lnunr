@@ -56,6 +56,14 @@ class MenstrualCycleWidget {
   /// phase lengths derived from ovulation / LH logs.
   static Future<List<int>> Function()? measuredLutealProvider;
 
+  /// Optional hook from the host app to say which completed cycles the user
+  /// attributed to a one-off cause. Receives the cycle start dates in
+  /// chronological order and returns a flag per cycle *length* (one shorter
+  /// than the input). Explained cycles leave the date estimate but still count
+  /// toward clinical pattern flags.
+  static Future<List<bool>> Function(List<DateTime> cycleStarts)?
+      explainedCyclesProvider;
+
   // Return previous period day into string
   String getPreviousPeriodDay() => _lastPeriodDate;
 
@@ -1002,8 +1010,37 @@ class MenstrualCycleWidget {
     );
   }
 
-  /// Pulls cycle lengths from finished cycles (skips the in-progress one).
-  Future<List<int>> _completedCycleLengths() async {
+  /// Cycle start dates for finished cycles, oldest → newest, aligned with
+  /// [_rawCompletedCycleLengths] so a per-length flag can be built from them.
+  Future<List<DateTime>> _completedCycleStarts() async {
+    final all = await getAllPeriodsDetails();
+    if (all.length < 2) return [];
+    final starts = <DateTime>[];
+    for (var i = all.length - 1; i >= 0; i--) {
+      final raw = all[i].cycleStartDate;
+      if (raw == null || raw.isEmpty) continue;
+      try {
+        final d = DateTime.parse(raw);
+        starts.add(DateTime(d.year, d.month, d.day));
+      } catch (_) {}
+    }
+    return starts;
+  }
+
+  Future<List<bool>> _explainedCycleFlags() async {
+    final provider = MenstrualCycleWidget.explainedCyclesProvider;
+    if (provider == null) return const [];
+    try {
+      return await provider(await _completedCycleStarts());
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Raw cycle lengths from finished cycles (skips the in-progress one),
+  /// oldest → newest. Nothing is filtered: pattern detection needs the long
+  /// and erratic cycles that outlier cleaning would remove.
+  Future<List<int>> _rawCompletedCycleLengths() async {
     final all = await getAllPeriodsDetails();
     if (all.length < 2) return [];
     final lengths = <int>[];
@@ -1013,7 +1050,14 @@ class MenstrualCycleWidget {
       final len = all[i].cycleLength;
       if (len != null && len > 0) lengths.add(len);
     }
-    return SmartCyclePredictor.prepareCycleLengths(lengths);
+    return lengths;
+  }
+
+  /// Cleaned cycle lengths for date estimation.
+  Future<List<int>> _completedCycleLengths() async {
+    return SmartCyclePredictor.prepareCycleLengths(
+      await _rawCompletedCycleLengths(),
+    );
   }
 
   Future<List<int>> _completedPeriodDurations() async {
@@ -1353,11 +1397,13 @@ class MenstrualCycleWidget {
     final lastPeriod = CalenderDateUtils.dateFormat.parse(
       getPreviousPeriodDay(),
     );
-    final completed = await _completedCycleLengths();
+    // Raw history: the predictor cleans it internally for the estimate and
+    // needs the untouched list to raise clinical pattern flags.
     return SmartCyclePredictor.estimateNextPeriod(
       lastPeriodStart: lastPeriod,
-      completedLengths: completed,
+      completedLengths: await _rawCompletedCycleLengths(),
       configuredFallback: getCycleLength(),
+      explainedCycles: await _explainedCycleFlags(),
       now: now,
     );
   }
@@ -1445,6 +1491,11 @@ class MenstrualCycleWidget {
     int numberOfCycle = allPeriodRange.length;
     if (numberOfCycle == 0) return symptomAnalysisData;
 
+    // Resolve the user's personalized phase boundaries once, outside the loop.
+    final reportCycleLength = await getEffectiveCycleLength();
+    final reportLutealDays = await _resolvedLutealDays();
+    final reportPeriodDuration = getPeriodDuration();
+
     for (var symptomsPattern in symptomsPatternData) {
       SymptomsPatterns symptomsPatterns = SymptomsPatterns();
 
@@ -1478,16 +1529,15 @@ class MenstrualCycleWidget {
             }
 
             int cycleDay = cycleDayInt ?? (i + 1); // Fallback if null
-            String phaseName;
-            if (cycleDay >= 1 && cycleDay <= 5) {
-              phaseName = WidgetBaseLanguage.menstruationLabel;
-            } else if (cycleDay >= 6 && cycleDay <= 13) {
-              phaseName = WidgetBaseLanguage.follicularPhaseLabel;
-            } else if (cycleDay == 14) {
-              phaseName = WidgetBaseLanguage.ovulationLabel;
-            } else {
-              phaseName = WidgetBaseLanguage.lutealPhaseLabel;
-            }
+            // Use the user's own phase boundaries. Fixed day 1-5/6-13/14
+            // buckets made the doctor report disagree with every other screen
+            // for anyone whose cycle isn't textbook 28 days.
+            final String phaseName = phaseLabelForCycleDay(
+              cycleDay: cycleDay,
+              cycleLength: reportCycleLength,
+              lutealDays: reportLutealDays,
+              periodDuration: reportPeriodDuration,
+            );
 
             phaseSymptomCount[phaseName] =
                 (phaseSymptomCount[phaseName] ?? 0) + 1;
@@ -1530,21 +1580,16 @@ class MenstrualCycleWidget {
     if (lastPeriodDate.isNotEmpty) {
       final difference =
           DateTime.now().difference(DateTime.parse(lastPeriodDate)).inDays;
+      // Cycle day is simply days since the period started. The old code
+      // rescaled it by the ratio of the previous cycle length to the
+      // configured one, which shifted the day used to look up past symptoms
+      // by several days for anyone whose cycles vary at all.
       currentCycleDay = difference + 1;
-      // Check past cycle length
-      // if not same as current then calculate current cycle day based on past cycle
-      int pastCycleLength = await getPreviousCycleLength();
 
-      if (pastCycleLength > 0) {
-        if (pastCycleLength != getCycleLength()) {
-          currentCycleDay =
-              ((currentCycleDay / getCycleLength()) * pastCycleLength).round();
-        }
-      }
-
+      final effectiveLength = await getEffectiveCycleLength();
       if (isForTomorrow) {
         // Check if period start from tomorrow then set currentCycleDay is 1
-        if (currentCycleDay >= getCycleLength()) {
+        if (currentCycleDay >= effectiveLength) {
           currentCycleDay = 1;
         } else {
           currentCycleDay = currentCycleDay + 1;
@@ -1609,32 +1654,46 @@ class MenstrualCycleWidget {
     return symptomAnalysisData;
   }
 
-  /// get current phase name based on cycle day — scaled to actual cycle length.
-  Future<String> getCurrentPhaseName() async {
-    int currentCycleDay = await getCurrentCycleDay();
-    final cycleLength = await getEffectiveCycleLength();
-    int menstruationDayCount = getPeriodDuration();
+  /// Phase label for a cycle day, using the user's own cycle length and
+  /// luteal phase rather than textbook 28-day boundaries.
+  ///
+  /// Every phase-labelling caller goes through here so the home screen, the
+  /// analytics screen and the doctor report can never disagree.
+  static String phaseLabelForCycleDay({
+    required int cycleDay,
+    required int cycleLength,
+    required int lutealDays,
+    required int periodDuration,
+  }) {
+    if (cycleDay <= 0) return "";
 
-    final luteal = await _resolvedLutealDays();
-    final ovulationDay = cycleLength - luteal;
+    final ovulationDay = cycleLength - lutealDays;
     final fertileStart = ovulationDay - 5;
     final follicularEnd = fertileStart - 1;
 
-    if (currentCycleDay <= 0) return "";
-    if (currentCycleDay <= menstruationDayCount) {
+    if (cycleDay <= periodDuration) {
       return WidgetBaseLanguage.menstruationLabel;
     }
-    if (currentCycleDay <= follicularEnd) {
+    if (cycleDay <= follicularEnd) {
       return WidgetBaseLanguage.follicularPhaseLabel;
     }
-    if (currentCycleDay <= ovulationDay) {
+    if (cycleDay <= ovulationDay) {
       return WidgetBaseLanguage.ovulationLabel;
     }
-    if (currentCycleDay <= cycleLength) {
+    if (cycleDay <= cycleLength) {
       return WidgetBaseLanguage.lutealPhaseLabel;
     }
-
     return WidgetBaseLanguage.latePeriodLabel;
+  }
+
+  /// get current phase name based on cycle day — scaled to actual cycle length.
+  Future<String> getCurrentPhaseName() async {
+    return phaseLabelForCycleDay(
+      cycleDay: await getCurrentCycleDay(),
+      cycleLength: await getEffectiveCycleLength(),
+      lutealDays: await _resolvedLutealDays(),
+      periodDuration: getPeriodDuration(),
+    );
   }
 
   /// Return All UserSymptomsLogs for backup

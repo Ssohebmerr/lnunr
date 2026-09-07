@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
+import '../../../core/cycle/luteal_calibration.dart';
+
 /// Result of a quick daily-log write (from chat actions or shortcuts).
 enum DailyLogWriteStatus { success, notReady, notMatched, failed }
 
@@ -213,6 +215,10 @@ class DailyLogWriter {
         onSuccess: (_) => ok = true,
         onError: () => ok = false,
       );
+
+      // The temperature scan is cached per refresh; a fresh log has to be
+      // visible to ovulation detection immediately.
+      if (ok) LutealCalibration.sharedBbtService.invalidate();
 
       return DailyLogWriteResult(
         ok ? DailyLogWriteStatus.success : DailyLogWriteStatus.failed,

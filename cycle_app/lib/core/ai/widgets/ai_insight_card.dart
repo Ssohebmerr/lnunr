@@ -49,7 +49,23 @@ class _AiInsightCardState extends State<AiInsightCard> {
     if (!mounted) return;
     setState(() => force ? _refreshing = true : _loading = true);
 
-    final service = context.read<AiInsightsService>();
+    // The card's contract is that any screen can embed it unconditionally, so
+    // a host without the AI provider in its tree counts as "AI unavailable"
+    // rather than a crash.
+    final AiInsightsService service;
+    try {
+      service = context.read<AiInsightsService>();
+    } on ProviderNotFoundException {
+      if (mounted) {
+        setState(() {
+          _insight = null;
+          _loading = false;
+          _refreshing = false;
+        });
+      }
+      return;
+    }
+
     final lang = Localizations.localeOf(context).languageCode;
     final insight = await service
         .getInsight(widget.type, languageCode: lang, forceRefresh: force)
@@ -90,6 +106,22 @@ class _AiInsightCardState extends State<AiInsightCard> {
     AiInsightType.wellnessTip => (
       Icons.health_and_safety_outlined,
       l10n.aiInsightWellnessTitle,
+    ),
+    AiInsightType.pcosInsight => (
+      Icons.insights_outlined,
+      l10n.aiInsightPcosTitle,
+    ),
+    AiInsightType.menopauseInsight => (
+      Icons.spa_outlined,
+      l10n.aiInsightMenopauseTitle,
+    ),
+    AiInsightType.postpartumInsight => (
+      Icons.volunteer_activism_outlined,
+      l10n.aiInsightPostpartumTitle,
+    ),
+    AiInsightType.logReflection => (
+      Icons.edit_note_outlined,
+      l10n.aiInsightLogTitle,
     ),
   };
 

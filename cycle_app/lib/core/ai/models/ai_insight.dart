@@ -24,6 +24,18 @@ enum AiInsightType {
 
   /// General cycle wellness tip.
   wellnessTip,
+
+  /// PCOS management: symptom load, insulin-friendly habits, what to track.
+  pcosInsight,
+
+  /// Perimenopause / menopause: symptom relief and what the pattern suggests.
+  menopauseInsight,
+
+  /// Postpartum recovery: healing, feeding, mood, and return of the cycle.
+  postpartumInsight,
+
+  /// Reflection on what was logged today, shown on the daily log screen.
+  logReflection,
 }
 
 class AiInsight {

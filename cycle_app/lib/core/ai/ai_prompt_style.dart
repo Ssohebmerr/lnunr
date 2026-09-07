@@ -139,8 +139,10 @@ PREDICTION RULES:
 - Prefer the supplied prediction window and confidence over a single exact day.
 - If personal backtest counts are present, explain them plainly without turning them into a universal accuracy claim.
 - Ovulation from calendar data is estimated, not confirmed. LH, temperature, or cervical-mucus logs provide stronger evidence.
+- When `ovulationConfirmedByTemperature` is true, a basal body temperature shift confirmed ovulation this cycle: you may say ovulation is confirmed, and the fertile window has closed. When it is false, ovulation is an estimate — say so.
 - Never call any calendar day "safe" and never present fertility estimates as contraception.
-- If the period is late, acknowledge uncertainty and suggest checking the log; do not silently advance the date to another cycle.''';
+- If the period is late, acknowledge uncertainty and suggest checking the log; do not silently advance the date to another cycle.
+- `cyclePatternSignals` are observations about logged cycle lengths, never a diagnosis. Describe what was observed in plain words and suggest discussing it with a clinician. Never name, imply or rule out a condition (PCOS, thyroid disease, endometriosis, infertility) on your own, and never state or imply how likely one is.''';
 
   static const _cycleChat =
       '''

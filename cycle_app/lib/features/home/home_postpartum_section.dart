@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/ai/models/ai_insight.dart';
+import '../../core/ai/widgets/ai_insight_card.dart';
 import '../../core/storage/user_prefs.dart';
 import '../../core/theme/app_design_tokens.dart';
 import '../../core/widgets/app_surface.dart';
@@ -292,6 +294,14 @@ class _HomePostpartumSectionState extends State<HomePostpartumSection> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 14),
+
+        // ── AI reading of the user's own recovery logs ─────────────────────
+        const AiInsightCard(
+          type: AiInsightType.postpartumInsight,
+          margin: EdgeInsets.zero,
+          blur: false,
         ),
         const SizedBox(height: 14),
 

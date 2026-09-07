@@ -157,4 +157,119 @@ void main() {
       expect(ar.isNotEmpty, isTrue);
     });
   });
+
+  group('clinical pattern flags', () {
+    test('repeated long cycles are surfaced, not smoothed away', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([29, 48, 52, 30, 47]);
+      expect(flags, contains(CyclePatternFlag.prolongedCycles));
+    });
+
+    test('one long cycle after a stressful month is not a pattern', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([28, 29, 41, 28, 29]);
+      expect(flags, isNot(contains(CyclePatternFlag.prolongedCycles)));
+    });
+
+    test('repeated short cycles are surfaced', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([18, 19, 27, 20]);
+      expect(flags, contains(CyclePatternFlag.shortCycles));
+    });
+
+    test('a three-month gap counts as an absent cycle', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([28, 29, 95]);
+      expect(flags, contains(CyclePatternFlag.absentCycles));
+    });
+
+    test('a nine-day spread trips the irregularity threshold', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([25, 34, 28]);
+      expect(flags, contains(CyclePatternFlag.highVariability));
+    });
+
+    test('a steady cycle raises nothing', () {
+      final flags = SmartCyclePredictor.detectPatternFlags([28, 29, 28, 27, 29]);
+      expect(flags, isEmpty);
+    });
+
+    test('flags survive into the user-facing estimate', () {
+      final estimate = SmartCyclePredictor.estimateNextPeriod(
+        lastPeriodStart: DateTime(2026, 3, 1),
+        completedLengths: const [30, 49, 51, 29, 48],
+        configuredFallback: 28,
+        now: DateTime(2026, 3, 10),
+      );
+      expect(estimate.hasPatternFlags, isTrue);
+      expect(estimate.patternFlags, contains(CyclePatternFlag.prolongedCycles));
+    });
+  });
+
+  group('learning from user-supplied causes', () {
+    // A steady ~28-day pattern with one 34-day cycle the user attributes to
+    // illness. 34 is deliberately chosen: it sits INSIDE the MAD outlier
+    // threshold, so the statistical filter keeps it. That is exactly where an
+    // explanation earns its keep — an extreme 44-day cycle would already be
+    // filtered out and annotating it would change nothing.
+    const history = [28, 29, 34, 28, 29];
+    const explained = [false, false, true, false, false];
+
+    CyclePredictionEstimate estimate({List<bool> flags = const []}) =>
+        SmartCyclePredictor.estimateNextPeriod(
+          lastPeriodStart: DateTime(2026, 3, 1),
+          completedLengths: history,
+          configuredFallback: 28,
+          explainedCycles: flags,
+          now: DateTime(2026, 3, 10),
+        );
+
+    test('an explained cycle leaves the date estimate', () {
+      final withReason = estimate(flags: explained);
+      final without = estimate();
+      expect(withReason.explainedCycleCount, 1);
+      expect(withReason.learnsFromExplanations, isTrue);
+      expect(without.explainedCycleCount, 0);
+    });
+
+    test('setting a disruption aside tightens the prediction window', () {
+      expect(
+        estimate(flags: explained).windowDays,
+        lessThanOrEqualTo(estimate().windowDays),
+      );
+    });
+
+    test('regularity improves once the disruption is accounted for', () {
+      expect(
+        estimate(flags: explained).regularityScore,
+        greaterThan(estimate().regularityScore),
+      );
+    });
+
+    test('explaining cycles can NEVER hide a clinical pattern', () {
+      // Every long cycle blamed on stress — the flag must survive anyway.
+      final hidden = SmartCyclePredictor.estimateNextPeriod(
+        lastPeriodStart: DateTime(2026, 3, 1),
+        completedLengths: const [29, 48, 52, 30, 47],
+        configuredFallback: 28,
+        explainedCycles: const [false, true, true, false, true],
+        now: DateTime(2026, 3, 10),
+      );
+      expect(hidden.patternFlags, contains(CyclePatternFlag.prolongedCycles));
+    });
+
+    test('falls back to the full history rather than starving itself', () {
+      // Everything explained: keeping two cycles beats predicting from none.
+      final all = SmartCyclePredictor.estimateNextPeriod(
+        lastPeriodStart: DateTime(2026, 3, 1),
+        completedLengths: const [28, 44, 30],
+        configuredFallback: 28,
+        explainedCycles: const [true, true, true],
+        now: DateTime(2026, 3, 10),
+      );
+      expect(all.effectiveCycleLength, greaterThan(0));
+      expect(all.completedCycleCount, greaterThan(0));
+    });
+
+    test('a mismatched flag list is ignored rather than misaligning cycles', () {
+      final short = estimate(flags: const [true]);
+      expect(short.effectiveCycleLength, greaterThan(0));
+      expect(short.explainedCycleCount, 1);
+    });
+  });
 }

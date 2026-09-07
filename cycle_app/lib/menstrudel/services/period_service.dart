@@ -16,15 +16,21 @@ import 'package:cycle_aura/menstrudel/services/settings_service.dart';
 import 'package:cycle_aura/menstrudel/services/wear_sync_service.dart';
 import 'package:cycle_aura/menstrudel/services/widget_controller.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart';
-import 'package:cycle_aura/core/cycle/ovulation_log_service.dart';
+import 'package:cycle_aura/core/cycle/cycle_annotation_service.dart';
+import 'package:cycle_aura/core/cycle/luteal_calibration.dart';
 
 class PeriodService extends ChangeNotifier {
   final SettingsService _settingsService;
   final PeriodsRepository _periodsRepo;
   final _watchSyncService = WatchSyncService();
 
-  /// The maximum number of recent months to consider when calculating cycle statistics.
-  static const int _lastNMonthsToConsider = 6;
+  /// How far back to read period history for statistics.
+  ///
+  /// This is deliberately generous: the predictor's confidence score only
+  /// saturates at six completed cycles, and the analytics history already
+  /// keeps twelve. A six-month window used to starve a 35-day cycle of the
+  /// history it needed to ever reach "strong" confidence.
+  static const int _historyDays = 540;
 
   PeriodService(this._settingsService, this._periodsRepo);
 
@@ -132,19 +138,25 @@ class PeriodService extends ChangeNotifier {
   /// Calculates the period predictions, cycle predictions and ongoing status.
   Future<void> _calculatePrediction() async {
     final periods = await getPeriodsSince(
-      DateTime.now().subtract(
-        const Duration(days: _lastNMonthsToConsider * 30),
-      ),
+      DateTime.now().subtract(const Duration(days: _historyDays)),
+    );
+
+    // What the user told us about unusual cycles. Explained cycles leave the
+    // date estimate but still count toward clinical pattern flags.
+    final explained = await CycleAnnotationService().explainedFlagsFor(
+      PeriodPredictor.getCycleStarts(periods),
     );
 
     _upcomingPeriodPrediction = PeriodPredictor.estimateNextPeriod(
       periods,
       DateTime.now(),
+      explainedCycles: explained,
     );
 
-    _isPeriodOngoing = _lastPeriod != null
-        ? DateUtils.isSameDay(_lastPeriod!.endDate, DateTime.now())
-        : false;
+    // A period is ongoing whenever today falls inside it — not only on the
+    // exact day of the last logged entry. Checking `endDate == today` meant
+    // that being on day 3 and not having logged yet reported "no period".
+    _isPeriodOngoing = _isTodayInsidePeriod(_lastPeriod);
 
     if (_upcomingPeriodPrediction != null && _lastPeriod != null) {
       final lastPeriodStartDate = _lastPeriod!.startDate;
@@ -153,7 +165,7 @@ class PeriodService extends ChangeNotifier {
       final averagePeriodDuration =
           _upcomingPeriodPrediction?.averagePeriodDuration ?? 0;
       final completedLengths = PeriodPredictor.getValidCycleLengths(periods);
-      final measuredLutealLengths = await OvulationLogService()
+      final measuredLutealLengths = await LutealCalibration()
           .measuredLutealLengths();
       final lutealPhaseLength = SmartCyclePredictor.lutealPhaseDays(
         effectiveCycleLength: averageCycleLength,
@@ -161,11 +173,21 @@ class PeriodService extends ChangeNotifier {
         measuredLutealLengths: measuredLutealLengths,
       );
 
+      // A thermal shift in the running cycle pins ovulation to an observed
+      // day; without one the fertile window has to carry the cycle-length
+      // uncertainty instead of pretending to a precision it lacks.
+      final confirmedOvulation = await LutealCalibration.sharedBbtService
+          .confirmedOvulationDate();
+
       _predictedCurrentCycle = CyclePhasePredictor.predictCycle(
         lastPeriodStartDate: lastPeriodStartDate,
         averageCycleLength: averageCycleLength,
         averagePeriodDuration: averagePeriodDuration,
         lutealPhaseLength: lutealPhaseLength,
+        predictionWindowDays:
+            _upcomingPeriodPrediction?.evidence?.windowDays ??
+            SmartCyclePredictor.predictionWindowDays(completedLengths),
+        confirmedOvulationDate: confirmedOvulation,
       );
 
       final estimatedFollowingPeriodStartDate = _upcomingPeriodPrediction!
@@ -195,6 +217,30 @@ class PeriodService extends ChangeNotifier {
       final start = DateUtils.dateOnly(_lastPeriod!.startDate);
       _menstruationDay = today.difference(start).inDays + 1;
     }
+  }
+
+  /// Whether today falls inside [period].
+  ///
+  /// The logged end date only reaches as far as the last day the user actually
+  /// recorded, so a short grace window keeps the period "ongoing" through a
+  /// missed morning without stretching past its expected duration.
+  bool _isTodayInsidePeriod(Period? period) {
+    if (period == null) return false;
+
+    final today = DateUtils.dateOnly(DateTime.now());
+    final start = DateUtils.dateOnly(period.startDate);
+    if (today.isBefore(start)) return false;
+
+    final loggedEnd = DateUtils.dateOnly(period.endDate);
+    if (!today.isAfter(loggedEnd)) return true;
+
+    const maxUnloggedDays = 2;
+    if (today.difference(loggedEnd).inDays > maxUnloggedDays) return false;
+
+    final expectedDuration =
+        _upcomingPeriodPrediction?.averagePeriodDuration ?? 5;
+    final expectedEnd = start.add(Duration(days: expectedDuration - 1));
+    return !today.isAfter(expectedEnd);
   }
 
   /// Recalculates periods based on the provided [logs] and returns a mapping of log IDs to period IDs.

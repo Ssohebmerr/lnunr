@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/cycle/data/cycle_bridge_service.dart';
 import '../../features/cycle/data/cycle_sync_service.dart';
 import '../../features/cycle/data/today_log_service.dart';
+import '../cycle/cycle_annotation_service.dart';
+import '../cycle/luteal_calibration.dart';
 import '../cycle/ovulation_log_service.dart';
 import '../../features/pregnancy/data/pregnancy_development_content.dart';
 import '../../features/pregnancy/data/pregnancy_tracking_service.dart';
@@ -11,6 +13,7 @@ import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../menstrudel/models/period_logs/symptom.dart';
 import '../../features/self_care/data/ritual_service.dart';
 import '../../menstrudel_integration/menstrudel_init.dart';
+import 'condition_context_collector.dart';
 import 'models/health_snapshot.dart';
 import 'wellness_hub_collector.dart';
 
@@ -67,6 +70,16 @@ class AiContextEngine {
     final goal = await _sync.getUserGoal();
     final locale = await _userLocale();
     final cycleHistory = await _collectCycleHistory();
+    final patternSignals = <String>[
+      for (final f in (cycleHistory['cyclePatternSignals'] as List? ?? const []))
+        f.toString(),
+    ];
+    final thermalShift =
+        await LutealCalibration.sharedBbtService.currentCycleShift();
+    final conditionTracking = await ConditionContextCollector.collect(
+      goal,
+      lang: locale,
+    );
     Map<String, dynamic> pregnancyTracking = const {};
     Map<String, dynamic> todayLog = const {};
 
@@ -141,6 +154,10 @@ class AiContextEngine {
       pregnancyTracking: pregnancyTracking,
       todayLog: todayLog,
       cycleHistory: cycleHistory,
+      conditionTracking: conditionTracking,
+      patternSignals: patternSignals,
+      ovulationConfirmedByTemperature: thermalShift != null,
+      temperatureRiseCelsius: thermalShift?.shift.riseCelsius,
       localTimeOfDay: _localTimeOfDay(),
       userLocale: locale,
     );
@@ -167,8 +184,12 @@ class AiContextEngine {
       final lengths = lastSix(history.cycleLengths);
       final durations = lastSix(history.periodDurations);
       final ovulationService = OvulationLogService();
-      final measuredLuteal = await ovulationService.measuredLutealLengths();
+      final measuredLuteal = await LutealCalibration().measuredLutealLengths();
       final ovulationLogsCount = await ovulationService.entryCount();
+      final thermalShift =
+          await LutealCalibration.sharedBbtService.currentCycleShift();
+      final tempSeries = await LutealCalibration.sharedBbtService
+          .latestCycleSeries(minReadings: 3);
       final prediction = await MenstrualCycleWidget.instance
           ?.getCurrentPeriodPrediction();
       if (lengths.isEmpty &&
@@ -177,6 +198,10 @@ class AiContextEngine {
           prediction == null) {
         return const {};
       }
+      // What the user says disrupted her cycles. This is the only part of the
+      // context the app could never derive on its own, and it turns "your
+      // cycles are getting longer" into "your cycles run long when you travel".
+      final causeCounts = await CycleAnnotationService().causeFrequencies();
       final window = SmartCyclePredictor.predictionWindowDays(lengths);
       final score = lengths.length >= 2
           ? SmartCyclePredictor.regularityScore(lengths)
@@ -187,7 +212,31 @@ class AiContextEngine {
         if (measuredLuteal.isNotEmpty) 'measuredLutealDays': measuredLuteal,
         'ovulationLogsCount': ovulationLogsCount,
         'ovulationCalibrated': measuredLuteal.length >= 2,
+        // Temperature is the only at-home proof ovulation actually happened,
+        // so tell the model when it exists — and equally when it does not.
+        'ovulationConfirmedByTemperature': thermalShift != null,
+        // The readings themselves, so "why didn't my temperature rise?" gets a
+        // real answer instead of generic advice.
+        if (tempSeries != null) ...{
+          'temperatureReadingsThisCycle': tempSeries.points.length,
+          'temperatureByCycleDay': {
+            for (final p in tempSeries.points)
+              p.cycleDay.toString(): p.celsius,
+          },
+          if (tempSeries.coverline != null)
+            'temperatureCoverline': tempSeries.coverline,
+        },
+        if (thermalShift != null) ...{
+          'temperatureConfirmedOvulationDate': thermalShift
+              .shift
+              .ovulationDate
+              .toIso8601String()
+              .substring(0, 10),
+          'temperatureRiseCelsius': thermalShift.shift.riseCelsius,
+          'temperatureShiftIsFull': thermalShift.shift.isFullShift,
+        },
         'predictionWindowDays': window,
+        if (causeCounts.isNotEmpty) 'reportedCycleDisruptions': causeCounts,
         'cycleRegularityScore': score.round(),
         if (prediction != null) ...{
           'predictionConfidence': prediction.confidence.name,
@@ -208,6 +257,14 @@ class AiContextEngine {
           'medianAbsoluteErrorDays': double.parse(
             prediction.accuracy.medianAbsoluteError.toStringAsFixed(1),
           ),
+          // Signals to raise with the user, never a diagnosis. The prompt
+          // rules forbid the model from naming a condition on its own.
+          if (prediction.learnsFromExplanations)
+            'cyclesSetAsideByUser': prediction.explainedCycleCount,
+          if (prediction.hasPatternFlags)
+            'cyclePatternSignals': [
+              for (final f in prediction.patternFlags) f.name,
+            ],
         },
         'predictionNote': score < 75
             ? 'irregular_cycles_use_median_and_wider_window'

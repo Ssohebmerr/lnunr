@@ -32,6 +32,10 @@ class HealthSnapshot {
     this.pregnancyTracking = const {},
     this.todayLog = const {},
     this.cycleHistory = const {},
+    this.conditionTracking = const {},
+    this.patternSignals = const [],
+    this.ovulationConfirmedByTemperature = false,
+    this.temperatureRiseCelsius,
     this.localTimeOfDay,
     this.userLocale = 'ar',
   });
@@ -83,6 +87,24 @@ class HealthSnapshot {
   /// AI can spot patterns — sourced from CycleBridgeService analytics history.
   final Map<String, dynamic> cycleHistory;
 
+  /// What a life-stage goal (PCOS, menopause, postpartum) has actually logged
+  /// over the last 30 days: symptom and ritual frequencies. Empty for other
+  /// goals and for users who have not logged yet.
+  final Map<String, dynamic> conditionTracking;
+
+  /// Clinically meaningful cycle patterns detected in the raw history
+  /// ([CyclePatternFlag] names). Observations to surface, never a diagnosis.
+  ///
+  /// Typed rather than buried in [cycleHistory] so the offline doctor report —
+  /// which runs with no AI and no premium — can include them.
+  final List<String> patternSignals;
+
+  /// A basal body temperature shift confirmed ovulation in the running cycle.
+  final bool ovulationConfirmedByTemperature;
+
+  /// How far the confirming reading rose above the coverline (°C).
+  final double? temperatureRiseCelsius;
+
   /// morning | afternoon | evening | night — lets the AI tailor tips to the
   /// user's local time (energy in the morning, wind-down at night).
   final String? localTimeOfDay;
@@ -131,6 +153,8 @@ class HealthSnapshot {
         if (pregnancyTracking.isNotEmpty) 'pregnancyTracking': pregnancyTracking,
         if (todayLog.isNotEmpty) 'todayLog': todayLog,
         if (cycleHistory.isNotEmpty) 'cycleHistory': cycleHistory,
+        if (conditionTracking.isNotEmpty)
+          'conditionTracking': conditionTracking,
         if (localTimeOfDay != null) 'localTimeOfDay': localTimeOfDay,
         'userLocale': userLocale,
       };

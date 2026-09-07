@@ -2,6 +2,27 @@ import 'dart:math';
 
 enum CyclePredictionConfidence { learning, moderate, strong }
 
+/// Clinically meaningful patterns in a user's cycle history.
+///
+/// These are *signals to surface*, never diagnoses. The predictor used to drop
+/// long or erratic cycles as statistical noise, which threw away exactly the
+/// evidence that matters most — repeated long cycles are the classic marker of
+/// oligomenorrhea (PCOS, thyroid disorders), and the user should be told to
+/// discuss it rather than have it silently smoothed away.
+enum CyclePatternFlag {
+  /// Repeated cycles longer than 35 days.
+  prolongedCycles,
+
+  /// Repeated cycles shorter than 21 days.
+  shortCycles,
+
+  /// Cycle-to-cycle spread of 9+ days — the ACOG threshold for "irregular".
+  highVariability,
+
+  /// A gap of 90+ days with no period logged.
+  absentCycles,
+}
+
 /// Walk-forward evidence showing how this predictor performed on the user's
 /// own completed cycles.
 class CyclePredictionAccuracy {
@@ -65,6 +86,8 @@ class CyclePredictionEstimate {
     required this.confidenceScore,
     required this.confidence,
     required this.accuracy,
+    this.patternFlags = const {},
+    this.explainedCycleCount = 0,
   });
 
   final DateTime centerDate;
@@ -83,6 +106,19 @@ class CyclePredictionEstimate {
   final double confidenceScore;
   final CyclePredictionConfidence confidence;
   final CyclePredictionAccuracy accuracy;
+
+  /// Clinically meaningful patterns found in the raw history. Empty for a
+  /// typical cycle. Surface these; never present them as a diagnosis.
+  final Set<CyclePatternFlag> patternFlags;
+
+  bool get hasPatternFlags => patternFlags.isNotEmpty;
+
+  /// How many cycles the user explained away (illness, travel, stress…) and
+  /// were therefore left out of the date estimate. They still count toward
+  /// [patternFlags].
+  final int explainedCycleCount;
+
+  bool get learnsFromExplanations => explainedCycleCount > 0;
 }
 
 /// Evidence-informed cycle prediction: learns from completed cycles, weights
@@ -201,10 +237,9 @@ class SmartCyclePredictor {
     DateTime? now,
   }) {
     final today = _dateOnly(now ?? DateTime.now());
-    var next =
-        _dateOnly(lastPeriodStart).add(Duration(days: effectiveCycleLength));
+    var next = _addDays(_dateOnly(lastPeriodStart), effectiveCycleLength);
     while (next.isBefore(today)) {
-      next = next.add(Duration(days: effectiveCycleLength));
+      next = _addDays(next, effectiveCycleLength);
     }
     return next;
   }
@@ -215,6 +250,16 @@ class SmartCyclePredictor {
     required DateTime lastPeriodStart,
     required List<int> completedLengths,
     required int configuredFallback,
+
+    /// Parallel to [completedLengths]: true where the user told us a one-off
+    /// cause (illness, travel, stress…) explains that cycle's length.
+    ///
+    /// Explained cycles are dropped from the *date estimate*, because a cycle
+    /// the user can account for is not her baseline. They are deliberately
+    /// still counted for [detectPatternFlags] — otherwise someone could hide a
+    /// genuine clinical pattern from herself by attributing every long cycle
+    /// to stress.
+    List<bool> explainedCycles = const [],
     DateTime? now,
   }) {
     final today = _dateOnly(now ?? DateTime.now());
@@ -223,7 +268,10 @@ class SmartCyclePredictor {
           (d) => d >= minTrackableCycleDays && d <= maxTrackableCycleDays,
         )
         .length;
-    final prepared = prepareCycleLengths(completedLengths);
+
+    final baseline = _baselineLengths(completedLengths, explainedCycles);
+    final explainedCount = completedLengths.length - baseline.length;
+    final prepared = prepareCycleLengths(baseline);
     final effectiveLength = effectiveCycleLength(
       completedLengths: prepared,
       configuredFallback: configuredFallback,
@@ -238,11 +286,9 @@ class SmartCyclePredictor {
       accuracy.hasPersonalEvidence ? accuracy.p80AbsoluteError : 0,
     ).clamp(2, 14);
 
-    final center = _dateOnly(lastPeriodStart).add(
-      Duration(days: effectiveLength),
-    );
-    final windowStart = center.subtract(Duration(days: calibratedWindow));
-    final windowEnd = center.add(Duration(days: calibratedWindow));
+    final center = _addDays(_dateOnly(lastPeriodStart), effectiveLength);
+    final windowStart = _addDays(center, -calibratedWindow);
+    final windowEnd = _addDays(center, calibratedWindow);
     final isWithinWindow =
         !today.isBefore(windowStart) && !today.isAfter(windowEnd);
     final isLate = today.isAfter(windowEnd);
@@ -273,7 +319,31 @@ class SmartCyclePredictor {
       confidenceScore: score,
       confidence: _confidenceLevel(score, prepared.length),
       accuracy: accuracy,
+      // Deliberately the FULL history: a user-supplied reason explains a
+      // cycle, it does not make the pattern go away.
+      patternFlags: detectPatternFlags(completedLengths),
+      explainedCycleCount: explainedCount,
     );
+  }
+
+  /// Cycles the prediction should learn from: everything the user has not
+  /// attributed to a one-off cause.
+  ///
+  /// Falls back to the full history when setting explained cycles aside would
+  /// leave too little to predict from — a sparse baseline is worse than a
+  /// slightly noisy one.
+  static List<int> _baselineLengths(
+    List<int> completedLengths,
+    List<bool> explainedCycles,
+  ) {
+    if (explainedCycles.isEmpty) return completedLengths;
+
+    final kept = <int>[];
+    for (var i = 0; i < completedLengths.length; i++) {
+      final explained = i < explainedCycles.length && explainedCycles[i];
+      if (!explained) kept.add(completedLengths[i]);
+    }
+    return kept.length >= 2 ? kept : completedLengths;
   }
 
   /// Walk-forward evaluation: each cycle is predicted using only cycles that
@@ -335,11 +405,59 @@ class SmartCyclePredictor {
 
     var cycleStart = last;
     while (true) {
-      final cycleEnd = cycleStart.add(Duration(days: effectiveCycleLength));
-      final ovulation = cycleEnd.subtract(Duration(days: luteal));
+      final cycleEnd = _addDays(cycleStart, effectiveCycleLength);
+      final ovulation = _addDays(cycleEnd, -luteal);
       if (!ovulation.isBefore(today)) return ovulation;
       cycleStart = cycleEnd;
     }
+  }
+
+  /// Cycle lengths beyond this are oligomenorrhea territory (FIGO puts the
+  /// normal band at 24–38 days; 35 is the widely used screening cut-off).
+  static const int prolongedCycleDays = 35;
+
+  /// A gap this long counts as an absent cycle worth raising.
+  static const int absentCycleDays = 90;
+
+  /// Two or more affected cycles before a pattern is called — one long cycle
+  /// after travel, illness or stress is normal and not worth alarming over.
+  static const int patternMinOccurrences = 2;
+
+  /// Detects clinically meaningful patterns in raw cycle history.
+  ///
+  /// Runs on the *unfiltered* lengths on purpose: [prepareCycleLengths] exists
+  /// to keep the date estimate stable, not to decide what the user gets told.
+  static Set<CyclePatternFlag> detectPatternFlags(List<int> completedLengths) {
+    final flags = <CyclePatternFlag>{};
+    if (completedLengths.isEmpty) return flags;
+
+    final recent = completedLengths.length > 12
+        ? completedLengths.sublist(completedLengths.length - 12)
+        : completedLengths;
+
+    if (recent.any((d) => d >= absentCycleDays)) {
+      flags.add(CyclePatternFlag.absentCycles);
+    }
+    if (recent.where((d) => d > prolongedCycleDays).length >=
+        patternMinOccurrences) {
+      flags.add(CyclePatternFlag.prolongedCycles);
+    }
+    if (recent.where((d) => d < minValidCycleDays).length >=
+        patternMinOccurrences) {
+      flags.add(CyclePatternFlag.shortCycles);
+    }
+
+    // Variability is only meaningful once there is something to compare, and
+    // is measured on trackable cycles so a single corrupt log can't trigger it.
+    final trackable = recent
+        .where((d) => d >= minTrackableCycleDays && d <= maxTrackableCycleDays)
+        .toList();
+    if (trackable.length >= 3) {
+      final spread = trackable.reduce(max) - trackable.reduce(min);
+      if (spread >= 9) flags.add(CyclePatternFlag.highVariability);
+    }
+
+    return flags;
   }
 
   /// ±window for irregular cycles (days). Regular users get a tight band.
@@ -357,6 +475,13 @@ class SmartCyclePredictor {
   }
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// Calendar-day arithmetic. `add(Duration(days: n))` adds exact hours, so
+  /// crossing a daylight-saving boundary lands "+28 days" at 23:00 the day
+  /// before and moves every predicted date by one. The DateTime constructor
+  /// normalizes overflowing day numbers at local midnight instead.
+  static DateTime _addDays(DateTime d, int days) =>
+      DateTime(d.year, d.month, d.day + days);
 
   static int _blend(int learned, int configured) {
     final blended = (learned * 0.7 + configured * 0.3).round();

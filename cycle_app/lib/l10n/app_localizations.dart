@@ -5192,6 +5192,252 @@ abstract class AppLocalizations {
   /// **'Wellness tip'**
   String get aiInsightWellnessTitle;
 
+  /// No description provided for @cycleCauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Was this cycle different?'**
+  String get cycleCauseTitle;
+
+  /// No description provided for @cycleCauseIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'If something threw this cycle off, tell me. I\'ll leave it out of your averages instead of learning the wrong pattern from it.'**
+  String get cycleCauseIntro;
+
+  /// No description provided for @cycleCauseIllness.
+  ///
+  /// In en, this message translates to:
+  /// **'Illness'**
+  String get cycleCauseIllness;
+
+  /// No description provided for @cycleCauseTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel'**
+  String get cycleCauseTravel;
+
+  /// No description provided for @cycleCauseStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress'**
+  String get cycleCauseStress;
+
+  /// No description provided for @cycleCauseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight change'**
+  String get cycleCauseWeight;
+
+  /// No description provided for @cycleCauseMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'New medication'**
+  String get cycleCauseMedication;
+
+  /// No description provided for @cycleCauseSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor sleep'**
+  String get cycleCauseSleep;
+
+  /// No description provided for @cycleCauseExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Intense exercise'**
+  String get cycleCauseExercise;
+
+  /// No description provided for @cycleCauseNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing unusual'**
+  String get cycleCauseNothing;
+
+  /// No description provided for @cycleCauseSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved — this cycle is set aside from your averages.'**
+  String get cycleCauseSaved;
+
+  /// No description provided for @cycleCauseCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved — this cycle counts toward your averages.'**
+  String get cycleCauseCleared;
+
+  /// No description provided for @cycleCauseLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cycles set aside from your averages'**
+  String cycleCauseLearned(int count);
+
+  /// No description provided for @cycleCauseStillCounted.
+  ///
+  /// In en, this message translates to:
+  /// **'Set-aside cycles are still reviewed for health patterns.'**
+  String get cycleCauseStillCounted;
+
+  /// No description provided for @cycleSignalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth mentioning to a doctor'**
+  String get cycleSignalsTitle;
+
+  /// No description provided for @cycleSignalsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These come from your own logged cycles. They are observations, not a diagnosis — stress, travel, illness and weight changes all cause them too.'**
+  String get cycleSignalsIntro;
+
+  /// No description provided for @cycleSignalsProlonged.
+  ///
+  /// In en, this message translates to:
+  /// **'Several recent cycles ran longer than 35 days.'**
+  String get cycleSignalsProlonged;
+
+  /// No description provided for @cycleSignalsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Several recent cycles were shorter than 21 days.'**
+  String get cycleSignalsShort;
+
+  /// No description provided for @cycleSignalsVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cycle length swung by 9 days or more between cycles.'**
+  String get cycleSignalsVariable;
+
+  /// No description provided for @cycleSignalsAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'There was a gap of 90 days or more with no period logged.'**
+  String get cycleSignalsAbsent;
+
+  /// No description provided for @cycleSignalsFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring this up at your next visit. Your doctor report already includes it.'**
+  String get cycleSignalsFooter;
+
+  /// No description provided for @cycleSignalsOpenReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Open doctor report'**
+  String get cycleSignalsOpenReport;
+
+  /// No description provided for @ovulationConfirmedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by your temperature — up {rise}°C'**
+  String ovulationConfirmedHint(String rise);
+
+  /// No description provided for @ovulationConfirmedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get ovulationConfirmedBadge;
+
+  /// No description provided for @bbtCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your ovulation'**
+  String get bbtCardTitle;
+
+  /// No description provided for @bbtCardWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Your temperature rises 0.2–0.5°C after ovulation and stays up. It is the only at-home sign that ovulation actually happened — everything else is an estimate from your dates.'**
+  String get bbtCardWhy;
+
+  /// No description provided for @bbtCardHow.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it each morning before getting out of bed, at roughly the same time.'**
+  String get bbtCardHow;
+
+  /// No description provided for @bbtCardProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} readings this cycle'**
+  String bbtCardProgress(int done, int total);
+
+  /// No description provided for @bbtCardReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Enough readings — watching for the rise that confirms ovulation.'**
+  String get bbtCardReady;
+
+  /// No description provided for @bbtCardConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ovulation confirmed on {date}, temperature up {rise}°C.'**
+  String bbtCardConfirmed(String date, String rise);
+
+  /// No description provided for @bbtCardConfirmedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next period is now predicted from this, not from your average cycle length.'**
+  String get bbtCardConfirmedNote;
+
+  /// No description provided for @bbtCardCalibrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your luteal phase is measured from {count} real signals instead of assumed.'**
+  String bbtCardCalibrated(int count);
+
+  /// No description provided for @bbtCardReminderOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me each morning'**
+  String get bbtCardReminderOn;
+
+  /// No description provided for @bbtCardReminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder at {time}'**
+  String bbtCardReminderTime(String time);
+
+  /// No description provided for @bbtCardLogNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Log today\'s temperature'**
+  String get bbtCardLogNow;
+
+  /// No description provided for @bbtReminderEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning temperature reminder'**
+  String get bbtReminderEnabled;
+
+  /// No description provided for @bbtReminderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fires at your wake time — basal temperature only counts before you get up.'**
+  String get bbtReminderSubtitle;
+
+  /// No description provided for @aiInsightPcosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your PCOS pattern'**
+  String get aiInsightPcosTitle;
+
+  /// No description provided for @aiInsightMenopauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your menopause pattern'**
+  String get aiInsightMenopauseTitle;
+
+  /// No description provided for @aiInsightPostpartumTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery'**
+  String get aiInsightPostpartumTitle;
+
+  /// No description provided for @aiInsightLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s reflection'**
+  String get aiInsightLogTitle;
+
   /// No description provided for @goalModeConceiveTitle.
   ///
   /// In en, this message translates to:
