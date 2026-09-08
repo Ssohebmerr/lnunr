@@ -8,15 +8,17 @@ import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/feminine_icon.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../chat/presentation/ai_chat_page.dart';
-import '../../community/presentation/community_tab.dart';
 import '../../education/presentation/education_hub_page.dart';
 import '../../partner/presentation/partner_page.dart';
-import '../../self_care/presentation/self_care_tab.dart';
 import '../cycle_calendar_page.dart';
-import '../insights_tab.dart';
+import '../insights_hub.dart';
 import '../sub_feature_page.dart';
 
-/// Compact shortcuts — same destinations as account menu, less home clutter.
+/// Compact shortcuts to destinations that have no other home on this screen.
+///
+/// Self-care and Community are deliberately absent: both are bottom-bar tabs
+/// already, and a shortcut that lands on a tab the user can reach in one tap
+/// is just a second door to the same room.
 class HomeExploreRail extends StatelessWidget {
   const HomeExploreRail({
     super.key,
@@ -49,19 +51,6 @@ class HomeExploreRail extends StatelessWidget {
           },
         ),
       _ExploreItem(
-        icon: FeminineIcon.selfCare,
-        label: l10n.navSelfCare,
-        color: const Color(0xFFE8917A),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => SubFeaturePage(
-              title: l10n.navSelfCare,
-              child: const SelfCareTab(),
-            ),
-          ),
-        ),
-      ),
-      _ExploreItem(
         icon: FeminineIcon.calendar,
         label: l10n.accountMenuCalendar,
         color: theme.colorScheme.secondary,
@@ -81,26 +70,12 @@ class HomeExploreRail extends StatelessWidget {
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => SubFeaturePage(
-              title: l10n.navInsights,
-              child: const InsightsTab(),
+              title: l10n.insightsHubTitle,
+              child: const InsightsHub(),
             ),
           ),
         ),
       ),
-      if (settings.communityEnabled)
-        _ExploreItem(
-          icon: FeminineIcon.community,
-          label: l10n.accountMenuCommunity,
-          color: const Color(0xFF7E57C2),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => SubFeaturePage(
-                title: l10n.navCommunity,
-                child: const CommunityTab(),
-              ),
-            ),
-          ),
-        ),
       if (settings.aiEducationEnabled)
         _ExploreItem(
           icon: FeminineIcon.education,

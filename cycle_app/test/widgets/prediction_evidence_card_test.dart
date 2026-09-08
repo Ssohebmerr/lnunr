@@ -76,4 +76,64 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a temperature-confirmed ovulation reads as observed, not guessed', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const data = CycleDashboardData(
+      phase: 'Luteal',
+      nextPeriod: '2026-07-18',
+      nextPeriodRange: 'Jul 16, 2026 – Jul 20, 2026',
+      ovulation: '2026-07-04',
+      // A confirmed shift collapses the window, so there is no range.
+      ovulationRange: '',
+      predictionWindowDays: 2,
+      ovulationCalibrated: true,
+      ovulationConfirmedByTemperature: true,
+      temperatureShiftCelsius: 0.31,
+      cycleDay: 24,
+      periodDay: 0,
+      cycleRegularity: 94,
+      cycleRegularityStatus: 'Regular',
+      periodRegularity: 90,
+      periodRegularityStatus: 'Regular',
+      avgCycleLength: 28,
+      avgPeriodDuration: 5,
+      totalCycles: 7,
+      pregnancyChances: 'Estimated low',
+      expectedDueDate: '',
+      pregnancyWeek: 0,
+      trimester: 0,
+      isPeriodStarted: false,
+      isOvulationDay: false,
+      expectedPregnancyTestDate: '',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: Locale('en'),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(12),
+            child: HomeKeyDatesCard(data: data),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Confirmed by your temperature — up 0.31°C'),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

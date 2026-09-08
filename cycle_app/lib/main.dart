@@ -61,6 +61,7 @@ import 'features/chat/data/chat_repository.dart';
 import 'features/community/data/community_repository.dart';
 import 'features/community/data/community_story_repository.dart';
 import 'features/cycle/data/cycle_bridge_service.dart';
+import 'features/cycle/data/daily_log_bridge_service.dart';
 import 'features/cycle/data/cycle_sync_service.dart';
 import 'features/admin/presentation/admin_screen.dart';
 import 'features/home/home_shell.dart';
@@ -226,6 +227,15 @@ void main() async {
   MenstrudelInit.symptomService ??= SymptomService(prefs);
   MenstrudelInit.logsRepository ??= LogsRepository();
   MenstrudelInit.watchService ??= WatchSyncService();
+
+  // One-time fold of the old Wellness Hub daily-log symptoms into the main
+  // store, now that the + button is the only daily log. Runs off the critical
+  // path — a failure just leaves the flag unset so the next launch retries.
+  unawaited(
+    DailyLogBridgeService.migrateOnce(prefs).catchError((Object e) {
+      debugPrint('[Main] daily-log symptom merge skipped: $e');
+    }),
+  );
 
   runApp(
     MenstrudelProviders(

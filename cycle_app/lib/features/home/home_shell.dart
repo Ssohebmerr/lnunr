@@ -30,7 +30,7 @@ import 'home_tab.dart';
 import '../chat/presentation/ai_chat_page.dart';
 import '../premium/presentation/subscription_plans_screen.dart';
 import 'log_tab.dart';
-import 'reports_tab.dart';
+import 'insights_hub.dart';
 import 'sub_feature_page.dart';
 
 class HomeShell extends StatefulWidget {
@@ -209,8 +209,10 @@ class _HomeShellState extends State<HomeShell> {
     final l10n = AppLocalizations.of(context)!;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            SubFeaturePage(title: l10n.navReports, child: const ReportsTab()),
+        builder: (_) => SubFeaturePage(
+          title: l10n.insightsHubTitle,
+          child: const InsightsHub(),
+        ),
       ),
     );
   }
@@ -407,7 +409,7 @@ class _HomeShellState extends State<HomeShell> {
                               ),
                             if (_index == 0)
                               _HeaderIconButton(
-                                tooltip: l10n.navReports,
+                                tooltip: l10n.insightsHubTitle,
                                 onPressed: _openReports,
                                 icon: FeminineIconView(
                                   FeminineIcon.reports,
@@ -421,16 +423,6 @@ class _HomeShellState extends State<HomeShell> {
                                 onPressed: () => context.push('/stealth'),
                                 icon: Icon(
                                   Icons.visibility_off_rounded,
-                                  color: theme.colorScheme.primary,
-                                  size: 20,
-                                ),
-                              ),
-                            if (_index == 0)
-                              _HeaderIconButton(
-                                tooltip: l10n.retry,
-                                onPressed: HomeRefreshScope.refresh,
-                                icon: Icon(
-                                  Icons.refresh_rounded,
                                   color: theme.colorScheme.primary,
                                   size: 20,
                                 ),

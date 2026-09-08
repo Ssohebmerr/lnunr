@@ -5,6 +5,7 @@ import '../../core/ai/widgets/ai_insight_card.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../cycle/data/cycle_bridge_service.dart';
+import '../cycle/presentation/widgets/bbt_tracking_card.dart';
 import 'analytics_data.dart';
 import 'analytics_widgets.dart';
 
@@ -26,6 +27,16 @@ AiInsightType analyticsInsightType(UserGoalTypes goal) {
       return AiInsightType.cycleHealth;
   }
 }
+
+/// Whether temperature-based ovulation confirmation is worth asking this user
+/// for. It is meaningless while pregnant, and postpartum or menopausal cycles
+/// are not ovulating predictably enough for a daily 7am ask to be fair.
+bool _bbtIsRelevant(UserGoalTypes goal) => switch (goal) {
+  UserGoalTypes.pregnant ||
+  UserGoalTypes.postpartum ||
+  UserGoalTypes.menopause => false,
+  _ => true,
+};
 
 /// Builds a bar chart of the user's real completed cycle lengths (oldest →
 /// newest). Returns null when there isn't enough history to be meaningful, so
@@ -528,9 +539,16 @@ class AnalyticsSectionShell extends StatelessWidget {
           c,
           const SizedBox(height: 12),
         ],
-        // Annual body-temperature indicator — real monthly curve when the user
-        // has logged temperatures, otherwise a gentle prompt to start.
-        if (history != null && history!.hasTemperature) ...[
+        // Body temperature. The cycle-relative curve is the one that shows the
+        // ovulatory shift, so prefer it; the monthly average is only a
+        // fallback for scattered readings that can't fill one cycle.
+        if (history != null && history!.hasCycleTemperature) ...[
+          AnalyticsCycleTemperatureChart(
+            series: history!.cycleTemperature!,
+            accent: accent,
+          ),
+          const SizedBox(height: 12),
+        ] else if (history != null && history!.hasTemperature) ...[
           AnalyticsTemperatureChart(
             points: history!.monthlyTemps,
             accent: accent,
@@ -538,6 +556,13 @@ class AnalyticsSectionShell extends StatelessWidget {
           const SizedBox(height: 12),
         ] else ...[
           AnalyticsTemperatureHint(accent: accent),
+          const SizedBox(height: 12),
+        ],
+
+        // Owns the "why bother" explanation, the progress toward a real
+        // confirmation, and the morning reminder that makes it happen.
+        if (_bbtIsRelevant(goal)) ...[
+          const BbtTrackingCard(margin: EdgeInsets.zero),
           const SizedBox(height: 12),
         ],
         AppSectionHeader(title: ar ? 'كل المؤشرات' : 'All metrics'),

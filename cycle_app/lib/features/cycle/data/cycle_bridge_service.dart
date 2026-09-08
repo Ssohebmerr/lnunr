@@ -4,7 +4,9 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:menstrual_cycle_widget/ui/model/symptoms_patterns.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/cycle/ovulation_log_service.dart';
+import '../../../core/cycle/bbt_ovulation_service.dart';
+import '../../../core/cycle/cycle_annotation_service.dart';
+import '../../../core/cycle/luteal_calibration.dart';
 import '../../../core/cycle/prediction_display.dart';
 import '../../../core/security/cycle_encryption_keys.dart';
 import '../../analytics/wellness_scores.dart';
@@ -130,17 +132,32 @@ class CycleBridgeService {
     final window =
         prediction?.windowDays ??
         SmartCyclePredictor.predictionWindowDays(completed);
-    final measured = await OvulationLogService().measuredLutealLengths();
+    final calibration = LutealCalibration();
+    final measured = await calibration.measuredLutealLengths();
     final ovulationCalibrated = measured.length >= 2;
 
+    // Temperature is the only at-home evidence that ovulation actually
+    // happened. When this cycle already shows a confirmed thermal shift it
+    // replaces the statistical estimate outright.
+    final confirmedShift = await _safeField<BbtCycleShift?>(
+      () => LutealCalibration.sharedBbtService.currentCycleShift(),
+      null,
+    );
+
     final nextPeriod = await _safeField(_api.getNextPredictedPeriodDate, '');
-    final ovulation = await _safeField(
+    final estimatedOvulation = await _safeField(
       _api.getCurrentCycleOvulationEstimateDate,
       '',
     );
 
     final nextDt = PredictionDisplay.tryParseDashboardDate(nextPeriod);
-    final ovDt = PredictionDisplay.tryParseDashboardDate(ovulation);
+    final confirmedOvulationDate = confirmedShift?.shift.ovulationDate;
+    final ovDt =
+        confirmedOvulationDate ??
+        PredictionDisplay.tryParseDashboardDate(estimatedOvulation);
+    final ovulation = confirmedOvulationDate != null
+        ? PredictionDisplay.formatDashboardDate(confirmedOvulationDate)
+        : estimatedOvulation;
     final nextPeriodRange = nextDt != null && window > 0
         ? PredictionDisplay.formatPredictionRange(
             center: nextDt,
@@ -148,7 +165,12 @@ class CycleBridgeService {
             languageCode: lang,
           )
         : '';
-    final ovulationWindow = ovulationCalibrated || window >= 3 ? window : 3;
+    // A confirmed thermal shift is an observation, not a forecast — collapse
+    // the ±window to a single day instead of implying uncertainty we no longer
+    // have. Otherwise the ovulation band tracks the cycle-length uncertainty.
+    final ovulationWindow = confirmedOvulationDate != null
+        ? 0
+        : (ovulationCalibrated || window >= 3 ? window : 3);
     final ovulationRange = ovDt != null && ovulationWindow > 0
         ? PredictionDisplay.formatPredictionRange(
             center: ovDt,
@@ -165,6 +187,9 @@ class CycleBridgeService {
       ovulationRange: ovulationRange,
       predictionWindowDays: window,
       ovulationCalibrated: ovulationCalibrated,
+      ovulationConfirmedByTemperature: confirmedOvulationDate != null,
+      temperatureShiftCelsius: confirmedShift?.shift.riseCelsius,
+      measuredLutealSignals: measured.length,
       predictionConfidence:
           prediction?.confidence ?? CyclePredictionConfidence.learning,
       predictionConfidenceScore: prediction?.confidenceScore ?? 0,
@@ -175,6 +200,7 @@ class CycleBridgeService {
       isPeriodLate: prediction?.isLate ?? false,
       daysLate: prediction?.daysLate ?? 0,
       possibleMissingLog: prediction?.possibleMissingLog ?? false,
+      patternFlags: prediction?.patternFlags ?? const {},
       cycleDay: await _safeField(_api.getCurrentCycleDay, 0),
       periodDay: await _safeField(_api.getCurrentPeriodDay, 0),
       cycleRegularity: await _safeField(_api.getCycleRegularityScore, 0.0),
@@ -212,11 +238,20 @@ class CycleBridgeService {
     }
   }
 
-  /// Wires ovulation-log → luteal calibration into the widget engine.
+  /// Wires every measured ovulation signal — manual ovulation/LH logs *and*
+  /// basal body temperature shifts — into the widget engine's luteal
+  /// calibration.
   static void wireOvulationCalibration() {
     MenstrualCycleWidget.measuredLutealProvider =
-        OvulationLogService().measuredLutealLengths;
+        LutealCalibration().measuredLutealLengths;
+    MenstrualCycleWidget.explainedCyclesProvider =
+        CycleAnnotationService().explainedFlagsFor;
   }
+
+  /// Drops the cached temperature scan so the next dashboard refresh sees
+  /// newly logged temperatures. Call after any daily-log write.
+  static void invalidateBbtCache() =>
+      LutealCalibration.sharedBbtService.invalidate();
 
   Future<Map<String, dynamic>> loadFullSummary() =>
       _api.getMenstrualCycleSummary();
@@ -353,6 +388,13 @@ class CycleBridgeService {
       _loadMonthlyTemperatures,
       <MonthlyTemperature>[],
     );
+    // The cycle-relative curve is the one that actually shows the thermal
+    // shift; the monthly average is kept only as a fallback for users with
+    // scattered readings.
+    final cycleTemps = await _safeField<CycleTemperatureSeries?>(
+      LutealCalibration.sharedBbtService.latestCycleSeries,
+      null,
+    );
     final wellness = await _safeField(
       _loadWellnessScores,
       const RealWellnessScores(),
@@ -362,6 +404,7 @@ class CycleBridgeService {
       cycleLengths: _lastN(cycleLengths, 12),
       periodDurations: _lastN(periodDurations, 12),
       monthlyTemps: monthlyTemps,
+      cycleTemperature: cycleTemps,
       wellness: wellness,
     );
   }
@@ -475,6 +518,10 @@ class CycleDashboardData {
     this.isPeriodLate = false,
     this.daysLate = 0,
     this.possibleMissingLog = false,
+    this.ovulationConfirmedByTemperature = false,
+    this.temperatureShiftCelsius,
+    this.measuredLutealSignals = 0,
+    this.patternFlags = const {},
   });
 
   final String phase;
@@ -509,6 +556,21 @@ class CycleDashboardData {
   final bool isPeriodLate;
   final int daysLate;
   final bool possibleMissingLog;
+
+  /// True when a basal body temperature shift confirmed ovulation in the
+  /// cycle currently running — an observation, not an estimate.
+  final bool ovulationConfirmedByTemperature;
+
+  /// How far the confirming temperature rose above the coverline (°C).
+  final double? temperatureShiftCelsius;
+
+  /// Number of measured ovulation signals (manual logs + thermal shifts)
+  /// backing the personalized luteal phase.
+  final int measuredLutealSignals;
+
+  /// Clinically meaningful cycle patterns worth surfacing (prolonged, short,
+  /// highly variable or absent cycles). Never a diagnosis.
+  final Set<CyclePatternFlag> patternFlags;
 
   String get periodDisplay =>
       nextPeriodRange.isNotEmpty ? nextPeriodRange : nextPeriod;
@@ -586,6 +648,7 @@ class AnalyticsHistory {
     required this.cycleLengths,
     required this.periodDurations,
     required this.monthlyTemps,
+    this.cycleTemperature,
     this.wellness,
   });
 
@@ -599,6 +662,10 @@ class AnalyticsHistory {
   /// Up to 12 most recent monthly body-temperature averages, oldest → newest.
   final List<MonthlyTemperature> monthlyTemps;
 
+  /// Temperature curve for the most recent cycle with enough readings, with
+  /// the coverline and detected ovulation day when a shift was found.
+  final CycleTemperatureSeries? cycleTemperature;
+
   /// Real mood/energy/sleep scores from the last 60 days of daily logs;
   /// null (or empty) when the user hasn't logged those dimensions.
   final RealWellnessScores? wellness;
@@ -606,6 +673,9 @@ class AnalyticsHistory {
   bool get hasCycleHistory => cycleLengths.length >= 2;
   bool get hasPeriodHistory => periodDurations.length >= 2;
   bool get hasTemperature => monthlyTemps.isNotEmpty;
+
+  bool get hasCycleTemperature =>
+      (cycleTemperature?.points.length ?? 0) >= 6;
 
   static const AnalyticsHistory empty = AnalyticsHistory(
     cycleLengths: [],

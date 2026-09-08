@@ -3,7 +3,10 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:menstrual_cycle_widget/ui/menstrual_log_period_view.dart';
 import 'package:menstrual_cycle_widget/ui/model/display_symptoms_data.dart';
 
+import '../../../core/ai/models/ai_insight.dart';
+import '../../../core/ai/widgets/ai_insight_card.dart';
 import '../../../core/app_home_refresh.dart';
+import '../../../core/cycle/luteal_calibration.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -30,6 +33,10 @@ class LogTab extends StatefulWidget {
 
 class _LogTabState extends State<LogTab> {
   Key _refreshKey = UniqueKey();
+
+  /// Whether the user has saved a log while this tab has been open. The AI
+  /// reflection needs something to reflect on before it is worth showing.
+  bool _savedThisSession = false;
   static const _navBarClearance = 88.0;
 
   @override
@@ -82,6 +89,18 @@ class _LogTabState extends State<LogTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Shown only after a save: while the form is being filled in, the
+          // AI has nothing to reflect on and the card would just eat the
+          // vertical space the log entry needs.
+          if (_savedThisSession) ...[
+            const AiInsightCard(
+              type: AiInsightType.logReflection,
+              margin: EdgeInsets.zero,
+              blur: false,
+              compact: true,
+            ),
+            const SizedBox(height: 10),
+          ],
           Expanded(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -107,12 +126,16 @@ class _LogTabState extends State<LogTab> {
               }
             },
             onAutoSaved: () {
+              // Temperature is logged in this form, so ovulation detection has
+              // to see it on the next read rather than a stale cached scan.
+              LutealCalibration.sharedBbtService.invalidate();
               // Sync home / AI context WITHOUT a global refresh — a refresh
               // recreates this very log widget mid-edit and the entry being
               // typed appears to vanish (the "won't save" bug).
               sync.onCycleDataChanged(notifyHomeRefresh: false);
             },
             onSuccess: (_) async {
+              LutealCalibration.sharedBbtService.invalidate();
               await NotificationService.scheduleFromPrefs();
               // Silent sync so the form is not rebuilt out from under the user.
               await sync.onCycleDataChanged(notifyHomeRefresh: false);
@@ -127,6 +150,9 @@ class _LogTabState extends State<LogTab> {
                 HomeRefreshScope.refresh();
               } else {
                 DailyLogFeedback.showSaved(context, l10n);
+                if (mounted && !_savedThisSession) {
+                  setState(() => _savedThisSession = true);
+                }
               }
             },
             onError: (_) {

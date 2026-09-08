@@ -6,5 +6,6 @@ export 'menstrual_cycle_widget_base.dart';
 export 'utils/strings.dart';
 export 'utils/constant.dart';
 export 'utils/smart_cycle_predictor.dart';
+export 'utils/bbt_analyzer.dart';
 export 'utils/model/periods_date_range.dart';
 export 'ui/ui.dart';

@@ -945,13 +945,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancel => 'إلغاء';
 
   @override
-  String get navReports => 'التقارير';
-
-  @override
   String get navAnalysis => 'تحليل';
-
-  @override
-  String get accountMenuReports => 'الرسوم البيانية والتقارير';
 
   @override
   String get accountMenuAi => 'محادثة Lune';
@@ -1023,30 +1017,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeQuickCalendar => 'تقويم';
 
   @override
-  String get reportsMoreTitle => 'رسوم وتفاصيل إضافية';
-
-  @override
-  String get reportsMoreSubtitle => 'إحصائيات كاملة، سجل الدورة والأنماط';
-
-  @override
   String get reportsChecklistHint => 'قائمة مهام مخصّصة لك';
 
   @override
-  String get reportsHeaderTitle => 'تقاريرك';
+  String get insightsHubTitle => 'التحليلات والتقارير';
 
   @override
-  String get reportsHeaderSubtitle =>
-      'نظرة واضحة على دورتكِ، اتجاهاتكِ، وملخّص جاهز للطبيب.';
+  String get insightsHubSubtitle =>
+      'دورتكِ بلمحة، الرسوم وراءها، وسجلّ جاهز للطبيب.';
 
   @override
-  String get reportsQuickActions => 'إجراءات سريعة';
+  String get insightsHubTabOverview => 'نظرة عامة';
 
   @override
-  String get reportsAnalyticsCardTitle => 'التحليلات الكاملة';
+  String get insightsHubTabCharts => 'الرسوم';
 
   @override
-  String get reportsAnalyticsCardSubtitle =>
-      'كل المؤشرات والرسوم والنتائج حسب هدفكِ.';
+  String get insightsHubTabHistory => 'السجل';
+
+  @override
+  String get insightsHubChartsTitle => 'رسوم تفصيلية';
+
+  @override
+  String get insightsHubChartsSubtitle => 'اتجاهات مستخلصة من كل ما تسجّلينه.';
+
+  @override
+  String get insightsHubSymptomPatternsCta =>
+      'اعرفي متى تظهر أعراضكِ عادةً خلال الدورة';
 
   @override
   String get reportsPregnancyOverview => 'نظرة على الحمل';
@@ -2768,6 +2765,152 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aiInsightWellnessTitle => 'نصيحة صحية';
+
+  @override
+  String get cycleCauseTitle => 'هل كانت هذه الدورة مختلفة؟';
+
+  @override
+  String get cycleCauseIntro =>
+      'إن كان شيء قد أربك هذه الدورة، أخبريني. سأستثنيها من متوسطاتك بدل أن أتعلّم منها نمطاً خاطئاً.';
+
+  @override
+  String get cycleCauseIllness => 'مرض';
+
+  @override
+  String get cycleCauseTravel => 'سفر';
+
+  @override
+  String get cycleCauseStress => 'ضغط نفسي';
+
+  @override
+  String get cycleCauseWeight => 'تغيّر الوزن';
+
+  @override
+  String get cycleCauseMedication => 'دواء جديد';
+
+  @override
+  String get cycleCauseSleep => 'نوم سيّئ';
+
+  @override
+  String get cycleCauseExercise => 'رياضة مكثّفة';
+
+  @override
+  String get cycleCauseNothing => 'لا شيء غير معتاد';
+
+  @override
+  String get cycleCauseSaved => 'حُفظ — هذه الدورة مستثناة من متوسطاتك.';
+
+  @override
+  String get cycleCauseCleared => 'حُفظ — هذه الدورة محسوبة في متوسطاتك.';
+
+  @override
+  String cycleCauseLearned(int count) {
+    return '$count دورات مستثناة من متوسطاتك';
+  }
+
+  @override
+  String get cycleCauseStillCounted =>
+      'الدورات المستثناة تبقى مشمولة بفحص الأنماط الصحية.';
+
+  @override
+  String get cycleSignalsTitle => 'يستحق ذكره للطبيب';
+
+  @override
+  String get cycleSignalsIntro =>
+      'هذه ملاحظات من دوراتك المسجّلة، وليست تشخيصاً — التوتر والسفر والمرض وتغيّر الوزن تسبّبها أيضاً.';
+
+  @override
+  String get cycleSignalsProlonged => 'عدة دورات أخيرة تجاوزت ٣٥ يوماً.';
+
+  @override
+  String get cycleSignalsShort => 'عدة دورات أخيرة كانت أقصر من ٢١ يوماً.';
+
+  @override
+  String get cycleSignalsVariable =>
+      'طول دورتك تأرجح ٩ أيام أو أكثر بين دورة وأخرى.';
+
+  @override
+  String get cycleSignalsAbsent =>
+      'مرّت فترة ٩٠ يوماً أو أكثر بلا دورة مسجّلة.';
+
+  @override
+  String get cycleSignalsFooter =>
+      'اذكريها في زيارتك القادمة. تقرير الطبيب يتضمّنها بالفعل.';
+
+  @override
+  String get cycleSignalsOpenReport => 'افتحي تقرير الطبيب';
+
+  @override
+  String ovulationConfirmedHint(String rise) {
+    return 'مؤكَّد بحرارتك — ارتفاع $rise درجة';
+  }
+
+  @override
+  String get ovulationConfirmedBadge => 'مؤكَّد';
+
+  @override
+  String get bbtCardTitle => 'أكّدي تبويضك';
+
+  @override
+  String get bbtCardWhy =>
+      'ترتفع حرارتك ٠٫٢–٠٫٥ درجة بعد التبويض وتبقى مرتفعة. هذه هي العلامة المنزلية الوحيدة على أن التبويض حدث فعلاً — وما عداها تقدير من تواريخك.';
+
+  @override
+  String get bbtCardHow =>
+      'قيسيها كل صباح قبل النهوض من السرير، في وقت متقارب تقريباً.';
+
+  @override
+  String bbtCardProgress(int done, int total) {
+    return '$done من $total قراءات في هذه الدورة';
+  }
+
+  @override
+  String get bbtCardReady =>
+      'القراءات كافية — نتابع الارتفاع الذي يؤكّد التبويض.';
+
+  @override
+  String bbtCardConfirmed(String date, String rise) {
+    return 'تأكّد التبويض في $date، بارتفاع $rise درجة.';
+  }
+
+  @override
+  String get bbtCardConfirmedNote =>
+      'دورتك القادمة تُحسب الآن من هذا، لا من متوسط طول دوراتك.';
+
+  @override
+  String bbtCardCalibrated(int count) {
+    return 'طورك الأصفري مقيس من $count إشارات حقيقية بدل افتراضه.';
+  }
+
+  @override
+  String get bbtCardReminderOn => 'ذكّريني كل صباح';
+
+  @override
+  String bbtCardReminderTime(String time) {
+    return 'التذكير الساعة $time';
+  }
+
+  @override
+  String get bbtCardLogNow => 'سجّلي حرارة اليوم';
+
+  @override
+  String get bbtReminderEnabled => 'تذكير الحرارة الصباحي';
+
+  @override
+  String get bbtReminderSubtitle =>
+      'يصل في وقت استيقاظك — الحرارة القاعدية لا تُحتسب إلا قبل النهوض.';
+
+  @override
+  String get aiInsightPcosTitle => 'نمطكِ مع تكيّس المبايض';
+
+  @override
+  String get aiInsightMenopauseTitle => 'نمطكِ في سنّ اليأس';
+
+  @override
+  String get aiInsightPostpartumTitle => 'تعافيكِ';
+
+  @override
+  String get aiInsightLogTitle => 'تأمّل اليوم';
 
   @override
   String get goalModeConceiveTitle => 'محاولة الحمل';

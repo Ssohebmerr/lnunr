@@ -16,6 +16,15 @@ class NotificationPrefs {
   /// current cycle phase / pregnancy trimester at schedule-time.
   static const smartPhaseKey = 'smart_phase_reminder_enabled';
 
+  /// Morning basal body temperature reminder. Unlike every other reminder this
+  /// one is time-critical: BBT is only valid taken before getting out of bed,
+  /// so it fires at the user's wake time rather than a convenient hour.
+  static const temperatureKey = 'temperature_reminder_enabled';
+
+  /// Wake-up hour/minute the temperature reminder fires at (default 07:00).
+  static const temperatureHourKey = 'temperature_reminder_hour';
+  static const temperatureMinuteKey = 'temperature_reminder_minute';
+
   static Future<bool> hasPromptedForPermission() async {
     final p = await SharedPreferences.getInstance();
     return p.getBool(permissionPromptedKey) ?? false;
@@ -63,6 +72,30 @@ class NotificationPrefs {
     if (!await masterEnabled()) return false;
     final p = await SharedPreferences.getInstance();
     return p.getBool(smartPhaseKey) ?? true;
+  }
+
+  /// Morning temperature reminder. OFF by default — it only helps users who
+  /// have opted into temperature tracking, and a daily 7am alert nobody asked
+  /// for is the fastest way to get all notifications muted.
+  static Future<bool> temperatureEnabled() async {
+    if (!await masterEnabled()) return false;
+    final p = await SharedPreferences.getInstance();
+    return p.getBool(temperatureKey) ?? false;
+  }
+
+  /// (hour, minute) the temperature reminder fires at.
+  static Future<(int, int)> temperatureTime() async {
+    final p = await SharedPreferences.getInstance();
+    return (
+      p.getInt(temperatureHourKey) ?? 7,
+      p.getInt(temperatureMinuteKey) ?? 0,
+    );
+  }
+
+  static Future<void> setTemperatureTime(int hour, int minute) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setInt(temperatureHourKey, hour.clamp(0, 23));
+    await p.setInt(temperatureMinuteKey, minute.clamp(0, 59));
   }
 
   /// Pills, sanitary, LARC — follow master toggle only.

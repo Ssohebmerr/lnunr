@@ -5,6 +5,7 @@ import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../cycle/bbt_tracking_status.dart';
 import '../../features/notifications/data/smart_phase_notifier.dart';
 import '../config/feature_flags.dart';
 import '../../menstrudel/services/notification_service.dart' as md;
@@ -20,6 +21,7 @@ class NotificationService {
   static const _periodTodayId = 1004;
   static const _lateId = 1006;
   static const _fertileId = 1007;
+  static const _temperatureId = 1008;
   static const _testId = 1999;
 
   static Future<bool> _isArabic() async {
@@ -216,6 +218,12 @@ class NotificationService {
         await _scheduleLatePeriodWarning();
       } else {
         await _plugin.cancel(_lateId);
+      }
+
+      if (await NotificationPrefs.temperatureEnabled()) {
+        await _scheduleTemperatureReminder();
+      } else {
+        await _plugin.cancel(_temperatureId);
       }
 
       if (await NotificationPrefs.smartPhaseEnabled() &&
@@ -479,6 +487,52 @@ class NotificationService {
     );
   }
 
+  /// Morning basal body temperature reminder.
+  ///
+  /// BBT is only valid taken on waking, before getting out of bed, so this
+  /// fires at the user's own wake time and repeats daily. The body reports
+  /// real progress: a thermal shift needs a run of readings before it can be
+  /// detected, and telling the user how close she is beats nagging.
+  static Future<void> _scheduleTemperatureReminder() async {
+    final (hour, minute) = await NotificationPrefs.temperatureTime();
+
+    final now = DateTime.now();
+    var scheduled = DateTime(now.year, now.month, now.day, hour, minute);
+    if (scheduled.isBefore(now)) {
+      scheduled = DateTime(now.year, now.month, now.day + 1, hour, minute);
+    }
+
+    final ar = await _isArabic();
+    final status = await BbtTrackingStatus.load();
+
+    final String body;
+    if (status.ovulationConfirmed) {
+      body = ar
+          ? 'قياس الصباح: حرارتك أكّدت التبويض هذه الدورة. الاستمرار يجعل التنبؤ أدق كل شهر.'
+          : 'Morning reading: your temperature confirmed ovulation this cycle. Keeping it up sharpens every future prediction.';
+    } else if (status.isReady) {
+      body = ar
+          ? 'قياس الصباح قبل النهوض — نتابع ارتفاع الحرارة الذي يؤكّد التبويض.'
+          : 'Morning reading before you get up — we are watching for the rise that confirms ovulation.';
+    } else {
+      final left = status.readingsUntilReady;
+      body = ar
+          ? 'قياس الصباح قبل النهوض. بعد $left قراءة أخرى نستطيع تأكيد تبويضك من الحرارة.'
+          : 'Morning reading before you get up. $left more and we can confirm your ovulation from temperature.';
+    }
+
+    await _plugin.zonedSchedule(
+      _temperatureId,
+      'Lune',
+      body,
+      tz.TZDateTime.from(scheduled, tz.local),
+      _details(),
+      androidScheduleMode: await _scheduleMode(),
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: NotificationPayload.home(action: 'open_log'),
+    );
+  }
+
   static NotificationDetails _details({bool high = false}) =>
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -496,6 +550,7 @@ class NotificationService {
     await _plugin.cancel(_periodTodayId);
     await _plugin.cancel(_lateId);
     await _plugin.cancel(_fertileId);
+    await _plugin.cancel(_temperatureId);
     await SmartPhaseNotifier.cancel();
   }
 }

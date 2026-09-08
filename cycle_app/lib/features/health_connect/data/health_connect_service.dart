@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/cycle/luteal_calibration.dart';
 import '../../../core/cycle/ovulation_log_service.dart';
 import '../../cycle/data/period_bridge_service.dart';
 import '../../../menstrudel/database/repositories/logs_repository.dart';
@@ -610,6 +611,9 @@ class HealthConnectService {
       );
       if (ok) changed++;
     }
+    // Imported temperatures (thermometers, wearables) are the richest BBT
+    // source there is — make them visible to ovulation detection right away.
+    if (changed > 0) LutealCalibration.sharedBbtService.invalidate();
     return changed;
   }
 

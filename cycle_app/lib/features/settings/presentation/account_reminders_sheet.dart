@@ -22,6 +22,7 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
   bool _ovulationReminder = true;
   bool _latePeriodReminder = true;
   bool _smartPhaseReminder = true;
+  bool _temperatureReminder = false;
   bool _loading = true;
   bool _osNotificationsEnabled = true;
   bool _exactAlarmsEnabled = true;
@@ -50,6 +51,8 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
             prefs.getBool(NotificationPrefs.latePeriodKey) ?? true;
         _smartPhaseReminder =
             prefs.getBool(NotificationPrefs.smartPhaseKey) ?? true;
+        _temperatureReminder =
+            prefs.getBool(NotificationPrefs.temperatureKey) ?? false;
         _osNotificationsEnabled = osEnabled;
         _exactAlarmsEnabled = exactOk;
         _pendingCount = pending;
@@ -243,6 +246,23 @@ class _AccountRemindersSheetState extends State<AccountRemindersSheet> {
                   ? (v) async {
                       setState(() => _latePeriodReminder = v);
                       await _savePref(NotificationPrefs.latePeriodKey, v);
+                    }
+                  : null,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.bbtReminderEnabled),
+              subtitle: Text(
+                l10n.bbtReminderSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              value: _temperatureReminder,
+              onChanged: _notifications
+                  ? (v) async {
+                      setState(() => _temperatureReminder = v);
+                      await _savePref(NotificationPrefs.temperatureKey, v);
                     }
                   : null,
             ),

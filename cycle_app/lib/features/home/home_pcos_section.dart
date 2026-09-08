@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/ai/models/ai_insight.dart';
 import '../../core/theme/app_design_tokens.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../l10n/app_localizations.dart';
@@ -66,6 +67,7 @@ class HomePcosSection extends StatelessWidget {
           .toList(),
       doctorNote: PcosContent.doctorNote.forLang(lang),
       onOpenCalendar: onOpenCalendar,
+      aiInsightType: AiInsightType.pcosInsight,
     );
   }
 }

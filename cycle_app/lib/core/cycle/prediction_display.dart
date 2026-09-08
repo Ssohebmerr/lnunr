@@ -24,6 +24,11 @@ class PredictionDisplay {
     return DateFormat.yMMMd(locale).format(date);
   }
 
+  /// Inverse of [tryParseDashboardDate] — the `yyyy-MM-dd` shape the widget
+  /// engine hands back for every dashboard date field.
+  static String formatDashboardDate(DateTime date) =>
+      DateFormat('yyyy-MM-dd').format(date);
+
   static DateTime? tryParseDashboardDate(String raw) {
     if (raw.isEmpty || raw == '—' || raw == '-') return null;
     try {

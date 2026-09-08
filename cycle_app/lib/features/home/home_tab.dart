@@ -13,7 +13,7 @@ import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
 import '../../../core/widgets/feminine_icons_custom.dart';
 import '../../../l10n/app_localizations.dart';
-import '../insight/presentation/insight_card.dart';
+import '../insights/presentation/insight_card.dart';
 import '../streak/presentation/streak_badge.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 import '../cycle/data/cycle_sync_service.dart';
@@ -66,6 +66,20 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _onExternalRefresh() => _load();
+
+  /// Pull-to-refresh. Reloads this tab *and* the cards that reload on a global
+  /// refresh (the today-log card listens for it), so the header no longer
+  /// needs a separate refresh button next to a list that already pulls.
+  ///
+  /// [_load] is started first: it flips `_loadInFlight` before its first
+  /// await, so the listener that [HomeRefreshScope.refresh] triggers here
+  /// no-ops instead of kicking off a second pass, and the pull spinner still
+  /// tracks the real load.
+  Future<void> _refreshAll() {
+    final load = _load();
+    HomeRefreshScope.refresh();
+    return load;
+  }
 
   Future<void> _load() async {
     if (_loadInFlight) return;
@@ -126,7 +140,7 @@ class _HomeTabState extends State<HomeTab> {
     final sections = _sectionBuilders(context, l10n, d, theme);
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: _refreshAll,
       child: ListView.builder(
         controller: _scrollController,
         primary: false,

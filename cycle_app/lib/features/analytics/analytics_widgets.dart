@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_design_tokens.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/cycle/bbt_ovulation_service.dart';
 import '../cycle/data/cycle_bridge_service.dart';
 import 'analytics_data.dart';
 
@@ -768,4 +769,194 @@ class AnalyticsSectionHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Basal body temperature across the current cycle, with the coverline and the
+/// detected ovulation day.
+///
+/// This replaces the old monthly-average curve for anyone logging regularly:
+/// averaging temperatures by calendar month flattens the post-ovulatory shift —
+/// the one thing BBT exists to show — into a straight line.
+class AnalyticsCycleTemperatureChart extends StatelessWidget {
+  const AnalyticsCycleTemperatureChart({
+    super.key,
+    required this.series,
+    this.accent,
+  });
+
+  final CycleTemperatureSeries series;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ar = Localizations.localeOf(context).languageCode.startsWith('ar');
+    final color = accent ?? theme.colorScheme.primary;
+    final ovulationDay = series.ovulationCycleDay;
+
+    return AppGlassCard(
+      blur: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.device_thermostat, size: 18, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  ar
+                      ? 'منحنى الحرارة خلال الدورة'
+                      : 'Temperature across this cycle',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            ovulationDay != null
+                ? (ar
+                      ? 'ارتفاع الحرارة أكّد التبويض في اليوم $ovulationDay من الدورة.'
+                      : 'A temperature rise confirmed ovulation on cycle day $ovulationDay.')
+                : (ar
+                      ? 'لم يظهر ارتفاع مؤكِّد للتبويض بعد. سجّلي الحرارة كل صباح قبل النهوض.'
+                      : 'No confirming rise yet. Log your temperature each morning before getting up.'),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: CustomPaint(
+              painter: _CycleTemperaturePainter(
+                points: series.points,
+                coverline: series.coverline,
+                ovulationCycleDay: ovulationDay,
+                color: color,
+                gridColor: theme.colorScheme.outlineVariant,
+              ),
+              size: Size.infinite,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            ar ? 'يوم الدورة' : 'Cycle day',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CycleTemperaturePainter extends CustomPainter {
+  _CycleTemperaturePainter({
+    required this.points,
+    required this.color,
+    required this.gridColor,
+    this.coverline,
+    this.ovulationCycleDay,
+  });
+
+  final List<CycleTemperaturePoint> points;
+  final Color color;
+  final Color gridColor;
+  final double? coverline;
+  final int? ovulationCycleDay;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
+    final temps = points.map((p) => p.celsius).toList();
+    final cover = coverline;
+    var minV = temps.reduce(math.min);
+    var maxV = temps.reduce(math.max);
+    if (cover != null) {
+      minV = math.min(minV, cover);
+      maxV = math.max(maxV, cover);
+    }
+    // A 0.6 °C floor keeps a real 0.3 °C shift looking like a shift rather
+    // than filling the whole card.
+    final range = math.max(0.6, maxV - minV);
+    final mid = (minV + maxV) / 2;
+    final low = mid - range / 2;
+
+    const topPad = 10.0;
+    const bottomPad = 10.0;
+    final usableH = size.height - topPad - bottomPad;
+
+    // X axis is the cycle day, so gaps in logging show as gaps.
+    final firstDay = points.first.cycleDay;
+    final lastDay = math.max(points.last.cycleDay, firstDay + 1);
+    final span = (lastDay - firstDay).toDouble();
+
+    double xFor(int cycleDay) =>
+        6 + ((cycleDay - firstDay) / span) * (size.width - 12);
+    double yFor(double celsius) =>
+        topPad + (1 - ((celsius - low) / range)) * usableH;
+
+    if (cover != null) {
+      final y = yFor(cover);
+      final dash = Paint()
+        ..color = gridColor
+        ..strokeWidth = 1;
+      for (var x = 0.0; x < size.width; x += 8) {
+        canvas.drawLine(Offset(x, y), Offset(x + 4, y), dash);
+      }
+    }
+
+    if (ovulationCycleDay != null) {
+      final x = xFor(ovulationCycleDay!);
+      canvas.drawLine(
+        Offset(x, topPad),
+        Offset(x, size.height - bottomPad),
+        Paint()
+          ..color = color.withValues(alpha: 0.45)
+          ..strokeWidth = 1.5,
+      );
+    }
+
+    final pts = [
+      for (final p in points) Offset(xFor(p.cycleDay), yFor(p.celsius)),
+    ];
+
+    if (pts.length == 1) {
+      canvas.drawCircle(pts.first, 4, Paint()..color = color);
+      return;
+    }
+
+    final line = Path()..moveTo(pts.first.dx, pts.first.dy);
+    for (var i = 1; i < pts.length; i++) {
+      line.lineTo(pts[i].dx, pts[i].dy);
+    }
+    canvas.drawPath(
+      line,
+      Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    final dot = Paint()..color = color;
+    for (final p in pts) {
+      canvas.drawCircle(p, 2, dot);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CycleTemperaturePainter old) =>
+      old.points != points ||
+      old.coverline != coverline ||
+      old.ovulationCycleDay != ovulationCycleDay ||
+      old.color != color;
 }

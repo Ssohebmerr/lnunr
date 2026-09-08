@@ -21,6 +21,7 @@ class DoctorReportBuilder {
       } else {
         _cycleSection(buf, s, ar: true);
       }
+      _patternSignalsSection(buf, s, ar: true);
       _symptomsSection(buf, s, ar: true);
       _wellnessSection(buf, s, ar: true);
       buf.writeln('\n⚠️ هذا ملخص تتبّع شخصي من التطبيق — ليس تشخيصاً طبياً.');
@@ -33,6 +34,7 @@ class DoctorReportBuilder {
       } else {
         _cycleSection(buf, s, ar: false);
       }
+      _patternSignalsSection(buf, s, ar: false);
       _symptomsSection(buf, s, ar: false);
       _wellnessSection(buf, s, ar: false);
       buf.writeln('\n⚠️ Personal tracking summary — not a medical diagnosis.');
@@ -62,6 +64,39 @@ class DoctorReportBuilder {
     return jsonEncode(payload);
   }
 
+  /// Objective cycle-pattern observations worth a clinician's attention.
+  ///
+  /// Deliberately phrased as measurements, not impressions: a doctor needs the
+  /// number of days, not an app's opinion about what it might mean.
+  static void _patternSignalsSection(
+    StringBuffer buf,
+    HealthSnapshot s, {
+    required bool ar,
+  }) {
+    if (s.patternSignals.isEmpty) return;
+
+    buf.writeln();
+    buf.writeln(ar ? '🔎 ملاحظات على نمط الدورة' : '🔎 Cycle pattern notes');
+    for (final signal in s.patternSignals) {
+      final text = switch (signal) {
+        'prolongedCycles' => ar
+            ? 'عدة دورات مسجّلة تجاوزت ٣٥ يوماً'
+            : 'Multiple logged cycles exceeded 35 days',
+        'shortCycles' => ar
+            ? 'عدة دورات مسجّلة كانت أقصر من ٢١ يوماً'
+            : 'Multiple logged cycles were shorter than 21 days',
+        'highVariability' => ar
+            ? 'تباين طول الدورة ٩ أيام أو أكثر بين الدورات'
+            : 'Cycle-to-cycle length varied by 9 or more days',
+        'absentCycles' => ar
+            ? 'فجوة ٩٠ يوماً أو أكثر بلا دورة مسجّلة'
+            : 'A gap of 90 or more days with no logged period',
+        _ => null,
+      };
+      if (text != null) buf.writeln('• $text');
+    }
+  }
+
   static void _cycleSection(StringBuffer buf, HealthSnapshot s, {required bool ar}) {
     buf.writeln(ar ? '\n📊 ملخص الدورة' : '\n📊 Cycle overview');
     _line(buf, ar ? 'المرحلة الحالية' : 'Current phase', s.currentPhase);
@@ -70,7 +105,19 @@ class DoctorReportBuilder {
     _line(buf, ar ? 'مدة الحيض (متوسط)' : 'Avg period length', s.periodDuration != null ? '${s.periodDuration} ${ar ? 'يوم' : 'days'}' : null);
     _line(buf, ar ? 'انتظام الدورة' : 'Cycle regularity', s.cycleRegularity);
     _line(buf, ar ? 'الدورة القادمة (تقدير)' : 'Next period (est.)', s.nextPeriodDate);
-    _line(buf, ar ? 'الإباضة (تقدير)' : 'Ovulation (est.)', s.ovulationDate);
+    if (s.ovulationConfirmedByTemperature) {
+      final rise = s.temperatureRiseCelsius?.toStringAsFixed(2);
+      _line(
+        buf,
+        ar ? 'الإباضة (مؤكّدة بالحرارة)' : 'Ovulation (BBT-confirmed)',
+        rise == null
+            ? s.ovulationDate
+            : '${s.ovulationDate} '
+                  '(${ar ? 'ارتفاع' : 'rise'} $rise°C)',
+      );
+    } else {
+      _line(buf, ar ? 'الإباضة (تقدير)' : 'Ovulation (est.)', s.ovulationDate);
+    }
     _line(buf, ar ? 'احتمال الحمل' : 'Pregnancy chance', s.pregnancyChances);
     if (s.isPeriodActive) {
       buf.writeln(ar ? '• الدورة الشهرية جارية الآن' : '• Period is active now');

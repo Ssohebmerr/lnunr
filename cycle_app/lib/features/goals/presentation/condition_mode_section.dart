@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/widgets/app_surface.dart';
+import '../../../core/ai/models/ai_insight.dart';
+import '../../../core/ai/widgets/ai_insight_card.dart';
 import '../../../l10n/app_localizations.dart';
 import 'condition_widgets.dart';
 
@@ -39,6 +41,7 @@ class ConditionModeSection extends StatelessWidget {
     required this.doctorNote,
     this.heroExtras = const [],
     this.onOpenCalendar,
+    this.aiInsightType,
   });
 
   final IconData icon;
@@ -63,6 +66,10 @@ class ConditionModeSection extends StatelessWidget {
   /// (e.g. hot-flash counter, cycle-gap card).
   final List<Widget> heroExtras;
   final VoidCallback? onOpenCalendar;
+
+  /// AI reading of what this goal has actually logged. The card hides itself
+  /// when AI is unavailable, so passing a type is always safe.
+  final AiInsightType? aiInsightType;
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +190,16 @@ class ConditionModeSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
+
+        // ── AI reading of the user's own logged pattern ────────────────────
+        if (aiInsightType != null) ...[
+          AiInsightCard(
+            type: aiInsightType!,
+            margin: EdgeInsets.zero,
+            blur: false,
+          ),
+          const SizedBox(height: 14),
+        ],
 
         // ── Symptom logger (interactive) ──────────────────────────────────
         AppSectionHeader(title: l10n.conditionHowAreYouToday),

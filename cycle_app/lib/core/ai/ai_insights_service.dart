@@ -62,6 +62,7 @@ class AiInsightsService {
 
     final snapshot = await _engine.buildSnapshot();
     if (snapshot.isEmpty) return null;
+    if (!_hasDataFor(type, snapshot)) return null;
 
     final reply = await _gateway.request(
       message: _prompt(type, snapshot, languageCode),
@@ -246,6 +247,23 @@ class AiInsightsService {
     return DoctorReportEnrichment(clinicalSummary: text);
   }
 
+  /// Whether there is enough real data for this insight to say anything the
+  /// user could not read in a static article.
+  ///
+  /// The condition insights exist to describe the user's *own* logged pattern.
+  /// Asking a model to do that with no logs produces generic advice dressed up
+  /// as personalization, so the card stays hidden until there is something to
+  /// read — and the API call is not spent.
+  bool _hasDataFor(AiInsightType type, HealthSnapshot s) {
+    return switch (type) {
+      AiInsightType.pcosInsight ||
+      AiInsightType.menopauseInsight ||
+      AiInsightType.postpartumInsight => s.conditionTracking.isNotEmpty,
+      AiInsightType.logReflection => s.todayLog.isNotEmpty,
+      _ => true,
+    };
+  }
+
   /// One cache slot per type per day per language.
   String _cacheKey(AiInsightType type, String lang) {
     final now = DateTime.now();
@@ -325,6 +343,43 @@ class AiInsightsService {
             'My goal is GENERAL CYCLE WELLNESS. Phase: ${s.currentPhase ?? 'unknown'}, '
             'regularity: ${s.cycleRegularity ?? 'unknown'}. '
             'Give one holistic wellness tip for today — sleep, nutrition, movement, or mood.';
+      case AiInsightType.pcosInsight:
+        return '$base\n'
+            'I am managing PCOS. My logged symptom and habit frequencies over '
+            'the last 30 days: ${s.conditionTracking}. '
+            'Cycle regularity: ${s.cycleRegularity ?? 'unknown'}, cycle length: '
+            '${s.cycleLength ?? '?'} days. '
+            'Name the pattern you actually see in my numbers, then give ONE '
+            'practical step for this week — movement, meals, sleep, or stress. '
+            'I already know the general PCOS advice, so be specific to my data. '
+            'Never diagnose PCOS, never confirm or rule it out, and never '
+            'suggest or adjust medication.';
+      case AiInsightType.menopauseInsight:
+        return '$base\n'
+            'I am in perimenopause or menopause. My logged symptom and habit '
+            'frequencies over the last 30 days: ${s.conditionTracking}. '
+            'Cycle regularity: ${s.cycleRegularity ?? 'unknown'}. '
+            'Point out which symptom is hitting me hardest based on the counts, '
+            'then give ONE practical relief step to try this week. '
+            'Never recommend, start or adjust hormone therapy — if that comes '
+            'up, say it is a conversation for my clinician.';
+      case AiInsightType.postpartumInsight:
+        return '$base\n'
+            'I am in postpartum recovery. My logged symptom and habit '
+            'frequencies over the last 30 days: ${s.conditionTracking}. '
+            'Acknowledge what my logs show, then give ONE gentle recovery step '
+            'for this week — rest, nutrition, pelvic floor, or asking for help. '
+            'If the logs point to persistent low mood, heavy bleeding, or fever, '
+            'warmly urge me to contact my provider — do not diagnose.';
+      case AiInsightType.logReflection:
+        return '$base\n'
+            'Here is what I logged today: ${s.todayLog}. '
+            'My cycle phase is ${s.currentPhase ?? 'unknown'} '
+            '(day ${s.currentCycleDay ?? '?'}). '
+            'In two or three sentences, reflect back what I logged and connect '
+            'it to where I am in my cycle. Be encouraging about the act of '
+            'tracking. Do not list my entries back to me verbatim, and do not '
+            'suggest anything I should have logged instead.';
     }
   }
 }

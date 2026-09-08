@@ -64,10 +64,14 @@ void main() {
 
   group('Home shell wiring files', () {
     test('critical home widgets exist on disk', () {
+      // Only widgets home_tab actually wires. home_ai_entry_card.dart used to
+      // be listed here but home_tab stopped importing it in an earlier
+      // refactor, leaving a file nothing rendered — the AI entry point on Home
+      // is the header chip plus the explore rail. The file is gone; guarding a
+      // path no screen imports just protects dead code.
       const widgets = [
         'lib/features/home/widgets/home_explore_rail.dart',
         'lib/features/home/widgets/home_updates_panel.dart',
-        'lib/features/home/widgets/home_ai_entry_card.dart',
         'lib/features/home/widgets/home_community_card.dart',
       ];
       for (final path in widgets) {

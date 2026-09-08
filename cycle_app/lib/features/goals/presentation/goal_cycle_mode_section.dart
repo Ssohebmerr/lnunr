@@ -9,7 +9,10 @@ import '../../../menstrudel_integration/wellness_hub_launcher.dart';
 import '../../../menstrudel/models/app/user_goal_types_enum.dart';
 import '../../cycle/data/cycle_bridge_service.dart';
 import '../../cycle/presentation/widgets/lune_cycle_ring.dart';
+import '../../cycle/presentation/widgets/cycle_cause_card.dart';
+import '../../cycle/presentation/widgets/cycle_signals_card.dart';
 import '../../cycle/presentation/widgets/ovulation_log_card.dart';
+import '../../home/doctor_report_screen.dart';
 import '../../home/widgets/home_feed_sections.dart';
 import '../data/goal_mode_analytics.dart';
 import '../data/goal_mode_content.dart';
@@ -158,6 +161,14 @@ class GoalModeBannerCard extends StatelessWidget {
 }
 
 /// Ring + week view visible; stats, tips, education & AI under «More».
+/// Whether to ask about this cycle's disruptions.
+///
+/// Only in the first stretch of a cycle: recall is freshest then, and a card
+/// that never goes away stops being read. Needs a real cycle day, so it stays
+/// hidden until tracking has actually started.
+bool _shouldAskCycleCause(CycleDashboardData data) =>
+    data.cycleDay >= 1 && data.cycleDay <= 7;
+
 class GoalCycleSharedBody extends StatelessWidget {
   const GoalCycleSharedBody({
     super.key,
@@ -280,7 +291,31 @@ class GoalCycleSharedBody extends StatelessWidget {
                   const OvulationLogCard(),
                   const SizedBox(height: 12),
                 ],
+                // Asked early in a cycle, while the user still remembers what
+                // last month was like. Hidden later so it does not become
+                // permanent furniture.
+                if (_shouldAskCycleCause(data)) ...[
+                  CycleCauseCard(
+                    cycleStart: DateTime.now().subtract(
+                      Duration(days: data.cycleDay - 1),
+                    ),
+                    margin: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 HomeKeyDatesCard(data: data),
+                // Health signals from her own logs. Free and offline by
+                // design — this must not depend on premium or on the AI
+                // gateway being reachable.
+                CycleSignalsCard(
+                  flags: data.patternFlags,
+                  margin: const EdgeInsets.only(top: 12),
+                  onOpenDoctorReport: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DoctorReportScreen(),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 HomeTipsSection(phase: data.phase),
                 const SizedBox(height: 12),

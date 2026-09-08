@@ -948,13 +948,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get navReports => 'Reports';
-
-  @override
   String get navAnalysis => 'Analysis';
-
-  @override
-  String get accountMenuReports => 'Charts & reports';
 
   @override
   String get accountMenuAi => 'Lune chat';
@@ -1026,30 +1020,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeQuickCalendar => 'Calendar';
 
   @override
-  String get reportsMoreTitle => 'Detailed charts & history';
-
-  @override
-  String get reportsMoreSubtitle => 'Full stats, cycle log & patterns';
-
-  @override
   String get reportsChecklistHint => 'Your personalized action list';
 
   @override
-  String get reportsHeaderTitle => 'Your reports';
+  String get insightsHubTitle => 'Insights & reports';
 
   @override
-  String get reportsHeaderSubtitle =>
-      'A clear look at your cycle, your trends, and a doctor-ready summary.';
+  String get insightsHubSubtitle =>
+      'Your cycle at a glance, the charts behind it, and a doctor-ready record.';
 
   @override
-  String get reportsQuickActions => 'Quick actions';
+  String get insightsHubTabOverview => 'Overview';
 
   @override
-  String get reportsAnalyticsCardTitle => 'Full analytics';
+  String get insightsHubTabCharts => 'Charts';
 
   @override
-  String get reportsAnalyticsCardSubtitle =>
-      'All metrics, charts, and insights for your goal.';
+  String get insightsHubTabHistory => 'History';
+
+  @override
+  String get insightsHubChartsTitle => 'Detailed charts';
+
+  @override
+  String get insightsHubChartsSubtitle => 'Trends from everything you log.';
+
+  @override
+  String get insightsHubSymptomPatternsCta =>
+      'See when your symptoms tend to appear in your cycle';
 
   @override
   String get reportsPregnancyOverview => 'Pregnancy overview';
@@ -2787,6 +2784,156 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiInsightWellnessTitle => 'Wellness tip';
+
+  @override
+  String get cycleCauseTitle => 'Was this cycle different?';
+
+  @override
+  String get cycleCauseIntro =>
+      'If something threw this cycle off, tell me. I\'ll leave it out of your averages instead of learning the wrong pattern from it.';
+
+  @override
+  String get cycleCauseIllness => 'Illness';
+
+  @override
+  String get cycleCauseTravel => 'Travel';
+
+  @override
+  String get cycleCauseStress => 'Stress';
+
+  @override
+  String get cycleCauseWeight => 'Weight change';
+
+  @override
+  String get cycleCauseMedication => 'New medication';
+
+  @override
+  String get cycleCauseSleep => 'Poor sleep';
+
+  @override
+  String get cycleCauseExercise => 'Intense exercise';
+
+  @override
+  String get cycleCauseNothing => 'Nothing unusual';
+
+  @override
+  String get cycleCauseSaved =>
+      'Saved — this cycle is set aside from your averages.';
+
+  @override
+  String get cycleCauseCleared =>
+      'Saved — this cycle counts toward your averages.';
+
+  @override
+  String cycleCauseLearned(int count) {
+    return '$count cycles set aside from your averages';
+  }
+
+  @override
+  String get cycleCauseStillCounted =>
+      'Set-aside cycles are still reviewed for health patterns.';
+
+  @override
+  String get cycleSignalsTitle => 'Worth mentioning to a doctor';
+
+  @override
+  String get cycleSignalsIntro =>
+      'These come from your own logged cycles. They are observations, not a diagnosis — stress, travel, illness and weight changes all cause them too.';
+
+  @override
+  String get cycleSignalsProlonged =>
+      'Several recent cycles ran longer than 35 days.';
+
+  @override
+  String get cycleSignalsShort =>
+      'Several recent cycles were shorter than 21 days.';
+
+  @override
+  String get cycleSignalsVariable =>
+      'Your cycle length swung by 9 days or more between cycles.';
+
+  @override
+  String get cycleSignalsAbsent =>
+      'There was a gap of 90 days or more with no period logged.';
+
+  @override
+  String get cycleSignalsFooter =>
+      'Bring this up at your next visit. Your doctor report already includes it.';
+
+  @override
+  String get cycleSignalsOpenReport => 'Open doctor report';
+
+  @override
+  String ovulationConfirmedHint(String rise) {
+    return 'Confirmed by your temperature — up $rise°C';
+  }
+
+  @override
+  String get ovulationConfirmedBadge => 'Confirmed';
+
+  @override
+  String get bbtCardTitle => 'Confirm your ovulation';
+
+  @override
+  String get bbtCardWhy =>
+      'Your temperature rises 0.2–0.5°C after ovulation and stays up. It is the only at-home sign that ovulation actually happened — everything else is an estimate from your dates.';
+
+  @override
+  String get bbtCardHow =>
+      'Take it each morning before getting out of bed, at roughly the same time.';
+
+  @override
+  String bbtCardProgress(int done, int total) {
+    return '$done of $total readings this cycle';
+  }
+
+  @override
+  String get bbtCardReady =>
+      'Enough readings — watching for the rise that confirms ovulation.';
+
+  @override
+  String bbtCardConfirmed(String date, String rise) {
+    return 'Ovulation confirmed on $date, temperature up $rise°C.';
+  }
+
+  @override
+  String get bbtCardConfirmedNote =>
+      'Your next period is now predicted from this, not from your average cycle length.';
+
+  @override
+  String bbtCardCalibrated(int count) {
+    return 'Your luteal phase is measured from $count real signals instead of assumed.';
+  }
+
+  @override
+  String get bbtCardReminderOn => 'Remind me each morning';
+
+  @override
+  String bbtCardReminderTime(String time) {
+    return 'Reminder at $time';
+  }
+
+  @override
+  String get bbtCardLogNow => 'Log today\'s temperature';
+
+  @override
+  String get bbtReminderEnabled => 'Morning temperature reminder';
+
+  @override
+  String get bbtReminderSubtitle =>
+      'Fires at your wake time — basal temperature only counts before you get up.';
+
+  @override
+  String get aiInsightPcosTitle => 'Your PCOS pattern';
+
+  @override
+  String get aiInsightMenopauseTitle => 'Your menopause pattern';
+
+  @override
+  String get aiInsightPostpartumTitle => 'Your recovery';
+
+  @override
+  String get aiInsightLogTitle => 'Today\'s reflection';
 
   @override
   String get goalModeConceiveTitle => 'Trying to conceive';
