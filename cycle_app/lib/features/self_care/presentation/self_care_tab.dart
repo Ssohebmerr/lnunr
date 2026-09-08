@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/app_home_refresh.dart';
+import '../../../core/navigation/home_shell_actions.dart';
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_surface.dart';
@@ -364,12 +365,15 @@ class _SelfCareTabState extends State<SelfCareTab> {
           ),
           _WellnessGroup(
             rows: [
+              // The daily log is the app's own log screen (the + button),
+              // not the Menstrudel one this hub used to open — there is a
+              // single daily log now, writing to a single store.
               _WellnessRowData(
                 icon: Icons.edit_calendar_outlined,
                 title: l10n.wellnessDailyLog,
                 subtitle: l10n.wellnessDailyLogDesc,
                 color: theme.colorScheme.primary,
-                onTap: () => WellnessHubLauncher.openDailyLog(context),
+                onTap: () => HomeShellActions.openLog?.call(),
               ),
               _WellnessRowData(
                 icon: Icons.medication_outlined,

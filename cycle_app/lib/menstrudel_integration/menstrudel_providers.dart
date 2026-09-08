@@ -1,7 +1,6 @@
 import 'package:cycle_aura/menstrudel/controllers/log_reversible_contraceptive_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/controllers/log_sanitary_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/controllers/log_sex_ui_controller.dart';
-import 'package:cycle_aura/menstrudel/controllers/log_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/coordinators/data_refresh_coordinator.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/logs_repository.dart';
 import 'package:cycle_aura/menstrudel/database/repositories/periods_repository.dart';
@@ -93,7 +92,6 @@ class MenstrudelProviders extends StatelessWidget {
             return coordinator;
           },
         ),
-        ChangeNotifierProvider(create: (_) => LogUIController()),
         ChangeNotifierProvider(create: (_) => LogSanitaryUIController()),
         ChangeNotifierProvider(create: (_) => LogSexUIController()),
         ChangeNotifierProvider(

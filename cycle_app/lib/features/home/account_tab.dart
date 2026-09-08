@@ -47,7 +47,7 @@ import '../support/presentation/support_sheet.dart';
 import '../../core/widgets/feminine_icon.dart';
 import '../settings/presentation/account_reminders_sheet.dart';
 import '../settings/presentation/account_settings_screen.dart';
-import 'insights_tab.dart';
+import 'insights_hub.dart';
 import 'sub_feature_page.dart';
 import 'widgets/account_menu_tile.dart';
 
@@ -291,9 +291,11 @@ class _AccountTabState extends State<AccountTab> {
     );
   }
 
-  void _openInsights() =>
-      _openSub(context, AppLocalizations.of(context)!.navInsights,
-          const InsightsTab());
+  void _openInsights() => _openSub(
+        context,
+        AppLocalizations.of(context)!.insightsHubTitle,
+        const InsightsHub(),
+      );
 
   /// Opens the education hub, guarded by the same server flag as the menu row.
   Future<void> _openEducation() async {

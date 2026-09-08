@@ -13,27 +13,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocaleController extends ChangeNotifier {
   static const _key = 'app_locale';
 
-  static const supportedLocales = [
-    Locale('en'),
-    Locale('ar'),
-    Locale('hi'),
-    Locale('es'),
-    Locale('zh'),
-    Locale('fr'),
-    Locale('bn'),
-    Locale('ru'),
-    Locale('pt'),
-    Locale('ja'),
-    Locale('de'),
-    Locale('pa'),
-    Locale('jv'),
-    Locale('ko'),
-    Locale('ta'),
-    Locale('tr'),
-    Locale('ur'),
-    Locale('vi'),
-    Locale('it'),
-  ];
+  /// The languages the app actually ships strings for. Anything else has to be
+  /// clamped rather than passed through: a locale outside this set resolves to
+  /// no delegate, and `AppLocalizations.of(context)!` then throws on the first
+  /// frame. The app used to advertise 19 locales it had no translations for.
+  static const _supported = {'ar', 'en'};
+
+  static Locale _resolve(String? code) =>
+      Locale(_supported.contains(code) ? code! : 'ar');
 
   Locale _locale = const Locale('ar');
 
@@ -44,8 +31,7 @@ class LocaleController extends ChangeNotifier {
   /// re-renders with the correct strings on first frame.
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_key) ?? 'ar';
-    _locale = Locale(code);
+    _locale = _resolve(prefs.getString(_key));
     notifyListeners();
   }
 
@@ -58,9 +44,9 @@ class LocaleController extends ChangeNotifier {
   }
 
   Future<void> setLocale(String languageCode) async {
-    _locale = Locale(languageCode);
+    _locale = _resolve(languageCode);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, languageCode);
+    await prefs.setString(_key, _locale.languageCode);
     notifyListeners();
   }
 }

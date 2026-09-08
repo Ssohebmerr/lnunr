@@ -1,16 +1,12 @@
 import 'package:cycle_aura/menstrudel/controllers/log_reversible_contraceptive_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/controllers/log_sanitary_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/controllers/log_sex_ui_controller.dart';
-import 'package:cycle_aura/menstrudel/controllers/log_ui_controller.dart';
 import 'package:cycle_aura/menstrudel/l10n/app_localizations.dart' as md;
-import 'package:cycle_aura/menstrudel/screens/dashboards/logs/logs_screen.dart';
 import 'package:cycle_aura/menstrudel/screens/dashboards/pills_screen.dart';
 import 'package:cycle_aura/menstrudel/screens/dashboards/reversible_contraceptive/reversible_contraceptive_screen.dart';
 import 'package:cycle_aura/menstrudel/screens/dashboards/sanitary_screen.dart';
 import 'package:cycle_aura/menstrudel/screens/dashboards/sex/sex_screen.dart';
 import 'package:cycle_aura/menstrudel/screens/settings/sections/birth_control_settings_screen.dart';
-import 'package:cycle_aura/menstrudel/services/symptom_service.dart';
-import 'package:cycle_aura/menstrudel/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,8 +15,13 @@ import 'menstrudel_screen_shell.dart';
 
 /// Opens the individual health-tracking tools of the Wellness Hub.
 ///
-/// Extracted so the tools can be surfaced prominently on the Self-care tab
-/// AND inside [WellnessHubPage] without duplicating the navigation wiring.
+/// Daily symptom/flow logging deliberately lives outside this class: it is the
+/// app's own log screen (the + button), which writes to the main store. The
+/// tools below are the ones with no equivalent there — pills, sanitary
+/// products, intimacy, and LARC.
+///
+/// Extracted so the tools can be surfaced from the Self-care tab without
+/// duplicating the navigation wiring.
 /// Every feature is wrapped in [MenstrudelScreenShell], which bootstraps the
 /// Menstrudel services (default user, localization) before the screen builds.
 class WellnessHubLauncher {
@@ -52,25 +53,6 @@ class WellnessHubLauncher {
           locale: Localizations.localeOf(context),
           child: const BirthControlSettingsScreen(),
         ),
-      ),
-    );
-  }
-
-  static void openDailyLog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final mdL10n = md.AppLocalizations.of(context);
-    _open(
-      context,
-      title: mdL10n?.mainScreen_logsPageTitle ?? l10n.wellnessDailyLog,
-      screen: const LogsScreen(),
-      fabBuilder: (ctx) => FloatingActionButton(
-        onPressed: () => ctx.read<LogUIController>().handleCreateNewLog(
-              context: ctx,
-              selectedDate: DateTime.now(),
-              symptomService: ctx.read<SymptomService>(),
-              age: ctx.read<UserService>().age,
-            ),
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -1,5 +1,5 @@
 // ============================================================================
-// test/features/insight/insight_generator_test.dart
+// test/features/insights/insight_generator_test.dart
 // ----------------------------------------------------------------------------
 // Tests the offline insight generator that powers the Today's Insight card
 // on the home tab. We feed it synthetic HealthSnapshot objects and assert
@@ -19,7 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cycle_aura/core/ai/models/health_snapshot.dart';
-import 'package:cycle_aura/features/insight/data/insight_generator.dart';
+import 'package:cycle_aura/features/insights/data/insight_generator.dart';
 import 'package:cycle_aura/l10n/app_localizations.dart';
 
 void main() {

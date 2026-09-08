@@ -948,13 +948,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get navReports => 'Reports';
-
-  @override
   String get navAnalysis => 'Analysis';
-
-  @override
-  String get accountMenuReports => 'Charts & reports';
 
   @override
   String get accountMenuAi => 'Lune chat';
@@ -1026,30 +1020,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeQuickCalendar => 'Calendar';
 
   @override
-  String get reportsMoreTitle => 'Detailed charts & history';
-
-  @override
-  String get reportsMoreSubtitle => 'Full stats, cycle log & patterns';
-
-  @override
   String get reportsChecklistHint => 'Your personalized action list';
 
   @override
-  String get reportsHeaderTitle => 'Your reports';
+  String get insightsHubTitle => 'Insights & reports';
 
   @override
-  String get reportsHeaderSubtitle =>
-      'A clear look at your cycle, your trends, and a doctor-ready summary.';
+  String get insightsHubSubtitle =>
+      'Your cycle at a glance, the charts behind it, and a doctor-ready record.';
 
   @override
-  String get reportsQuickActions => 'Quick actions';
+  String get insightsHubTabOverview => 'Overview';
 
   @override
-  String get reportsAnalyticsCardTitle => 'Full analytics';
+  String get insightsHubTabCharts => 'Charts';
 
   @override
-  String get reportsAnalyticsCardSubtitle =>
-      'All metrics, charts, and insights for your goal.';
+  String get insightsHubTabHistory => 'History';
+
+  @override
+  String get insightsHubChartsTitle => 'Detailed charts';
+
+  @override
+  String get insightsHubChartsSubtitle => 'Trends from everything you log.';
+
+  @override
+  String get insightsHubSymptomPatternsCta =>
+      'See when your symptoms tend to appear in your cycle';
 
   @override
   String get reportsPregnancyOverview => 'Pregnancy overview';

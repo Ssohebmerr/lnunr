@@ -1844,23 +1844,11 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// No description provided for @navReports.
-  ///
-  /// In en, this message translates to:
-  /// **'Reports'**
-  String get navReports;
-
   /// No description provided for @navAnalysis.
   ///
   /// In en, this message translates to:
   /// **'Analysis'**
   String get navAnalysis;
-
-  /// No description provided for @accountMenuReports.
-  ///
-  /// In en, this message translates to:
-  /// **'Charts & reports'**
-  String get accountMenuReports;
 
   /// No description provided for @accountMenuAi.
   ///
@@ -2000,53 +1988,59 @@ abstract class AppLocalizations {
   /// **'Calendar'**
   String get homeQuickCalendar;
 
-  /// No description provided for @reportsMoreTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Detailed charts & history'**
-  String get reportsMoreTitle;
-
-  /// No description provided for @reportsMoreSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Full stats, cycle log & patterns'**
-  String get reportsMoreSubtitle;
-
   /// No description provided for @reportsChecklistHint.
   ///
   /// In en, this message translates to:
   /// **'Your personalized action list'**
   String get reportsChecklistHint;
 
-  /// No description provided for @reportsHeaderTitle.
+  /// No description provided for @insightsHubTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your reports'**
-  String get reportsHeaderTitle;
+  /// **'Insights & reports'**
+  String get insightsHubTitle;
 
-  /// No description provided for @reportsHeaderSubtitle.
+  /// No description provided for @insightsHubSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'A clear look at your cycle, your trends, and a doctor-ready summary.'**
-  String get reportsHeaderSubtitle;
+  /// **'Your cycle at a glance, the charts behind it, and a doctor-ready record.'**
+  String get insightsHubSubtitle;
 
-  /// No description provided for @reportsQuickActions.
+  /// No description provided for @insightsHubTabOverview.
   ///
   /// In en, this message translates to:
-  /// **'Quick actions'**
-  String get reportsQuickActions;
+  /// **'Overview'**
+  String get insightsHubTabOverview;
 
-  /// No description provided for @reportsAnalyticsCardTitle.
+  /// No description provided for @insightsHubTabCharts.
   ///
   /// In en, this message translates to:
-  /// **'Full analytics'**
-  String get reportsAnalyticsCardTitle;
+  /// **'Charts'**
+  String get insightsHubTabCharts;
 
-  /// No description provided for @reportsAnalyticsCardSubtitle.
+  /// No description provided for @insightsHubTabHistory.
   ///
   /// In en, this message translates to:
-  /// **'All metrics, charts, and insights for your goal.'**
-  String get reportsAnalyticsCardSubtitle;
+  /// **'History'**
+  String get insightsHubTabHistory;
+
+  /// No description provided for @insightsHubChartsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed charts'**
+  String get insightsHubChartsTitle;
+
+  /// No description provided for @insightsHubChartsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trends from everything you log.'**
+  String get insightsHubChartsSubtitle;
+
+  /// No description provided for @insightsHubSymptomPatternsCta.
+  ///
+  /// In en, this message translates to:
+  /// **'See when your symptoms tend to appear in your cycle'**
+  String get insightsHubSymptomPatternsCta;
 
   /// No description provided for @reportsPregnancyOverview.
   ///

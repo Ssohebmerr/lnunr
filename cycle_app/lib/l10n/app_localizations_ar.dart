@@ -945,13 +945,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancel => 'إلغاء';
 
   @override
-  String get navReports => 'التقارير';
-
-  @override
   String get navAnalysis => 'تحليل';
-
-  @override
-  String get accountMenuReports => 'الرسوم البيانية والتقارير';
 
   @override
   String get accountMenuAi => 'محادثة Lune';
@@ -1023,30 +1017,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeQuickCalendar => 'تقويم';
 
   @override
-  String get reportsMoreTitle => 'رسوم وتفاصيل إضافية';
-
-  @override
-  String get reportsMoreSubtitle => 'إحصائيات كاملة، سجل الدورة والأنماط';
-
-  @override
   String get reportsChecklistHint => 'قائمة مهام مخصّصة لك';
 
   @override
-  String get reportsHeaderTitle => 'تقاريرك';
+  String get insightsHubTitle => 'التحليلات والتقارير';
 
   @override
-  String get reportsHeaderSubtitle =>
-      'نظرة واضحة على دورتكِ، اتجاهاتكِ، وملخّص جاهز للطبيب.';
+  String get insightsHubSubtitle =>
+      'دورتكِ بلمحة، الرسوم وراءها، وسجلّ جاهز للطبيب.';
 
   @override
-  String get reportsQuickActions => 'إجراءات سريعة';
+  String get insightsHubTabOverview => 'نظرة عامة';
 
   @override
-  String get reportsAnalyticsCardTitle => 'التحليلات الكاملة';
+  String get insightsHubTabCharts => 'الرسوم';
 
   @override
-  String get reportsAnalyticsCardSubtitle =>
-      'كل المؤشرات والرسوم والنتائج حسب هدفكِ.';
+  String get insightsHubTabHistory => 'السجل';
+
+  @override
+  String get insightsHubChartsTitle => 'رسوم تفصيلية';
+
+  @override
+  String get insightsHubChartsSubtitle => 'اتجاهات مستخلصة من كل ما تسجّلينه.';
+
+  @override
+  String get insightsHubSymptomPatternsCta =>
+      'اعرفي متى تظهر أعراضكِ عادةً خلال الدورة';
 
   @override
   String get reportsPregnancyOverview => 'نظرة على الحمل';
