@@ -492,7 +492,7 @@ class _InlineArticleImage extends StatelessWidget {
             child: Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 color: accent.withValues(alpha: 0.12),
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(16),

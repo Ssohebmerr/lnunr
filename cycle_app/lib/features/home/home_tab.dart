@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:cycle_aura/menstrudel/models/app/user_goal_types_enum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:menstrual_cycle_widget/menstrual_cycle_widget.dart';
 
 import '../../../core/app_home_refresh.dart';
@@ -144,7 +145,7 @@ class _HomeTabState extends State<HomeTab> {
       child: ListView.builder(
         controller: _scrollController,
         primary: false,
-        cacheExtent: 400,
+        scrollCacheExtent: const ScrollCacheExtent.pixels(400),
         physics: const AlwaysScrollableScrollPhysics(
           parent: ClampingScrollPhysics(),
         ),
