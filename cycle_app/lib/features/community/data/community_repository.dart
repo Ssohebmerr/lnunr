@@ -282,7 +282,7 @@ class CommunityRepository {
       );
       if (!fetchCounts) return communities;
 
-      return Future.wait(
+      return await Future.wait(
         communities.map((community) async {
           try {
             final countSnap = await _membersRef(
