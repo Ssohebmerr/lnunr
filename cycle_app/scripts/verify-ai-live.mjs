@@ -7,7 +7,7 @@
  *
  * Steps: sign in → ensure users/{uid} exists → grant tester premium → chat + analyze.
  */
-const API_KEY = 'AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g';
+const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSy_REPLACE_WITH_YOUR_FIREBASE_API_KEY';
 const BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
 const FIRESTORE_BASE =
   'https://firestore.googleapis.com/v1/projects/lune-7d956/databases/(default)/documents';

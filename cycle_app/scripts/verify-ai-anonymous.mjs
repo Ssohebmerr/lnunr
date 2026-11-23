@@ -2,7 +2,7 @@
  * End-to-end: anonymous auth → users doc → premium → chat/analyze.
  * node scripts/verify-ai-anonymous.mjs
  */
-const API_KEY = 'AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g';
+const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSy_REPLACE_WITH_YOUR_FIREBASE_API_KEY';
 const BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
 
 async function signUpAnonymous() {
