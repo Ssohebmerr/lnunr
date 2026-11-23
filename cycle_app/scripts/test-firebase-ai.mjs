@@ -2,7 +2,7 @@
  * Live smoke tests for Firebase AI endpoints (chat, analyze, moderate).
  * Usage: node scripts/test-firebase-ai.mjs [email] [password]
  */
-const API_KEY = 'AIzaSyC3T_iSeJg0mU6aGMmcDpnO4clstnH8Q1g';
+const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSy_REPLACE_WITH_YOUR_FIREBASE_API_KEY';
 const BASE = 'https://us-central1-lune-7d956.cloudfunctions.net';
 
 const email = process.argv[2] || process.env.LUNE_TEST_EMAIL;
